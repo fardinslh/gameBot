@@ -1,14 +1,14 @@
 # Crown & Coin
 
-Crown & Coin is the technical foundation for a portrait-oriented mobile strategy game. Bale Mini App support is the first delivery target, but game identity, UI, and server code do not depend on Bale. Telegram and standalone web adapters can be implemented later without replacing the internal player identity.
+Crown & Coin is a portrait-oriented mobile strategy game. Bale Mini App support is the first delivery target, but game identity, UI, and server code do not depend on Bale. Telegram and standalone web adapters can be implemented later without replacing the internal player identity.
 
-This repository contains foundation work only. Battle, guild, payment, shop economy, and final PixiJS gameplay scenes are intentionally out of scope.
+Phase 02 adds the first Kingdom vertical slice: a PixiJS-rendered medieval world, five interactive structures, a compact game HUD, localized building details, and mobile browser validation. Battle, guild, payment, persisted economy, and final game art remain intentionally out of scope.
 
 ## Architecture
 
 ```text
 apps/
-  game-client/       Next.js mobile game shell and localization
+game-client/       Next.js game UI, localization, and PixiJS Kingdom scene
   game-api/          NestJS authoritative game API and Prisma schema
 packages/
   shared/            Cross-application API and platform types
@@ -17,7 +17,18 @@ infrastructure/      Local infrastructure notes
 docker-compose.yml   PostgreSQL and Redis for development
 ```
 
-The API is authoritative. Clients never own permanent balances, rewards, timers, purchases, or results. The resource amounts shown in the current shell are explicitly labeled preview data.
+The API is authoritative. Clients never own permanent balances, rewards, timers, purchases, or results. Phase 02 values and building levels live only in `apps/game-client/src/features/kingdom/data/mock-kingdom.ts` and are explicitly labeled mock data.
+
+The Kingdom client keeps responsibilities separate:
+
+```text
+KingdomPage
+├── KingdomScene          PixiJS terrain, buildings, hit areas, restrained motion
+├── PlayerHud             profile, language, API state
+├── ResourceHud           five mock resources
+├── BuildingDetailSheet   selected building presentation only
+└── BottomNavigation      Kingdom plus coming-soon feedback
+```
 
 `Player` is the internal identity. `PlatformAccount` links a Bale, Telegram, or Web external account to a player; external platform IDs are never used as player primary keys.
 
@@ -86,9 +97,10 @@ npm run dev          # client + API
 npm run typecheck    # all TypeScript projects
 npm run build        # packages + production client/API builds
 npm run lint         # configured workspace checks
+npm run validate:client # Pixi interactions, mobile widths, RTL, and browser console
 ```
 
-PixiJS is installed and its lazy runtime bootstrap lives in `apps/game-client/src/game/rendering/pixi-runtime.ts`. It is deliberately not mounted yet; the final Kingdom scene belongs to a later phase.
+PixiJS is loaded lazily by `apps/game-client/src/features/kingdom/components/kingdom-scene.tsx`. The terrain texture and procedural building art are temporary Phase 02 assets, organized for later atlas/sprite replacement.
 
 ## URLs
 

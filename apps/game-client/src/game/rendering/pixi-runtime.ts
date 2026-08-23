@@ -10,12 +10,14 @@ export async function createPixiRuntime(container: HTMLDivElement): Promise<Pixi
   const app = new PixiApplication();
 
   await app.init({
-    resizeTo: container,
+    width: Math.max(container.clientWidth, 1),
+    height: Math.max(container.clientHeight, 1),
     antialias: true,
     autoDensity: true,
     backgroundAlpha: 0,
     resolution: Math.min(window.devicePixelRatio, 2),
   });
+  app.canvas.className = 'kingdom-canvas';
   container.appendChild(app.canvas);
 
   return {

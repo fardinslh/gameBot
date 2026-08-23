@@ -17,6 +17,7 @@
     "prisma:migrate": "npm run prisma:migrate --workspace @crown-and-coin/game-api",
     "prisma:deploy": "npm run prisma:deploy --workspace @crown-and-coin/game-api",
     "validate:runtime": "node scripts/validate-foundation.mjs",
+    "validate:client": "node scripts/validate-client.mjs",
     "start": "concurrently -n client,api -c cyan,magenta \"npm run start --workspace @crown-and-coin/game-client\" \"npm run start:prod --workspace @crown-and-coin/game-api\""
   },
   "engines": {
