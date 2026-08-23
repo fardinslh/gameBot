@@ -8,12 +8,12 @@ interface BottomNavigationProps {
   onComingSoon(section: string): void;
 }
 
-export type GameSection = 'kingdom' | 'heroes';
+export type GameSection = 'kingdom' | 'raid' | 'heroes';
 
 export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onComingSoon }: BottomNavigationProps) {
   const items = [
     { id: 'kingdom', label: t.kingdom, Icon: Castle, enabled: true },
-    { id: 'raid', label: t.raid, Icon: Swords, enabled: false },
+    { id: 'raid', label: t.raid, Icon: Swords, enabled: true },
     { id: 'heroes', label: t.heroes, Icon: Shield, enabled: true },
     { id: 'guild', label: t.guild, Icon: Users, enabled: false },
     { id: 'shop', label: t.shop, Icon: ShoppingBag, enabled: false },

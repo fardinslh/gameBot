@@ -1,13 +1,13 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Phase 04 adds a persistent, server-authoritative Hero roster and three-slot Raid Team on top of the validated PixiJS Kingdom and Phase 03 economy. PvP, battle simulation, loot, guilds, payments, platform authentication, and final artwork remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Phase 05 completes the first server-authoritative loop: Kingdom economy, Hero preparation, server matchmaking, an 8–15 second deterministic Raid replay, atomic loot/Trophy settlement, and return to an updated Kingdom. Revenge, guilds, payments, platform authentication, and final artwork remain out of scope.
 
 ## Architecture
 
 ```text
 apps/
-  game-client/       Next.js React HUD/Hero UI + PixiJS Kingdom scene
-  game-api/          NestJS authoritative economy/Hero API + Prisma
+  game-client/       Next.js React HUD/game UI + PixiJS Kingdom/Battle scenes
+  game-api/          NestJS authoritative economy/Hero/Raid API + Prisma
 packages/
   shared/            API contracts shared by client and server
   platform/          Future platform adapter contract
@@ -30,7 +30,7 @@ KingdomPage
 └── BottomNavigation      Kingdom + unchanged coming-soon feedback
 ```
 
-The game shell now switches only the enabled `Kingdom` and `Heroes` views. The compact 54px navigation remains shared; Raid, Guild, and Shop still show Coming Soon. The Hero client is isolated under `apps/game-client/src/features/heroes/`:
+The game shell switches the enabled `Kingdom`, `Raid`, and `Heroes` views. The compact 54px navigation remains shared; Guild and Shop still show Coming Soon. The Hero client is isolated under `apps/game-client/src/features/heroes/`:
 
 ```text
 HeroesPage
@@ -66,6 +66,7 @@ URLs:
 - Health: http://localhost:3001/health
 - Kingdom: http://localhost:3001/kingdom
 - Heroes: http://localhost:3001/heroes
+- Raid: http://localhost:3001/raid
 
 The health endpoint checks PostgreSQL and, in the normal Docker flow, Redis. If Docker is unavailable, `npx prisma dev -d -n crown-coin` can provide a local PostgreSQL TCP URL. Put that URL in `.env`; because Phase 03 correctness does not use BullMQ, `SKIP_REDIS_FOR_DEVELOPMENT="true"` may be used only for this fallback. Never enable that flag in a normal/production environment.
 
@@ -113,6 +114,11 @@ Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems.
 | `GET` | `/heroes/team` | Return the persisted ordered three-slot Raid Team |
 | `PUT` | `/heroes/team` | Validate and persist exactly three unique owned Hero IDs |
 | `POST` | `/heroes/:playerHeroId/upgrade` | Idempotently charge Gold, log the economy transaction, and increase Hero level |
+| `GET` | `/raid` | Return Trophy rating, current authoritative team, power, and balances |
+| `POST` | `/raid/search` | Match by Trophy/team power and issue one short-lived server Match Offer |
+| `POST` | `/raid/start` | Validate one Match Offer, simulate, persist, and settle the Raid exactly once |
+| `GET` | `/raid/history` | Return the participant's recent persisted Raid summaries |
+| `GET` | `/battles/:battleId` | Return an authorized authoritative replay from stored snapshots/events |
 
 Economy-changing requests require an `Idempotency-Key` header between 8 and 100 characters. An optional `X-Dev-Player-Id` selects an isolated development identity; otherwise the centralized `DEV_PLAYER_ID` value is used.
 
@@ -160,6 +166,53 @@ maximumLevel = 20
 
 The client never submits level, stats, power, cost, balance, or ownership. Hero upgrades take the same PostgreSQL player advisory lock as Phase 03, conditionally decrement the GOLD balance, create one `EconomyTransaction(HERO_UPGRADE)` with before/delta/after/reference values, increment level, and persist an idempotent response in `EconomyRequest`.
 
+## Phase 05 Raid architecture
+
+The client submits only a `matchOfferId` and an idempotency key. It never submits a defender ID, Hero stats, damage, winner, loot, Trophy delta, or duration. `/raid/search` derives team power from the Phase 04 calculator and searches configurable passes: ±150 Trophy/±15% power, ±300/±30%, a wider non-repeat fallback, then a population-safe repeat fallback. The last five offered defenders are avoided where possible. Offers expire after 180 seconds and are single-use.
+
+`POST /raid/start` snapshots all six Heroes (key, slot, level, HP, ATK, DEF, power, skill), creates a cryptographic server seed, and runs rules version `1` immediately. The persisted event stream is the only combat input used by Pixi playback, so historical replays do not change after Hero upgrades.
+
+| Rule | Temporary value |
+| --- | --- |
+| Basic damage | `max(25, ATK - round(DEF × 0.35))`, then seeded 95–105% variance |
+| Critical | seeded 10% chance, ×1.5 |
+| Attack interval | Knight 1.4s, Ranger 1.2s, Mage 1.5s |
+| Shield Wall | 35% reduction for 2.5s, 5.0s cooldown |
+| Power Shot | 180% focused damage, 4.0s cooldown |
+| Arcane Blast | 100% damage to every living enemy, 5.5s cooldown |
+| Targeting | first living slot |
+| Safety timeout | 30 logical seconds; remaining HP ratio resolves it |
+| Replay duration | event timeline scaled to 8–15 seconds |
+
+All randomness comes from `seeded-random.ts`; authoritative engine code does not call `Math.random()`. Battle rows store the seed, rules version, result, six snapshots, ordered events, Trophy values, loot, and timestamps.
+
+### Loot, Trophy, and transaction safety
+
+Gems are never raidable. Final loot is recalculated during settlement as the minimum of the exposed 30%, the amount above the reserve, and the cap:
+
+| Resource | Cap | Defender reserve |
+| --- | ---: | ---: |
+| Gold | 8,000 | 2,000 |
+| Food | 6,000 | 1,000 |
+| Wood | 5,000 | 1,000 |
+| Stone | 4,000 | 800 |
+
+The temporary rating formula lightly adjusts for rating difference: winners gain 15–30 and losers lose 5–20, with a floor of zero. Battle persistence, offer consumption, Trophy changes, balance transfer, and the idempotent response share one PostgreSQL transaction. Both existing economy advisory locks are acquired in stable Player-ID order. Conditional decrements prevent negative defender balances. Each transfer writes paired `RAID_REWARD`/`RAID_LOSS` rows with exact before/delta/after values and `referenceId = battleId`.
+
+### Development opponents and debugging
+
+The server idempotently bootstraps real domain rows for `Iron Wolf` (Lv1/~850), `Silver Fox` (Lv1/~920), `Lion Heart` (Lv2/~1000), `Black Raven` (Lv2/~1100), and `Storm Keep` (Lv3/~1220). Stable `raid-fixture:*` Web IDs prevent duplicates. Fixtures use normal Player, Kingdom, balance, Hero, and Raid Team models.
+
+Call `GET /battles/BATTLE_ID` as either participant to inspect the persisted seed, rules version, snapshots, ordered events, result, loot, duration, and Trophy deltas. Re-running `simulateBattle` with those snapshots/seed/version produces the same result.
+
+Manual Raid flow:
+
+1. Open `http://localhost:3000/?lang=fa&section=raid` (or `lang=en`).
+2. Find an opponent, inspect the offer, and optionally find another.
+3. Confirm the three-Hero team/power or use **Edit Team**.
+4. Attack, watch the Pixi replay, and inspect Victory/Defeat, loot, and Trophy delta.
+5. Return to Kingdom and verify the freshly fetched HUD; refresh to confirm persistence.
+
 ## Validation and tests
 
 ```bash
@@ -172,9 +225,12 @@ npm run build
 npm run lint
 npm run validate:client  # requires API + client; browser Collect/upgrade/RTL/mobile flow
 npm run validate:heroes  # requires API + client; Hero/team/upgrade/RTL/mobile/Kingdom flow
+npm run validate:raid    # full match/battle/result/Kingdom flow + mobile screenshots
 ```
 
-Tests cover zero/normal/negative elapsed time, the eight-hour cap, per-building production, fractional precision, deterministic bootstrap, immediate/retried/concurrent Collect, transaction accuracy, upgrade charging, insufficient resources, ownership, Castle gates, maximum level, simultaneous upgrades, early completion rejection, valid completion, and idempotent reconciliation.
+Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.
+
+`npm run validate:raid` validates 320×568, 375×812, and 390×844 in English LTR and Persian RTL, the unchanged 54px navigation, server Match Offers, Pixi HP/event playback, both Victory and Defeat results, post-Raid Kingdom HUD synchronization, persisted six-Hero snapshots/events, and browser console errors. It writes ignored screenshots under `artifacts/phase-05-*.png`.
 
 `npm run validate:client` checks all five Pixi buildings, server-backed HUD balances, Collect feedback, refresh persistence during an upgrade, completion, English LTR, Persian RTL, widths 320/375/390, horizontal overflow, and browser console errors. It writes an ignored screenshot to `artifacts/phase-03-kingdom-fa.png`.
 
@@ -190,4 +246,4 @@ Manual Phase 04 validation:
 
 ## Temporary assets and current scope
 
-`apps/game-client/public/assets/kingdom/kingdom-terrain-v1.webp`, the procedural buildings, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are replaceable temporary art. Pixi coordinates, Kingdom artwork, the Phase 02 world design, Phase 03 HUD proportions, production, Collect, and building upgrade behavior are unchanged. Hero skills are informational/configuration-ready only; battle behavior starts no earlier than Phase 05.
+`apps/game-client/public/assets/kingdom/kingdom-terrain-v1.webp`, the procedural buildings, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are replaceable temporary art. The Battle scene reuses those local portraits and lightweight procedural Pixi effects; no giant textures, shaders, particle systems, or per-frame React state were added. Pixi Kingdom coordinates/artwork, the Phase 03 HUD/economy, and Phase 04 Hero progression/team behavior are unchanged.

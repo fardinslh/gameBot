@@ -11,5 +11,6 @@ export default async function HomePage({ searchParams }: HomePageProps) {
   const dictionary = getDictionary(locale);
   const requestedSection = Array.isArray(params.section) ? params.section[0] : params.section;
 
-  return <GameShell locale={locale} dictionary={dictionary} initialSection={requestedSection === 'heroes' ? 'heroes' : 'kingdom'} />;
+  const initialSection = requestedSection === 'heroes' || requestedSection === 'raid' ? requestedSection : 'kingdom';
+  return <GameShell locale={locale} dictionary={dictionary} initialSection={initialSection} />;
 }

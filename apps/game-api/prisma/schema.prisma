@@ -39,6 +39,7 @@ enum EconomyTransactionReason {
   HERO_UPGRADE
   ADMIN_OR_SEED
   RAID_REWARD
+  RAID_LOSS
   QUEST_REWARD
   PURCHASE
 }
@@ -47,6 +48,38 @@ enum EconomyAction {
   COLLECT
   UPGRADE
   HERO_UPGRADE
+  RAID_START
+}
+
+enum BattleType {
+  RAID
+}
+
+enum BattleStatus {
+  CREATED
+  RESOLVED
+  REWARDED
+}
+
+enum BattleSide {
+  ATTACKER
+  DEFENDER
+}
+
+enum BattleResult {
+  ATTACKER_WIN
+  DEFENDER_WIN
+}
+
+enum BattleEventType {
+  BATTLE_START
+  BASIC_ATTACK
+  SKILL_CAST
+  DAMAGE
+  BUFF_APPLIED
+  BUFF_EXPIRED
+  HERO_DEFEATED
+  BATTLE_END
 }
 
 enum HeroKey {
@@ -73,12 +106,19 @@ model Player {
   displayName      String?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  trophies         Int               @default(1000)
+  isDevelopmentOpponent Boolean      @default(false)
   platformAccounts PlatformAccount[]
   kingdom          Kingdom?
   economyTransactions EconomyTransaction[]
   economyRequests     EconomyRequest[]
   heroes              PlayerHero[]
   raidTeam            RaidTeam?
+  raidOffersCreated   RaidMatchOffer[] @relation("RaidOfferAttacker")
+  raidOffersReceived  RaidMatchOffer[] @relation("RaidOfferDefender")
+  battlesAttacked     Battle[]         @relation("BattleAttacker")
+  battlesDefended     Battle[]         @relation("BattleDefender")
+  battlesWon          Battle[]         @relation("BattleWinner")
 }
 
 model PlatformAccount {
@@ -239,4 +279,92 @@ model RaidTeamSlot {
   @@unique([raidTeamId, slot])
   @@unique([raidTeamId, playerHeroId])
   @@index([playerHeroId])
+}
+
+model RaidMatchOffer {
+  id               String    @id @default(uuid())
+  attackerPlayerId String
+  defenderPlayerId String
+  attackerPower    Int
+  defenderPower    Int
+  potentialLoot    Json
+  createdAt        DateTime  @default(now())
+  expiresAt        DateTime
+  usedAt           DateTime?
+  attacker         Player    @relation("RaidOfferAttacker", fields: [attackerPlayerId], references: [id], onDelete: Cascade)
+  defender         Player    @relation("RaidOfferDefender", fields: [defenderPlayerId], references: [id], onDelete: Cascade)
+  battle           Battle?
+
+  @@index([attackerPlayerId, createdAt])
+  @@index([defenderPlayerId, createdAt])
+  @@index([expiresAt])
+}
+
+model Battle {
+  id                   String         @id @default(uuid())
+  matchOfferId         String         @unique
+  type                 BattleType     @default(RAID)
+  status               BattleStatus   @default(CREATED)
+  attackerPlayerId     String
+  defenderPlayerId     String
+  winnerPlayerId       String
+  result               BattleResult
+  seed                 String
+  rulesVersion         Int
+  durationMs           Int
+  attackerTrophyBefore Int
+  defenderTrophyBefore Int
+  attackerTrophyDelta  Int
+  defenderTrophyDelta  Int
+  loot                 Json
+  startedAt            DateTime
+  resolvedAt           DateTime
+  createdAt            DateTime       @default(now())
+  matchOffer           RaidMatchOffer @relation(fields: [matchOfferId], references: [id], onDelete: Restrict)
+  attacker             Player         @relation("BattleAttacker", fields: [attackerPlayerId], references: [id], onDelete: Restrict)
+  defender             Player         @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
+  winner               Player         @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
+  heroSnapshots        BattleHeroSnapshot[]
+  events               BattleEvent[]
+
+  @@index([attackerPlayerId, createdAt])
+  @@index([defenderPlayerId, createdAt])
+  @@index([winnerPlayerId, createdAt])
+}
+
+model BattleHeroSnapshot {
+  id       String     @id @default(uuid())
+  battleId String
+  side     BattleSide
+  slot     Int
+  heroKey  HeroKey
+  level    Int
+  hp       Int
+  atk      Int
+  def      Int
+  power    Int
+  skillKey String
+  battle   Battle     @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  @@unique([battleId, side, slot])
+  @@index([battleId, side])
+}
+
+model BattleEvent {
+  id          String          @id @default(uuid())
+  battleId    String
+  sequence    Int
+  timeMs      Int
+  type        BattleEventType
+  sourceSide  BattleSide?
+  sourceSlot  Int?
+  targetSide  BattleSide?
+  targetSlot  Int?
+  amount      Int?
+  remainingHp Int?
+  skillKey    String?
+  battle      Battle          @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  @@unique([battleId, sequence])
+  @@index([battleId, timeMs])
 }

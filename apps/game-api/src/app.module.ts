@@ -9,6 +9,7 @@ import { RedisModule } from './infrastructure/redis/redis.module';
 import { KingdomModule } from './kingdom/kingdom.module';
 import { PlatformModule } from './platform/platform.module';
 import { PlayerModule } from './player/player.module';
+import { RaidModule } from './raid/raid.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { PlayerModule } from './player/player.module';
     PlatformModule,
     KingdomModule,
     EconomyModule,
+    RaidModule,
   ],
 })
 export class AppModule {}

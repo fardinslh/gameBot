@@ -178,3 +178,126 @@ export interface HeroErrorResponse {
   code: HeroErrorCode;
   message: string;
 }
+
+export type RaidResourceType = Exclude<ResourceType, 'GEMS'>;
+export type RaidLootAmounts = Record<RaidResourceType, string>;
+export type BattleSide = 'ATTACKER' | 'DEFENDER';
+export type BattleResult = 'ATTACKER_WIN' | 'DEFENDER_WIN';
+export type BattleEventType =
+  | 'BATTLE_START'
+  | 'BASIC_ATTACK'
+  | 'SKILL_CAST'
+  | 'DAMAGE'
+  | 'BUFF_APPLIED'
+  | 'BUFF_EXPIRED'
+  | 'HERO_DEFEATED'
+  | 'BATTLE_END';
+
+export interface BattleHeroState {
+  side: BattleSide;
+  slot: 1 | 2 | 3;
+  key: HeroKey;
+  level: number;
+  hp: number;
+  atk: number;
+  def: number;
+  power: number;
+  skillKey: HeroSkillKey;
+  portraitAsset: string;
+}
+
+export interface BattleEventState {
+  sequence: number;
+  timeMs: number;
+  type: BattleEventType;
+  sourceSide: BattleSide | null;
+  sourceSlot: 1 | 2 | 3 | null;
+  targetSide: BattleSide | null;
+  targetSlot: 1 | 2 | 3 | null;
+  amount: number | null;
+  remainingHp: number | null;
+  skillKey: HeroSkillKey | null;
+}
+
+export interface RaidTeamPreview {
+  heroes: HeroState[];
+  power: number;
+}
+
+export interface RaidOverviewResponse {
+  player: { id: string; displayName: string; level: number; trophies: number };
+  balances: ResourceAmounts;
+  team: RaidTeamPreview;
+  serverTime: string;
+}
+
+export interface RaidMatchOfferState {
+  id: string;
+  expiresAt: string;
+  opponent: {
+    id: string;
+    displayName: string;
+    castleLevel: number;
+    trophies: number;
+    teamPower: number;
+    team: HeroState[];
+  };
+  ownPower: number;
+  potentialLoot: RaidLootAmounts;
+}
+
+export interface RaidSearchResponse extends RaidOverviewResponse {
+  offer: RaidMatchOfferState;
+}
+
+export interface BattleReplayResponse {
+  id: string;
+  seed: string;
+  rulesVersion: number;
+  result: BattleResult;
+  winnerPlayerId: string;
+  durationMs: number;
+  attacker: { playerId: string; displayName: string; trophiesBefore: number; trophyDelta: number };
+  defender: { playerId: string; displayName: string; trophiesBefore: number; trophyDelta: number };
+  teams: { attacker: BattleHeroState[]; defender: BattleHeroState[] };
+  events: BattleEventState[];
+  loot: RaidLootAmounts;
+  balances: ResourceAmounts;
+  resolvedAt: string;
+}
+
+export interface RaidHistoryItem {
+  battleId: string;
+  opponentName: string;
+  result: BattleResult;
+  wasAttacker: boolean;
+  trophyDelta: number;
+  loot: RaidLootAmounts;
+  createdAt: string;
+}
+
+export interface RaidHistoryResponse {
+  battles: RaidHistoryItem[];
+}
+
+export type RaidErrorCode =
+  | 'NO_OPPONENT_AVAILABLE'
+  | 'MATCH_OFFER_EXPIRED'
+  | 'MATCH_OFFER_ALREADY_USED'
+  | 'MATCH_OFFER_NOT_FOUND'
+  | 'MATCH_OFFER_NOT_OWNER'
+  | 'INVALID_RAID_TEAM'
+  | 'OPPONENT_NOT_FOUND'
+  | 'BATTLE_NOT_FOUND'
+  | 'BATTLE_NOT_PARTICIPANT'
+  | 'SELF_ATTACK_FORBIDDEN'
+  | 'INSUFFICIENT_OR_INVALID_STATE'
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'RAID_CONFLICT'
+  | 'RATE_LIMITED';
+
+export interface RaidErrorResponse {
+  statusCode: number;
+  code: RaidErrorCode;
+  message: string;
+}

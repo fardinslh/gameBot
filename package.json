@@ -19,6 +19,7 @@
     "validate:runtime": "node scripts/validate-foundation.mjs",
     "validate:client": "node scripts/validate-client.mjs",
     "validate:heroes": "node scripts/validate-heroes.mjs",
+    "validate:raid": "dotenv -e .env -- node scripts/validate-raid.mjs",
     "test": "npm run test --workspace @crown-and-coin/game-api",
     "test:integration": "npm run test:integration --workspace @crown-and-coin/game-api",
     "start": "concurrently -n client,api -c cyan,magenta \"npm run start --workspace @crown-and-coin/game-client\" \"npm run start:prod --workspace @crown-and-coin/game-api\""

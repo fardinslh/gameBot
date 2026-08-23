@@ -84,7 +84,7 @@ try {
   const balancesAfterCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
   if (balancesBeforeCollect.join('|') === balancesAfterCollect.join('|')) throw new Error('Collect did not update authoritative HUD balances');
 
-  await page.locator('[data-nav-id="raid"]').click();
+  await page.locator('[data-nav-id="guild"]').click();
   await page.waitForSelector('.coming-soon-toast--visible');
 
   for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {

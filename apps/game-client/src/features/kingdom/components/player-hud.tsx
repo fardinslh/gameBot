@@ -8,7 +8,7 @@ interface PlayerHudProps {
   locale: Locale;
   playerLevel: number;
   playerName: string;
-  section?: 'heroes';
+  section?: 'heroes' | 'raid';
 }
 
 export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, section }: PlayerHudProps) {
