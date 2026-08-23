@@ -1,15 +1,37 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { BattleReplayResponse, RaidOverviewResponse, RaidSearchResponse } from '@crown-and-coin/shared';
-import { fetchRaid, RaidApiError, searchRaid, startRaid } from '../api/raid-api';
+import type {
+  BattleReplayResponse,
+  DefenseInboxResponse,
+  RaidOverviewResponse,
+  RaidSearchResponse,
+  RevengePreviewResponse,
+} from '@crown-and-coin/shared';
+import {
+  fetchBattle,
+  fetchRaid,
+  fetchRaidInbox,
+  fetchRevengePreview,
+  markRaidInboxRead,
+  RaidApiError,
+  searchRaid,
+  startRaid,
+  startRevenge,
+} from '../api/raid-api';
 import { trackRaidEvent } from '../analytics/raid-analytics';
 
-export function useRaidState() {
+export type RaidView = 'overview' | 'inbox';
+
+export function useRaidState(initialView: RaidView = 'overview') {
   const [overview, setOverview] = useState<RaidOverviewResponse | null>(null);
   const [offer, setOffer] = useState<RaidSearchResponse['offer'] | null>(null);
   const [battle, setBattle] = useState<BattleReplayResponse | null>(null);
-  const [action, setAction] = useState<'loading' | 'idle' | 'searching' | 'attacking'>('loading');
+  const [inbox, setInbox] = useState<DefenseInboxResponse | null>(null);
+  const [revengePreview, setRevengePreview] = useState<RevengePreviewResponse | null>(null);
+  const [battleDetail, setBattleDetail] = useState<BattleReplayResponse | null>(null);
+  const [view, setView] = useState<RaidView>(initialView);
+  const [action, setAction] = useState<'loading' | 'idle' | 'searching' | 'attacking' | 'loading-inbox' | 'loading-preview'>('loading');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const trackedBattles = useRef(new Set<string>());
 
@@ -31,6 +53,28 @@ export function useRaidState() {
     void refresh(controller.signal);
     return () => controller.abort();
   }, [refresh]);
+
+  const openInbox = useCallback(async () => {
+    setView('inbox');
+    setAction('loading-inbox');
+    setRevengePreview(null);
+    setBattleDetail(null);
+    try {
+      const response = await fetchRaidInbox();
+      setInbox(response);
+      setErrorCode(null);
+      if (response.unreadCount > 0) {
+        await markRaidInboxRead();
+        setInbox((current) => current ? { ...current, unreadCount: 0 } : current);
+      }
+    } catch (error) {
+      setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR');
+    } finally { setAction('idle'); }
+  }, []);
+
+  useEffect(() => {
+    if (initialView === 'inbox') void openInbox();
+  }, [initialView, openInbox]);
 
   const search = useCallback(async () => {
     if (action !== 'idle') return;
@@ -60,6 +104,38 @@ export function useRaidState() {
     finally { setAction('idle'); }
   }, [offer, action, overview]);
 
+  const openRevengePreview = useCallback(async (revengeTargetId: string) => {
+    if (action !== 'idle') return;
+    setAction('loading-preview');
+    try {
+      setRevengePreview(await fetchRevengePreview(revengeTargetId));
+      setErrorCode(null);
+    } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
+    finally { setAction('idle'); }
+  }, [action]);
+
+  const revenge = useCallback(async () => {
+    if (!revengePreview || action !== 'idle') return;
+    setAction('attacking');
+    try {
+      setBattle(await startRevenge(revengePreview.revengeTargetId));
+      setRevengePreview(null);
+      setBattleDetail(null);
+      setErrorCode(null);
+    } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
+    finally { setAction('idle'); }
+  }, [revengePreview, action]);
+
+  const openBattleDetail = useCallback(async (battleId: string) => {
+    if (action !== 'idle') return;
+    setAction('loading-preview');
+    try {
+      setBattleDetail(await fetchBattle(battleId));
+      setErrorCode(null);
+    } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
+    finally { setAction('idle'); }
+  }, [action]);
+
   const finishBattle = useCallback(() => {
     if (!battle || trackedBattles.current.has(battle.id)) return;
     trackedBattles.current.add(battle.id);
@@ -70,10 +146,23 @@ export function useRaidState() {
   }, [battle]);
 
   const clearBattle = useCallback(() => {
+    const wasRevenge = battle?.type === 'REVENGE';
     setBattle(null);
     setOffer(null);
-    void refresh();
-  }, [refresh]);
+    if (wasRevenge) void openInbox();
+    else void refresh();
+  }, [battle, openInbox, refresh]);
 
-  return { overview, offer, battle, action, errorCode, refresh, search, attack, finishBattle, clearBattle };
+  const closeInbox = useCallback(() => {
+    setView('overview');
+    setRevengePreview(null);
+    setBattleDetail(null);
+  }, []);
+
+  return {
+    overview, offer, battle, inbox, revengePreview, battleDetail, view, action, errorCode,
+    refresh, search, attack, openInbox, closeInbox, openRevengePreview, revenge,
+    openBattleDetail, closeBattleDetail: () => setBattleDetail(null),
+    closeRevengePreview: () => setRevengePreview(null), finishBattle, clearBattle,
+  };
 }

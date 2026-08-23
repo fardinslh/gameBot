@@ -2,6 +2,10 @@ import type { KingdomBuildingState, KingdomBuildingType, ResourceType } from '@c
 
 export type BuildingId = 'castle' | 'farm' | 'lumberMill' | 'mine' | 'grandMarket';
 
+export type FutureBuildingId = 'barracks' | 'blacksmith' | 'academy' | 'granary' | 'watchtower' | 'tavern' | 'stable';
+
+export type WorldBuildingId = BuildingId | FutureBuildingId;
+
 export type ResourceId = 'gold' | 'food' | 'wood' | 'stone' | 'gems';
 
 export interface MockBuilding {
@@ -24,6 +28,14 @@ export interface BuildingLayout {
   x: number;
   y: number;
   scale: number;
+}
+
+export interface FutureBuildingLayout {
+  id: FutureBuildingId;
+  x: number;
+  y: number;
+  scale: number;
+  castleLevel: number;
 }
 
 export interface KingdomBuildingView extends KingdomBuildingState {

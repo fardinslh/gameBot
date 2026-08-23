@@ -3,6 +3,7 @@ import type { RaidLootAmounts, RaidResourceType } from '@crown-and-coin/shared';
 export const RAID_OFFER_TTL_MS = 180_000;
 export const RAID_RECENT_OPPONENT_LIMIT = 5;
 export const RAID_HISTORY_LIMIT = 20;
+export const REVENGE_TTL_MS = 24 * 60 * 60 * 1_000;
 export const RAID_PROTECTED_BPS = 7_000n;
 
 export const RAID_LOOT_CAP: Record<RaidResourceType, bigint> = {
@@ -28,4 +29,3 @@ export const DEVELOPMENT_OPPONENTS = [
   { externalId: 'raid-fixture:black-raven', name: 'Black Raven', kingdom: 'Nightfall', trophies: 1_100, level: 2, resources: [28_000n, 20_000n, 18_000n, 15_000n] },
   { externalId: 'raid-fixture:storm-keep', name: 'Storm Keep', kingdom: 'Stormkeep', trophies: 1_220, level: 3, resources: [36_000n, 28_000n, 22_000n, 20_000n] },
 ] as const;
-

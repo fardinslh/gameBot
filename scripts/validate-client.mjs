@@ -59,15 +59,17 @@ try {
   await page.waitForSelector('.resource-hud__server');
   await page.waitForSelector('.collect-button');
   const buildingCount = await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count');
-  if (buildingCount !== '5') throw new Error(`Expected five Pixi buildings, found ${buildingCount ?? 'none'}`);
+  if (buildingCount !== '12') throw new Error(`Expected twelve Pixi buildings, found ${buildingCount ?? 'none'}`);
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-active-building-count') !== '5') throw new Error('Expected five active Pixi buildings');
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-future-building-count') !== '7') throw new Error('Expected seven future Pixi buildings');
 
   const canvas = page.locator('.kingdom-canvas');
   const buildingPoints = [
-    { id: 'castle', x: 160, y: 311 },
-    { id: 'lumberMill', x: 74, y: 200 },
-    { id: 'mine', x: 243, y: 207 },
-    { id: 'farm', x: 74, y: 459 },
-    { id: 'grandMarket', x: 234, y: 459 },
+    { id: 'castle', x: 160, y: 345 },
+    { id: 'mine', x: 110, y: 215 },
+    { id: 'farm', x: 50, y: 504 },
+    { id: 'lumberMill', x: 267, y: 501 },
+    { id: 'grandMarket', x: 160, y: 596 },
   ];
 
   for (const building of buildingPoints) {
@@ -76,6 +78,11 @@ try {
     await page.locator('.building-sheet .icon-button').click();
     await page.waitForFunction(() => document.querySelector('.building-sheet')?.getAttribute('aria-hidden') === 'true');
   }
+
+  await canvas.click({ position: { x: 159, y: 462 } });
+  await page.waitForSelector('[data-locked-building="granary"]');
+  await page.locator('.locked-building-sheet__close').click();
+  await page.waitForFunction(() => document.querySelector('.locked-building-sheet')?.getAttribute('aria-hidden') === 'true');
 
   const balancesBeforeCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
   await page.waitForTimeout(8_000);
@@ -100,7 +107,7 @@ try {
   await page.waitForSelector('.collect-button');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
-  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  await page.locator('.kingdom-canvas').click({ position: { x: 110, y: 215 } });
   await page.waitForSelector('[data-building-sheet="mine"]');
   const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   await page.locator('.upgrade-button').click();
@@ -109,7 +116,7 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  await page.locator('.kingdom-canvas').click({ position: { x: 110, y: 215 } });
   await page.waitForSelector('[data-building-sheet="mine"]');
   await page.waitForSelector('.upgrade-preview--active');
 
@@ -120,12 +127,12 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  await page.locator('.kingdom-canvas').click({ position: { x: 110, y: 215 } });
   const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS Pixi scene + 5 interactive buildings');
+  console.log('PASS expanded Pixi scene + 5 active and 7 locked interactive buildings');
   console.log('PASS server-backed Collect + persisted upgrade timer/completion');
   console.log('PASS detail sheet + coming-soon navigation');
   console.log('PASS 320/375/390 responsive + Persian RTL + browser console');

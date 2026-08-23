@@ -1,9 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { History } from 'lucide-react';
 import type { ResourceAmounts } from '@crown-and-coin/shared';
 import type { Dictionary, Locale } from '@/i18n/config';
-import type { BuildingId } from '../domain/kingdom-types';
+import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
+import { FUTURE_BUILDING_LAYOUT } from '../data/building-layout';
 import { useKingdomState } from '../hooks/use-kingdom-state';
 import { BottomNavigation } from './bottom-navigation';
 import type { GameSection } from './bottom-navigation';
@@ -12,26 +14,38 @@ import { CollectControl } from './collect-control';
 import { KingdomScene } from './kingdom-scene';
 import { PlayerHud } from './player-hud';
 import { ResourceHud } from './resource-hud';
+import { useInboxCount } from '@/features/raid/hooks/use-inbox-count';
+import { LockedBuildingSheet } from './locked-building-sheet';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
   locale: Locale;
   onNavigate(section: GameSection): void;
+  onOpenInbox(): void;
 }
 
-export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPageProps) {
+export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: KingdomPageProps) {
   const economy = useKingdomState();
-  const [selectedBuildingId, setSelectedBuildingId] = useState<BuildingId | null>(null);
+  const inboxCount = useInboxCount();
+  const [selectedBuildingId, setSelectedBuildingId] = useState<WorldBuildingId | null>(null);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
-  const selectedBuilding = economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null;
+  const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
+  const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
   const direction = locale === 'fa' ? 'rtl' : 'ltr';
-  const buildingLabels: Record<BuildingId, string> = {
+  const buildingLabels: Record<WorldBuildingId, string> = {
     castle: t.buildings.castle.name,
     farm: t.buildings.farm.name,
     lumberMill: t.buildings.lumberMill.name,
     mine: t.buildings.mine.name,
     grandMarket: t.buildings.grandMarket.name,
+    barracks: t.futureBuildings.barracks.name,
+    blacksmith: t.futureBuildings.blacksmith.name,
+    academy: t.futureBuildings.academy.name,
+    granary: t.futureBuildings.granary.name,
+    watchtower: t.futureBuildings.watchtower.name,
+    tavern: t.futureBuildings.tavern.name,
+    stable: t.futureBuildings.stable.name,
   };
 
   useEffect(() => {
@@ -40,7 +54,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPagePr
     return () => window.clearTimeout(timeout);
   }, [comingSoonSection]);
 
-  const handleBuildingSelect = useCallback((buildingId: BuildingId) => {
+  const handleBuildingSelect = useCallback((buildingId: WorldBuildingId) => {
     setSelectedBuildingId(buildingId);
   }, []);
 
@@ -54,6 +68,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPagePr
           errorLabel={t.kingdomLoadError}
           loadingLabel={t.loadingKingdom}
           onSelect={handleBuildingSelect}
+          panLabel={t.dragToExplore}
           selectedBuildingId={selectedBuildingId}
         />
 
@@ -65,6 +80,11 @@ export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPagePr
             playerName={economy.state?.player.displayName ?? t.playerTitle}
           />
           <ResourceHud balances={balances} dictionary={t} />
+          <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
+            <History aria-hidden="true" size={17} />
+            <span>{t.inboxUi.title}</span>
+            {inboxCount > 0 ? <b>{inboxCount > 99 ? '99+' : inboxCount}</b> : null}
+          </button>
           {economy.state ? (
             <CollectControl
               buildings={economy.buildings}
@@ -85,6 +105,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPagePr
             onUpgrade={(buildingId) => void economy.upgrade(buildingId)}
             serverNow={economy.serverNow}
           />
+          <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           <BottomNavigation activeSection="kingdom" dictionary={t} onComingSoon={setComingSoonSection} onNavigate={onNavigate} />
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
             {comingSoonSection ? t.comingSoonMessage.replace('{section}', comingSoonSection) : ''}
@@ -97,6 +118,10 @@ export function KingdomPage({ dictionary: t, locale, onNavigate }: KingdomPagePr
       </main>
     </div>
   );
+}
+
+function isActiveBuildingId(id: WorldBuildingId | null): id is BuildingId {
+  return id === 'castle' || id === 'farm' || id === 'lumberMill' || id === 'mine' || id === 'grandMarket';
 }
 
 function errorMessage(code: string, t: Dictionary): string {

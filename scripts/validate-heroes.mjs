@@ -39,6 +39,7 @@ try {
   await page.waitForSelector('[data-heroes-status="ready"]');
   if (await page.locator('.hero-card').count() !== 3) throw new Error('Expected three starter Hero cards');
   if (await page.locator('[data-team-slot]').count() !== 3) throw new Error('Expected three Raid Team slots');
+  await page.waitForFunction(() => [...document.querySelectorAll('.hero-card__portrait')].every((image) => image.complete && image.naturalWidth > 0));
   const portraitsReady = await page.locator('.hero-card__portrait').evaluateAll((images) => images.every((image) => image.complete && image.naturalWidth > 0));
   if (!portraitsReady) throw new Error('A temporary Hero portrait did not load');
 
@@ -89,7 +90,7 @@ try {
   await page.waitForSelector('[data-heroes-status="ready"]');
   await page.locator('[data-nav-id="kingdom"]').click();
   await page.waitForSelector('[data-scene-status="ready"]');
-  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count') !== '5') throw new Error('Kingdom regression: Pixi buildings missing');
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count') !== '12') throw new Error('Kingdom regression: expanded Pixi buildings missing');
   if (await page.locator('.collect-button').count() !== 1) throw new Error('Kingdom regression: Collect missing');
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
 

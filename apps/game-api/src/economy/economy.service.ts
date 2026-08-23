@@ -22,6 +22,7 @@ import { KINGDOM_BUILDING_TYPES, RESOURCE_TYPES } from '@crown-and-coin/shared';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { ensureHeroSystemForPlayer } from '../heroes/hero.bootstrap';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
+import { NotificationService } from '../notifications/notification.service';
 import { calculateProduction } from './economy.calculator';
 import {
   ECONOMY_CONFIG,
@@ -58,7 +59,10 @@ type TransactionClient = Prisma.TransactionClient;
 export class EconomyService {
   private readonly logger = new Logger(EconomyService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly notifications: NotificationService,
+  ) {}
 
   getKingdom(context: DevelopmentPlayerContext): Promise<KingdomStateResponse> {
     return this.withPlayerTransaction(context, async (tx, _playerId, kingdomId) => {
@@ -339,6 +343,19 @@ export class EconomyService {
       if (claimed.count !== 1) continue;
       await tx.building.update({ where: { id: upgrade.buildingId }, data: { level: upgrade.toLevel } });
       if (upgrade.building.type === 'CASTLE') await tx.kingdom.update({ where: { id: kingdomId }, data: { level: upgrade.toLevel } });
+      const kingdom = await tx.kingdom.findUniqueOrThrow({ where: { id: kingdomId }, select: { playerId: true } });
+      await this.notifications.createNotification(tx, {
+        playerId: kingdom.playerId,
+        type: 'UPGRADE_COMPLETE',
+        payload: {
+          buildingId: upgrade.buildingId,
+          buildingType: upgrade.building.type,
+          level: upgrade.toLevel,
+          completedAt: now.toISOString(),
+        },
+        deepLinkIntent: { screen: 'BUILDING', buildingId: upgrade.buildingId },
+        sourceKey: `UPGRADE_COMPLETE:${upgrade.id}`,
+      });
       this.logger.log(`upgrade-complete building=${upgrade.buildingId} upgrade=${upgrade.id} level=${upgrade.toLevel}`);
     }
   }

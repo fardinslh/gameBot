@@ -1,17 +1,18 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { BuildingId } from '../domain/kingdom-types';
+import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
-import { KINGDOM_BUILDING_LAYOUT } from '../data/building-layout';
+import { FUTURE_BUILDING_LAYOUT, KINGDOM_BUILDING_LAYOUT } from '../data/building-layout';
 
 interface KingdomSceneProps {
-  buildingLabels: Record<BuildingId, string>;
+  buildingLabels: Record<WorldBuildingId, string>;
   buildings: KingdomBuildingView[];
   errorLabel: string;
   loadingLabel: string;
-  onSelect(buildingId: BuildingId): void;
-  selectedBuildingId: BuildingId | null;
+  onSelect(buildingId: WorldBuildingId): void;
+  panLabel: string;
+  selectedBuildingId: WorldBuildingId | null;
 }
 
 type SceneStatus = 'loading' | 'ready' | 'error';
@@ -22,6 +23,7 @@ export function KingdomScene({
   errorLabel,
   loadingLabel,
   onSelect,
+  panLabel,
   selectedBuildingId,
 }: KingdomSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,12 +83,18 @@ export function KingdomScene({
     <section className="kingdom-scene" aria-label={loadingLabel} data-scene-status={status}>
       <div className="kingdom-scene__canvas" ref={containerRef} />
       <div className="kingdom-scene__vignette" aria-hidden="true" />
+      <div className="kingdom-pan-cue" aria-hidden="true"><span>↕</span>{panLabel}</div>
       <div className={`scene-status scene-status--${status}`} role="status">
         <span className="scene-status__rune" aria-hidden="true" />
         <span>{status === 'error' ? errorLabel : loadingLabel}</span>
       </div>
       <div className="sr-only" aria-label={loadingLabel}>
         {KINGDOM_BUILDING_LAYOUT.map((building) => (
+          <button key={building.id} onClick={() => onSelect(building.id)} type="button">
+            {buildingLabels[building.id]}
+          </button>
+        ))}
+        {FUTURE_BUILDING_LAYOUT.map((building) => (
           <button key={building.id} onClick={() => onSelect(building.id)} type="button">
             {buildingLabels[building.id]}
           </button>

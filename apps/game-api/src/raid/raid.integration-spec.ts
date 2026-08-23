@@ -3,6 +3,7 @@ import { EconomyTransactionReason } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EconomyService } from '../economy/economy.service';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
+import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { RaidError } from './raid.errors';
 import { RaidFixtureService } from './raid-fixture.service';
@@ -10,9 +11,10 @@ import { RaidRateLimiter } from './raid-rate-limiter.service';
 import { RaidService } from './raid.service';
 
 const prisma = new PrismaService();
-const economy = new EconomyService(prisma);
+const notifications = new NotificationService(prisma);
+const economy = new EconomyService(prisma, notifications);
 const fixtures = new RaidFixtureService(prisma, economy);
-const raids = new RaidService(prisma, economy, fixtures, new RaidRateLimiter());
+const raids = new RaidService(prisma, economy, fixtures, new RaidRateLimiter(), notifications);
 
 function context(prefix = 'raid'): DevelopmentPlayerContext {
   return { platform: 'WEB', externalUserId: `${prefix}-${randomUUID()}` };
@@ -148,5 +150,123 @@ describe.sequential('authoritative Raid integration', () => {
     expect(transactions.every((transaction) => transaction.balanceAfter - transaction.balanceBefore === transaction.delta && transaction.balanceAfter >= 0n)).toBe(true);
     const net = transactions.reduce((sum, transaction) => sum + transaction.delta, 0n);
     expect(net).toBe(0n);
+  });
+
+  it('creates a defender inbox, structured notifications, and one available Revenge target for an eligible Raid', async () => {
+    const attackerContext = context('revenge-source-attacker');
+    const defenderContext = context('revenge-source-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: defender.kingdomId, resource: { not: 'GEMS' } }, data: { amount: 100_000n } });
+    const source = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    expect(source.result).toBe('ATTACKER_WIN');
+
+    const target = await prisma.revengeTarget.findUniqueOrThrow({ where: { sourceBattleId: source.id } });
+    expect(target).toMatchObject({ playerId: defender.id, targetPlayerId: attacker.id, status: 'AVAILABLE' });
+    const rows = await prisma.notification.findMany({ where: { playerId: defender.id }, orderBy: { type: 'asc' } });
+    expect(rows.map((row) => row.type).sort()).toEqual(['PLAYER_RAIDED', 'REVENGE_AVAILABLE']);
+    expect(rows.find((row) => row.type === 'PLAYER_RAIDED')?.payload).toMatchObject({ battleId: source.id, defenseResult: 'DEFENSE_LOSS' });
+    expect(rows.find((row) => row.type === 'PLAYER_RAIDED')?.deepLinkIntent).toEqual({ screen: 'INBOX', battleId: source.id });
+    expect(rows.find((row) => row.type === 'REVENGE_AVAILABLE')?.deepLinkIntent).toEqual({ screen: 'REVENGE', revengeTargetId: target.id });
+
+    const inbox = await raids.inbox(defenderContext);
+    expect(inbox.unreadCount).toBe(1);
+    expect(inbox.entries[0]).toMatchObject({ battleId: source.id, defenseResult: 'DEFENSE_LOSS', revengeStatus: 'AVAILABLE', revengeTargetId: target.id });
+    expect(Object.values(inbox.entries[0].lootLost).some((amount) => BigInt(amount) > 0n)).toBe(true);
+    const preview = await raids.revengePreview(defenderContext, target.id);
+    expect(preview.target.id).toBe(attacker.id);
+    expect(preview.ownTeam.heroes).toHaveLength(3);
+    expect(preview.status).toBe('AVAILABLE');
+    await raids.markInboxRead(defenderContext);
+    expect((await raids.inbox(defenderContext)).unreadCount).toBe(0);
+    await raids.history(defenderContext);
+    expect(await prisma.notification.count({ where: { playerId: defender.id } })).toBe(2);
+  });
+
+  it('starts one idempotent REVENGE with the Phase 05 replay and never creates a revenge chain', async () => {
+    const attackerContext = context('revenge-loop-attacker');
+    const defenderContext = context('revenge-loop-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    const source = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    expect(source.result).toBe('ATTACKER_WIN');
+    const target = await prisma.revengeTarget.findUniqueOrThrow({ where: { sourceBattleId: source.id } });
+    const requestKey = randomUUID();
+    const first = await raids.startRevenge(defenderContext, target.id, requestKey);
+    const replay = await raids.startRevenge(defenderContext, target.id, requestKey);
+    expect(replay).toEqual(first);
+    expect(first.type).toBe('REVENGE');
+    expect(first.events.length).toBeGreaterThan(0);
+    expect(first.teams.attacker).toHaveLength(3);
+    expect(await prisma.battle.count({ where: { revengeTargetId: target.id } })).toBe(1);
+    expect(await prisma.revengeTarget.count({ where: { sourceBattleId: first.id } })).toBe(0);
+    expect((await prisma.revengeTarget.findUniqueOrThrow({ where: { id: target.id } })).status).toBe('USED');
+    expect(await prisma.economyRequest.count({ where: { playerId: defender.id, idempotencyKey: requestKey, action: 'REVENGE_START' } })).toBe(1);
+    expect(await code(raids.startRevenge(defenderContext, target.id, randomUUID()))).toBe('REVENGE_ALREADY_USED');
+  });
+
+  it('rejects expired and foreign Revenge targets', async () => {
+    const attackerContext = context('revenge-guard-attacker');
+    const defenderContext = context('revenge-guard-defender');
+    const foreignContext = context('revenge-guard-foreign');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    await player(foreignContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    const source = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    const target = await prisma.revengeTarget.findUniqueOrThrow({ where: { sourceBattleId: source.id } });
+    expect(await code(raids.startRevenge(foreignContext, target.id, randomUUID()))).toBe('REVENGE_NOT_OWNER');
+    await prisma.revengeTarget.update({ where: { id: target.id }, data: { expiresAt: new Date(Date.now() - 1_000) } });
+    expect(await code(raids.startRevenge(defenderContext, target.id, randomUUID()))).toBe('REVENGE_EXPIRED');
+    expect((await prisma.revengeTarget.findUniqueOrThrow({ where: { id: target.id } })).status).toBe('EXPIRED');
+  });
+
+  it('serializes simultaneous Revenge starts and settles only one Battle', async () => {
+    const attackerContext = context('revenge-concurrent-attacker');
+    const defenderContext = context('revenge-concurrent-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    const source = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    const target = await prisma.revengeTarget.findUniqueOrThrow({ where: { sourceBattleId: source.id } });
+    const outcomes = await Promise.allSettled([
+      raids.startRevenge(defenderContext, target.id, randomUUID()),
+      raids.startRevenge(defenderContext, target.id, randomUUID()),
+    ]);
+    expect(outcomes.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(outcomes.filter((result) => result.status === 'rejected')).toHaveLength(1);
+    expect(await prisma.battle.count({ where: { revengeTargetId: target.id } })).toBe(1);
+  });
+
+  it('serializes a normal Raid and Revenge against the same target without corrupting resources', async () => {
+    const targetContext = context('mixed-lock-target');
+    const revengePlayerContext = context('mixed-lock-revenge');
+    const normalAttackerContext = context('mixed-lock-normal');
+    const targetPlayer = await player(targetContext);
+    const revengePlayer = await player(revengePlayerContext);
+    const normalAttacker = await player(normalAttackerContext);
+
+    await prisma.playerHero.updateMany({ where: { playerId: targetPlayer.id }, data: { level: 20 } });
+    const source = await raids.start(targetContext, await offer(targetPlayer.id, revengePlayer.id), randomUUID());
+    expect(source.result).toBe('ATTACKER_WIN');
+    const revengeTarget = await prisma.revengeTarget.findUniqueOrThrow({ where: { sourceBattleId: source.id } });
+
+    await prisma.playerHero.updateMany({ where: { playerId: { in: [revengePlayer.id, normalAttacker.id] } }, data: { level: 20 } });
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: targetPlayer.kingdomId, resource: { not: 'GEMS' } }, data: { amount: 100_000n } });
+    const normalOffer = await offer(normalAttacker.id, targetPlayer.id);
+    const outcomes = await Promise.all([
+      raids.start(normalAttackerContext, normalOffer, randomUUID()),
+      raids.startRevenge(revengePlayerContext, revengeTarget.id, randomUUID()),
+    ]);
+
+    expect(outcomes.map((battle) => battle.type).sort()).toEqual(['RAID', 'REVENGE']);
+    const balances = await prisma.resourceBalance.findMany({ where: { kingdomId: targetPlayer.kingdomId } });
+    expect(balances.every((balance) => balance.amount >= 0n)).toBe(true);
+    const transactions = await prisma.economyTransaction.findMany({
+      where: { referenceId: { in: outcomes.map((battle) => battle.id) }, reason: { in: [EconomyTransactionReason.RAID_REWARD, EconomyTransactionReason.RAID_LOSS] } },
+    });
+    expect(transactions.every((row) => row.balanceAfter >= 0n && row.balanceAfter - row.balanceBefore === row.delta)).toBe(true);
   });
 });

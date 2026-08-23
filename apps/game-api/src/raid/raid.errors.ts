@@ -14,6 +14,11 @@ const STATUS: Record<RaidErrorCode, HttpStatus> = {
   SELF_ATTACK_FORBIDDEN: HttpStatus.BAD_REQUEST,
   INSUFFICIENT_OR_INVALID_STATE: HttpStatus.CONFLICT,
   INVALID_IDEMPOTENCY_KEY: HttpStatus.BAD_REQUEST,
+  REVENGE_NOT_FOUND: HttpStatus.NOT_FOUND,
+  REVENGE_NOT_OWNER: HttpStatus.FORBIDDEN,
+  REVENGE_EXPIRED: HttpStatus.GONE,
+  REVENGE_ALREADY_USED: HttpStatus.CONFLICT,
+  REVENGE_INVALID_SOURCE: HttpStatus.CONFLICT,
   RAID_CONFLICT: HttpStatus.CONFLICT,
   RATE_LIMITED: HttpStatus.TOO_MANY_REQUESTS,
 };
@@ -25,4 +30,3 @@ export class RaidError extends HttpException {
     super(response, statusCode);
   }
 }
-

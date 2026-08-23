@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Phase 05 completes the first server-authoritative loop: Kingdom economy, Hero preparation, server matchmaking, an 8–15 second deterministic Raid replay, atomic loot/Trophy settlement, and return to an updated Kingdom. Revenge, guilds, payments, platform authentication, and final artwork remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Phase 06.5 expands the five-building prototype into a pan-enabled, twelve-structure Kingdom while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, external delivery, and final production art for every structure remain out of scope.
 
 ## Architecture
 
@@ -213,6 +213,32 @@ Manual Raid flow:
 4. Attack, watch the Pixi replay, and inspect Victory/Defeat, loot, and Trophy delta.
 5. Return to Kingdom and verify the freshly fetched HUD; refresh to confirm persistence.
 
+## Phase 06 defense inbox and Revenge
+
+A successful standard `RAID` against a real Player creates one `RevengeTarget` for the defender. It references the source Battle, expires after 24 hours, can be consumed once, and transitions through `AVAILABLE`, `USED`, `EXPIRED`, or `INVALID`. A `REVENGE` Battle never creates another target, which prevents reciprocal Revenge chains.
+
+The preview and start endpoints use the target Player's current valid Raid Team and current protected balances. Revenge start locks both Players in stable ID order and locks the target row, then reuses the Phase 05 snapshot, deterministic simulation, event persistence, loot/Trophy settlement, and replay response inside one idempotent transaction.
+
+Phase 06 routes:
+
+- `GET /raid/inbox` — compact defender-perspective history and unread count
+- `POST /raid/inbox/read` — persistent read state
+- `GET /raid/revenge/:revengeTargetId` — server-authoritative preview
+- `POST /raid/revenge/start` — idempotent settlement
+- `GET /battles/:battleId` — participant-only Battle Detail data
+
+`NotificationService` stores structured `PLAYER_RAIDED`, `REVENGE_AVAILABLE`, and exactly-once `UPGRADE_COMPLETE` records. Deep-link intent is platform-neutral JSON such as `{ "screen": "INBOX", "battleId": "…" }`, `{ "screen": "REVENGE", "revengeTargetId": "…" }`, or `{ "screen": "BUILDING", "buildingId": "…" }`; no Bale URL or transport is implemented.
+
+The Kingdom visual pass keeps the existing Pixi coordinates and hit areas. It adds inexpensive masonry/timber/detail geometry and grounding cues, strengthens the Castle gate and hierarchy, reduces upgrade/timer badges, and compacts the Collect chip. The terrain texture and all procedural building artwork remain temporary and replaceable.
+
+## Phase 06.5 visual production world
+
+The Kingdom uses a bounded vertical camera instead of compressing twelve structures into a single 320px frame. Direct pointer/touch dragging moves only the Pixi world container; the React HUD, Collect, sheets, and exact 54px navigation remain fixed. The initial camera focuses the Castle courtyard, with military/craft landmarks above and the economic village, market, fields, bridge, and river below.
+
+Active server-backed structures remain Castle, Farm, Lumber Mill, Mine, and Grand Market. Seven client-presentational future structures are data-driven and tappable: Royal Barracks, Emberforge, Astral Academy, Crown Granary, High Watchtower, Golden Stag Tavern, and Royal Stables. Their compact locked sheet communicates a future phase and required Castle level without adding backend mechanics or API fields.
+
+The visual approach is hybrid: an optimized local 1024×1536 environment WebP and transparent Castle WebP provide production-level scale/material depth, while active secondary and future buildings remain lightweight Pixi geometry with deterministic hit areas, selection, indicators, glow, flags, and smoke. The two generated assets total about 625KB and are replaceable under `public/assets/kingdom/`.
+
 ## Validation and tests
 
 ```bash
@@ -226,9 +252,17 @@ npm run lint
 npm run validate:client  # requires API + client; browser Collect/upgrade/RTL/mobile flow
 npm run validate:heroes  # requires API + client; Hero/team/upgrade/RTL/mobile/Kingdom flow
 npm run validate:raid    # full match/battle/result/Kingdom flow + mobile screenshots
+npm run validate:revenge # incoming badge/log/preview/Revenge/result + Phase 06 screenshots
+npm run validate:visual  # expanded world/pan/locked/detail/RTL/mobile screenshots and asset budget
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.
+
+Phase 06 integration coverage adds defender-perspective inbox data, persistent read state, structured/deep-link notifications, eligible/expired/foreign/used Revenge guards, shared-engine replay, idempotent retry, loop prevention, simultaneous Revenge serialization, and concurrent Raid/Revenge balance integrity. Self-Revenge is guarded in the service and by the database `RevengeTarget_not_self` constraint.
+
+`npm run validate:revenge` creates two isolated development Player contexts, resolves a real standard Raid, switches to the defender, verifies the Kingdom badge and Battle Log, starts Revenge through its preview, captures shared Battle playback/result, confirms `USED`, checks notification cardinality, and validates English LTR/Persian RTL at 320×568, 375×812, and 390×844 with the unchanged 54px navigation and no browser console errors. Screenshots are written under `artifacts/phase-06-*.png`.
+
+`npm run validate:visual` verifies 5 active + 7 future Pixi structures, bounded pan movement, a future-building sheet, an active-building detail sheet, English LTR/Persian RTL, 320×568 / 375×812 / 390×844, the unchanged 54px navigation, horizontal overflow, browser console errors, and a 700KB/150KB terrain/Castle asset budget. It writes screenshots under `artifacts/phase-06-5-*.png`.
 
 `npm run validate:raid` validates 320×568, 375×812, and 390×844 in English LTR and Persian RTL, the unchanged 54px navigation, server Match Offers, Pixi HP/event playback, both Victory and Defeat results, post-Raid Kingdom HUD synchronization, persisted six-Hero snapshots/events, and browser console errors. It writes ignored screenshots under `artifacts/phase-05-*.png`.
 
@@ -246,4 +280,4 @@ Manual Phase 04 validation:
 
 ## Temporary assets and current scope
 
-`apps/game-client/public/assets/kingdom/kingdom-terrain-v1.webp`, the procedural buildings, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are replaceable temporary art. The Battle scene reuses those local portraits and lightweight procedural Pixi effects; no giant textures, shaders, particle systems, or per-frame React state were added. Pixi Kingdom coordinates/artwork, the Phase 03 HUD/economy, and Phase 04 Hero progression/team behavior are unchanged.
+`apps/game-client/public/assets/kingdom/kingdom-expansion-v1.webp`, `castle-production-v1.webp`, the procedural secondary/future buildings, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are local, optimized, replaceable art. The Battle scene reuses those local portraits and lightweight procedural Pixi effects; no shaders, particle systems, or per-frame React state were added. Phase 03–06 server state and mechanics are unchanged.

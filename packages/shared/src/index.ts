@@ -183,6 +183,7 @@ export type RaidResourceType = Exclude<ResourceType, 'GEMS'>;
 export type RaidLootAmounts = Record<RaidResourceType, string>;
 export type BattleSide = 'ATTACKER' | 'DEFENDER';
 export type BattleResult = 'ATTACKER_WIN' | 'DEFENDER_WIN';
+export type BattleType = 'RAID' | 'REVENGE';
 export type BattleEventType =
   | 'BATTLE_START'
   | 'BASIC_ATTACK'
@@ -252,6 +253,7 @@ export interface RaidSearchResponse extends RaidOverviewResponse {
 
 export interface BattleReplayResponse {
   id: string;
+  type: BattleType;
   seed: string;
   rulesVersion: number;
   result: BattleResult;
@@ -280,6 +282,54 @@ export interface RaidHistoryResponse {
   battles: RaidHistoryItem[];
 }
 
+export type RevengeStatus = 'AVAILABLE' | 'USED' | 'EXPIRED' | 'INVALID' | 'UNAVAILABLE';
+export type DefenseResult = 'DEFENSE_WIN' | 'DEFENSE_LOSS';
+
+export interface DefenseInboxItem {
+  battleId: string;
+  battleType: BattleType;
+  attacker: { id: string; displayName: string };
+  createdAt: string;
+  defenseResult: DefenseResult;
+  lootLost: RaidLootAmounts;
+  trophyDelta: number;
+  revengeStatus: RevengeStatus;
+  revengeTargetId: string | null;
+  revengeExpiresAt: string | null;
+}
+
+export interface DefenseInboxResponse {
+  entries: DefenseInboxItem[];
+  unreadCount: number;
+  serverTime: string;
+}
+
+export interface RevengePreviewResponse {
+  revengeTargetId: string;
+  sourceBattleId: string;
+  status: RevengeStatus;
+  target: { id: string; displayName: string; trophies: number; teamPower: number };
+  ownTeam: RaidTeamPreview;
+  potentialLoot: RaidLootAmounts;
+  expiresAt: string;
+  serverTime: string;
+}
+
+export type NotificationType = 'PLAYER_RAIDED' | 'REVENGE_AVAILABLE' | 'UPGRADE_COMPLETE';
+export type DeepLinkIntent =
+  | { screen: 'INBOX'; battleId?: string }
+  | { screen: 'REVENGE'; revengeTargetId: string }
+  | { screen: 'BUILDING'; buildingId: string };
+
+export interface NotificationState {
+  id: string;
+  type: NotificationType;
+  payload: Record<string, unknown>;
+  deepLinkIntent: DeepLinkIntent;
+  createdAt: string;
+  readAt: string | null;
+}
+
 export type RaidErrorCode =
   | 'NO_OPPONENT_AVAILABLE'
   | 'MATCH_OFFER_EXPIRED'
@@ -293,6 +343,11 @@ export type RaidErrorCode =
   | 'SELF_ATTACK_FORBIDDEN'
   | 'INSUFFICIENT_OR_INVALID_STATE'
   | 'INVALID_IDEMPOTENCY_KEY'
+  | 'REVENGE_NOT_FOUND'
+  | 'REVENGE_NOT_OWNER'
+  | 'REVENGE_EXPIRED'
+  | 'REVENGE_ALREADY_USED'
+  | 'REVENGE_INVALID_SOURCE'
   | 'RAID_CONFLICT'
   | 'RATE_LIMITED';
 

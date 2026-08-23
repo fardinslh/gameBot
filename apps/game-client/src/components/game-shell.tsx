@@ -6,6 +6,7 @@ import { HeroesPage } from '@/features/heroes/components/heroes-page';
 import { KingdomPage } from '@/features/kingdom/components/kingdom-page';
 import { RaidPage } from '@/features/raid/components/raid-page';
 import type { GameSection } from '@/features/kingdom/components/bottom-navigation';
+import type { RaidView } from '@/features/raid/hooks/use-raid-state';
 
 interface GameShellProps {
   locale: Locale;
@@ -15,7 +16,16 @@ interface GameShellProps {
 
 export function GameShell({ locale, dictionary, initialSection }: GameShellProps) {
   const [activeSection, setActiveSection] = useState<GameSection>(initialSection);
-  if (activeSection === 'heroes') return <HeroesPage locale={locale} dictionary={dictionary} onNavigate={setActiveSection} />;
-  if (activeSection === 'raid') return <RaidPage locale={locale} dictionary={dictionary} onNavigate={setActiveSection} />;
-  return <KingdomPage locale={locale} dictionary={dictionary} onNavigate={setActiveSection} />;
+  const [raidInitialView, setRaidInitialView] = useState<RaidView>('overview');
+  const navigate = (section: GameSection): void => {
+    if (section === 'raid') setRaidInitialView('overview');
+    setActiveSection(section);
+  };
+  const openInbox = (): void => {
+    setRaidInitialView('inbox');
+    setActiveSection('raid');
+  };
+  if (activeSection === 'heroes') return <HeroesPage locale={locale} dictionary={dictionary} onNavigate={navigate} />;
+  if (activeSection === 'raid') return <RaidPage locale={locale} dictionary={dictionary} initialView={raidInitialView} onNavigate={navigate} />;
+  return <KingdomPage locale={locale} dictionary={dictionary} onNavigate={navigate} onOpenInbox={openInbox} />;
 }

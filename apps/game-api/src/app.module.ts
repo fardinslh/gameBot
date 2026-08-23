@@ -7,6 +7,7 @@ import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
 import { KingdomModule } from './kingdom/kingdom.module';
+import { NotificationModule } from './notifications/notification.module';
 import { PlatformModule } from './platform/platform.module';
 import { PlayerModule } from './player/player.module';
 import { RaidModule } from './raid/raid.module';
@@ -26,6 +27,7 @@ import { RaidModule } from './raid/raid.module';
     PlatformModule,
     KingdomModule,
     EconomyModule,
+    NotificationModule,
     RaidModule,
   ],
 })

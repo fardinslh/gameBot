@@ -2,12 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { EconomyTransactionReason } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
+import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { EconomyService } from './economy.service';
 import { EconomyError } from './economy.errors';
 
 const prisma = new PrismaService();
-const economy = new EconomyService(prisma);
+const notifications = new NotificationService(prisma);
+const economy = new EconomyService(prisma, notifications);
 
 function context(): DevelopmentPlayerContext {
   return { platform: 'WEB', externalUserId: `test-${randomUUID()}` };
@@ -156,5 +158,12 @@ describe.sequential('authoritative economy integration', () => {
     expect(completed.buildings.find((building) => building.id === farm.id)?.level).toBe(2);
     expect(repeated.buildings.find((building) => building.id === farm.id)?.level).toBe(2);
     expect(await prisma.buildingUpgrade.count({ where: { id: started.building.activeUpgrade!.id, status: 'COMPLETED' } })).toBe(1);
+    const created = await prisma.notification.findMany({
+      where: { playerId: initial.player.id, sourceKey: `UPGRADE_COMPLETE:${started.building.activeUpgrade!.id}` },
+    });
+    expect(created).toHaveLength(1);
+    expect(created[0].type).toBe('UPGRADE_COMPLETE');
+    expect(created[0].payload).toMatchObject({ buildingId: farm.id, buildingType: 'FARM', level: 2 });
+    expect(created[0].deepLinkIntent).toEqual({ screen: 'BUILDING', buildingId: farm.id });
   });
 });

@@ -2,13 +2,14 @@ import { randomUUID } from 'node:crypto';
 import { EconomyTransactionReason } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { EconomyService } from '../economy/economy.service';
+import { NotificationService } from '../notifications/notification.service';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { HeroError } from './hero.errors';
 import { HeroService } from './hero.service';
 
 const prisma = new PrismaService();
-const economy = new EconomyService(prisma);
+const economy = new EconomyService(prisma, new NotificationService(prisma));
 const heroes = new HeroService(prisma, economy);
 
 function context(): DevelopmentPlayerContext {

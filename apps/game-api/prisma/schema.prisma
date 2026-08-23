@@ -49,10 +49,29 @@ enum EconomyAction {
   UPGRADE
   HERO_UPGRADE
   RAID_START
+  REVENGE_START
 }
 
 enum BattleType {
   RAID
+  REVENGE
+}
+
+enum RevengeStatus {
+  AVAILABLE
+  USED
+  EXPIRED
+  INVALID
+}
+
+enum NotificationType {
+  PLAYER_RAIDED
+  REVENGE_AVAILABLE
+  UPGRADE_COMPLETE
+}
+
+enum NotificationDeliveryStatus {
+  STORED
 }
 
 enum BattleStatus {
@@ -102,23 +121,26 @@ enum UpgradeStatus {
 }
 
 model Player {
-  id               String            @id @default(uuid())
-  displayName      String?
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  trophies         Int               @default(1000)
-  isDevelopmentOpponent Boolean      @default(false)
-  platformAccounts PlatformAccount[]
-  kingdom          Kingdom?
-  economyTransactions EconomyTransaction[]
-  economyRequests     EconomyRequest[]
-  heroes              PlayerHero[]
-  raidTeam            RaidTeam?
-  raidOffersCreated   RaidMatchOffer[] @relation("RaidOfferAttacker")
-  raidOffersReceived  RaidMatchOffer[] @relation("RaidOfferDefender")
-  battlesAttacked     Battle[]         @relation("BattleAttacker")
-  battlesDefended     Battle[]         @relation("BattleDefender")
-  battlesWon          Battle[]         @relation("BattleWinner")
+  id                    String               @id @default(uuid())
+  displayName           String?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  trophies              Int                  @default(1000)
+  isDevelopmentOpponent Boolean              @default(false)
+  platformAccounts      PlatformAccount[]
+  kingdom               Kingdom?
+  economyTransactions   EconomyTransaction[]
+  economyRequests       EconomyRequest[]
+  heroes                PlayerHero[]
+  raidTeam              RaidTeam?
+  raidOffersCreated     RaidMatchOffer[]     @relation("RaidOfferAttacker")
+  raidOffersReceived    RaidMatchOffer[]     @relation("RaidOfferDefender")
+  battlesAttacked       Battle[]             @relation("BattleAttacker")
+  battlesDefended       Battle[]             @relation("BattleDefender")
+  battlesWon            Battle[]             @relation("BattleWinner")
+  revengeTargetsOwned   RevengeTarget[]      @relation("RevengeOwner")
+  revengeTargetsAgainst RevengeTarget[]      @relation("RevengeTargetPlayer")
+  notifications         Notification[]
 }
 
 model PlatformAccount {
@@ -135,41 +157,41 @@ model PlatformAccount {
 }
 
 model Kingdom {
-  id               String            @id @default(uuid())
-  playerId         String            @unique
-  name             String
-  level            Int               @default(1)
-  lastCollectedAt  DateTime          @default(now())
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  player           Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  resourceBalances ResourceBalance[]
-  buildings        Building[]
+  id                  String               @id @default(uuid())
+  playerId            String               @unique
+  name                String
+  level               Int                  @default(1)
+  lastCollectedAt     DateTime             @default(now())
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  player              Player               @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  resourceBalances    ResourceBalance[]
+  buildings           Building[]
   economyTransactions EconomyTransaction[]
 }
 
 model ResourceBalance {
-  id        String       @id @default(uuid())
-  kingdomId String
-  resource  ResourceType
-  amount    BigInt       @default(0)
-  updatedAt DateTime     @updatedAt
-  kingdom   Kingdom      @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+  id           String               @id @default(uuid())
+  kingdomId    String
+  resource     ResourceType
+  amount       BigInt               @default(0)
+  updatedAt    DateTime             @updatedAt
+  kingdom      Kingdom              @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
   transactions EconomyTransaction[]
 
   @@unique([kingdomId, resource])
 }
 
 model Building {
-  id        String            @id @default(uuid())
-  kingdomId String
-  type      BuildingType
-  level     Int               @default(1)
-  productionRemainder BigInt  @default(0)
-  createdAt DateTime          @default(now())
-  updatedAt DateTime          @updatedAt
-  kingdom   Kingdom           @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
-  upgrades  BuildingUpgrade[]
+  id                  String            @id @default(uuid())
+  kingdomId           String
+  type                BuildingType
+  level               Int               @default(1)
+  productionRemainder BigInt            @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  kingdom             Kingdom           @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+  upgrades            BuildingUpgrade[]
 
   @@unique([kingdomId, type])
 }
@@ -223,36 +245,36 @@ model BuildingUpgrade {
 }
 
 model HeroDefinition {
-  id               String       @id @default(uuid())
-  key              HeroKey      @unique
-  combatClass      HeroClass
-  baseHp           Int
-  baseAtk          Int
-  baseDef          Int
-  hpGrowthBps      Int
-  atkGrowthBps     Int
-  defGrowthBps     Int
-  skillKey         String
-  portraitAsset    String
-  sortOrder        Int
-  enabled          Boolean      @default(true)
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  playerHeroes     PlayerHero[]
+  id            String       @id @default(uuid())
+  key           HeroKey      @unique
+  combatClass   HeroClass
+  baseHp        Int
+  baseAtk       Int
+  baseDef       Int
+  hpGrowthBps   Int
+  atkGrowthBps  Int
+  defGrowthBps  Int
+  skillKey      String
+  portraitAsset String
+  sortOrder     Int
+  enabled       Boolean      @default(true)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  playerHeroes  PlayerHero[]
 
   @@index([enabled, sortOrder])
 }
 
 model PlayerHero {
-  id               String          @id @default(uuid())
+  id               String         @id @default(uuid())
   playerId         String
   heroDefinitionId String
-  level            Int             @default(1)
-  xp               Int             @default(0)
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-  player           Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  heroDefinition   HeroDefinition  @relation(fields: [heroDefinitionId], references: [id], onDelete: Restrict)
+  level            Int            @default(1)
+  xp               Int            @default(0)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  player           Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  heroDefinition   HeroDefinition @relation(fields: [heroDefinitionId], references: [id], onDelete: Restrict)
   raidTeamSlots    RaidTeamSlot[]
 
   @@unique([playerId, heroDefinitionId])
@@ -269,12 +291,12 @@ model RaidTeam {
 }
 
 model RaidTeamSlot {
-  id           String      @id @default(uuid())
+  id           String     @id @default(uuid())
   raidTeamId   String
   playerHeroId String
   slot         Int
-  raidTeam     RaidTeam    @relation(fields: [raidTeamId], references: [id], onDelete: Cascade)
-  playerHero   PlayerHero  @relation(fields: [playerHeroId], references: [id], onDelete: Cascade)
+  raidTeam     RaidTeam   @relation(fields: [raidTeamId], references: [id], onDelete: Cascade)
+  playerHero   PlayerHero @relation(fields: [playerHeroId], references: [id], onDelete: Cascade)
 
   @@unique([raidTeamId, slot])
   @@unique([raidTeamId, playerHeroId])
@@ -301,10 +323,11 @@ model RaidMatchOffer {
 }
 
 model Battle {
-  id                   String         @id @default(uuid())
-  matchOfferId         String         @unique
-  type                 BattleType     @default(RAID)
-  status               BattleStatus   @default(CREATED)
+  id                   String               @id @default(uuid())
+  matchOfferId         String?              @unique
+  revengeTargetId      String?              @unique
+  type                 BattleType           @default(RAID)
+  status               BattleStatus         @default(CREATED)
   attackerPlayerId     String
   defenderPlayerId     String
   winnerPlayerId       String
@@ -319,17 +342,54 @@ model Battle {
   loot                 Json
   startedAt            DateTime
   resolvedAt           DateTime
-  createdAt            DateTime       @default(now())
-  matchOffer           RaidMatchOffer @relation(fields: [matchOfferId], references: [id], onDelete: Restrict)
-  attacker             Player         @relation("BattleAttacker", fields: [attackerPlayerId], references: [id], onDelete: Restrict)
-  defender             Player         @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
-  winner               Player         @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
+  createdAt            DateTime             @default(now())
+  matchOffer           RaidMatchOffer?      @relation(fields: [matchOfferId], references: [id], onDelete: Restrict)
+  revengeTarget        RevengeTarget?       @relation("RevengeBattle", fields: [revengeTargetId], references: [id], onDelete: Restrict)
+  revengeSource        RevengeTarget?       @relation("RevengeSourceBattle")
+  attacker             Player               @relation("BattleAttacker", fields: [attackerPlayerId], references: [id], onDelete: Restrict)
+  defender             Player               @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
+  winner               Player               @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
   heroSnapshots        BattleHeroSnapshot[]
   events               BattleEvent[]
 
   @@index([attackerPlayerId, createdAt])
   @@index([defenderPlayerId, createdAt])
   @@index([winnerPlayerId, createdAt])
+  @@index([type, createdAt])
+}
+
+model RevengeTarget {
+  id             String        @id @default(uuid())
+  sourceBattleId String        @unique
+  playerId       String
+  targetPlayerId String
+  status         RevengeStatus @default(AVAILABLE)
+  createdAt      DateTime      @default(now())
+  expiresAt      DateTime
+  usedAt         DateTime?
+  sourceBattle   Battle        @relation("RevengeSourceBattle", fields: [sourceBattleId], references: [id], onDelete: Restrict)
+  player         Player        @relation("RevengeOwner", fields: [playerId], references: [id], onDelete: Cascade)
+  targetPlayer   Player        @relation("RevengeTargetPlayer", fields: [targetPlayerId], references: [id], onDelete: Cascade)
+  revengeBattle  Battle?       @relation("RevengeBattle")
+
+  @@index([playerId, status, expiresAt])
+  @@index([targetPlayerId, createdAt])
+}
+
+model Notification {
+  id             String                     @id @default(uuid())
+  playerId       String
+  type           NotificationType
+  payload        Json
+  deepLinkIntent Json
+  sourceKey      String                     @unique
+  createdAt      DateTime                   @default(now())
+  readAt         DateTime?
+  deliveryStatus NotificationDeliveryStatus @default(STORED)
+  player         Player                     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, readAt, createdAt])
+  @@index([playerId, type, createdAt])
 }
 
 model BattleHeroSnapshot {
