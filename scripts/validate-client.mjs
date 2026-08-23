@@ -1,6 +1,5 @@
 import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync } from 'node:fs';
-import { createServer } from 'node:http';
 import process from 'node:process';
 import { chromium } from 'playwright-core';
 
@@ -9,13 +8,6 @@ const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.
 const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
 const nextCli = new URL('node_modules/next/dist/bin/next', root).pathname.slice(1);
-
-const healthServer = createServer((request, response) => {
-  response.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
-  response.setHeader('Content-Type', 'application/json');
-  response.statusCode = request.url === '/health' ? 200 : 404;
-  response.end(request.url === '/health' ? '{"status":"ok"}' : '{"status":"not_found"}');
-});
 
 function startClient() {
   return spawn(process.execPath, [nextCli, 'start', '--port', '3000'], {
@@ -39,25 +31,33 @@ async function waitForUrl(url, timeoutMs = 20_000) {
 
 if (!browserPath) throw new Error('No supported local Chromium browser was found');
 
-const client = startClient();
+let client;
 let browser;
 
 try {
-  await new Promise((resolve, reject) => {
-    healthServer.once('error', reject);
-    healthServer.listen(3001, resolve);
-  });
-  await waitForUrl('http://localhost:3000/?lang=en');
+  await waitForUrl('http://localhost:3001/health');
+  try {
+    await waitForUrl('http://localhost:3000/?lang=en', 1_000);
+  } catch {
+    client = startClient();
+    await waitForUrl('http://localhost:3000/?lang=en');
+  }
   browser = await chromium.launch({ executablePath: browserPath, headless: true });
   const page = await browser.newPage({ viewport: { width: 320, height: 740 } });
+  const testPlayerId = `browser-validation-${Date.now()}`;
+  await page.route('http://localhost:3001/**', (route) => route.continue({
+    headers: { ...route.request().headers(), 'x-dev-player-id': testPlayerId },
+  }));
   const consoleErrors = [];
   page.on('console', (message) => {
     if (message.type() === 'error') consoleErrors.push(message.text());
   });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
-  await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'networkidle' });
+  await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
+  await page.waitForSelector('.resource-hud__server');
+  await page.waitForSelector('.collect-button');
   const buildingCount = await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count');
   if (buildingCount !== '5') throw new Error(`Expected five Pixi buildings, found ${buildingCount ?? 'none'}`);
 
@@ -77,6 +77,13 @@ try {
     await page.waitForFunction(() => document.querySelector('.building-sheet')?.getAttribute('aria-hidden') === 'true');
   }
 
+  const balancesBeforeCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
+  await page.waitForTimeout(8_000);
+  await page.locator('.collect-button').click();
+  await page.waitForSelector('.collect-feedback--visible');
+  const balancesAfterCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
+  if (balancesBeforeCollect.join('|') === balancesAfterCollect.join('|')) throw new Error('Collect did not update authoritative HUD balances');
+
   await page.locator('[data-nav-id="raid"]').click();
   await page.waitForSelector('.coming-soon-toast--visible');
 
@@ -87,23 +94,42 @@ try {
     if (overflow) throw new Error(`Horizontal overflow at ${viewport.width}x${viewport.height}`);
   }
 
-  await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'networkidle' });
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
+  await page.waitForSelector('.collect-button');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
-  await page.locator('.kingdom-canvas').click({ position: { x: 195, y: 354 } });
-  await page.waitForSelector('[data-building-sheet="castle"]');
-  await page.waitForTimeout(300);
+  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  await page.waitForSelector('[data-building-sheet="mine"]');
+  const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
+  await page.locator('.upgrade-button').click();
+  await page.waitForSelector('.upgrade-preview--active');
+
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('[data-scene-status="ready"]');
+  await page.waitForSelector('.collect-button');
+  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  await page.waitForSelector('[data-building-sheet="mine"]');
+  await page.waitForSelector('.upgrade-preview--active');
 
   mkdirSync(new URL('artifacts/', root), { recursive: true });
-  await page.screenshot({ path: new URL('artifacts/phase-02-kingdom-fa.png', root).pathname.slice(1), fullPage: true });
+  await page.screenshot({ path: new URL('artifacts/phase-03-kingdom-fa.png', root).pathname.slice(1), fullPage: true });
+
+  await page.waitForTimeout(8_000);
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('[data-scene-status="ready"]');
+  await page.waitForSelector('.collect-button');
+  await page.locator('.kingdom-canvas').click({ position: { x: 243, y: 207 } });
+  const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
+  if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS Pixi scene + 5 interactive buildings');
+  console.log('PASS server-backed Collect + persisted upgrade timer/completion');
   console.log('PASS detail sheet + coming-soon navigation');
   console.log('PASS 320/375/390 responsive + Persian RTL + browser console');
 } finally {
   await browser?.close();
-  client.kill();
-  healthServer.close();
+  client?.kill();
 }

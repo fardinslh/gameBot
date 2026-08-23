@@ -14,7 +14,7 @@ enum Platform {
 }
 
 enum ResourceType {
-  COIN
+  GOLD
   FOOD
   WOOD
   STONE
@@ -25,9 +25,40 @@ enum BuildingType {
   CASTLE
   FARM
   LUMBER_MILL
-  QUARRY
+  MINE
+  GRAND_MARKET
   BARRACKS
+  BLACKSMITH
+  ACADEMY
   WALL
+}
+
+enum EconomyTransactionReason {
+  OFFLINE_PRODUCTION
+  BUILDING_UPGRADE
+  HERO_UPGRADE
+  ADMIN_OR_SEED
+  RAID_REWARD
+  QUEST_REWARD
+  PURCHASE
+}
+
+enum EconomyAction {
+  COLLECT
+  UPGRADE
+  HERO_UPGRADE
+}
+
+enum HeroKey {
+  KNIGHT
+  RANGER
+  MAGE
+}
+
+enum HeroClass {
+  TANK
+  SINGLE_TARGET_DPS
+  AOE_BURST
 }
 
 enum UpgradeStatus {
@@ -44,6 +75,10 @@ model Player {
   updatedAt        DateTime          @updatedAt
   platformAccounts PlatformAccount[]
   kingdom          Kingdom?
+  economyTransactions EconomyTransaction[]
+  economyRequests     EconomyRequest[]
+  heroes              PlayerHero[]
+  raidTeam            RaidTeam?
 }
 
 model PlatformAccount {
@@ -64,11 +99,13 @@ model Kingdom {
   playerId         String            @unique
   name             String
   level            Int               @default(1)
+  lastCollectedAt  DateTime          @default(now())
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   player           Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
   resourceBalances ResourceBalance[]
   buildings        Building[]
+  economyTransactions EconomyTransaction[]
 }
 
 model ResourceBalance {
@@ -78,6 +115,7 @@ model ResourceBalance {
   amount    BigInt       @default(0)
   updatedAt DateTime     @updatedAt
   kingdom   Kingdom      @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+  transactions EconomyTransaction[]
 
   @@unique([kingdomId, resource])
 }
@@ -87,12 +125,46 @@ model Building {
   kingdomId String
   type      BuildingType
   level     Int               @default(1)
+  productionRemainder BigInt  @default(0)
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
   kingdom   Kingdom           @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
   upgrades  BuildingUpgrade[]
 
-  @@index([kingdomId])
+  @@unique([kingdomId, type])
+}
+
+model EconomyTransaction {
+  id            String                   @id @default(uuid())
+  playerId      String
+  kingdomId     String
+  balanceId     String
+  resourceType  ResourceType
+  delta         BigInt
+  balanceBefore BigInt
+  balanceAfter  BigInt
+  reason        EconomyTransactionReason
+  referenceId   String
+  createdAt     DateTime                 @default(now())
+  player        Player                   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  kingdom       Kingdom                  @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+  balance       ResourceBalance          @relation(fields: [balanceId], references: [id], onDelete: Restrict)
+
+  @@index([playerId, createdAt])
+  @@index([referenceId])
+}
+
+model EconomyRequest {
+  id             String        @id @default(uuid())
+  playerId       String
+  idempotencyKey String
+  action         EconomyAction
+  response       Json
+  createdAt      DateTime      @default(now())
+  player         Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, idempotencyKey, action])
+  @@index([createdAt])
 }
 
 model BuildingUpgrade {
@@ -108,4 +180,63 @@ model BuildingUpgrade {
   building    Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
 
   @@index([buildingId, status])
+}
+
+model HeroDefinition {
+  id               String       @id @default(uuid())
+  key              HeroKey      @unique
+  combatClass      HeroClass
+  baseHp           Int
+  baseAtk          Int
+  baseDef          Int
+  hpGrowthBps      Int
+  atkGrowthBps     Int
+  defGrowthBps     Int
+  skillKey         String
+  portraitAsset    String
+  sortOrder        Int
+  enabled          Boolean      @default(true)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  playerHeroes     PlayerHero[]
+
+  @@index([enabled, sortOrder])
+}
+
+model PlayerHero {
+  id               String          @id @default(uuid())
+  playerId         String
+  heroDefinitionId String
+  level            Int             @default(1)
+  xp               Int             @default(0)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  player           Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  heroDefinition   HeroDefinition  @relation(fields: [heroDefinitionId], references: [id], onDelete: Restrict)
+  raidTeamSlots    RaidTeamSlot[]
+
+  @@unique([playerId, heroDefinitionId])
+  @@index([playerId])
+}
+
+model RaidTeam {
+  id        String         @id @default(uuid())
+  playerId  String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  player    Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slots     RaidTeamSlot[]
+}
+
+model RaidTeamSlot {
+  id           String      @id @default(uuid())
+  raidTeamId   String
+  playerHeroId String
+  slot         Int
+  raidTeam     RaidTeam    @relation(fields: [raidTeamId], references: [id], onDelete: Cascade)
+  playerHero   PlayerHero  @relation(fields: [playerHeroId], references: [id], onDelete: Cascade)
+
+  @@unique([raidTeamId, slot])
+  @@unique([raidTeamId, playerHeroId])
+  @@index([playerHeroId])
 }

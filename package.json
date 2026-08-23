@@ -18,6 +18,9 @@
     "prisma:deploy": "npm run prisma:deploy --workspace @crown-and-coin/game-api",
     "validate:runtime": "node scripts/validate-foundation.mjs",
     "validate:client": "node scripts/validate-client.mjs",
+    "validate:heroes": "node scripts/validate-heroes.mjs",
+    "test": "npm run test --workspace @crown-and-coin/game-api",
+    "test:integration": "npm run test:integration --workspace @crown-and-coin/game-api",
     "start": "concurrently -n client,api -c cyan,magenta \"npm run start --workspace @crown-and-coin/game-client\" \"npm run start:prod --workspace @crown-and-coin/game-api\""
   },
   "engines": {
@@ -26,7 +29,9 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
+    "dotenv-cli": "^11.0.0",
     "playwright-core": "^1.62.1",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.11"
   }
 }

@@ -1,14 +1,17 @@
 import { Assets, Container, Graphics, Sprite } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
-import { MOCK_KINGDOM_BUILDINGS } from '../data/mock-kingdom';
+import { KINGDOM_BUILDING_LAYOUT } from '../data/building-layout';
 import type { BuildingId } from '../domain/kingdom-types';
 import { createBuildingArtwork } from './building-art';
 
 interface KingdomSceneRuntime {
   destroy(): void;
   select(buildingId: BuildingId | null): void;
+  setIndicators(indicators: Partial<Record<BuildingId, BuildingIndicator>>): void;
 }
+
+export type BuildingIndicator = 'upgrade' | 'active' | null;
 
 const TERRAIN_TEXTURE = '/assets/kingdom/kingdom-terrain-v1.webp';
 
@@ -30,12 +33,17 @@ export async function createKingdomScene(
   app.stage.addChild(buildingsLayer);
 
   const artwork = new Map<BuildingId, ReturnType<typeof createBuildingArtwork>>();
+  const indicatorArtwork = new Map<BuildingId, Graphics>();
   let selectedBuildingId: BuildingId | null = null;
   let elapsed = 0;
 
-  for (const building of MOCK_KINGDOM_BUILDINGS) {
+  for (const building of KINGDOM_BUILDING_LAYOUT) {
     const buildingArt = createBuildingArtwork(building.id);
+    const indicator = createIndicator();
+    indicator.position.set(building.id === 'castle' ? 58 : 47, building.id === 'castle' ? -126 : -84);
+    buildingArt.container.addChild(indicator);
     artwork.set(building.id, buildingArt);
+    indicatorArtwork.set(building.id, indicator);
     buildingArt.container.on('pointertap', () => {
       selectedBuildingId = building.id;
       syncSelection();
@@ -64,7 +72,7 @@ export async function createKingdomScene(
     atmosphere.height = height;
 
     const screenScale = Math.max(0.62, Math.min(width / 470, 1.08));
-    for (const building of MOCK_KINGDOM_BUILDINGS) {
+    for (const building of KINGDOM_BUILDING_LAYOUT) {
       const item = artwork.get(building.id);
       if (!item) continue;
       item.container.position.set(width * building.x, height * building.y);
@@ -108,6 +116,9 @@ export async function createKingdomScene(
       selectedBuildingId = buildingId;
       syncSelection();
     },
+    setIndicators: (indicators) => {
+      for (const [id, indicator] of indicatorArtwork) drawIndicator(indicator, indicators[id] ?? null);
+    },
     destroy: () => {
       resizeObserver.disconnect();
       window.cancelAnimationFrame(resizeFrame);
@@ -115,6 +126,26 @@ export async function createKingdomScene(
       runtime.destroy();
     },
   };
+}
+
+function createIndicator(): Graphics {
+  const indicator = new Graphics();
+  indicator.visible = false;
+  return indicator;
+}
+
+function drawIndicator(indicator: Graphics, state: BuildingIndicator): void {
+  indicator.clear();
+  indicator.visible = state !== null;
+  if (!state) return;
+  const color = state === 'active' ? 0xe2b447 : 0x8ecb68;
+  indicator.circle(0, 0, 18).fill({ color: 0x17140f, alpha: 0.94 }).stroke({ color, width: 3 });
+  if (state === 'upgrade') {
+    indicator.moveTo(0, 10).lineTo(0, -7).moveTo(-7, 0).lineTo(0, -8).lineTo(7, 0).stroke({ color, width: 4 });
+  } else {
+    indicator.circle(0, 0, 9).stroke({ color, width: 2 });
+    indicator.moveTo(0, 0).lineTo(0, -6).moveTo(0, 0).lineTo(5, 3).stroke({ color, width: 2 });
+  }
 }
 
 function buildingOffset(id: BuildingId): number {

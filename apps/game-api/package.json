@@ -9,8 +9,10 @@
     "start:prod": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev",
-    "prisma:deploy": "prisma migrate deploy"
+    "prisma:migrate": "dotenv -e ../../.env -- prisma migrate dev",
+    "prisma:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
+    "test": "vitest run",
+    "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.mts"
   },
   "dependencies": {
     "@crown-and-coin/platform": "*",

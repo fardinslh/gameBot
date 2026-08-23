@@ -1,7 +1,8 @@
-import { ArrowUp, Castle, Hammer, Landmark, Mountain, Trees, Wheat, X } from 'lucide-react';
+import { ArrowUp, Castle, Clock3, Hammer, Landmark, Mountain, Trees, Wheat, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
-import type { BuildingId, MockBuilding } from '../domain/kingdom-types';
+import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
+import { formatAmount } from './resource-hud';
 
 const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
   castle: Castle,
@@ -12,21 +13,28 @@ const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
 };
 
 interface BuildingDetailSheetProps {
-  building: MockBuilding | null;
+  actionPending: boolean;
+  building: KingdomBuildingView | null;
   dictionary: Dictionary;
   onClose(): void;
+  onUpgrade(buildingId: string): void;
+  serverNow: number;
 }
 
-export function BuildingDetailSheet({ building, dictionary: t, onClose }: BuildingDetailSheetProps) {
-  const presentation = building ? t.buildings[building.id] : t.buildings.castle;
-  const Icon = building ? BUILDING_ICONS[building.id] : Castle;
+export function BuildingDetailSheet({ actionPending, building, dictionary: t, onClose, onUpgrade, serverNow }: BuildingDetailSheetProps) {
+  const presentation = building ? t.buildings[building.visualId] : t.buildings.castle;
+  const Icon = building ? BUILDING_ICONS[building.visualId] : Castle;
+  const activeUpgrade = building?.activeUpgrade ?? null;
+  const remainingSeconds = activeUpgrade ? Math.max(0, Math.ceil((Date.parse(activeUpgrade.finishAt) - serverNow) / 1_000)) : 0;
+  const availability = building?.upgradeAvailability ?? 'CAN_UPGRADE';
+  const buttonLabel = actionPending ? t.startingUpgrade : t.upgradeStates[availability];
 
   return (
     <aside
       aria-hidden={!building}
       aria-label={t.buildingDetails}
       className={building ? 'building-sheet building-sheet--open' : 'building-sheet'}
-      data-building-sheet={building?.id}
+      data-building-sheet={building?.visualId}
       inert={!building}
     >
       <div className="building-sheet__handle" aria-hidden="true" />
@@ -43,16 +51,49 @@ export function BuildingDetailSheet({ building, dictionary: t, onClose }: Buildi
 
       <div className="building-sheet__stats">
         <div><small>{t.currentLevel}</small><strong>{building?.level ?? 0}</strong></div>
-        <div><small>{t.production}</small><strong>{presentation.production}</strong></div>
+        <div><small>{t.currentProduction}</small><strong>{building?.resource ? `${formatAmount(building.productionPerHour)} / ${t.hour}` : presentation.production}</strong></div>
       </div>
 
       <p className="building-role"><Hammer aria-hidden="true" size={15} /><span><small>{t.role}</small>{presentation.role}</span></p>
 
-      <div className="upgrade-preview">
+      <div className={activeUpgrade ? 'upgrade-preview upgrade-preview--active' : 'upgrade-preview'}>
         <span className="upgrade-preview__icon"><ArrowUp aria-hidden="true" size={18} /></span>
-        <span><small>{t.upgradePreview} · {building?.level ?? 0} → {building?.nextLevel ?? 0}</small><strong>{presentation.upgrade}</strong></span>
+        <span>
+          <small>{activeUpgrade ? t.upgradeInProgress : `${t.nextLevel} · ${building?.level ?? 0} → ${(building?.level ?? 0) + 1}`}</small>
+          <strong>
+            {activeUpgrade
+              ? <><Clock3 aria-hidden="true" size={13} /> {formatDuration(remainingSeconds)}</>
+              : building?.nextProductionPerHour
+                ? `${formatAmount(building.nextProductionPerHour)} / ${t.hour}`
+                : presentation.upgrade}
+          </strong>
+        </span>
       </div>
-      <p className="preview-note">{t.previewOnly}</p>
+
+      {!activeUpgrade && building ? (
+        <div className="upgrade-economy">
+          <div><small>{t.upgradeCost}</small><strong>{building.upgradeCost.map((cost) => `${formatAmount(cost.amount)} ${t.resourceShort[cost.resource]}`).join(' · ') || '—'}</strong></div>
+          <div><small>{t.upgradeDuration}</small><strong>{formatDuration(building.upgradeDurationSeconds ?? 0)}</strong></div>
+        </div>
+      ) : null}
+
+      {building ? (
+        <button
+          className="upgrade-button"
+          data-upgrade-state={availability}
+          disabled={availability !== 'CAN_UPGRADE' || actionPending}
+          onClick={() => onUpgrade(building.id)}
+          type="button"
+        >
+          <ArrowUp aria-hidden="true" size={17} /> {buttonLabel}
+        </button>
+      ) : null}
     </aside>
   );
+}
+
+function formatDuration(totalSeconds: number): string {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
 }

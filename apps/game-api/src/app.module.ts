@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { EconomyModule } from './economy/economy.module';
 import { HealthModule } from './health/health.module';
+import { HeroModule } from './heroes/hero.module';
 import { JobsModule } from './infrastructure/jobs/jobs.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 import { RedisModule } from './infrastructure/redis/redis.module';
@@ -19,6 +20,7 @@ import { PlayerModule } from './player/player.module';
     RedisModule,
     JobsModule,
     HealthModule,
+    HeroModule,
     PlayerModule,
     PlatformModule,
     KingdomModule,

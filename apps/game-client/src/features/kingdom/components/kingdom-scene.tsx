@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { BuildingId } from '../domain/kingdom-types';
-import { MOCK_KINGDOM_BUILDINGS } from '../data/mock-kingdom';
+import type { KingdomBuildingView } from '../domain/kingdom-types';
+import { KINGDOM_BUILDING_LAYOUT } from '../data/building-layout';
 
 interface KingdomSceneProps {
   buildingLabels: Record<BuildingId, string>;
+  buildings: KingdomBuildingView[];
   errorLabel: string;
   loadingLabel: string;
   onSelect(buildingId: BuildingId): void;
@@ -16,6 +18,7 @@ type SceneStatus = 'loading' | 'ready' | 'error';
 
 export function KingdomScene({
   buildingLabels,
+  buildings,
   errorLabel,
   loadingLabel,
   onSelect,
@@ -23,6 +26,7 @@ export function KingdomScene({
 }: KingdomSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
+  const buildingsRef = useRef(buildings);
   const sceneRef = useRef<Awaited<ReturnType<typeof import('../rendering/create-kingdom-scene').createKingdomScene>> | null>(null);
   const [status, setStatus] = useState<SceneStatus>('loading');
 
@@ -33,6 +37,14 @@ export function KingdomScene({
   useEffect(() => {
     sceneRef.current?.select(selectedBuildingId);
   }, [selectedBuildingId]);
+
+  useEffect(() => {
+    buildingsRef.current = buildings;
+    sceneRef.current?.setIndicators(Object.fromEntries(buildings.map((building) => [
+      building.visualId,
+      building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+    ])));
+  }, [buildings]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -48,6 +60,10 @@ export function KingdomScene({
           return;
         }
         sceneRef.current = scene;
+        scene.setIndicators(Object.fromEntries(buildingsRef.current.map((building) => [
+          building.visualId,
+          building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+        ])));
         setStatus('ready');
       })
       .catch(() => {
@@ -59,7 +75,7 @@ export function KingdomScene({
       sceneRef.current?.destroy();
       sceneRef.current = null;
     };
-  }, []);
+  }, []); // Pixi runtime is mounted once; refs/effects synchronize changing React state.
 
   return (
     <section className="kingdom-scene" aria-label={loadingLabel} data-scene-status={status}>
@@ -70,7 +86,7 @@ export function KingdomScene({
         <span>{status === 'error' ? errorLabel : loadingLabel}</span>
       </div>
       <div className="sr-only" aria-label={loadingLabel}>
-        {MOCK_KINGDOM_BUILDINGS.map((building) => (
+        {KINGDOM_BUILDING_LAYOUT.map((building) => (
           <button key={building.id} onClick={() => onSelect(building.id)} type="button">
             {buildingLabels[building.id]}
           </button>

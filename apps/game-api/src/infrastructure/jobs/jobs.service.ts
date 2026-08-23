@@ -6,13 +6,13 @@ export const GAME_JOBS_QUEUE = 'game-jobs';
 
 @Injectable()
 export class JobsService implements OnModuleDestroy {
-  readonly queue: Queue;
+  readonly queue: Queue | null;
 
   constructor(redis: RedisService) {
-    this.queue = new Queue(GAME_JOBS_QUEUE, { connection: redis.client });
+    this.queue = redis.disabled ? null : new Queue(GAME_JOBS_QUEUE, { connection: redis.client });
   }
 
   async onModuleDestroy(): Promise<void> {
-    await this.queue.close();
+    await this.queue?.close();
   }
 }

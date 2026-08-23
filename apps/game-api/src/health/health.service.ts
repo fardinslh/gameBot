@@ -11,7 +11,8 @@ export class HealthService {
   ) {}
 
   async check(): Promise<HealthResponse> {
-    await Promise.all([this.prisma.$queryRaw`SELECT 1`, this.redis.client.ping()]);
+    await this.prisma.$queryRaw`SELECT 1`;
+    if (!this.redis.disabled) await this.redis.client.ping();
     return { status: 'ok' };
   }
 }
