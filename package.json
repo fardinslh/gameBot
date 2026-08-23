@@ -1,0 +1,31 @@
+{
+  "name": "crown-and-coin",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build:packages && npm run build --workspace @crown-and-coin/game-api && npm run build --workspace @crown-and-coin/game-client",
+    "build:packages": "npm run build --workspace @crown-and-coin/shared && npm run build --workspace @crown-and-coin/platform",
+    "dev": "npm run build:packages && concurrently -n client,api -c cyan,magenta \"npm run dev --workspace @crown-and-coin/game-client\" \"npm run start:dev --workspace @crown-and-coin/game-api\"",
+    "typecheck": "npm run build:packages && npm run typecheck --workspace @crown-and-coin/shared && npm run typecheck --workspace @crown-and-coin/platform && npm run typecheck --workspace @crown-and-coin/game-api && npm run typecheck --workspace @crown-and-coin/game-client",
+    "lint": "npm run lint --workspace @crown-and-coin/game-client",
+    "postinstall": "npm run prisma:generate",
+    "prisma:generate": "npm run prisma:generate --workspace @crown-and-coin/game-api",
+    "prisma:migrate": "npm run prisma:migrate --workspace @crown-and-coin/game-api",
+    "prisma:deploy": "npm run prisma:deploy --workspace @crown-and-coin/game-api",
+    "validate:runtime": "node scripts/validate-foundation.mjs",
+    "start": "concurrently -n client,api -c cyan,magenta \"npm run start --workspace @crown-and-coin/game-client\" \"npm run start:prod --workspace @crown-and-coin/game-api\""
+  },
+  "engines": {
+    "node": ">=20.9.0",
+    "npm": ">=10.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "playwright-core": "^1.62.1",
+    "typescript": "^5.9.3"
+  }
+}

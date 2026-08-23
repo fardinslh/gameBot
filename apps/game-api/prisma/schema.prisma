@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Platform {
+  BALE
+  TELEGRAM
+  WEB
+}
+
+enum ResourceType {
+  COIN
+  FOOD
+  WOOD
+  STONE
+  GEMS
+}
+
+enum BuildingType {
+  CASTLE
+  FARM
+  LUMBER_MILL
+  QUARRY
+  BARRACKS
+  WALL
+}
+
+enum UpgradeStatus {
+  QUEUED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+model Player {
+  id               String            @id @default(uuid())
+  displayName      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  platformAccounts PlatformAccount[]
+  kingdom          Kingdom?
+}
+
+model PlatformAccount {
+  id             String    @id @default(uuid())
+  playerId       String
+  platform       Platform
+  externalUserId String
+  verifiedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  player         Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([platform, externalUserId])
+  @@index([playerId])
+}
+
+model Kingdom {
+  id               String            @id @default(uuid())
+  playerId         String            @unique
+  name             String
+  level            Int               @default(1)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  player           Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  resourceBalances ResourceBalance[]
+  buildings        Building[]
+}
+
+model ResourceBalance {
+  id        String       @id @default(uuid())
+  kingdomId String
+  resource  ResourceType
+  amount    BigInt       @default(0)
+  updatedAt DateTime     @updatedAt
+  kingdom   Kingdom      @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+
+  @@unique([kingdomId, resource])
+}
+
+model Building {
+  id        String            @id @default(uuid())
+  kingdomId String
+  type      BuildingType
+  level     Int               @default(1)
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  kingdom   Kingdom           @relation(fields: [kingdomId], references: [id], onDelete: Cascade)
+  upgrades  BuildingUpgrade[]
+
+  @@index([kingdomId])
+}
+
+model BuildingUpgrade {
+  id          String        @id @default(uuid())
+  buildingId  String
+  fromLevel   Int
+  toLevel     Int
+  status      UpgradeStatus @default(QUEUED)
+  queuedAt    DateTime      @default(now())
+  startedAt   DateTime?
+  completesAt DateTime?
+  completedAt DateTime?
+  building    Building      @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+
+  @@index([buildingId, status])
+}
