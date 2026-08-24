@@ -14,7 +14,7 @@ interface KingdomSceneRuntime {
 
 export type BuildingIndicator = 'upgrade' | 'active' | null;
 
-const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v2.webp';
+const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
 const CASTLE_TEXTURE = '/assets/kingdom/castle-production-v1.webp';
 const CASTLE_FOCUS_Y = 690;
 

@@ -237,7 +237,7 @@ The Kingdom uses a bounded vertical camera instead of compressing the world into
 
 Active server-backed structures remain Castle, Farm, Lumber Mill, Mine, and Grand Market. Future building definitions and assets remain available in the repository, but they are intentionally not rendered in the current clean composition.
 
-The visual approach is layered: `terrain/kingdom-base-v2.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. The previous `kingdom-expansion-v1.webp` remains available only for comparison and rollback.
+The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 
 ## Validation and tests
 
@@ -280,4 +280,4 @@ Manual Phase 04 validation:
 
 ## Temporary assets and current scope
 
-`apps/game-client/public/assets/kingdom/terrain/kingdom-base-v2.webp`, `castle-production-v1.webp`, the secondary/future building sprites, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are local, optimized, replaceable art. The older `kingdom-expansion-v1.webp` is retained but no longer loaded by the game. The Battle scene reuses local portraits and lightweight Pixi effects; no shaders, particle systems, or per-frame React state were added. Phase 03–06 server state and mechanics are unchanged.
+`apps/game-client/public/assets/kingdom/terrain/kingdom-base-v3.webp`, `castle-production-v1.webp`, the secondary/future building sprites, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are local, optimized, replaceable art. The older `kingdom-base-v2.webp` and `kingdom-expansion-v1.webp` are retained but no longer loaded by the game. The Battle scene reuses local portraits and lightweight Pixi effects; no shaders, particle systems, or per-frame React state were added. Phase 03–06 server state and mechanics are unchanged.

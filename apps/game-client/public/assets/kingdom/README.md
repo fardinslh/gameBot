@@ -1,15 +1,17 @@
 # Kingdom local assets
 
-The Kingdom uses local generated WebP artwork. `terrain/kingdom-base-v2.webp` is the
-active 1024x1536 building-free environment. `kingdom-expansion-v1.webp` is retained as
-the previous baked-building terrain for comparison and rollback. The Castle remains
+The Kingdom uses local generated WebP artwork. `terrain/kingdom-base-v3.webp` is the
+active 1024x1536 building-free environment with natural Farm, Lumber, Mine, and Market
+work-yard footprints. `terrain/kingdom-base-v2.webp` retains the approved clean-map
+baseline, and `kingdom-expansion-v1.webp` retains the previous baked-building terrain
+for comparison and rollback. The Castle remains
 independent in `castle-production-v1.webp`, while `buildings/` contains replaceable
 Stage 1 building sprites. No remote asset URLs are used.
 
-The active base map contains terrain, roads, a walled courtyard, fields, forest-edge
-timber context, rock, river, and bridge only. Major structures are never merged into
-the terrain texture, so Pixi can position and interact with every gameplay building
-independently.
+The active base map contains terrain, roads, a walled courtyard, an irregular farmyard,
+a timber work yard, an excavated rocky Mine approach, a worn Market crossroads, river,
+and bridge only. Major structures are never merged into the terrain texture, so Pixi
+can position and interact with every gameplay building independently.
 
 Runtime placement is independent from the image files:
 
@@ -24,6 +26,11 @@ Development capture helpers are query-only and do not affect the normal game:
 - `?debugBuildingLayout=1` shows anchors, footprints, hit areas, and bounds.
 - `?debugKingdomLayers=terrain` shows the clean terrain by itself.
 - `?debugKingdomLayers=castle` shows the terrain plus the separate Castle.
+
+`scripts/composite-kingdom-footprints.mjs` builds a versioned terrain asset from a
+full-size edited source through soft, irregular masks. Only the Mine excavation and
+lower work-yard regions are composited; the approved Castle area and outer environment
+remain sourced from the clean baseline.
 
 Future building definitions and local assets remain available for later progression,
 but they are intentionally not loaded or rendered in the current Kingdom composition.

@@ -79,8 +79,8 @@ try {
   await main.close();
 
   const active = [
-    { id: 'farm', x: 128, y: 1008 },
-    { id: 'lumberMill', x: 512, y: 1008 },
+    { id: 'farm', x: 88, y: 958 },
+    { id: 'lumberMill', x: 552, y: 958 },
     { id: 'mine', x: 132, y: 392 },
     { id: 'grandMarket', x: 320, y: 1172 },
   ];
