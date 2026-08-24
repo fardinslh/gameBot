@@ -38,15 +38,25 @@ function createDebugOverlay(id: BuildingVisualId, sprite: Sprite): Container {
     .moveTo(visuals.indicatorAnchor.x, visuals.indicatorAnchor.y - 5)
     .lineTo(visuals.indicatorAnchor.x, visuals.indicatorAnchor.y + 5)
     .stroke({ color: 0xd66bff, alpha: 1, width: 2 });
+  if (id === 'mine') {
+    // Alpha analysis shows no meaningful transparent padding, so the cyan
+    // visible-pixel bounds intentionally sit just inside the blue sprite bounds.
+    geometry
+      .rect(boundsLeft + 3, boundsTop + 3, sprite.width - 6, sprite.height - 6)
+      .stroke({ color: 0x00f5d4, alpha: .95, width: 1.5 });
+  }
   const footprint = drawEllipse(visuals.footprint, 0xff3b30, .95, 2);
+  const shadow = drawEllipse(visuals.shadow, 0xff8c32, .95, 2);
   const hitArea = drawEllipse(visuals.hitArea, 0xffcc33, .9, 2);
   const label = new Text({
-    text: id,
+    text: id === 'mine'
+      ? `${id}  anchor(${visuals.groundAnchor.x.toFixed(3)}, ${visuals.groundAnchor.y.toFixed(3)})`
+      : id,
     style: { fill: 0xffffff, fontFamily: 'Arial', fontSize: 10, fontWeight: '700', stroke: { color: 0x111111, width: 3 } },
   });
   label.anchor.set(.5, 1);
   label.position.set(0, boundsTop - 4);
-  overlay.addChild(footprint, hitArea, geometry, label);
+  overlay.addChild(footprint, shadow, hitArea, geometry, label);
   return overlay;
 }
 

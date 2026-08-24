@@ -5,7 +5,7 @@ export const KINGDOM_WORLD = { width: 640, height: 1536, sourceOffsetX: -192 } a
 
 export const KINGDOM_BUILDING_LAYOUT: readonly BuildingLayout[] = [
   { id: 'castle', type: 'CASTLE', groundX: 320, groundY: 690, scale: 1.48 },
-  { id: 'mine', type: 'MINE', groundX: 132, groundY: 392, scale: 1 },
+  { id: 'mine', type: 'MINE', groundX: 170, groundY: 396, scale: 1 },
   { id: 'farm', type: 'FARM', groundX: 88, groundY: 958, scale: 0.97 },
   { id: 'lumberMill', type: 'LUMBER_MILL', groundX: 552, groundY: 958, scale: 0.96 },
   { id: 'grandMarket', type: 'GRAND_MARKET', groundX: 320, groundY: 1172, scale: 1.03 },

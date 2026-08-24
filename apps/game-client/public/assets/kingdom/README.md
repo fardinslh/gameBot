@@ -32,6 +32,13 @@ full-size edited source through soft, irregular masks. Only the Mine excavation 
 lower work-yard regions are composited; the approved Castle area and outer environment
 remain sourced from the clean baseline.
 
+The Stage 1 Mine source is 512x464 and its non-transparent pixels reach every canvas
+edge, so transparent padding is not used for registration. Its stable front rail contact
+is source pixel `(280, 453)`, normalized to ground anchor `(0.547, 0.976)`. Pixi pins
+that anchor to world target `(170, 396)` at scale `1`, with zero visual offset. The
+Mine-specific shadow is intentionally faint because the raster already carries strong
+grounding detail.
+
 Future building definitions and local assets remain available for later progression,
 but they are intentionally not loaded or rendered in the current Kingdom composition.
 

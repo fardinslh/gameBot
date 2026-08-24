@@ -74,7 +74,7 @@ try {
   };
   const buildingPoints = [
     { id: 'castle', x: 320, y: 690 },
-    { id: 'mine', x: 132, y: 392 },
+    { id: 'mine', x: 170, y: 396 },
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'grandMarket', x: 320, y: 1172 },

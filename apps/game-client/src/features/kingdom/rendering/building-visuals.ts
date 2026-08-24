@@ -31,6 +31,11 @@ export interface BuildingVisualDefinition {
 }
 
 const buildingAsset = (name: string): string => `/assets/kingdom/buildings/${name}-stage-1.webp`;
+// The Mine alpha bounds cover its complete 512x464 source canvas. The stable
+// front rail/ground contact is centered at source pixel (280, 453); anchoring
+// there prevents the last 11 rail-tip pixels from pulling the structure off its
+// terrain registration while keeping scale changes pinned to the approach path.
+const MINE_GROUND_ANCHOR = { x: 280 / 512, y: 453 / 464 } as const;
 
 // All coordinates below are local to the registered ground-contact point (0, 0).
 // The normalized anchors account for each generated asset's distinct canvas proportions.
@@ -55,9 +60,9 @@ export const BUILDING_VISUALS: Readonly<Record<BuildingVisualId, BuildingVisualD
   },
   mine: {
     stages: { 1: buildingAsset('mine') }, renderWidth: 184,
-    groundAnchor: { x: .5, y: .862 }, visualOffset: { x: -2, y: 0 },
-    footprint: { x: -2, y: 0, width: 150, height: 38 }, shadow: { x: -4, y: 1, width: 138, height: 23, alpha: .2 },
-    hitArea: { x: -2, y: -42, width: 176, height: 126 }, indicatorAnchor: { x: 64, y: -109 }, lockAnchor: { x: 66, y: -94 },
+    groundAnchor: MINE_GROUND_ANCHOR, visualOffset: { x: 0, y: 0 },
+    footprint: { x: -8, y: -16, width: 152, height: 38 }, shadow: { x: -8, y: -14, width: 138, height: 22, alpha: .08 },
+    hitArea: { x: -8, y: -78, width: 178, height: 166 }, indicatorAnchor: { x: 68, y: -116 }, lockAnchor: { x: 66, y: -104 },
   },
   grandMarket: {
     stages: { 1: buildingAsset('grand-market') }, renderWidth: 194,

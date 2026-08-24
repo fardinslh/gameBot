@@ -30,6 +30,16 @@ async function attach(page) {
   page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
 }
 
+async function clickWorldBuilding(page, worldX, worldY) {
+  const host = page.locator('.kingdom-scene__canvas');
+  const canvas = page.locator('.kingdom-canvas');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Kingdom canvas has no layout box');
+  const cameraY = Number(await host.getAttribute('data-camera-y'));
+  const scale = box.width / 640;
+  await canvas.click({ position: { x: worldX * scale, y: worldY * scale + cameraY } });
+}
+
 try {
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await attach(page);
@@ -54,7 +64,7 @@ try {
   await page.screenshot({ path: new URL('phase-06-5-outer-district-fa-320.png', artifacts).pathname.slice(1) });
   await page.screenshot({ path: new URL('phase-06-6-simplified-lower-fa-320.png', artifacts).pathname.slice(1) });
 
-  await canvas.click({ position: { x: 160, y: 386 } });
+  await clickWorldBuilding(page, 320, 1172);
   await page.waitForSelector('[data-building-sheet="grandMarket"]');
   await page.waitForTimeout(320);
   await page.screenshot({ path: new URL('phase-06-5-active-building-detail-fa-320.png', artifacts).pathname.slice(1) });
