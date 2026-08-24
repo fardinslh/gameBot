@@ -64,16 +64,24 @@ try {
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-future-building-count') !== '0') throw new Error('Future buildings must stay out of the current Kingdom');
 
   const canvas = page.locator('.kingdom-canvas');
+  const canvasHost = page.locator('.kingdom-scene__canvas');
+  const clickWorldBuilding = async (worldX, worldY) => {
+    const canvasBox = await canvas.boundingBox();
+    if (!canvasBox) throw new Error('Kingdom canvas has no layout box');
+    const cameraY = Number(await canvasHost.getAttribute('data-camera-y'));
+    const worldScale = canvasBox.width / 640;
+    await canvas.click({ position: { x: worldX * worldScale, y: worldY * worldScale + cameraY } });
+  };
   const buildingPoints = [
-    { id: 'castle', x: 160, y: 345 },
-    { id: 'mine', x: 48, y: 273 },
-    { id: 'farm', x: 75, y: 504 },
-    { id: 'lumberMill', x: 245, y: 505 },
-    { id: 'grandMarket', x: 160, y: 586 },
+    { id: 'castle', x: 320, y: 690 },
+    { id: 'mine', x: 132, y: 392 },
+    { id: 'farm', x: 128, y: 1008 },
+    { id: 'lumberMill', x: 512, y: 1008 },
+    { id: 'grandMarket', x: 320, y: 1172 },
   ];
 
   for (const building of buildingPoints) {
-    await canvas.click({ position: { x: building.x, y: building.y } });
+    await clickWorldBuilding(building.x, building.y);
     await page.waitForSelector(`[data-building-sheet="${building.id}"]`);
     await page.locator('.building-sheet .icon-button').click();
     await page.waitForFunction(() => document.querySelector('.building-sheet')?.getAttribute('aria-hidden') === 'true');
@@ -102,7 +110,7 @@ try {
   await page.waitForSelector('.collect-button');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
-  await page.locator('.kingdom-canvas').click({ position: { x: 48, y: 273 } });
+  await clickWorldBuilding(132, 392);
   await page.waitForSelector('[data-building-sheet="mine"]');
   const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   await page.locator('.upgrade-button').click();
@@ -111,7 +119,7 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await page.locator('.kingdom-canvas').click({ position: { x: 48, y: 273 } });
+  await clickWorldBuilding(132, 392);
   await page.waitForSelector('[data-building-sheet="mine"]');
   await page.waitForSelector('.upgrade-preview--active');
 
@@ -122,7 +130,7 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await page.locator('.kingdom-canvas').click({ position: { x: 48, y: 273 } });
+  await clickWorldBuilding(132, 392);
   const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 

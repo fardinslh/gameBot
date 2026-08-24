@@ -14,14 +14,16 @@ interface KingdomSceneRuntime {
 
 export type BuildingIndicator = 'upgrade' | 'active' | null;
 
-const TERRAIN_TEXTURE = '/assets/kingdom/kingdom-expansion-v1.webp';
+const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v2.webp';
 const CASTLE_TEXTURE = '/assets/kingdom/castle-production-v1.webp';
 const CASTLE_FOCUS_Y = 690;
 
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void): Promise<KingdomSceneRuntime> {
   const runtime = await createPixiRuntime(host);
   const { app } = runtime;
-  const debugBuildingLayout = new URLSearchParams(window.location.search).get('debugBuildingLayout') === '1';
+  const searchParams = new URLSearchParams(window.location.search);
+  const debugBuildingLayout = searchParams.get('debugBuildingLayout') === '1';
+  const debugKingdomLayers = searchParams.get('debugKingdomLayers');
   const visualIds: BuildingVisualId[] = KINGDOM_BUILDING_LAYOUT
     .filter((building) => building.id !== 'castle')
     .map((building) => building.id as BuildingVisualId);
@@ -31,8 +33,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     ...visualIds.map((id) => Assets.load(resolveBuildingTexture(id))),
   ]);
   const textureById = new Map(visualIds.map((id, index) => [id, buildingTextures[index]]));
-  // A fixed copy only shows through above the positively panned world. This
-  // keeps the HUD-safe camera range from exposing the shell background.
+  // A mirrored top-edge extension only shows above a positively panned world.
+  // Its lower edge shares source row zero with the terrain, avoiding a repeated
+  // or hard seam while the camera keeps the upper building clear of the HUD.
   const backdrop = new Sprite(texture);
   app.stage.addChild(backdrop);
   const world = new Container();
@@ -74,6 +77,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
     indicator.position.copyFrom(indicatorAnchor);
     buildingArt.container.addChild(indicator);
+    buildingArt.container.visible = debugKingdomLayers !== 'terrain'
+      && (debugKingdomLayers !== 'castle' || building.id === 'castle');
     indicatorArtwork.set(building.id, indicator);
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
   }
@@ -83,6 +88,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.futureBuildingCount = '0';
   host.dataset.panEnabled = 'true';
   host.dataset.debugBuildingLayout = String(debugBuildingLayout);
+  host.dataset.debugKingdomLayers = debugKingdomLayers ?? 'all';
 
   function syncSelection(): void {
     for (const [id, item] of artwork) {
@@ -94,10 +100,13 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   let cameraY = 0;
   let cameraMinY = 0;
   let cameraMaxY = 0;
+  let worldScale = 1;
   let laidOut = false;
   const clampCamera = (value: number): number => Math.max(cameraMinY, Math.min(cameraMaxY, value));
   const syncCamera = (): void => {
     world.y = cameraY;
+    backdrop.visible = cameraY > 0;
+    backdrop.position.set(world.x + KINGDOM_WORLD.sourceOffsetX * worldScale, cameraY);
     host.dataset.cameraY = String(Math.round(cameraY));
     host.dataset.cameraMinY = String(Math.round(cameraMinY));
     host.dataset.cameraMaxY = String(Math.round(cameraMaxY));
@@ -108,21 +117,28 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const previousRange = cameraMinY - cameraMaxY;
     const previousProgress = laidOut && previousRange !== 0 ? (cameraY - cameraMaxY) / previousRange : .28;
     app.renderer.resize(width, height);
-    const worldScale = width / KINGDOM_WORLD.width;
+    worldScale = width / KINGDOM_WORLD.width;
     world.scale.set(worldScale);
     world.x = (width - KINGDOM_WORLD.width * worldScale) / 2;
-    backdrop.scale.set(worldScale);
-    backdrop.position.set(world.x + KINGDOM_WORLD.sourceOffsetX * worldScale, 0);
+    backdrop.scale.set(worldScale, -worldScale);
     cameraMinY = Math.min(0, height - KINGDOM_WORLD.height * worldScale);
     const shell = host.closest<HTMLElement>('.kingdom-shell');
     const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');
+    const inboxButton = shell?.querySelector<HTMLElement>('.kingdom-inbox-button');
+    const collectControl = shell?.querySelector<HTMLElement>('.collect-control');
     const shellTop = shell?.getBoundingClientRect().top ?? 0;
-    const hudSafeBottom = resourceHud ? resourceHud.getBoundingClientRect().bottom - shellTop + 12 : 112;
+    const hudSafeBottom = Math.max(
+      resourceHud?.getBoundingClientRect().bottom ?? shellTop + 100,
+      inboxButton?.getBoundingClientRect().bottom ?? shellTop + 100,
+      collectControl?.getBoundingClientRect().bottom ?? shellTop + 100,
+    ) - shellTop + 12;
     const topmostBuildingY = buildingsLayer.getLocalBounds().y;
     cameraMaxY = Math.max(0, hudSafeBottom - topmostBuildingY * worldScale);
+    const castleFocusCameraY = height * .49 - CASTLE_FOCUS_Y * worldScale;
+    const topBuildingSafeCameraY = hudSafeBottom - topmostBuildingY * worldScale;
     cameraY = laidOut
       ? clampCamera(cameraMaxY + (cameraMinY - cameraMaxY) * previousProgress)
-      : clampCamera(height * .49 - CASTLE_FOCUS_Y * worldScale);
+      : clampCamera(Math.max(castleFocusCameraY, topBuildingSafeCameraY));
     syncCamera();
     laidOut = true;
   };

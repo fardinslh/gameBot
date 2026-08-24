@@ -26,12 +26,12 @@ const consoleErrors = [];
 const identity = `building-art-${Date.now()}`;
 const WORLD_WIDTH = 640;
 
-async function openPage(viewport, locale = 'fa', debugBuildingLayout = false) {
+async function openPage(viewport, locale = 'fa', debugBuildingLayout = false, debugKingdomLayers = '') {
   const page = await browser.newPage({ viewport });
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': identity } }));
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
-  await page.goto(`http://localhost:3000/?lang=${locale}${debugBuildingLayout ? '&debugBuildingLayout=1' : ''}`, { waitUntil: 'domcontentloaded' });
+  await page.goto(`http://localhost:3000/?lang=${locale}${debugBuildingLayout ? '&debugBuildingLayout=1' : ''}${debugKingdomLayers ? `&debugKingdomLayers=${debugKingdomLayers}` : ''}`, { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForTimeout(600);
   return page;
@@ -72,15 +72,16 @@ try {
   }
   await main.screenshot({ path: new URL('phase-building-art-after-fa-320.png', artifacts).pathname.slice(1) });
   await main.screenshot({ path: new URL('phase-06-6-simplified-fa-320.png', artifacts).pathname.slice(1) });
+  await main.screenshot({ path: new URL('phase-clean-base-final-320.png', artifacts).pathname.slice(1) });
   await clickBuilding(main, 320, 690);
   await main.waitForSelector('[data-building-sheet="castle"]');
   await main.locator('.building-sheet .icon-button').click();
   await main.close();
 
   const active = [
-    { id: 'farm', x: 150, y: 1008 },
-    { id: 'lumberMill', x: 490, y: 1010 },
-    { id: 'mine', x: 95, y: 545 },
+    { id: 'farm', x: 128, y: 1008 },
+    { id: 'lumberMill', x: 512, y: 1008 },
+    { id: 'mine', x: 132, y: 392 },
     { id: 'grandMarket', x: 320, y: 1172 },
   ];
   for (const building of active) {
@@ -119,6 +120,7 @@ try {
       if (locale === 'fa' && viewport.width === 390) {
         await page.screenshot({ path: new URL('phase-building-art-expanded-fa-390.png', artifacts).pathname.slice(1) });
         await page.screenshot({ path: new URL('phase-06-6-simplified-fa-390.png', artifacts).pathname.slice(1) });
+        await page.screenshot({ path: new URL('phase-clean-base-final-390.png', artifacts).pathname.slice(1) });
       }
       await page.close();
     }
@@ -151,6 +153,20 @@ try {
   for (let step = 0; step < 3; step += 1) await moveWorldBuilding(debugDesktop, 1190, 380);
   await debugDesktop.screenshot({ path: new URL('phase-placement-lower-debug-710.png', artifacts).pathname.slice(1) });
   await debugDesktop.close();
+
+  const terrainOnly = await openPage({ width: 390, height: 844 }, 'fa', false, 'terrain');
+  if (await terrainOnly.locator('.kingdom-scene__canvas').getAttribute('data-debug-kingdom-layers') !== 'terrain') {
+    throw new Error('Terrain-only capture mode did not activate');
+  }
+  await terrainOnly.screenshot({ path: new URL('phase-clean-base-terrain-only-390.png', artifacts).pathname.slice(1) });
+  await terrainOnly.close();
+
+  const castleOnly = await openPage({ width: 390, height: 844 }, 'fa', false, 'castle');
+  if (await castleOnly.locator('.kingdom-scene__canvas').getAttribute('data-debug-kingdom-layers') !== 'castle') {
+    throw new Error('Castle-only capture mode did not activate');
+  }
+  await castleOnly.screenshot({ path: new URL('phase-clean-base-castle-only-390.png', artifacts).pathname.slice(1) });
+  await castleOnly.close();
 
   const assetNames = ['farm', 'lumber-mill', 'mine', 'grand-market', 'barracks', 'blacksmith', 'academy', 'granary', 'watchtower', 'workshop', 'stable', 'tavern'];
   const assetSizes = Object.fromEntries(assetNames.map((name) => [name, statSync(new URL(`apps/game-client/public/assets/kingdom/buildings/${name}-stage-1.webp`, root)).size]));

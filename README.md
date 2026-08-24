@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Phase 06.5 expands the five-building prototype into a pan-enabled, twelve-structure Kingdom while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, external delivery, and final production art for every structure remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 06.6, the client presents a pan-enabled Kingdom with five active, independently rendered buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, external delivery, and progressive Kingdom expansion remain out of scope.
 
 ## Architecture
 
@@ -231,13 +231,13 @@ Phase 06 routes:
 
 The Kingdom visual pass keeps the existing Pixi coordinates and hit areas. It adds inexpensive masonry/timber/detail geometry and grounding cues, strengthens the Castle gate and hierarchy, reduces upgrade/timer badges, and compacts the Collect chip. The terrain texture and all procedural building artwork remain temporary and replaceable.
 
-## Phase 06.5 visual production world
+## Phase 06.5–06.6 visual production world
 
-The Kingdom uses a bounded vertical camera instead of compressing twelve structures into a single 320px frame. Direct pointer/touch dragging moves only the Pixi world container; the React HUD, Collect, sheets, and exact 54px navigation remain fixed. The initial camera focuses the Castle courtyard, with military/craft landmarks above and the economic village, market, fields, bridge, and river below.
+The Kingdom uses a bounded vertical camera instead of compressing the world into a single 320px frame. Direct pointer/touch dragging moves only the Pixi world container; the React HUD, Collect, sheets, and exact 54px navigation remain fixed. The initial camera keeps the uppermost active building below the HUD controls while preserving the Castle as the focal point.
 
-Active server-backed structures remain Castle, Farm, Lumber Mill, Mine, and Grand Market. Seven client-presentational future structures are data-driven and tappable: Royal Barracks, Emberforge, Astral Academy, Crown Granary, High Watchtower, Golden Stag Tavern, and Royal Stables. Their compact locked sheet communicates a future phase and required Castle level without adding backend mechanics or API fields.
+Active server-backed structures remain Castle, Farm, Lumber Mill, Mine, and Grand Market. Future building definitions and assets remain available in the repository, but they are intentionally not rendered in the current clean composition.
 
-The visual approach is hybrid: an optimized local 1024×1536 environment WebP and transparent Castle WebP provide production-level scale/material depth, while active secondary and future buildings remain lightweight Pixi geometry with deterministic hit areas, selection, indicators, glow, flags, and smoke. The two generated assets total about 625KB and are replaceable under `public/assets/kingdom/`.
+The visual approach is layered: `terrain/kingdom-base-v2.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. The previous `kingdom-expansion-v1.webp` remains available only for comparison and rollback.
 
 ## Validation and tests
 
@@ -262,7 +262,7 @@ Phase 06 integration coverage adds defender-perspective inbox data, persistent r
 
 `npm run validate:revenge` creates two isolated development Player contexts, resolves a real standard Raid, switches to the defender, verifies the Kingdom badge and Battle Log, starts Revenge through its preview, captures shared Battle playback/result, confirms `USED`, checks notification cardinality, and validates English LTR/Persian RTL at 320×568, 375×812, and 390×844 with the unchanged 54px navigation and no browser console errors. Screenshots are written under `artifacts/phase-06-*.png`.
 
-`npm run validate:visual` verifies 5 active + 7 future Pixi structures, bounded pan movement, a future-building sheet, an active-building detail sheet, English LTR/Persian RTL, 320×568 / 375×812 / 390×844, the unchanged 54px navigation, horizontal overflow, browser console errors, and a 700KB/150KB terrain/Castle asset budget. It writes screenshots under `artifacts/phase-06-5-*.png`.
+`npm run validate:visual` verifies the five active Pixi structures, zero rendered future structures, bounded pan movement, an active-building detail sheet, English LTR/Persian RTL, 320×568 / 375×812 / 390×844, the unchanged 54px navigation, horizontal overflow, browser console errors, and a 700KB/150KB terrain/Castle asset budget. It writes screenshots under `artifacts/phase-06-5-*.png`.
 
 `npm run validate:raid` validates 320×568, 375×812, and 390×844 in English LTR and Persian RTL, the unchanged 54px navigation, server Match Offers, Pixi HP/event playback, both Victory and Defeat results, post-Raid Kingdom HUD synchronization, persisted six-Hero snapshots/events, and browser console errors. It writes ignored screenshots under `artifacts/phase-05-*.png`.
 
@@ -280,4 +280,4 @@ Manual Phase 04 validation:
 
 ## Temporary assets and current scope
 
-`apps/game-client/public/assets/kingdom/kingdom-expansion-v1.webp`, `castle-production-v1.webp`, the procedural secondary/future buildings, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are local, optimized, replaceable art. The Battle scene reuses those local portraits and lightweight procedural Pixi effects; no shaders, particle systems, or per-frame React state were added. Phase 03–06 server state and mechanics are unchanged.
+`apps/game-client/public/assets/kingdom/terrain/kingdom-base-v2.webp`, `castle-production-v1.webp`, the secondary/future building sprites, and the 640×640 WebP portraits in `apps/game-client/public/assets/heroes/` are local, optimized, replaceable art. The older `kingdom-expansion-v1.webp` is retained but no longer loaded by the game. The Battle scene reuses local portraits and lightweight Pixi effects; no shaders, particle systems, or per-frame React state were added. Phase 03–06 server state and mechanics are unchanged.

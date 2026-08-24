@@ -89,7 +89,7 @@ try {
     }
   }
 
-  const terrainBytes = statSync(new URL('apps/game-client/public/assets/kingdom/kingdom-expansion-v1.webp', root)).size;
+  const terrainBytes = statSync(new URL('apps/game-client/public/assets/kingdom/terrain/kingdom-base-v2.webp', root)).size;
   const castleBytes = statSync(new URL('apps/game-client/public/assets/kingdom/castle-production-v1.webp', root)).size;
   if (terrainBytes > 700_000 || castleBytes > 150_000) throw new Error(`Visual assets exceed mobile budget: terrain=${terrainBytes}, castle=${castleBytes}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
