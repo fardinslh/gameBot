@@ -38,8 +38,9 @@ try {
   await page.waitForTimeout(800);
   const canvasHost = page.locator('.kingdom-scene__canvas');
   const counts = await canvasHost.evaluate((element) => ({ ...element.dataset }));
-  if (counts.activeBuildingCount !== '5' || counts.futureBuildingCount !== '7' || counts.panEnabled !== 'true') throw new Error(`Expanded world metadata is invalid: ${JSON.stringify(counts)}`);
+  if (counts.activeBuildingCount !== '5' || counts.futureBuildingCount !== '0' || counts.buildingCount !== '5' || counts.districtCount || counts.panEnabled !== 'true') throw new Error(`Simplified world metadata is invalid: ${JSON.stringify(counts)}`);
   await page.screenshot({ path: new URL('phase-06-5-kingdom-after-fa-320.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: new URL('phase-06-6-simplified-after-fa-320.png', artifacts).pathname.slice(1) });
 
   const canvas = page.locator('.kingdom-canvas');
   const cameraBefore = Number(await canvasHost.getAttribute('data-camera-y'));
@@ -51,15 +52,9 @@ try {
   const cameraAfter = Number(await canvasHost.getAttribute('data-camera-y'));
   if (!(cameraAfter < cameraBefore)) throw new Error(`Bounded camera did not pan: before=${cameraBefore}, after=${cameraAfter}`);
   await page.screenshot({ path: new URL('phase-06-5-outer-district-fa-320.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: new URL('phase-06-6-simplified-lower-fa-320.png', artifacts).pathname.slice(1) });
 
-  await canvas.click({ position: { x: 76, y: 418 } });
-  await page.waitForSelector('[data-locked-building="tavern"]');
-  await page.waitForTimeout(320);
-  await page.screenshot({ path: new URL('phase-06-5-locked-building-fa-320.png', artifacts).pathname.slice(1) });
-  await page.locator('.locked-building-sheet__close').click();
-  await page.waitForFunction(() => document.querySelector('.locked-building-sheet')?.getAttribute('aria-hidden') === 'true');
-
-  await canvas.click({ position: { x: 160, y: 396 } });
+  await canvas.click({ position: { x: 160, y: 386 } });
   await page.waitForSelector('[data-building-sheet="grandMarket"]');
   await page.waitForTimeout(320);
   await page.screenshot({ path: new URL('phase-06-5-active-building-detail-fa-320.png', artifacts).pathname.slice(1) });
@@ -71,6 +66,7 @@ try {
   await page.mouse.up();
   await page.waitForTimeout(150);
   await page.screenshot({ path: new URL('phase-06-5-military-district-fa-320.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: new URL('phase-06-6-simplified-upper-fa-320.png', artifacts).pathname.slice(1) });
   await page.close();
 
   for (const locale of ['en', 'fa']) {
@@ -88,7 +84,7 @@ try {
       if (dimensions.overflow) throw new Error(`Horizontal overflow at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.navHeight !== 54) throw new Error(`Bottom navigation changed at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.direction !== (locale === 'fa' ? 'rtl' : 'ltr')) throw new Error(`Direction failed for ${locale}`);
-      if (dimensions.world.buildingCount !== '12') throw new Error(`World failed at ${locale} ${viewport.width}x${viewport.height}`);
+      if (dimensions.world.buildingCount !== '5' || dimensions.world.futureBuildingCount !== '0') throw new Error(`World failed at ${locale} ${viewport.width}x${viewport.height}`);
       await layoutPage.close();
     }
   }
@@ -97,7 +93,7 @@ try {
   const castleBytes = statSync(new URL('apps/game-client/public/assets/kingdom/castle-production-v1.webp', root)).size;
   if (terrainBytes > 700_000 || castleBytes > 150_000) throw new Error(`Visual assets exceed mobile budget: terrain=${terrainBytes}, castle=${castleBytes}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS expanded 12-building Kingdom + bounded mobile pan + active/locked interactions');
+  console.log('PASS simplified five-building Kingdom + bounded mobile pan + active interactions');
   console.log('PASS 320x568, 375x812, 390x844 in English LTR and Persian RTL with unchanged 54px navigation');
   console.log(`PASS local WebP budget terrain=${terrainBytes}B castle=${castleBytes}B and clean browser console`);
 } finally {

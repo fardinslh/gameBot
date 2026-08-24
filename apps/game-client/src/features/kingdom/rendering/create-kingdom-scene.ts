@@ -1,10 +1,10 @@
 import { Assets, Container, Graphics, Sprite } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
-import { FUTURE_BUILDING_LAYOUT, KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
+import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { createBuildingArtwork, type BuildingArtwork } from './building-art';
-import { createFutureBuildingArtwork } from './future-building-art';
+import { BUILDING_VISUALS, resolveBuildingTexture, type BuildingVisualId } from './building-visuals';
 
 interface KingdomSceneRuntime {
   destroy(): void;
@@ -21,7 +21,20 @@ const CASTLE_FOCUS_Y = 690;
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void): Promise<KingdomSceneRuntime> {
   const runtime = await createPixiRuntime(host);
   const { app } = runtime;
-  const [texture, castleTexture] = await Promise.all([Assets.load(TERRAIN_TEXTURE), Assets.load(CASTLE_TEXTURE)]);
+  const debugBuildingLayout = new URLSearchParams(window.location.search).get('debugBuildingLayout') === '1';
+  const visualIds: BuildingVisualId[] = KINGDOM_BUILDING_LAYOUT
+    .filter((building) => building.id !== 'castle')
+    .map((building) => building.id as BuildingVisualId);
+  const [texture, castleTexture, ...buildingTextures] = await Promise.all([
+    Assets.load(TERRAIN_TEXTURE),
+    Assets.load(CASTLE_TEXTURE),
+    ...visualIds.map((id) => Assets.load(resolveBuildingTexture(id))),
+  ]);
+  const textureById = new Map(visualIds.map((id, index) => [id, buildingTextures[index]]));
+  // A fixed copy only shows through above the positively panned world. This
+  // keeps the HUD-safe camera range from exposing the shell background.
+  const backdrop = new Sprite(texture);
+  app.stage.addChild(backdrop);
   const world = new Container();
   app.stage.addChild(world);
 
@@ -31,6 +44,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   world.addChild(new Graphics().rect(0, 0, KINGDOM_WORLD.width, KINGDOM_WORLD.height).fill({ color: 0x0b140d, alpha: .08 }));
 
   const buildingsLayer = new Container();
+  buildingsLayer.sortableChildren = true;
   world.addChild(buildingsLayer);
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
@@ -42,6 +56,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     artwork.set(id, buildingArt);
     buildingArt.container.position.set(x, y);
     buildingArt.container.scale.set(scale);
+    buildingArt.container.zIndex = Math.round(y);
     buildingArt.container.on('pointertap', () => {
       if (didPan) return;
       selectedBuildingId = id;
@@ -52,26 +67,22 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   };
 
   for (const building of KINGDOM_BUILDING_LAYOUT) {
-    const buildingArt = createBuildingArtwork(building.id, building.id === 'castle' ? castleTexture : undefined);
+    const buildingTexture = building.id === 'castle' ? castleTexture : textureById.get(building.id);
+    if (!buildingTexture) throw new Error(`Missing visual texture for ${building.id}`);
+    const buildingArt = createBuildingArtwork(building.id, buildingTexture, debugBuildingLayout);
     const indicator = createIndicator();
-    indicator.position.set(building.id === 'castle' ? 76 : 40, building.id === 'castle' ? -148 : -77);
+    const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
+    indicator.position.copyFrom(indicatorAnchor);
     buildingArt.container.addChild(indicator);
     indicatorArtwork.set(building.id, indicator);
-    registerBuilding(building.id, building.x, building.y, building.scale, buildingArt);
-  }
-
-  for (const building of FUTURE_BUILDING_LAYOUT) {
-    const buildingArt = createFutureBuildingArtwork(building.id);
-    const lockBadge = createLockBadge();
-    lockBadge.position.set(building.id === 'watchtower' ? 32 : 46, building.id === 'watchtower' ? -113 : -72);
-    buildingArt.container.addChild(lockBadge);
-    registerBuilding(building.id, building.x, building.y, building.scale, buildingArt);
+    registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
   }
 
   host.dataset.buildingCount = String(artwork.size);
   host.dataset.activeBuildingCount = String(KINGDOM_BUILDING_LAYOUT.length);
-  host.dataset.futureBuildingCount = String(FUTURE_BUILDING_LAYOUT.length);
+  host.dataset.futureBuildingCount = '0';
   host.dataset.panEnabled = 'true';
+  host.dataset.debugBuildingLayout = String(debugBuildingLayout);
 
   function syncSelection(): void {
     for (const [id, item] of artwork) {
@@ -82,23 +93,36 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 
   let cameraY = 0;
   let cameraMinY = 0;
+  let cameraMaxY = 0;
   let laidOut = false;
-  const clampCamera = (value: number): number => Math.max(cameraMinY, Math.min(0, value));
+  const clampCamera = (value: number): number => Math.max(cameraMinY, Math.min(cameraMaxY, value));
   const syncCamera = (): void => {
     world.y = cameraY;
     host.dataset.cameraY = String(Math.round(cameraY));
     host.dataset.cameraMinY = String(Math.round(cameraMinY));
+    host.dataset.cameraMaxY = String(Math.round(cameraMaxY));
   };
   const layout = (): void => {
     const width = Math.max(host.clientWidth, 1);
     const height = Math.max(host.clientHeight, 1);
-    const previousProgress = cameraMinY < 0 ? cameraY / cameraMinY : .28;
+    const previousRange = cameraMinY - cameraMaxY;
+    const previousProgress = laidOut && previousRange !== 0 ? (cameraY - cameraMaxY) / previousRange : .28;
     app.renderer.resize(width, height);
     const worldScale = width / KINGDOM_WORLD.width;
     world.scale.set(worldScale);
     world.x = (width - KINGDOM_WORLD.width * worldScale) / 2;
+    backdrop.scale.set(worldScale);
+    backdrop.position.set(world.x + KINGDOM_WORLD.sourceOffsetX * worldScale, 0);
     cameraMinY = Math.min(0, height - KINGDOM_WORLD.height * worldScale);
-    cameraY = laidOut ? clampCamera(cameraMinY * previousProgress) : clampCamera(height * .49 - CASTLE_FOCUS_Y * worldScale);
+    const shell = host.closest<HTMLElement>('.kingdom-shell');
+    const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');
+    const shellTop = shell?.getBoundingClientRect().top ?? 0;
+    const hudSafeBottom = resourceHud ? resourceHud.getBoundingClientRect().bottom - shellTop + 12 : 112;
+    const topmostBuildingY = buildingsLayer.getLocalBounds().y;
+    cameraMaxY = Math.max(0, hudSafeBottom - topmostBuildingY * worldScale);
+    cameraY = laidOut
+      ? clampCamera(cameraMaxY + (cameraMinY - cameraMaxY) * previousProgress)
+      : clampCamera(height * .49 - CASTLE_FOCUS_Y * worldScale);
     syncCamera();
     laidOut = true;
   };
@@ -186,14 +210,6 @@ function createIndicator(): Graphics {
   return indicator;
 }
 
-function createLockBadge(): Graphics {
-  return new Graphics()
-    .roundRect(-11, -9, 22, 19, 7).fill({ color: 0x17140f, alpha: .94 }).stroke({ color: 0xc9a75f, width: 2 })
-    .arc(0, -8, 6, Math.PI, 0).stroke({ color: 0xe5c277, width: 2.5 })
-    .circle(0, 0, 2).fill(0xe5c277)
-    .moveTo(0, 1).lineTo(0, 5).stroke({ color: 0xe5c277, width: 2 });
-}
-
 function drawIndicator(indicator: Graphics, state: BuildingIndicator): void {
   indicator.clear();
   indicator.visible = state !== null;
@@ -209,5 +225,5 @@ function drawIndicator(indicator: Graphics, state: BuildingIndicator): void {
 }
 
 function artOffset(id: WorldBuildingId): number {
-  return ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket', 'barracks', 'blacksmith', 'academy', 'granary', 'watchtower', 'tavern', 'stable'].indexOf(id) * .7;
+  return ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket', 'barracks', 'blacksmith', 'academy', 'granary', 'watchtower', 'workshop', 'tavern', 'stable'].indexOf(id) * .7;
 }

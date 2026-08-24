@@ -1,10 +1,19 @@
-# Kingdom temporary assets
+# Kingdom local assets
 
-`kingdom-terrain-v1.webp` is a temporary generated Phase 02 environment texture. It contains terrain only so the PixiJS building and interaction layer can be replaced independently.
+The Kingdom uses local generated WebP artwork. `kingdom-expansion-v1.webp` is the active
+terrain, `castle-production-v1.webp` is the Castle landmark, and `buildings/` contains
+the replaceable Stage 1 building sprites. No remote asset URLs are used.
 
-- Source size: 1024 × 1536
-- Runtime format: WebP, approximately 382 KB
-- Intended replacement: an optimized atlas or layered environment produced by the final game-art pipeline
-- No remote asset URLs are used
+Runtime placement is independent from the image files:
 
-The five current buildings are lightweight PixiJS `Graphics` artwork in `src/features/kingdom/rendering/building-art.ts`. Their layout and hit areas are data-driven, so future sprites can replace the artwork without changing React UI or mock/domain data.
+- `building-visuals.ts` owns sprite anchors, footprints, shadows, hit areas, and badges.
+- `building-layout.ts` positions the five currently active structures with deliberate
+  open space around the Castle.
+- `create-kingdom-scene.ts` preloads the textures and keeps gameplay IDs separate from
+  asset names.
+
+Future building definitions and local assets remain available for later progression,
+but they are intentionally not loaded or rendered in the current Kingdom composition.
+
+Future art progression can add `*-stage-2.webp` and `*-stage-3.webp` entries without
+changing economy state or building interaction code.

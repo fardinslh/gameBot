@@ -90,7 +90,7 @@ try {
   await page.waitForSelector('[data-heroes-status="ready"]');
   await page.locator('[data-nav-id="kingdom"]').click();
   await page.waitForSelector('[data-scene-status="ready"]');
-  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count') !== '12') throw new Error('Kingdom regression: expanded Pixi buildings missing');
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count') !== '5') throw new Error('Kingdom regression: simplified active buildings missing');
   if (await page.locator('.collect-button').count() !== 1) throw new Error('Kingdom regression: Collect missing');
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
 

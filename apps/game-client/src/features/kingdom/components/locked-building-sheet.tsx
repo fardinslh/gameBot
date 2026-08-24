@@ -1,4 +1,4 @@
-import { Anvil, BookOpen, Castle, LockKeyhole, Shield, TowerControl, Warehouse, Wine, X } from 'lucide-react';
+import { Anvil, BookOpen, Castle, LockKeyhole, Shield, TowerControl, Warehouse, Wine, Wrench, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
 import type { FutureBuildingId, FutureBuildingLayout } from '../domain/kingdom-types';
@@ -9,6 +9,7 @@ const ICONS: Record<FutureBuildingId, LucideIcon> = {
   academy: BookOpen,
   granary: Warehouse,
   watchtower: TowerControl,
+  workshop: Wrench,
   tavern: Wine,
   stable: Castle,
 };

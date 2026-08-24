@@ -199,6 +199,7 @@ export const en = {
     academy: { name: 'Astral Academy', role: 'Researches knowledge and future kingdom technologies.' },
     granary: { name: 'Crown Granary', role: 'Protects food reserves and supports a growing population.' },
     watchtower: { name: 'High Watchtower', role: 'Guards the frontier and warns of approaching armies.' },
+    workshop: { name: 'Royal Workshop', role: 'Builds tools, mechanisms, and future kingdom improvements.' },
     tavern: { name: 'Golden Stag Tavern', role: 'A gathering place for travelers and future recruits.' },
     stable: { name: 'Royal Stables', role: 'Houses mounts for scouts, merchants, and cavalry.' },
   },

@@ -44,6 +44,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
     academy: t.futureBuildings.academy.name,
     granary: t.futureBuildings.granary.name,
     watchtower: t.futureBuildings.watchtower.name,
+    workshop: t.futureBuildings.workshop.name,
     tavern: t.futureBuildings.tavern.name,
     stable: t.futureBuildings.stable.name,
   };
