@@ -15,6 +15,11 @@ export class KingdomController {
     return this.kingdom.get(this.playerContext.resolve(developmentPlayerId));
   }
 
+  @Get('buildings')
+  getBuildingStatus(@Headers('x-dev-player-id') developmentPlayerId?: string): Promise<KingdomStateResponse> {
+    return this.kingdom.get(this.playerContext.resolve(developmentPlayerId));
+  }
+
   @Post('collect')
   collect(
     @Headers('x-dev-player-id') developmentPlayerId?: string,
@@ -30,5 +35,14 @@ export class KingdomController {
     @Headers('idempotency-key') idempotencyKey?: string,
   ): Promise<UpgradeResponse> {
     return this.kingdom.upgrade(this.playerContext.resolve(developmentPlayerId), buildingId, idempotencyKey);
+  }
+
+  @Post('buildings/:buildingId/upgrade/collect')
+  collectCompletedUpgrade(
+    @Param('buildingId') buildingId: string,
+    @Headers('x-dev-player-id') developmentPlayerId?: string,
+    @Headers('idempotency-key') idempotencyKey?: string,
+  ): Promise<UpgradeResponse> {
+    return this.kingdom.collectCompletedUpgrade(this.playerContext.resolve(developmentPlayerId), buildingId, idempotencyKey);
   }
 }

@@ -166,6 +166,7 @@ button { color: inherit; }
 }
 .player-copy small { overflow: hidden; color: var(--cream-muted); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
 .player-level {
+  position: relative;
   display: flex;
   min-width: 29px;
   align-items: center;
@@ -176,6 +177,8 @@ button { color: inherit; }
 }
 .player-level small { color: var(--cream-muted); font-size: 7px; }
 .player-level strong { font-size: 14px; line-height: 1.1; }
+.player-level i { position: absolute; inset-inline: 5px; inset-block-end: 3px; height: 2px; overflow: hidden; background: rgba(255,255,255,.09); border-radius: 2px; }
+.player-level i b { display: block; height: 100%; background: linear-gradient(90deg, #9bc879, var(--gold-bright)); border-radius: inherit; }
 
 .player-actions { display: flex; align-items: center; gap: 5px; pointer-events: auto; }
 .api-status {
@@ -397,6 +400,10 @@ button { color: inherit; }
 .building-sheet__stats strong { display: block; overflow: hidden; margin-top: 2px; color: var(--gold-bright); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .building-role { display: flex; align-items: center; gap: 9px; margin: 0; color: var(--cream); font-size: 11px; line-height: 1.35; text-wrap: pretty; }
 .building-role > svg { flex: 0 0 auto; color: var(--gold); }
+.building-lock-state { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: #e0be7d; background: rgba(183,130,53,.12); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(220,181,105,.12); }
+.building-lock-state > svg { flex: 0 0 auto; }
+.building-lock-state small { display: block; color: #aa9d87; font-size: 8px; }
+.building-lock-state strong { display: block; margin-top: 2px; color: #f0d99f; font-size: 11px; }
 .upgrade-preview { display: flex; align-items: center; gap: 9px; padding: 9px; background: linear-gradient(90deg, rgba(93,126,71,.18), rgba(226,180,71,.08)); border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(180,207,144,.1); }
 .upgrade-preview__icon { display: grid; flex: 0 0 34px; width: 34px; height: 34px; place-items: center; color: #d7efbd; background: rgba(108,151,78,.2); border-radius: 10px; }
 .upgrade-preview span:last-child { min-width: 0; }

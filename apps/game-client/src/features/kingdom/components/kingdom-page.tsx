@@ -40,11 +40,11 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
     mine: t.buildings.mine.name,
     grandMarket: t.buildings.grandMarket.name,
     barracks: t.futureBuildings.barracks.name,
-    blacksmith: t.futureBuildings.blacksmith.name,
-    academy: t.futureBuildings.academy.name,
+    blacksmith: t.buildings.blacksmith.name,
+    academy: t.buildings.academy.name,
     granary: t.futureBuildings.granary.name,
-    watchtower: t.futureBuildings.watchtower.name,
-    workshop: t.futureBuildings.workshop.name,
+    watchtower: t.buildings.watchtower.name,
+    workshop: t.buildings.workshop.name,
     tavern: t.futureBuildings.tavern.name,
     stable: t.futureBuildings.stable.name,
   };
@@ -79,8 +79,9 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             locale={locale}
             playerLevel={economy.state?.player.level ?? 1}
             playerName={economy.state?.player.displayName ?? t.playerTitle}
+            progression={economy.state?.progression}
           />
-          <ResourceHud balances={balances} dictionary={t} />
+          <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} />
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
             <History aria-hidden="true" size={17} />
             <span>{t.inboxUi.title}</span>
@@ -122,7 +123,8 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
 }
 
 function isActiveBuildingId(id: WorldBuildingId | null): id is BuildingId {
-  return id === 'castle' || id === 'farm' || id === 'lumberMill' || id === 'mine' || id === 'grandMarket';
+  return id === 'castle' || id === 'farm' || id === 'lumberMill' || id === 'mine' || id === 'grandMarket'
+    || id === 'academy' || id === 'blacksmith' || id === 'watchtower' || id === 'workshop';
 }
 
 function errorMessage(code: string, t: Dictionary): string {

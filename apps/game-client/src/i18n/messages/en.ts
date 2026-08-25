@@ -145,6 +145,7 @@ export const en = {
   },
   upgradeStates: {
     CAN_UPGRADE: 'Upgrade',
+    BUILDING_LOCKED: 'Building locked',
     INSUFFICIENT_RESOURCES: 'Not enough resources',
     CASTLE_LEVEL_REQUIRED: 'Castle level required',
     UPGRADE_IN_PROGRESS: 'Upgrade in progress',
@@ -153,6 +154,8 @@ export const en = {
   economyErrors: {
     INSUFFICIENT_RESOURCES: 'You do not have enough resources.',
     UPGRADE_ALREADY_ACTIVE: 'This building is already upgrading.',
+    UPGRADE_NOT_READY: 'This upgrade is not finished yet.',
+    BUILDING_LOCKED: 'Upgrade your Castle to unlock this building.',
     CASTLE_LEVEL_REQUIRED: 'Upgrade your Castle first.',
     MAX_LEVEL: 'This building is at maximum level.',
     BUILDING_NOT_FOUND: 'The building could not be found.',
@@ -191,6 +194,30 @@ export const en = {
       role: 'Manages trade and the kingdom economy',
       production: 'Gold',
       upgrade: 'Expands the trading square for future gold activity.',
+    },
+    academy: {
+      name: 'Astral Academy',
+      role: 'Advances kingdom research and Hero knowledge',
+      production: 'Research',
+      upgrade: 'Expands the library and scholarly halls.',
+    },
+    blacksmith: {
+      name: 'Emberforge',
+      role: 'Forges weapons, armor, and military equipment',
+      production: 'Crafting',
+      upgrade: 'Strengthens the forge and unlocks finer workmanship.',
+    },
+    watchtower: {
+      name: 'High Watchtower',
+      role: 'Guards the kingdom borders and scouts threats',
+      production: 'Defense',
+      upgrade: 'Raises the lookout and improves defensive readiness.',
+    },
+    workshop: {
+      name: 'Royal Workshop',
+      role: 'Develops tools and kingdom engineering',
+      production: 'Engineering',
+      upgrade: 'Adds improved machinery and production benches.',
     },
   },
   futureBuildings: {

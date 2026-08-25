@@ -2,17 +2,23 @@ import { Crown } from 'lucide-react';
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
+import type { KingdomProgressionState } from '@crown-and-coin/shared';
 
 interface PlayerHudProps {
   dictionary: Dictionary;
   locale: Locale;
   playerLevel: number;
   playerName: string;
+  progression?: KingdomProgressionState;
   section?: 'heroes' | 'raid';
 }
 
-export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, section }: PlayerHudProps) {
+export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, progression, section }: PlayerHudProps) {
   const sectionQuery = section ? `&section=${section}` : '';
+  const displayedLevel = progression?.level ?? playerLevel;
+  const xpProgress = progression?.nextLevelRequirement
+    ? Math.min(100, Math.round((progression.xp / progression.nextLevelRequirement) * 100))
+    : 100;
   return (
     <header className="player-hud">
       <div className="player-profile">
@@ -21,8 +27,9 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, sect
           <h1>{t.appName}</h1>
           <small>{playerName || t.playerTitle}</small>
         </span>
-        <span className="player-level" aria-label={`${t.playerLevel} ${playerLevel}`}>
-          <small>{t.playerLevel}</small><strong>{playerLevel}</strong>
+        <span className="player-level" aria-label={`${t.playerLevel} ${displayedLevel}`} title={progression ? `${progression.xp} XP` : undefined}>
+          <small>{t.playerLevel}</small><strong>{displayedLevel}</strong>
+          {progression ? <i aria-hidden="true"><b style={{ width: `${xpProgress}%` }} /></i> : null}
         </span>
       </div>
 

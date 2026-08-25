@@ -30,6 +30,8 @@ enum BuildingType {
   BARRACKS
   BLACKSMITH
   ACADEMY
+  WATCHTOWER
+  WORKSHOP
   WALL
 }
 
@@ -47,6 +49,7 @@ enum EconomyTransactionReason {
 enum EconomyAction {
   COLLECT
   UPGRADE
+  UPGRADE_COLLECT
   HERO_UPGRADE
   RAID_START
   REVENGE_START

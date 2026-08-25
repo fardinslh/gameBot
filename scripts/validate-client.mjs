@@ -59,8 +59,8 @@ try {
   await page.waitForSelector('.resource-hud__server');
   await page.waitForSelector('.collect-button');
   const buildingCount = await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count');
-  if (buildingCount !== '5') throw new Error(`Expected five Pixi buildings, found ${buildingCount ?? 'none'}`);
-  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-active-building-count') !== '5') throw new Error('Expected five active Pixi buildings');
+  if (buildingCount !== '9') throw new Error(`Expected nine Pixi buildings, found ${buildingCount ?? 'none'}`);
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-active-building-count') !== '9') throw new Error('Expected nine active Pixi buildings');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-future-building-count') !== '0') throw new Error('Future buildings must stay out of the current Kingdom');
 
   const canvas = page.locator('.kingdom-canvas');
@@ -72,15 +72,32 @@ try {
     const worldScale = canvasBox.width / 640;
     await canvas.click({ position: { x: worldX * worldScale, y: worldY * worldScale + cameraY } });
   };
+  const moveWorldBuilding = async (worldY, targetCanvasY = 330) => {
+    const canvasBox = await canvas.boundingBox();
+    if (!canvasBox) throw new Error('Kingdom canvas has no layout box');
+    const cameraY = Number(await canvasHost.getAttribute('data-camera-y'));
+    const worldScale = canvasBox.width / 640;
+    const dragY = Math.max(-520, Math.min(520, targetCanvasY - worldY * worldScale - cameraY));
+    await page.mouse.move(canvasBox.x + canvasBox.width / 2, canvasBox.y + canvasBox.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(canvasBox.x + canvasBox.width / 2, canvasBox.y + canvasBox.height / 2 + dragY, { steps: 10 });
+    await page.mouse.up();
+    await page.waitForTimeout(120);
+  };
   const buildingPoints = [
     { id: 'castle', x: 320, y: 690 },
     { id: 'mine', x: 170, y: 396 },
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'grandMarket', x: 320, y: 1172 },
+    { id: 'academy', x: 320, y: 316 },
+    { id: 'blacksmith', x: 89, y: 379 },
+    { id: 'watchtower', x: 590, y: 279 },
+    { id: 'workshop', x: 276, y: 200 },
   ];
 
   for (const building of buildingPoints) {
+    await moveWorldBuilding(building.y);
     await clickWorldBuilding(building.x, building.y);
     await page.waitForSelector(`[data-building-sheet="${building.id}"]`);
     await page.locator('.building-sheet .icon-button').click();
@@ -110,7 +127,8 @@ try {
   await page.waitForSelector('.collect-button');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
-  await clickWorldBuilding(132, 392);
+  await moveWorldBuilding(396);
+  await clickWorldBuilding(170, 396);
   await page.waitForSelector('[data-building-sheet="mine"]');
   const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   await page.locator('.upgrade-button').click();
@@ -119,7 +137,8 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await clickWorldBuilding(132, 392);
+  await moveWorldBuilding(396);
+  await clickWorldBuilding(170, 396);
   await page.waitForSelector('[data-building-sheet="mine"]');
   await page.waitForSelector('.upgrade-preview--active');
 
@@ -130,12 +149,13 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await clickWorldBuilding(132, 392);
+  await moveWorldBuilding(396);
+  await clickWorldBuilding(170, 396);
   const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS simplified Pixi scene + 5 active interactive buildings');
+  console.log('PASS progression Pixi scene + 9 active interactive buildings');
   console.log('PASS server-backed Collect + persisted upgrade timer/completion');
   console.log('PASS detail sheet + coming-soon navigation');
   console.log('PASS 320/375/390 responsive + Persian RTL + browser console');

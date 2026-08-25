@@ -146,6 +146,7 @@ export const fa: Dictionary = {
   },
   upgradeStates: {
     CAN_UPGRADE: 'ارتقا',
+    BUILDING_LOCKED: 'ساختمان قفل است',
     INSUFFICIENT_RESOURCES: 'منابع کافی نیست',
     CASTLE_LEVEL_REQUIRED: 'سطح قلعه کافی نیست',
     UPGRADE_IN_PROGRESS: 'ارتقا در حال انجام',
@@ -154,6 +155,8 @@ export const fa: Dictionary = {
   economyErrors: {
     INSUFFICIENT_RESOURCES: 'منابع کافی برای این ارتقا ندارید.',
     UPGRADE_ALREADY_ACTIVE: 'این ساختمان در حال ارتقا است.',
+    UPGRADE_NOT_READY: 'زمان این ارتقا هنوز تمام نشده است.',
+    BUILDING_LOCKED: 'برای بازکردن این ساختمان، قلعه را ارتقا دهید.',
     CASTLE_LEVEL_REQUIRED: 'ابتدا قلعه را ارتقا دهید.',
     MAX_LEVEL: 'این ساختمان به بالاترین سطح رسیده است.',
     BUILDING_NOT_FOUND: 'ساختمان پیدا نشد.',
@@ -192,6 +195,30 @@ export const fa: Dictionary = {
       role: 'مدیریت تجارت و اقتصاد پادشاهی',
       production: 'طلا',
       upgrade: 'میدان تجارت را برای فعالیت طلای آینده گسترش می‌دهد.',
+    },
+    academy: {
+      name: 'آکادمی اختر',
+      role: 'پژوهش پادشاهی و دانش قهرمانان را پیش می‌برد',
+      production: 'پژوهش',
+      upgrade: 'کتابخانه و تالارهای علمی را گسترش می‌دهد.',
+    },
+    blacksmith: {
+      name: 'آهنگری اخگر',
+      role: 'سلاح، زره و تجهیزات نظامی می‌سازد',
+      production: 'ساخت‌وساز',
+      upgrade: 'کوره را تقویت و ابزارهای دقیق‌تری فراهم می‌کند.',
+    },
+    watchtower: {
+      name: 'برج دیده‌بانی بلند',
+      role: 'از مرزها پاسداری و تهدیدها را شناسایی می‌کند',
+      production: 'دفاع',
+      upgrade: 'سکوی دیده‌بانی و آمادگی دفاعی را بهبود می‌دهد.',
+    },
+    workshop: {
+      name: 'کارگاه سلطنتی',
+      role: 'ابزارها و مهندسی پادشاهی را توسعه می‌دهد',
+      production: 'مهندسی',
+      upgrade: 'ماشین‌آلات و میزهای تولید بهتری اضافه می‌کند.',
     },
   },
   futureBuildings: {

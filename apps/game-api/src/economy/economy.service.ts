@@ -23,13 +23,17 @@ import type { DevelopmentPlayerContext } from '../player/player-context.service'
 import { ensureHeroSystemForPlayer } from '../heroes/hero.bootstrap';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
-import { calculateProduction } from './economy.calculator';
+import { KingdomLevelService } from '../kingdom/kingdom-level.service';
+import { calculateProduction, capProductionToStorage } from './economy.calculator';
+import { isBuildingUnlocked, presentUnlocks, unlockCastleLevel } from './building-unlocks.config';
 import {
+  appearanceVariant,
   ECONOMY_CONFIG,
   OFFLINE_STORAGE_CAP_HOURS,
   STARTING_RESOURCES,
   productionPerHour,
   requiredCastleLevel,
+  storageCapacity,
   upgradeCost,
   upgradeDurationSeconds,
 } from './economy.config';
@@ -42,8 +46,7 @@ const kingdomGraph = Prisma.validator<Prisma.KingdomDefaultArgs>()({
     buildings: {
       include: {
         upgrades: {
-          where: { status: UpgradeStatus.IN_PROGRESS },
-          orderBy: { startedAt: 'desc' },
+          orderBy: { queuedAt: 'desc' },
           take: 1,
         },
       },
@@ -62,6 +65,7 @@ export class EconomyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
+    private readonly kingdomLevels: KingdomLevelService = new KingdomLevelService(),
   ) {}
 
   getKingdom(context: DevelopmentPlayerContext): Promise<KingdomStateResponse> {
@@ -84,7 +88,7 @@ export class EconomyService {
       const now = new Date();
       await this.reconcileCompletedUpgrades(tx, kingdomId, now);
       const graph = await this.loadGraph(tx, kingdomId);
-      const production = calculateProduction(
+      const rawProduction = calculateProduction(
         graph.buildings.map((building) => ({
           id: building.id,
           type: building.type as KingdomBuildingType,
@@ -93,6 +97,11 @@ export class EconomyService {
         })),
         graph.lastCollectedAt,
         now,
+      );
+      const production = capProductionToStorage(
+        rawProduction,
+        this.presentBalances(graph),
+        this.presentStorageCapacities(graph),
       );
       const gains = this.emptyAmounts();
       const referenceId = randomUUID();
@@ -159,10 +168,12 @@ export class EconomyService {
 
       const type = building.type as KingdomBuildingType;
       const config = ECONOMY_CONFIG[type];
-      if (building.upgrades[0]) throw new EconomyError('UPGRADE_ALREADY_ACTIVE', 'This building is already upgrading.');
+      const castle = graph.buildings.find((item) => item.type === 'CASTLE');
+      const castleLevel = castle?.level ?? 1;
+      if (!isBuildingUnlocked(type, castleLevel)) throw new EconomyError('BUILDING_LOCKED', 'Upgrade the Castle to unlock this building.');
+      if (building.upgrades[0]?.status === UpgradeStatus.IN_PROGRESS) throw new EconomyError('UPGRADE_ALREADY_ACTIVE', 'This building is already upgrading.');
       if (building.level >= config.maximumLevel) throw new EconomyError('MAX_LEVEL', 'This building is at maximum level.');
 
-      const castle = graph.buildings.find((item) => item.type === 'CASTLE');
       const castleRequirement = requiredCastleLevel(type, building.level + 1);
       if (castleRequirement && (!castle || castle.level < castleRequirement)) {
         throw new EconomyError('CASTLE_LEVEL_REQUIRED', 'Upgrade the Castle before upgrading this building.');
@@ -219,6 +230,49 @@ export class EconomyService {
       };
       await this.saveIdempotentResponse(tx, playerId, key, EconomyAction.UPGRADE, response);
       this.logger.log(`upgrade-start player=${playerId} building=${buildingId} upgrade=${upgradeId} finish=${finishAt.toISOString()}`);
+      return response;
+    });
+  }
+
+  collectCompletedUpgrade(
+    context: DevelopmentPlayerContext,
+    buildingId: string,
+    idempotencyKey: string | undefined,
+  ): Promise<UpgradeResponse> {
+    const key = this.validateIdempotencyKey(idempotencyKey);
+    return this.withPlayerTransaction(context, async (tx, playerId, kingdomId) => {
+      const previous = await tx.economyRequest.findUnique({
+        where: { playerId_idempotencyKey_action: { playerId, idempotencyKey: key, action: EconomyAction.UPGRADE_COLLECT } },
+      });
+      if (previous) return previous.response as unknown as UpgradeResponse;
+
+      const now = new Date();
+      const owned = await tx.building.findFirst({ where: { id: buildingId, kingdomId }, select: { id: true } });
+      if (!owned) {
+        const exists = await tx.building.findUnique({ where: { id: buildingId }, select: { kingdomId: true } });
+        throw new EconomyError(exists ? 'NOT_BUILDING_OWNER' : 'BUILDING_NOT_FOUND', 'Building is not available to this player.');
+      }
+      const active = await tx.buildingUpgrade.findFirst({
+        where: { buildingId, status: UpgradeStatus.IN_PROGRESS },
+        orderBy: { startedAt: 'desc' },
+      });
+      if (active?.completesAt && active.completesAt > now) {
+        throw new EconomyError('UPGRADE_NOT_READY', 'This upgrade has not finished yet.');
+      }
+      const completedBefore = await tx.buildingUpgrade.count({ where: { buildingId, status: UpgradeStatus.COMPLETED } });
+      await this.reconcileCompletedUpgrades(tx, kingdomId, now, buildingId);
+      const completedAfter = await tx.buildingUpgrade.count({ where: { buildingId, status: UpgradeStatus.COMPLETED } });
+      if (!active && completedBefore === 0 && completedAfter === 0) {
+        throw new EconomyError('UPGRADE_NOT_READY', 'There is no completed upgrade to collect.');
+      }
+
+      const refreshed = await this.loadGraph(tx, kingdomId);
+      const response: UpgradeResponse = {
+        building: this.presentBuildings(refreshed, now).find((item) => item.id === buildingId)!,
+        balances: this.presentBalances(refreshed),
+        serverTime: now.toISOString(),
+      };
+      await this.saveIdempotentResponse(tx, playerId, key, EconomyAction.UPGRADE_COLLECT, response);
       return response;
     });
   }
@@ -330,9 +384,9 @@ export class EconomyService {
     }
   }
 
-  private async reconcileCompletedUpgrades(tx: TransactionClient, kingdomId: string, now: Date): Promise<void> {
+  private async reconcileCompletedUpgrades(tx: TransactionClient, kingdomId: string, now: Date, buildingId?: string): Promise<void> {
     const due = await tx.buildingUpgrade.findMany({
-      where: { status: UpgradeStatus.IN_PROGRESS, completesAt: { lte: now }, building: { kingdomId } },
+      where: { status: UpgradeStatus.IN_PROGRESS, completesAt: { lte: now }, buildingId, building: { kingdomId } },
       include: { building: true },
     });
     for (const upgrade of due) {
@@ -366,10 +420,18 @@ export class EconomyService {
 
   private presentKingdom(graph: KingdomGraph, now: Date): KingdomStateResponse {
     const castle = graph.buildings.find((building) => building.type === 'CASTLE');
+    const castleLevel = castle?.level ?? 1;
+    const progression = this.kingdomLevels.calculate(graph.buildings.map((building) => ({
+      type: building.type as KingdomBuildingType,
+      level: building.level,
+    })));
     return {
       player: { id: graph.player.id, displayName: graph.player.displayName ?? 'Warden of Dawnkeep', level: castle?.level ?? graph.level },
-      kingdom: { id: graph.id, name: graph.name, level: graph.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
+      kingdom: { id: graph.id, name: graph.name, level: progression.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
+      progression,
+      unlocks: presentUnlocks(castleLevel),
       balances: this.presentBalances(graph),
+      storageCapacities: this.presentStorageCapacities(graph),
       buildings: this.presentBuildings(graph, now),
       serverTime: now.toISOString(),
       offlineCapHours: OFFLINE_STORAGE_CAP_HOURS,
@@ -382,10 +444,15 @@ export class EconomyService {
     return balances;
   }
 
+  private presentStorageCapacities(graph: KingdomGraph): ResourceAmounts {
+    const castleLevel = graph.buildings.find((building) => building.type === 'CASTLE')?.level ?? 1;
+    return Object.fromEntries(RESOURCE_TYPES.map((resource) => [resource, storageCapacity(resource, castleLevel).toString()])) as unknown as ResourceAmounts;
+  }
+
   private presentBuildings(graph: KingdomGraph, now: Date): KingdomBuildingState[] {
     const balances = this.presentBalances(graph);
     const castleLevel = graph.buildings.find((building) => building.type === 'CASTLE')?.level ?? 1;
-    const production = calculateProduction(
+    const production = capProductionToStorage(calculateProduction(
       graph.buildings.map((building) => ({
         id: building.id,
         type: building.type as KingdomBuildingType,
@@ -394,16 +461,19 @@ export class EconomyService {
       })),
       graph.lastCollectedAt,
       now,
-    );
+    ), balances, this.presentStorageCapacities(graph));
     return graph.buildings.map((building): KingdomBuildingState => {
       const type = building.type as KingdomBuildingType;
       const config = ECONOMY_CONFIG[type];
-      const active = building.upgrades[0] ?? null;
+      const latestUpgrade = building.upgrades[0] ?? null;
+      const active = latestUpgrade?.status === UpgradeStatus.IN_PROGRESS ? latestUpgrade : null;
+      const unlocked = isBuildingUnlocked(type, castleLevel);
       const atMax = building.level >= config.maximumLevel;
       const costs = atMax ? {} : upgradeCost(type, building.level);
       const castleRequirement = atMax ? null : requiredCastleLevel(type, building.level + 1);
       let availability: UpgradeAvailability = 'CAN_UPGRADE';
-      if (atMax) availability = 'MAX_LEVEL';
+      if (!unlocked) availability = 'BUILDING_LOCKED';
+      else if (atMax) availability = 'MAX_LEVEL';
       else if (active) availability = 'UPGRADE_IN_PROGRESS';
       else if (castleRequirement && castleLevel < castleRequirement) availability = 'CASTLE_LEVEL_REQUIRED';
       else if ((Object.entries(costs) as [ResourceType, bigint][]).some(([resource, amount]) => BigInt(balances[resource]) < amount)) availability = 'INSUFFICIENT_RESOURCES';
@@ -411,7 +481,9 @@ export class EconomyService {
       return {
         id: building.id,
         type,
+        buildingType: type,
         level: building.level,
+        nextLevel: atMax ? null : building.level + 1,
         resource: config.resource,
         productionPerHour: productionPerHour(type, building.level).toString(),
         collectable: production.find((item) => item.buildingId === building.id)?.gain.toString() ?? '0',
@@ -419,6 +491,12 @@ export class EconomyService {
         upgradeCost: (Object.entries(costs) as [ResourceType, bigint][]).map(([resource, amount]) => ({ resource, amount: amount.toString() })),
         upgradeDurationSeconds: atMax ? null : upgradeDurationSeconds(type, building.level),
         requiredCastleLevel: castleRequirement,
+        remainingSeconds: active?.completesAt ? Math.max(0, Math.ceil((active.completesAt.getTime() - now.getTime()) / 1_000)) : 0,
+        upgradeStartedAt: active?.startedAt?.toISOString() ?? null,
+        upgradeFinishedAt: (active?.completesAt ?? latestUpgrade?.completedAt ?? latestUpgrade?.completesAt)?.toISOString() ?? null,
+        appearanceVariant: appearanceVariant(building.level),
+        unlocked,
+        unlockCastleLevel: unlockCastleLevel(type),
         upgradeAvailability: availability,
         activeUpgrade: active && active.startedAt && active.completesAt ? {
           id: active.id,

@@ -67,7 +67,7 @@ try {
   const main = await openPage({ width: 320, height: 568 });
   const host = main.locator('.kingdom-scene__canvas');
   const metadata = await host.evaluate((element) => ({ ...element.dataset }));
-  if (metadata.activeBuildingCount !== '5' || metadata.futureBuildingCount !== '0' || metadata.buildingCount !== '5' || metadata.districtCount) {
+  if (metadata.activeBuildingCount !== '9' || metadata.futureBuildingCount !== '0' || metadata.buildingCount !== '9' || metadata.districtCount) {
     throw new Error(`Building art metadata is invalid: ${JSON.stringify(metadata)}`);
   }
   await main.screenshot({ path: new URL('phase-building-art-after-fa-320.png', artifacts).pathname.slice(1) });
@@ -83,13 +83,18 @@ try {
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'mine', x: 170, y: 396 },
     { id: 'grandMarket', x: 320, y: 1172 },
+    { id: 'academy', x: 320, y: 316 },
+    { id: 'blacksmith', x: 89, y: 379 },
+    { id: 'watchtower', x: 590, y: 279 },
+    { id: 'workshop', x: 276, y: 200 },
   ];
   for (const building of active) {
     const page = await openPage({ width: 320, height: 568 });
-    await moveWorldBuilding(page, building.y, building.id === 'grandMarket' ? 270 : 185);
+    await moveWorldBuilding(page, building.y, 300);
     await clickBuilding(page, building.x, building.y);
-    await page.waitForSelector(`[data-building-sheet="${building.id}"]`);
     await page.waitForTimeout(260);
+    const selectedId = await page.locator('.building-sheet').getAttribute('data-building-sheet');
+    if (selectedId !== building.id) throw new Error(`Expected ${building.id} selection, received ${selectedId ?? 'none'}`);
     await page.screenshot({ path: new URL(`phase-building-art-${building.id}-selected-fa-320.png`, artifacts).pathname.slice(1) });
     await page.close();
   }
@@ -172,7 +177,7 @@ try {
   const assetSizes = Object.fromEntries(assetNames.map((name) => [name, statSync(new URL(`apps/game-client/public/assets/kingdom/buildings/${name}-stage-1.webp`, root)).size]));
   if (Object.values(assetSizes).some((bytes) => bytes > 200_000)) throw new Error(`Building asset exceeds 200KB: ${JSON.stringify(assetSizes)}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS simplified five-building raster Kingdom and all active selections');
+  console.log('PASS nine-building progression Kingdom and all active selections');
   console.log('PASS 320x568, 375x812, 390x844 in English LTR and Persian RTL with unchanged 54px navigation');
   console.log(`PASS optimized local WebP assets: ${JSON.stringify(assetSizes)}`);
 } finally {

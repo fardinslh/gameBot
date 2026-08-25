@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 06.6, the client presents a pan-enabled Kingdom with five active, independently rendered buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, external delivery, and progressive Kingdom expansion remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07, the client presents a pan-enabled Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Architecture
 
@@ -100,6 +100,10 @@ Current temporary balancing in `apps/game-api/src/economy/economy.config.ts`:
 | Lumber Mill | 420 Wood | 1.18 | 400 Gold, 100 Food | 1.22 | 12s | 1.20 | 20 |
 | Mine | 300 Stone | 1.18 | 450 Gold, 100 Food, 180 Wood | 1.22 | 14s | 1.20 | 20 |
 | Grand Market | 380 Gold | 1.18 | 200 Food, 150 Wood, 120 Stone | 1.22 | 16s | 1.20 | 20 |
+| Academy | — | — | 1200 Gold, 500 Wood, 700 Stone | 1.28 | 30s | 1.22 | 20 |
+| Blacksmith | — | — | 900 Gold, 400 Wood, 600 Stone | 1.26 | 25s | 1.21 | 20 |
+| Watchtower | — | — | 700 Gold, 550 Wood, 450 Stone | 1.24 | 22s | 1.20 | 20 |
+| Workshop | — | — | 800 Gold, 700 Wood, 350 Stone | 1.25 | 24s | 1.20 | 20 |
 
 Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems. Levels 1–3 require Castle 1; levels 4–6 require Castle 2, continuing in three-level bands.
 
@@ -108,8 +112,10 @@ Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems.
 | Method | Path | Purpose |
 | --- | --- | --- |
 | `GET` | `/kingdom` | Bootstrap if needed, reconcile upgrades, return the complete Kingdom state |
+| `GET` | `/kingdom/buildings` | Return the authoritative building/progression status payload |
 | `POST` | `/kingdom/collect` | Transactionally collect capped offline production |
 | `POST` | `/kingdom/buildings/:buildingId/upgrade` | Validate, charge, log, and start one upgrade |
+| `POST` | `/kingdom/buildings/:buildingId/upgrade/collect` | Authoritatively finish and collect a due upgrade |
 | `GET` | `/heroes` | Bootstrap missing starter content and return owned Heroes, Raid Team, balances, and server-derived stats |
 | `GET` | `/heroes/team` | Return the persisted ordered three-slot Raid Team |
 | `PUT` | `/heroes/team` | Validate and persist exactly three unique owned Hero IDs |
@@ -235,7 +241,15 @@ The Kingdom visual pass keeps the existing Pixi coordinates and hit areas. It ad
 
 The Kingdom uses a bounded vertical camera instead of compressing the world into a single 320px frame. Direct pointer/touch dragging moves only the Pixi world container; the React HUD, Collect, sheets, and exact 54px navigation remain fixed. The initial camera keeps the uppermost active building below the HUD controls while preserving the Castle as the focal point.
 
-Active server-backed structures remain Castle, Farm, Lumber Mill, Mine, and Grand Market. Future building definitions and assets remain available in the repository, but they are intentionally not rendered in the current clean composition.
+The approved Phase 06.6 coordinates remain unchanged. Phase 07 promotes Academy, Blacksmith, Watchtower, and Workshop from local future definitions into server-backed progression buildings; Barracks, Granary, Tavern, and Stable remain future-only assets.
+
+## Phase 07 Kingdom progression
+
+The normalized `Building` + `BuildingUpgrade` model now covers Castle, Farm, Lumber Mill, Mine, Grand Market, Academy, Blacksmith, Watchtower, and Workshop. Existing players are idempotently backfilled at level 1. Upgrade cost, duration, maximum level, Castle requirements, building unlocks, storage capacity, and appearance variants are server-derived from centralized configuration.
+
+`GET /kingdom` returns current/next level, authoritative cost and remaining time, upgrade timestamps, unlock state, appearance variant, storage capacities, and calculated Kingdom progression (`level`, total `xp`, and the next requirement). Production collection discards rewards beyond the Castle-derived storage limit without lowering legacy balances. Academy unlocks at Castle 3, Blacksmith at Castle 5, and advanced PvP availability is declared at Castle 7; the rules remain data-driven and do not change Phase 05/06 battle settlement.
+
+The client renders all nine progression buildings at their already-approved world coordinates, with compact level/lock badges, server-driven locked detail states, countdown completion collection, capacity hints in the resource HUD, and stage-ready visual mapping (`WOOD`, `STONE`, `FORTIFIED`). Stage 2/3 artwork still falls back to the existing Stage 1 asset until final skins are produced.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 

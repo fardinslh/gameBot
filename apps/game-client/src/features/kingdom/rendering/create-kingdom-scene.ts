@@ -1,18 +1,25 @@
-import { Assets, Container, Graphics, Sprite } from 'pixi.js';
+import { Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
+import type { BuildingAppearanceVariant } from '@crown-and-coin/shared';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { createBuildingArtwork, type BuildingArtwork } from './building-art';
-import { BUILDING_VISUALS, resolveBuildingTexture, type BuildingVisualId } from './building-visuals';
+import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture, type BuildingVisualId } from './building-visuals';
 
 interface KingdomSceneRuntime {
   destroy(): void;
   select(buildingId: WorldBuildingId | null): void;
-  setIndicators(indicators: Partial<Record<BuildingId, BuildingIndicator>>): void;
+  setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>): void;
 }
 
 export type BuildingIndicator = 'upgrade' | 'active' | null;
+export interface BuildingSceneState {
+  indicator: BuildingIndicator;
+  level: number;
+  locked: boolean;
+  appearanceVariant: BuildingAppearanceVariant;
+}
 
 const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
 const CASTLE_TEXTURE = '/assets/kingdom/castle-production-v1.webp';
@@ -51,6 +58,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   world.addChild(buildingsLayer);
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
+  const statusArtwork = new Map<BuildingId, Container>();
+  const lockedState = new Map<BuildingId, boolean>();
+  const texturePathById = new Map<BuildingId, string>();
+  const unlockAnimation = new Map<BuildingId, number>();
   let selectedBuildingId: WorldBuildingId | null = null;
   let elapsed = 0;
   let didPan = false;
@@ -74,12 +85,17 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     if (!buildingTexture) throw new Error(`Missing visual texture for ${building.id}`);
     const buildingArt = createBuildingArtwork(building.id, buildingTexture, debugBuildingLayout);
     const indicator = createIndicator();
+    const status = new Container();
     const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
     indicator.position.copyFrom(indicatorAnchor);
+    status.position.copyFrom(BUILDING_VISUALS[building.id].lockAnchor);
     buildingArt.container.addChild(indicator);
+    buildingArt.container.addChild(status);
     buildingArt.container.visible = debugKingdomLayers !== 'terrain'
       && (debugKingdomLayers !== 'castle' || building.id === 'castle');
     indicatorArtwork.set(building.id, indicator);
+    statusArtwork.set(building.id, status);
+    texturePathById.set(building.id, resolveBuildingTexture(building.id));
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
   }
 
@@ -190,6 +206,19 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         item.smoke.alpha = .74 - Math.abs(item.smoke.y % 28) / 55;
         if (item.smoke.y < -150) item.smoke.y += 34;
       }
+      const unlockElapsed = unlockAnimation.get(id as BuildingId);
+      if (unlockElapsed !== undefined) {
+        const next = unlockElapsed + ticker.deltaMS;
+        const status = statusArtwork.get(id as BuildingId);
+        if (status) {
+          const progress = Math.min(1, next / 420);
+          const bounce = 1 + Math.sin(progress * Math.PI) * .32;
+          status.scale.set(bounce);
+          status.alpha = progress;
+        }
+        if (next >= 420) unlockAnimation.delete(id as BuildingId);
+        else unlockAnimation.set(id as BuildingId, next);
+      }
     }
   };
   if (!reducedMotion) app.ticker.add(animate);
@@ -204,8 +233,32 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 
   return {
     select: (buildingId) => { selectedBuildingId = buildingId; syncSelection(); },
-    setIndicators: (indicators) => {
-      for (const [id, indicator] of indicatorArtwork) drawIndicator(indicator, indicators[id] ?? null);
+    setBuildingStates: (states) => {
+      for (const [id, indicator] of indicatorArtwork) {
+        const state = states[id];
+        if (!state) continue;
+        drawIndicator(indicator, state.locked ? null : state.indicator);
+        const previousLocked = lockedState.get(id);
+        lockedState.set(id, state.locked);
+        const item = artwork.get(id);
+        if (item) item.sprite.alpha = state.locked ? .24 : 1;
+        const desiredTexturePath = resolveBuildingTexture(id, appearanceVariantStage(state.appearanceVariant));
+        if (item && texturePathById.get(id) !== desiredTexturePath) {
+          texturePathById.set(id, desiredTexturePath);
+          void Assets.load(desiredTexturePath).then((nextTexture) => {
+            if (texturePathById.get(id) === desiredTexturePath) item.sprite.texture = nextTexture;
+          });
+        }
+        const status = statusArtwork.get(id);
+        if (status) {
+          drawBuildingStatus(status, state.level, state.locked);
+          if (previousLocked === true && !state.locked) {
+            status.alpha = 0;
+            status.scale.set(.65);
+            unlockAnimation.set(id, 0);
+          }
+        }
+      }
     },
     destroy: () => {
       resizeObserver.disconnect();
@@ -218,6 +271,29 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       runtime.destroy();
     },
   };
+}
+
+function drawBuildingStatus(status: Container, level: number, locked: boolean): void {
+  status.removeChildren().forEach((child) => child.destroy());
+  const color = locked ? 0xbda46f : 0xe2b447;
+  const width = locked ? 24 : 30;
+  const background = new Graphics()
+    .roundRect(-width / 2, -10, width, 20, 7)
+    .fill({ color: 0x17140f, alpha: .94 })
+    .stroke({ color, alpha: .9, width: 1.5 });
+  status.addChild(background);
+  if (locked) {
+    status.addChild(new Graphics()
+      .roundRect(-4.5, -1, 9, 8, 2).stroke({ color, width: 1.7 })
+      .arc(0, -1, 4, Math.PI, 0).stroke({ color, width: 1.7 }));
+    return;
+  }
+  const text = new Text({
+    text: `Lv.${level}`,
+    style: { fill: 0xffe7a1, fontFamily: 'Arial', fontSize: 8, fontWeight: '700' },
+  });
+  text.anchor.set(.5);
+  status.addChild(text);
 }
 
 function createIndicator(): Graphics {

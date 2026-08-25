@@ -15,10 +15,11 @@ const RESOURCE_ICONS: Record<ResourceId, LucideIcon> = {
 
 interface ResourceHudProps {
   balances: ResourceAmounts;
+  capacities?: ResourceAmounts;
   dictionary: Dictionary;
 }
 
-export function ResourceHud({ balances, dictionary: t }: ResourceHudProps) {
+export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHudProps) {
   const labels: Record<ResourceId, string> = {
     gold: t.resourceGold,
     food: t.resourceFood,
@@ -33,12 +34,13 @@ export function ResourceHud({ balances, dictionary: t }: ResourceHudProps) {
       {RESOURCE_TYPES.map((resource: ResourceType) => {
         const id = RESOURCE_TO_ID[resource];
         const value = formatAmount(balances[resource]);
+        const capacity = capacities ? formatAmount(capacities[resource]) : null;
         const Icon = RESOURCE_ICONS[id];
         return (
-          <div className={`resource-chip resource-chip--${id}`} data-balance={balances[resource]} key={resource} aria-label={`${labels[id]} ${value}`}>
+          <div className={`resource-chip resource-chip--${id}`} data-balance={balances[resource]} data-capacity={capacities?.[resource]} key={resource} aria-label={`${labels[id]} ${value}${capacity ? ` / ${capacity}` : ''}`}>
             <span className="resource-chip__icon"><Icon aria-hidden="true" size={14} strokeWidth={2.4} /></span>
             <strong>{value}</strong>
-            <small>{labels[id]}</small>
+            <small>{labels[id]}{capacity ? ` · ${capacity}` : ''}</small>
           </div>
         );
       })}

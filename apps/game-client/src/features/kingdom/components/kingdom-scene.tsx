@@ -42,9 +42,14 @@ export function KingdomScene({
 
   useEffect(() => {
     buildingsRef.current = buildings;
-    sceneRef.current?.setIndicators(Object.fromEntries(buildings.map((building) => [
+    sceneRef.current?.setBuildingStates(Object.fromEntries(buildings.map((building) => [
       building.visualId,
-      building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+      {
+        indicator: building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+        level: building.level,
+        locked: !building.unlocked,
+        appearanceVariant: building.appearanceVariant,
+      },
     ])));
   }, [buildings]);
 
@@ -62,9 +67,14 @@ export function KingdomScene({
           return;
         }
         sceneRef.current = scene;
-        scene.setIndicators(Object.fromEntries(buildingsRef.current.map((building) => [
+        scene.setBuildingStates(Object.fromEntries(buildingsRef.current.map((building) => [
           building.visualId,
-          building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+          {
+            indicator: building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
+            level: building.level,
+            locked: !building.unlocked,
+            appearanceVariant: building.appearanceVariant,
+          },
         ])));
         setStatus('ready');
       })

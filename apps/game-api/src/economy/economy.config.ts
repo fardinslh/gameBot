@@ -1,4 +1,4 @@
-import type { KingdomBuildingType, ResourceType } from '@crown-and-coin/shared';
+import type { BuildingAppearanceVariant, KingdomBuildingType, ResourceType } from '@crown-and-coin/shared';
 
 export interface BuildingEconomyConfig {
   resource: ResourceType | null;
@@ -19,6 +19,14 @@ export const STARTING_RESOURCES: Record<ResourceType, bigint> = {
   WOOD: 5_000n,
   STONE: 3_500n,
   GEMS: 120n,
+};
+
+export const STORAGE_CONFIG: Readonly<Record<ResourceType, { baseCapacity: number; growth: number }>> = {
+  GOLD: { baseCapacity: 10_000, growth: 1.35 },
+  FOOD: { baseCapacity: 10_000, growth: 1.32 },
+  WOOD: { baseCapacity: 10_000, growth: 1.32 },
+  STONE: { baseCapacity: 8_000, growth: 1.32 },
+  GEMS: { baseCapacity: 500, growth: 1.15 },
 };
 
 export const ECONOMY_CONFIG: Record<KingdomBuildingType, BuildingEconomyConfig> = {
@@ -72,7 +80,58 @@ export const ECONOMY_CONFIG: Record<KingdomBuildingType, BuildingEconomyConfig> 
     durationGrowth: 1.2,
     maximumLevel: 20,
   },
+  ACADEMY: {
+    resource: null,
+    baseProductionPerHour: 0,
+    productionGrowth: 1,
+    baseUpgradeCost: { GOLD: 1_200, WOOD: 500, STONE: 700 },
+    costGrowth: 1.28,
+    baseUpgradeSeconds: 30,
+    durationGrowth: 1.22,
+    maximumLevel: 20,
+  },
+  BLACKSMITH: {
+    resource: null,
+    baseProductionPerHour: 0,
+    productionGrowth: 1,
+    baseUpgradeCost: { GOLD: 900, WOOD: 400, STONE: 600 },
+    costGrowth: 1.26,
+    baseUpgradeSeconds: 25,
+    durationGrowth: 1.21,
+    maximumLevel: 20,
+  },
+  WATCHTOWER: {
+    resource: null,
+    baseProductionPerHour: 0,
+    productionGrowth: 1,
+    baseUpgradeCost: { GOLD: 700, WOOD: 550, STONE: 450 },
+    costGrowth: 1.24,
+    baseUpgradeSeconds: 22,
+    durationGrowth: 1.2,
+    maximumLevel: 20,
+  },
+  WORKSHOP: {
+    resource: null,
+    baseProductionPerHour: 0,
+    productionGrowth: 1,
+    baseUpgradeCost: { GOLD: 800, WOOD: 700, STONE: 350 },
+    costGrowth: 1.25,
+    baseUpgradeSeconds: 24,
+    durationGrowth: 1.2,
+    maximumLevel: 20,
+  },
 };
+
+export function storageCapacity(resource: ResourceType, castleLevel: number): bigint {
+  const config = STORAGE_CONFIG[resource];
+  return BigInt(Math.round(config.baseCapacity * config.growth ** (Math.max(1, castleLevel) - 1)));
+}
+
+export function appearanceVariant(level: number): BuildingAppearanceVariant {
+  if (level >= 10) return 'FORTIFIED';
+  if (level >= 5) return 'STONE';
+  return 'WOOD';
+}
 
 export function productionPerHour(type: KingdomBuildingType, level: number): bigint {
   const config = ECONOMY_CONFIG[type];

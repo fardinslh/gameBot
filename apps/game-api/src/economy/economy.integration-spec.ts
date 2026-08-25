@@ -38,9 +38,23 @@ describe.sequential('authoritative economy integration', () => {
     const first = await economy.getKingdom(player);
     const second = await economy.getKingdom(player);
     expect(first.balances).toEqual({ GOLD: '8000', FOOD: '5000', WOOD: '5000', STONE: '3500', GEMS: '120' });
-    expect(first.buildings).toHaveLength(5);
+    expect(first.buildings).toHaveLength(9);
+    expect(first.progression).toEqual({ level: 1, xp: 900, nextLevelRequirement: 1800 });
+    expect(first.storageCapacities.GOLD).toBe('10000');
+    expect(first.buildings.find((building) => building.type === 'ACADEMY')).toMatchObject({ unlocked: false, unlockCastleLevel: 3 });
     expect(second.kingdom.id).toBe(first.kingdom.id);
     expect(await prisma.kingdom.count({ where: { playerId: first.player.id } })).toBe(1);
+  });
+
+  it('backfills missing Phase 07 buildings without changing legacy balances', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    const academy = initial.buildings.find((building) => building.type === 'ACADEMY')!;
+    await prisma.building.delete({ where: { id: academy.id } });
+    const restored = await economy.getKingdom(player);
+    expect(restored.buildings).toHaveLength(9);
+    expect(restored.buildings.find((building) => building.type === 'ACADEMY')).toMatchObject({ level: 1, unlocked: false });
+    expect(restored.balances).toEqual(initial.balances);
   });
 
   it('collects once, logs exact transactions, and makes an immediate repeat harmless', async () => {
@@ -165,5 +179,35 @@ describe.sequential('authoritative economy integration', () => {
     expect(created[0].type).toBe('UPGRADE_COMPLETE');
     expect(created[0].payload).toMatchObject({ buildingId: farm.id, buildingType: 'FARM', level: 2 });
     expect(created[0].deepLinkIntent).toEqual({ screen: 'BUILDING', buildingId: farm.id });
+  });
+
+  it('collects a completed building upgrade explicitly and rejects an early collection', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    const farm = initial.buildings.find((building) => building.type === 'FARM')!;
+    const started = await economy.upgrade(player, farm.id, key());
+    expect(started.building.remainingSeconds).toBeGreaterThan(0);
+    expect(await errorCode(economy.collectCompletedUpgrade(player, farm.id, key()))).toBe('UPGRADE_NOT_READY');
+    await prisma.buildingUpgrade.update({
+      where: { id: started.building.activeUpgrade!.id },
+      data: { completesAt: new Date(Date.now() - 1_000) },
+    });
+    const completed = await economy.collectCompletedUpgrade(player, farm.id, key());
+    expect(completed.building.level).toBe(2);
+    expect(completed.building.nextLevel).toBe(3);
+    expect(completed.building.upgradeFinishedAt).not.toBeNull();
+  });
+
+  it('caps collected production at the Castle-derived storage limit', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    await prisma.resourceBalance.updateMany({
+      where: { kingdomId: initial.kingdom.id, resource: 'FOOD' },
+      data: { amount: 9_900n },
+    });
+    await prisma.kingdom.update({ where: { id: initial.kingdom.id }, data: { lastCollectedAt: new Date(Date.now() - 3_600_000) } });
+    const collected = await economy.collect(player, key());
+    expect(collected.gains.FOOD).toBe('100');
+    expect(collected.balances.FOOD).toBe('10000');
   });
 });

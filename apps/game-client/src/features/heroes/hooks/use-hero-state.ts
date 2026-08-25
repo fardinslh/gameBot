@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { HeroesResponse } from '@crown-and-coin/shared';
 import { fetchHeroes, HeroApiError, saveRaidTeam, upgradeHero } from '../api/hero-api';
 
@@ -12,7 +12,6 @@ export function useHeroState() {
   const [action, setAction] = useState<HeroAction>('idle');
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [teamSaved, setTeamSaved] = useState(false);
-  const initialLoadStarted = useRef(false);
 
   const refresh = useCallback(async (signal?: AbortSignal) => {
     try {
@@ -27,8 +26,6 @@ export function useHeroState() {
   }, []);
 
   useEffect(() => {
-    if (initialLoadStarted.current) return;
-    initialLoadStarted.current = true;
     const controller = new AbortController();
     void refresh(controller.signal);
     return () => controller.abort();

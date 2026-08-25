@@ -4,9 +4,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { CollectResponse, KingdomStateResponse, ResourceAmounts } from '@crown-and-coin/shared';
 import { BUILDING_TYPE_TO_ID } from '../data/building-layout';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
-import { collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
+import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
 
-type ActionState = 'idle' | 'collecting' | 'upgrading';
+type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade';
 
 export function useKingdomState() {
   const [state, setState] = useState<KingdomStateResponse | null>(null);
@@ -29,6 +29,19 @@ export function useKingdomState() {
     }
   }, []);
 
+  const finishUpgrade = useCallback(async (buildingId: string) => {
+    setAction('finishing-upgrade');
+    try {
+      await collectCompletedBuildingUpgrade(buildingId);
+      await refresh();
+      setErrorCode(null);
+    } catch (error) {
+      setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
+    } finally {
+      setAction('idle');
+    }
+  }, [refresh]);
+
   useEffect(() => {
     if (initialLoadStarted.current) return;
     initialLoadStarted.current = true;
@@ -50,14 +63,16 @@ export function useKingdomState() {
 
   useEffect(() => {
     if (!state) return;
-    const finishTimes = state.buildings.flatMap((building) => building.activeUpgrade ? [Date.parse(building.activeUpgrade.finishAt)] : []);
-    if (finishTimes.length === 0) return;
-    const nextFinish = Math.min(...finishTimes);
+    const nextBuilding = state.buildings
+      .filter((building) => building.activeUpgrade)
+      .sort((left, right) => Date.parse(left.activeUpgrade!.finishAt) - Date.parse(right.activeUpgrade!.finishAt))[0];
+    if (!nextBuilding?.activeUpgrade) return;
+    const nextFinish = Date.parse(nextBuilding.activeUpgrade.finishAt);
     const serverOffset = Date.parse(state.serverTime) - Date.now();
     const delay = Math.max(0, nextFinish - (Date.now() + serverOffset)) + 250;
-    const timeout = window.setTimeout(() => void refresh(), delay);
+    const timeout = window.setTimeout(() => void finishUpgrade(nextBuilding.id), delay);
     return () => window.clearTimeout(timeout);
-  }, [state, refresh]);
+  }, [state, finishUpgrade]);
 
   const collect = useCallback(async () => {
     if (!state || action !== 'idle') return;

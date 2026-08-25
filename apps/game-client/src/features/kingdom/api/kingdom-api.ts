@@ -43,3 +43,10 @@ export function upgradeBuilding(buildingId: string): Promise<UpgradeResponse> {
     headers: { 'Idempotency-Key': crypto.randomUUID() },
   });
 }
+
+export function collectCompletedBuildingUpgrade(buildingId: string): Promise<UpgradeResponse> {
+  return request(`/kingdom/buildings/${encodeURIComponent(buildingId)}/upgrade/collect`, {
+    method: 'POST',
+    headers: { 'Idempotency-Key': crypto.randomUUID() },
+  });
+}

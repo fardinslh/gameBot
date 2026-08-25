@@ -1,4 +1,5 @@
 import type { PointData } from 'pixi.js';
+import type { BuildingAppearanceVariant } from '@crown-and-coin/shared';
 import type { WorldBuildingId } from '../domain/kingdom-types';
 
 export type BuildingVisualId = WorldBuildingId;
@@ -123,4 +124,10 @@ export const BUILDING_VISUALS: Readonly<Record<BuildingVisualId, BuildingVisualD
 export function resolveBuildingTexture(id: BuildingVisualId, stage: BuildingVisualStage = 1): string {
   const visuals = BUILDING_VISUALS[id];
   return visuals.stages[stage] ?? visuals.stages[1];
+}
+
+export function appearanceVariantStage(variant: BuildingAppearanceVariant): BuildingVisualStage {
+  if (variant === 'FORTIFIED') return 3;
+  if (variant === 'STONE') return 2;
+  return 1;
 }

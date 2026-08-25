@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { calculateProduction, OFFLINE_STORAGE_CAP_MS } from './economy.calculator';
-import { productionPerHour, requiredCastleLevel, upgradeCost, upgradeDurationSeconds } from './economy.config';
+import { calculateProduction, capProductionToStorage, OFFLINE_STORAGE_CAP_MS } from './economy.calculator';
+import { appearanceVariant, productionPerHour, requiredCastleLevel, storageCapacity, upgradeCost, upgradeDurationSeconds } from './economy.config';
+import { isBuildingUnlocked, presentUnlocks } from './building-unlocks.config';
 
 const buildings = [
   { id: 'farm', type: 'FARM' as const, level: 1, productionRemainder: 0n },
@@ -56,5 +57,28 @@ describe('server economy calculator', () => {
     expect(requiredCastleLevel('FARM', 3)).toBe(1);
     expect(requiredCastleLevel('FARM', 4)).toBe(2);
     expect(requiredCastleLevel('CASTLE', 4)).toBeNull();
+  });
+
+  it('caps production without carrying discarded full-storage rewards forward', () => {
+    const start = new Date('2026-08-23T10:00:00.000Z');
+    const production = calculateProduction([buildings[0]], start, new Date('2026-08-23T11:00:00.000Z'));
+    const capped = capProductionToStorage(
+      production,
+      { GOLD: '0', FOOD: '9900', WOOD: '0', STONE: '0', GEMS: '0' },
+      { GOLD: '10000', FOOD: '10000', WOOD: '10000', STONE: '8000', GEMS: '500' },
+    );
+    expect(capped[0].gain).toBe(100n);
+    expect(capped[0].remainder).toBe(production[0].remainder);
+  });
+
+  it('derives storage, visual variants, and unlocks from centralized config', () => {
+    expect(storageCapacity('GOLD', 1)).toBe(10_000n);
+    expect(storageCapacity('GOLD', 2)).toBe(13_500n);
+    expect(appearanceVariant(1)).toBe('WOOD');
+    expect(appearanceVariant(5)).toBe('STONE');
+    expect(appearanceVariant(10)).toBe('FORTIFIED');
+    expect(isBuildingUnlocked('ACADEMY', 2)).toBe(false);
+    expect(isBuildingUnlocked('ACADEMY', 3)).toBe(true);
+    expect(presentUnlocks(7).find((unlock) => unlock.key === 'ADVANCED_PVP')?.unlocked).toBe(true);
   });
 });

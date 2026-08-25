@@ -15,11 +15,31 @@ export const KINGDOM_BUILDING_TYPES = [
   'LUMBER_MILL',
   'MINE',
   'GRAND_MARKET',
+  'ACADEMY',
+  'BLACKSMITH',
+  'WATCHTOWER',
+  'WORKSHOP',
 ] as const;
 export type KingdomBuildingType = (typeof KINGDOM_BUILDING_TYPES)[number];
 
+export type BuildingAppearanceVariant = 'WOOD' | 'STONE' | 'FORTIFIED';
+
+export interface KingdomProgressionState {
+  level: number;
+  xp: number;
+  nextLevelRequirement: number | null;
+}
+
+export interface KingdomUnlockState {
+  key: KingdomBuildingType | 'ADVANCED_PVP';
+  kind: 'BUILDING' | 'FEATURE';
+  requiredCastleLevel: number;
+  unlocked: boolean;
+}
+
 export type UpgradeAvailability =
   | 'CAN_UPGRADE'
+  | 'BUILDING_LOCKED'
   | 'INSUFFICIENT_RESOURCES'
   | 'CASTLE_LEVEL_REQUIRED'
   | 'UPGRADE_IN_PROGRESS'
@@ -43,7 +63,9 @@ export interface ActiveUpgradeState {
 export interface KingdomBuildingState {
   id: string;
   type: KingdomBuildingType;
+  buildingType: KingdomBuildingType;
   level: number;
+  nextLevel: number | null;
   resource: ResourceType | null;
   productionPerHour: string;
   collectable: string;
@@ -51,6 +73,12 @@ export interface KingdomBuildingState {
   upgradeCost: UpgradeCostItem[];
   upgradeDurationSeconds: number | null;
   requiredCastleLevel: number | null;
+  remainingSeconds: number;
+  upgradeStartedAt: string | null;
+  upgradeFinishedAt: string | null;
+  appearanceVariant: BuildingAppearanceVariant;
+  unlocked: boolean;
+  unlockCastleLevel: number;
   upgradeAvailability: UpgradeAvailability;
   activeUpgrade: ActiveUpgradeState | null;
 }
@@ -67,7 +95,10 @@ export interface KingdomStateResponse {
     level: number;
     lastCollectedAt: string;
   };
+  progression: KingdomProgressionState;
+  unlocks: KingdomUnlockState[];
   balances: ResourceAmounts;
+  storageCapacities: ResourceAmounts;
   buildings: KingdomBuildingState[];
   serverTime: string;
   offlineCapHours: number;
@@ -90,6 +121,8 @@ export interface UpgradeResponse {
 export type EconomyErrorCode =
   | 'INSUFFICIENT_RESOURCES'
   | 'UPGRADE_ALREADY_ACTIVE'
+  | 'UPGRADE_NOT_READY'
+  | 'BUILDING_LOCKED'
   | 'CASTLE_LEVEL_REQUIRED'
   | 'MAX_LEVEL'
   | 'BUILDING_NOT_FOUND'

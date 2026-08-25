@@ -1,8 +1,8 @@
 import type { KingdomBuildingState, KingdomBuildingType, ResourceType } from '@crown-and-coin/shared';
 
-export type BuildingId = 'castle' | 'farm' | 'lumberMill' | 'mine' | 'grandMarket';
+export type BuildingId = 'castle' | 'farm' | 'lumberMill' | 'mine' | 'grandMarket' | 'academy' | 'blacksmith' | 'watchtower' | 'workshop';
 
-export type FutureBuildingId = 'barracks' | 'blacksmith' | 'academy' | 'granary' | 'watchtower' | 'workshop' | 'tavern' | 'stable';
+export type FutureBuildingId = 'barracks' | 'granary' | 'tavern' | 'stable';
 
 export type WorldBuildingId = BuildingId | FutureBuildingId;
 

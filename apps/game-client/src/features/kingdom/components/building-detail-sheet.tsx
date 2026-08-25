@@ -1,4 +1,4 @@
-import { ArrowUp, Castle, Clock3, Hammer, Landmark, Mountain, Trees, Wheat, X } from 'lucide-react';
+import { Anvil, ArrowUp, BookOpen, Castle, Clock3, Hammer, Landmark, LockKeyhole, Mountain, TowerControl, Trees, Wheat, Wrench, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
 import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
@@ -10,6 +10,10 @@ const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
   lumberMill: Trees,
   mine: Mountain,
   grandMarket: Landmark,
+  academy: BookOpen,
+  blacksmith: Anvil,
+  watchtower: TowerControl,
+  workshop: Wrench,
 };
 
 interface BuildingDetailSheetProps {
@@ -53,6 +57,13 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
         <div><small>{t.currentLevel}</small><strong>{building?.level ?? 0}</strong></div>
         <div><small>{t.currentProduction}</small><strong>{building?.resource ? `${formatAmount(building.productionPerHour)} / ${t.hour}` : presentation.production}</strong></div>
       </div>
+
+      {building && !building.unlocked ? (
+        <div className="building-lock-state">
+          <LockKeyhole aria-hidden="true" size={17} />
+          <span><small>{t.unlockRequirement}</small><strong>{t.requiresCastle.replace('{level}', String(building.unlockCastleLevel))}</strong></span>
+        </div>
+      ) : null}
 
       <p className="building-role"><Hammer aria-hidden="true" size={15} /><span><small>{t.role}</small>{presentation.role}</span></p>
 

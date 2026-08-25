@@ -18,4 +18,8 @@ export class KingdomService {
   upgrade(context: DevelopmentPlayerContext, buildingId: string, idempotencyKey?: string): Promise<UpgradeResponse> {
     return this.economy.upgrade(context, buildingId, idempotencyKey);
   }
+
+  collectCompletedUpgrade(context: DevelopmentPlayerContext, buildingId: string, idempotencyKey?: string): Promise<UpgradeResponse> {
+    return this.economy.collectCompletedUpgrade(context, buildingId, idempotencyKey);
+  }
 }
