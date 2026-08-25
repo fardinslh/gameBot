@@ -25,7 +25,7 @@ const browser = await chromium.launch({ executablePath: browserPath, headless: t
 const root = new URL('../', import.meta.url);
 const artifacts = new URL('artifacts/', root);
 mkdirSync(artifacts, { recursive: true });
-const identity = `phase-071-${Date.now()}`;
+const identity = `phase-072-${Date.now()}`;
 const requestedBuildingAssets = [];
 const consoleErrors = [];
 
@@ -38,30 +38,82 @@ async function setCastleLevel(level) {
   return account.player.kingdom.id;
 }
 
-async function refreshKingdom(page, expectedCount) {
+async function refreshKingdom(page, expectedCount, expectedStage) {
   await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
-  await page.waitForFunction((count) => document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-building-count') === String(count), expectedCount);
-  await page.waitForTimeout(500);
+  await page.waitForFunction(({ count, stage }) => {
+    const dataset = document.querySelector('.kingdom-scene__canvas')?.dataset;
+    return dataset?.buildingCount === String(count)
+      && dataset?.expansionStage === String(stage)
+      && dataset?.expansionAreaCount === String(stage - 1);
+  }, { count: expectedCount, stage: expectedStage });
+  await page.waitForTimeout(1_100);
+  const host = page.locator('.kingdom-scene__canvas');
+  const metadata = await host.evaluate((element) => ({ ...element.dataset }));
+  if (metadata.buildingCount !== String(expectedCount) || metadata.activeBuildingCount !== String(expectedCount)) {
+    throw new Error(`Stage ${expectedStage} building count mismatch: ${JSON.stringify(metadata)}`);
+  }
+  if (metadata.expansionAreaCount !== String(expectedStage - 1)) throw new Error(`Stage ${expectedStage} area count mismatch`);
   const actualButtons = await page.locator('.kingdom-scene .sr-only button').count();
   if (actualButtons !== expectedCount) throw new Error(`Expected ${expectedCount} accessible building targets, found ${actualButtons}`);
 }
 
-async function moveAndClick(page, worldX, worldY) {
+async function validateMobileStage(page, stage, expectedCount) {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    await page.waitForTimeout(140);
+    const state = await page.evaluate(() => ({
+      overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      navHeight: document.querySelector('.bottom-navigation')?.getBoundingClientRect().height,
+      world: { ...document.querySelector('.kingdom-scene__canvas')?.dataset },
+    }));
+    if (state.overflow) throw new Error(`Horizontal overflow at Stage ${stage}, ${viewport.width}x${viewport.height}`);
+    if (state.navHeight !== 54) throw new Error(`Navigation changed at Stage ${stage}, ${viewport.width}x${viewport.height}`);
+    if (state.world.buildingCount !== String(expectedCount) || state.world.expansionStage !== String(stage)) {
+      throw new Error(`Stage ${stage} metadata failed at ${viewport.width}x${viewport.height}`);
+    }
+  }
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.waitForTimeout(140);
+}
+
+async function moveWorldTo(page, worldY, targetCanvasY = 315) {
   const host = page.locator('.kingdom-scene__canvas');
   const canvas = page.locator('.kingdom-canvas');
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Kingdom canvas has no layout box');
   const scale = box.width / 640;
-  let cameraY = Number(await host.getAttribute('data-camera-y'));
-  const desiredCamera = 330 - worldY * scale;
-  const dragY = Math.max(-520, Math.min(520, desiredCamera - cameraY));
+  const cameraY = Number(await host.getAttribute('data-camera-y'));
+  const dragY = Math.max(-520, Math.min(520, targetCanvasY - worldY * scale - cameraY));
+  if (Math.abs(dragY) < 2) return;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
   await page.mouse.down();
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + dragY, { steps: 10 });
   await page.mouse.up();
-  await page.waitForTimeout(150);
-  cameraY = Number(await host.getAttribute('data-camera-y'));
+  await page.waitForTimeout(170);
+}
+
+async function clickWorldPoint(page, worldX, worldY) {
+  const host = page.locator('.kingdom-scene__canvas');
+  const canvas = page.locator('.kingdom-canvas');
+  const box = await canvas.boundingBox();
+  if (!box) throw new Error('Kingdom canvas has no layout box');
+  const scale = box.width / 640;
+  const cameraY = Number(await host.getAttribute('data-camera-y'));
   await page.mouse.click(box.x + worldX * scale, box.y + worldY * scale + cameraY);
+}
+
+async function moveAndClick(page, worldX, worldY) {
+  await moveWorldTo(page, worldY, 330);
+  await clickWorldPoint(page, worldX, worldY);
+}
+
+async function closeOpenSheet(page) {
+  const sheet = page.locator('.building-sheet--open');
+  if (await sheet.count()) {
+    await sheet.locator('.icon-button').click();
+    await page.waitForSelector('.building-sheet[aria-hidden="true"]');
+    await page.waitForTimeout(360);
+  }
 }
 
 try {
@@ -75,56 +127,86 @@ try {
 
   await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
-  await refreshKingdom(page, 5);
+  await refreshKingdom(page, 5, 1);
+  const stageOneMetadata = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({ ...element.dataset }));
+  if (stageOneMetadata.mineGround !== '145,365') throw new Error(`Mine registration is ${stageOneMetadata.mineGround ?? 'missing'}`);
+  if (stageOneMetadata.expansionAreaCount !== '0') throw new Error('Locked expansion terrain affected Stage 1');
   const lockedAssetNames = ['academy', 'blacksmith', 'watchtower', 'workshop'];
   if (requestedBuildingAssets.some((url) => lockedAssetNames.some((name) => url.includes(`/${name}-stage-`)))) {
     throw new Error(`A locked building asset was loaded at Castle 1: ${requestedBuildingAssets.join(', ')}`);
   }
-  await page.screenshot({ path: new URL('phase-07-1-castle-1-five-buildings-fa-320.png', artifacts).pathname.slice(1) });
+  await clickWorldPoint(page, 410, 420);
+  if (await page.locator('.building-sheet').getAttribute('aria-hidden') !== 'true') throw new Error('A locked building created a ghost click target');
+  await validateMobileStage(page, 1, 5);
+  await page.screenshot({ path: new URL('phase-07-2-stage-1-castle-lv1-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.waitForTimeout(180);
+  await page.screenshot({ path: new URL('phase-07-2-stage-1-castle-lv1-fa-390x844.png', artifacts).pathname.slice(1) });
+  await moveWorldTo(page, 365, 300);
+  await page.screenshot({ path: new URL('phase-07-2-mine-upper-left-close-fa-390.png', artifacts).pathname.slice(1), clip: { x: 0, y: 105, width: 390, height: 470 } });
+  await page.setViewportSize({ width: 320, height: 568 });
 
   await setCastleLevel(2);
-  await refreshKingdom(page, 6);
-  await page.screenshot({ path: new URL('phase-07-1-castle-2-watchtower-fa-320.png', artifacts).pathname.slice(1) });
+  await refreshKingdom(page, 6, 2);
+  await validateMobileStage(page, 2, 6);
+  await moveWorldTo(page, 300);
+  await closeOpenSheet(page);
+  await page.screenshot({ path: new URL('phase-07-2-stage-2-watchtower-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
   await setCastleLevel(3);
-  await refreshKingdom(page, 7);
-  await page.screenshot({ path: new URL('phase-07-1-castle-3-academy-fa-320.png', artifacts).pathname.slice(1) });
+  await refreshKingdom(page, 7, 3);
+  await validateMobileStage(page, 3, 7);
+  await moveWorldTo(page, 420);
+  await closeOpenSheet(page);
+  await page.screenshot({ path: new URL('phase-07-2-stage-3-academy-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
   await setCastleLevel(4);
-  await refreshKingdom(page, 8);
+  await refreshKingdom(page, 8, 4);
+  await validateMobileStage(page, 4, 8);
+  await moveWorldTo(page, 170);
+  await closeOpenSheet(page);
+  await page.screenshot({ path: new URL('phase-07-2-stage-4-workshop-expansion-fa-320.png', artifacts).pathname.slice(1) });
+
   await setCastleLevel(5);
-  await refreshKingdom(page, 9);
+  await refreshKingdom(page, 9, 5);
+  await refreshKingdom(page, 9, 5);
+  await validateMobileStage(page, 5, 9);
   const kingdomId = await setCastleLevel(5);
   await prisma.building.updateMany({
     where: { kingdomId, type: { in: ['ACADEMY', 'BLACKSMITH', 'WATCHTOWER', 'WORKSHOP'] } },
     data: { level: 2 },
   });
-  await refreshKingdom(page, 9);
+  await refreshKingdom(page, 9, 5);
+  await moveWorldTo(page, 310);
+  await closeOpenSheet(page);
+  await page.screenshot({ path: new URL('phase-07-2-stage-5-full-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
   const effectBuildings = [
-    { id: 'academy', effect: 'PRODUCTION_BONUS', x: 320, y: 365 },
-    { id: 'blacksmith', effect: 'HERO_UPGRADE_DISCOUNT', x: 90, y: 420 },
-    { id: 'watchtower', effect: 'RAID_PROTECTION_BONUS', x: 590, y: 330 },
-    { id: 'workshop', effect: 'BUILDING_UPGRADE_SPEED', x: 275, y: 235 },
+    { id: 'academy', effect: 'PRODUCTION_BONUS' },
+    { id: 'blacksmith', effect: 'HERO_UPGRADE_DISCOUNT' },
+    { id: 'watchtower', effect: 'RAID_PROTECTION_BONUS' },
+    { id: 'workshop', effect: 'BUILDING_UPGRADE_SPEED' },
   ];
   for (const building of effectBuildings) {
-    await moveAndClick(page, building.x, building.y);
+    await page.locator(`[data-world-building-id="${building.id}"]`).evaluate((element) => element.click());
     await page.waitForSelector(`[data-building-sheet="${building.id}"] [data-effect="${building.effect}"]`);
-    await page.waitForTimeout(320);
-    await page.screenshot({ path: new URL(`phase-07-1-${building.id}-detail-fa-320.png`, artifacts).pathname.slice(1) });
     await page.locator('.building-sheet .icon-button').click();
   }
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.waitForTimeout(250);
-  await page.screenshot({ path: new URL('phase-07-1-castle-5-nine-buildings-fa-390.png', artifacts).pathname.slice(1) });
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-  if (overflow) throw new Error('Horizontal overflow at 390x844');
+  await page.waitForTimeout(220);
+  await moveWorldTo(page, 330, 360);
+  await page.screenshot({ path: new URL('phase-07-2-stage-5-full-expansion-fa-390x844.png', artifacts).pathname.slice(1) });
+  const stageFiveMetadata = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({ ...element.dataset }));
+  if (!(Number(stageFiveMetadata.activeBoundsTop) < Number(stageOneMetadata.activeBoundsTop))) {
+    throw new Error(`Expansion did not extend active camera bounds: Stage1=${stageOneMetadata.activeBoundsTop}, Stage5=${stageFiveMetadata.activeBoundsTop}`);
+  }
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
 
-  console.log('PASS server-driven Pixi mount counts 5/6/7/8/9 and zero locked asset loads at Castle 1');
-  console.log('PASS Academy/Blacksmith/Watchtower/Workshop localized effect details');
-  console.log('PASS Phase 07.1 screenshots at 320x568 and 390x844');
+  console.log('PASS progressive expansion stages 1-5 with exact Pixi counts 5/6/7/8/9');
+  console.log('PASS locked assets/areas/accessibility/interaction excluded from Stage 1 camera composition');
+  console.log('PASS runtime reveal mount is duplicate-safe and all four effect details remain interactive');
+  console.log('PASS Phase 07.2 at 320x568, 375x812, and 390x844 with new screenshots');
 } finally {
   await browser.close();
   await prisma.$disconnect();

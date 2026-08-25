@@ -24,6 +24,7 @@ import { ensureHeroSystemForPlayer } from '../heroes/hero.bootstrap';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { KingdomLevelService } from '../kingdom/kingdom-level.service';
+import { KingdomExpansionService } from '../kingdom/kingdom-expansion.service';
 import { buildingEffect, kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 import { calculateProduction, capProductionToStorage } from './economy.calculator';
 import { isBuildingUnlocked, presentUnlocks, unlockCastleLevel } from './building-unlocks.config';
@@ -67,6 +68,7 @@ export class EconomyService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
     private readonly kingdomLevels: KingdomLevelService = new KingdomLevelService(),
+    private readonly kingdomExpansion: KingdomExpansionService = new KingdomExpansionService(),
   ) {}
 
   getKingdom(context: DevelopmentPlayerContext): Promise<KingdomStateResponse> {
@@ -433,6 +435,7 @@ export class EconomyService {
       player: { id: graph.player.id, displayName: graph.player.displayName ?? 'Warden of Dawnkeep', level: castle?.level ?? graph.level },
       kingdom: { id: graph.id, name: graph.name, level: progression.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
       progression,
+      kingdomExpansionStage: this.kingdomExpansion.fromCastleLevel(castleLevel),
       unlocks: presentUnlocks(castleLevel),
       balances: this.presentBalances(graph),
       storageCapacities: this.presentStorageCapacities(graph),

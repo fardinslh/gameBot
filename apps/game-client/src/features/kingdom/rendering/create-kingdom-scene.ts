@@ -1,16 +1,18 @@
 import { Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
-import type { BuildingAppearanceVariant } from '@crown-and-coin/shared';
+import type { BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-and-coin/shared';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { createBuildingArtwork, type BuildingArtwork } from './building-art';
 import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from './building-visuals';
+import { KINGDOM_EXPANSION_PRESENTATIONS, EXPANSION_PRESENTATION_BY_BUILDING } from '../data/kingdom-expansion-stages';
+import { createExpansionAreaArtwork, type ExpansionAreaArtwork } from './expansion-area-art';
 
 interface KingdomSceneRuntime {
   destroy(): void;
   select(buildingId: WorldBuildingId | null): void;
-  setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>): void;
+  setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>, expansionStage: KingdomExpansionStage): void;
 }
 
 export type BuildingIndicator = 'upgrade' | 'active' | null;
@@ -48,6 +50,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   world.addChild(background);
   world.addChild(new Graphics().rect(0, 0, KINGDOM_WORLD.width, KINGDOM_WORLD.height).fill({ color: 0x0b140d, alpha: .08 }));
 
+  const expansionLayer = new Container();
+  world.addChild(expansionLayer);
   const buildingsLayer = new Container();
   buildingsLayer.sortableChildren = true;
   world.addChild(buildingsLayer);
@@ -57,7 +61,11 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const knownUnlockState = new Map<BuildingId, boolean>();
   const texturePathById = new Map<BuildingId, string>();
   const unlockAnimation = new Map<BuildingId, number>();
+  const expansionArtwork = new Map<BuildingId, ExpansionAreaArtwork>();
+  const expansionAnimation = new Map<BuildingId, number>();
   let desiredStates: Partial<Record<BuildingId, BuildingSceneState>> = {};
+  let currentExpansionStage: KingdomExpansionStage = 1;
+  let hasReceivedExpansionStage = false;
   let selectedBuildingId: WorldBuildingId | null = null;
   let elapsed = 0;
   let didPan = false;
@@ -79,6 +87,46 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const syncBuildingCount = (): void => {
     host.dataset.buildingCount = String(artwork.size);
     host.dataset.activeBuildingCount = String(artwork.size);
+  };
+
+  const syncExpansionCount = (): void => {
+    host.dataset.expansionAreaCount = String(expansionArtwork.size);
+    host.dataset.expansionStage = String(currentExpansionStage);
+  };
+
+  const syncExpansionAreas = (
+    states: Partial<Record<BuildingId, BuildingSceneState>>,
+    nextStage: KingdomExpansionStage,
+  ): void => {
+    const hasAuthoritativeBuildings = Object.keys(states).length > 0;
+    const liveAdvance = hasAuthoritativeBuildings
+      && hasReceivedExpansionStage
+      && nextStage > currentExpansionStage;
+    for (const presentation of KINGDOM_EXPANSION_PRESENTATIONS) {
+      const shouldExist = presentation.stage <= nextStage && states[presentation.buildingId]?.locked === false;
+      const existing = expansionArtwork.get(presentation.buildingId);
+      if (!shouldExist) {
+        if (existing) {
+          expansionArtwork.delete(presentation.buildingId);
+          expansionAnimation.delete(presentation.buildingId);
+          existing.container.destroy({ children: true });
+        }
+        continue;
+      }
+      if (existing) continue;
+      const area = createExpansionAreaArtwork(presentation);
+      area.container.position.set(presentation.groundX, presentation.groundY);
+      area.container.visible = debugKingdomLayers !== 'terrain' && debugKingdomLayers !== 'castle';
+      expansionLayer.addChild(area.container);
+      expansionArtwork.set(presentation.buildingId, area);
+      const reveal = liveAdvance && presentation.stage > currentExpansionStage && !reducedMotion;
+      area.environment.alpha = reveal ? 0 : 1;
+      area.mist.alpha = reveal ? 1 : 0;
+      if (reveal) expansionAnimation.set(presentation.buildingId, 0);
+    }
+    currentExpansionStage = nextStage;
+    if (hasAuthoritativeBuildings) hasReceivedExpansionStage = true;
+    syncExpansionCount();
   };
 
   const removeBuilding = (id: BuildingId): void => {
@@ -130,6 +178,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     if (reveal && !reducedMotion) {
       buildingArt.container.alpha = 0;
       buildingArt.container.scale.set(building.scale * .9);
+      buildingArt.container.eventMode = 'none';
       unlockAnimation.set(building.id, 0);
     }
     syncBuildingCount();
@@ -139,6 +188,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.buildingCount = '0';
   host.dataset.activeBuildingCount = '0';
   host.dataset.futureBuildingCount = '0';
+  host.dataset.expansionAreaCount = '0';
+  host.dataset.expansionStage = '1';
+  const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');
+  host.dataset.mineGround = mineLayout ? `${mineLayout.groundX},${mineLayout.groundY}` : '';
   host.dataset.panEnabled = 'true';
   host.dataset.debugBuildingLayout = String(debugBuildingLayout);
   host.dataset.debugKingdomLayers = debugKingdomLayers ?? 'all';
@@ -186,6 +239,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       collectControl?.getBoundingClientRect().bottom ?? shellTop + 100,
     ) - shellTop + 12;
     const topmostBuildingY = buildingsLayer.getLocalBounds().y;
+    host.dataset.activeBoundsTop = String(Math.round(topmostBuildingY));
+    host.dataset.activeBoundsBottom = String(Math.round(buildingsLayer.getLocalBounds().bottom));
     cameraMaxY = Math.max(0, hudSafeBottom - topmostBuildingY * worldScale);
     const castleFocusCameraY = height * .49 - CASTLE_FOCUS_Y * worldScale;
     const topBuildingSafeCameraY = hudSafeBottom - topmostBuildingY * worldScale;
@@ -247,19 +302,37 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       if (unlockElapsed !== undefined) {
         const next = unlockElapsed + ticker.deltaMS;
         const layoutEntry = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === id);
+        const expansion = EXPANSION_PRESENTATION_BY_BUILDING[id as BuildingId];
+        const duration = expansion?.revealDurationMs ?? 600;
         if (layoutEntry) {
-          const progress = Math.min(1, next / 420);
+          const progress = Math.min(1, Math.max(0, next / duration - .24) / .76);
           const eased = 1 - (1 - progress) ** 3;
           item.container.alpha = eased;
           item.container.scale.set(layoutEntry.scale * (.9 + eased * .1));
         }
-        if (next >= 420) {
+        if (next >= duration) {
           unlockAnimation.delete(id as BuildingId);
           if (layoutEntry) item.container.scale.set(layoutEntry.scale);
           item.container.alpha = 1;
+          item.container.eventMode = 'static';
         }
         else unlockAnimation.set(id as BuildingId, next);
       }
+    }
+    for (const [id, area] of expansionArtwork) {
+      const animationElapsed = expansionAnimation.get(id);
+      if (animationElapsed === undefined) continue;
+      const presentation = EXPANSION_PRESENTATION_BY_BUILDING[id];
+      const next = animationElapsed + ticker.deltaMS;
+      const progress = Math.min(1, next / (presentation?.revealDurationMs ?? 900));
+      area.environment.alpha = Math.min(1, progress / .55);
+      area.mist.alpha = Math.max(0, 1 - progress / .72);
+      area.mist.y = -progress * 10;
+      if (progress >= 1) {
+        expansionAnimation.delete(id);
+        area.environment.alpha = 1;
+        area.mist.alpha = 0;
+      } else expansionAnimation.set(id, next);
     }
   };
   if (!reducedMotion) app.ticker.add(animate);
@@ -274,15 +347,20 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 
   return {
     select: (buildingId) => { selectedBuildingId = buildingId; syncSelection(); },
-    setBuildingStates: (states) => {
+    setBuildingStates: (states, expansionStage) => {
       desiredStates = states;
+      syncExpansionAreas(states, expansionStage);
       for (const building of KINGDOM_BUILDING_LAYOUT) {
         const id = building.id;
         const state = states[id];
+        if (!state) {
+          removeBuilding(id);
+          continue;
+        }
         const unlocked = state?.locked === false;
         const previouslyUnlocked = knownUnlockState.get(id);
         knownUnlockState.set(id, unlocked);
-        if (!unlocked || !state) {
+        if (!unlocked) {
           removeBuilding(id);
           continue;
         }

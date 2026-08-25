@@ -1,18 +1,19 @@
 import type { KingdomBuildingType } from '@crown-and-coin/shared';
 import type { BuildingId, BuildingLayout, FutureBuildingLayout } from '../domain/kingdom-types';
+import { EXPANSION_PRESENTATION_BY_BUILDING } from './kingdom-expansion-stages';
 
 export const KINGDOM_WORLD = { width: 640, height: 1536, sourceOffsetX: -192 } as const;
 
 export const KINGDOM_BUILDING_LAYOUT: readonly BuildingLayout[] = [
   { id: 'castle', type: 'CASTLE', groundX: 320, groundY: 690, scale: 1.48 },
-  { id: 'mine', type: 'MINE', groundX: 170, groundY: 396, scale: 1 },
+  { id: 'mine', type: 'MINE', groundX: 145, groundY: 365, scale: 1 },
   { id: 'farm', type: 'FARM', groundX: 88, groundY: 958, scale: 0.97 },
   { id: 'lumberMill', type: 'LUMBER_MILL', groundX: 552, groundY: 958, scale: 0.96 },
   { id: 'grandMarket', type: 'GRAND_MARKET', groundX: 320, groundY: 1172, scale: 1.03 },
-  { id: 'academy', type: 'ACADEMY', groundX: 320, groundY: 365, scale: 0.9 },
-  { id: 'blacksmith', type: 'BLACKSMITH', groundX: 90, groundY: 420, scale: 0.92 },
-  { id: 'watchtower', type: 'WATCHTOWER', groundX: 590, groundY: 330, scale: 0.8 },
-  { id: 'workshop', type: 'WORKSHOP', groundX: 275, groundY: 235, scale: 0.82 },
+  { id: 'academy', type: 'ACADEMY', ...EXPANSION_PRESENTATION_BY_BUILDING.academy! },
+  { id: 'blacksmith', type: 'BLACKSMITH', ...EXPANSION_PRESENTATION_BY_BUILDING.blacksmith! },
+  { id: 'watchtower', type: 'WATCHTOWER', ...EXPANSION_PRESENTATION_BY_BUILDING.watchtower! },
+  { id: 'workshop', type: 'WORKSHOP', ...EXPANSION_PRESENTATION_BY_BUILDING.workshop! },
 ];
 
 export const FUTURE_BUILDING_LAYOUT: readonly FutureBuildingLayout[] = [

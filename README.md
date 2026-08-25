@@ -241,7 +241,7 @@ The Kingdom visual pass keeps the existing Pixi coordinates and hit areas. It ad
 
 The Kingdom uses a bounded vertical camera instead of compressing the world into a single 320px frame. Direct pointer/touch dragging moves only the Pixi world container; the React HUD, Collect, sheets, and exact 54px navigation remain fixed. The initial camera keeps the uppermost active building below the HUD controls while preserving the Castle as the focal point.
 
-The approved Phase 06.6 coordinates remain unchanged. Phase 07 promotes Academy, Blacksmith, Watchtower, and Workshop from local future definitions into server-backed progression buildings; Barracks, Granary, Tavern, and Stable remain future-only assets.
+Phase 07 promotes Academy, Blacksmith, Watchtower, and Workshop from local future definitions into server-backed progression buildings; Barracks, Granary, Tavern, and Stable remain future-only assets.
 
 ## Phase 07 Kingdom progression
 
@@ -249,7 +249,15 @@ The normalized `Building` + `BuildingUpgrade` model now covers Castle, Farm, Lum
 
 `GET /kingdom` returns current/next level, authoritative cost and remaining time, upgrade timestamps, unlock state, appearance variant, storage capacities, and calculated Kingdom progression (`level`, total `xp`, and the next requirement). Production collection discards rewards beyond the Castle-derived storage limit without lowering legacy balances. Academy unlocks at Castle 3, Blacksmith at Castle 5, and advanced PvP availability is declared at Castle 7; the rules remain data-driven and do not change Phase 05/06 battle settlement.
 
-Phase 07.1 mounts only server-unlocked Pixi buildings. Castle level 1 renders exactly Castle, Farm, Lumber Mill, Mine, and Grand Market; Watchtower, Academy, Workshop, and Blacksmith join at Castle levels 2, 3, 4, and 5. Locked buildings have no sprite, hit area, accessibility target, texture request, or camera-bound impact. Runtime unlocks use a restrained reveal while retaining every approved world coordinate.
+Phase 07.1 mounts only server-unlocked Pixi buildings. Castle level 1 renders exactly Castle, Farm, Lumber Mill, Mine, and Grand Market; Watchtower, Academy, Workshop, and Blacksmith join at Castle levels 2, 3, 4, and 5. Locked buildings have no sprite, hit area, accessibility target, texture request, or camera-bound impact.
+
+### Phase 07.2 Progressive Kingdom Expansion
+
+The API derives `kingdomExpansionStage` from the authoritative Castle level without storing redundant database state. Stage 1 is the compact starting Kingdom at Castle 1. Stage 2 opens the Watchtower defensive frontier at Castle 2, Stage 3 adds the Academy scholarly terrace at Castle 3, Stage 4 adds the Workshop engineering yard at Castle 4, and Stage 5 adds the Blacksmith forge yard at Castle 5. Gameplay unlock rules remain server-side; the client-side stage configuration controls only placement and reveal presentation.
+
+Each new stage adds a restrained, irregular environmental treatment behind the existing raster building: rock and border details for Watchtower, a quiet stone terrace for Academy, timber/material cues for Workshop, and a dark work yard for Blacksmith. During a live unlock the local environment and mist transition first, then the building fades and settles into place. Reduced-motion clients receive the completed state immediately. Locked stages create no sprite, texture request, hit area, accessibility target, environment layer, or camera-bound contribution.
+
+The Mine ground coordinate moved from `(170, 396)` to `(145, 365)` so it sits farther into the upper-left excavation terrain. Its scale and calibrated `MINE_GROUND_ANCHOR` remain unchanged. The world texture remains `kingdom-base-v3.webp`, and no database migration is required for visual expansion.
 
 Academy adds 1% production per level above 1, Blacksmith discounts Hero upgrade Gold by 1%, Watchtower adds one percentage point of Raid protection, and Workshop reduces future building-upgrade duration by 1%; every effect caps at 15%. All effects use centralized basis-point configuration and deterministic integer rounding. Academy is applied before storage caps, Blacksmith uses the same cost for display/affordability/charge/ledger, Watchtower flows through the shared search/settlement/Revenge loot calculator, and Workshop never changes an already-started timer. Kingdom XP is `sum(max(0, building level - 1) * 100)` with 900 XP per level and no Castle override.
 
@@ -272,7 +280,7 @@ npm run validate:heroes  # requires API + client; Hero/team/upgrade/RTL/mobile/K
 npm run validate:raid    # full match/battle/result/Kingdom flow + mobile screenshots
 npm run validate:revenge # incoming badge/log/preview/Revenge/result + Phase 06 screenshots
 npm run validate:visual  # expanded world/pan/locked/detail/RTL/mobile screenshots and asset budget
-npm run validate:progression # 5/6/7/8/9 runtime mounts, effect details, and Phase 07.1 screenshots
+npm run validate:progression # Stage 1–5 mounts/areas/camera/effects and Phase 07.2 screenshots
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.

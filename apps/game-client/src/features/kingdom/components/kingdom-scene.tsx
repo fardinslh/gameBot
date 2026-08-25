@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import type { KingdomExpansionStage } from '@crown-and-coin/shared';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 
 interface KingdomSceneProps {
   buildingLabels: Record<WorldBuildingId, string>;
   buildings: KingdomBuildingView[];
+  expansionStage: KingdomExpansionStage;
   errorLabel: string;
   loadingLabel: string;
   onSelect(buildingId: WorldBuildingId): void;
@@ -19,6 +21,7 @@ type SceneStatus = 'loading' | 'ready' | 'error';
 export function KingdomScene({
   buildingLabels,
   buildings,
+  expansionStage,
   errorLabel,
   loadingLabel,
   onSelect,
@@ -28,6 +31,7 @@ export function KingdomScene({
   const containerRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   const buildingsRef = useRef(buildings);
+  const expansionStageRef = useRef(expansionStage);
   const sceneRef = useRef<Awaited<ReturnType<typeof import('../rendering/create-kingdom-scene').createKingdomScene>> | null>(null);
   const [status, setStatus] = useState<SceneStatus>('loading');
 
@@ -41,8 +45,9 @@ export function KingdomScene({
 
   useEffect(() => {
     buildingsRef.current = buildings;
-    sceneRef.current?.setBuildingStates(toSceneStates(buildings));
-  }, [buildings]);
+    expansionStageRef.current = expansionStage;
+    sceneRef.current?.setBuildingStates(toSceneStates(buildings), expansionStage);
+  }, [buildings, expansionStage]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -58,7 +63,7 @@ export function KingdomScene({
           return;
         }
         sceneRef.current = scene;
-        scene.setBuildingStates(toSceneStates(buildingsRef.current));
+        scene.setBuildingStates(toSceneStates(buildingsRef.current), expansionStageRef.current);
         setStatus('ready');
       })
       .catch(() => {
@@ -83,7 +88,12 @@ export function KingdomScene({
       </div>
       <div className="sr-only" aria-label={loadingLabel}>
         {buildings.filter((building) => building.unlocked).map((building) => (
-          <button key={building.visualId} onClick={() => onSelect(building.visualId)} type="button">
+          <button
+            data-world-building-id={building.visualId}
+            key={building.visualId}
+            onClick={() => onSelect(building.visualId)}
+            type="button"
+          >
             {buildingLabels[building.visualId]}
           </button>
         ))}

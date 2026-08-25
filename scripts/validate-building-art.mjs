@@ -81,7 +81,7 @@ try {
   const active = [
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },
-    { id: 'mine', x: 170, y: 396 },
+    { id: 'mine', x: 145, y: 365 },
     { id: 'grandMarket', x: 320, y: 1172 },
   ];
   for (const building of active) {

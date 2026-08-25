@@ -86,7 +86,7 @@ try {
   };
   const buildingPoints = [
     { id: 'castle', x: 320, y: 690 },
-    { id: 'mine', x: 170, y: 396 },
+    { id: 'mine', x: 145, y: 365 },
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'grandMarket', x: 320, y: 1172 },
@@ -123,8 +123,8 @@ try {
   await page.waitForSelector('.collect-button');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
-  await moveWorldBuilding(396);
-  await clickWorldBuilding(170, 396);
+  await moveWorldBuilding(365);
+  await clickWorldBuilding(145, 365);
   await page.waitForSelector('[data-building-sheet="mine"]');
   const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   await page.locator('.upgrade-button').click();
@@ -133,8 +133,8 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await moveWorldBuilding(396);
-  await clickWorldBuilding(170, 396);
+  await moveWorldBuilding(365);
+  await clickWorldBuilding(145, 365);
   await page.waitForSelector('[data-building-sheet="mine"]');
   await page.waitForSelector('.upgrade-preview--active');
 
@@ -145,8 +145,8 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await page.waitForSelector('.collect-button');
-  await moveWorldBuilding(396);
-  await clickWorldBuilding(170, 396);
+  await moveWorldBuilding(365);
+  await clickWorldBuilding(145, 365);
   const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 

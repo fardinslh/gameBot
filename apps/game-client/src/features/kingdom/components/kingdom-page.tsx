@@ -66,6 +66,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
         <KingdomScene
           buildingLabels={buildingLabels}
           buildings={economy.buildings}
+          expansionStage={economy.state?.kingdomExpansionStage ?? 1}
           errorLabel={t.kingdomLoadError}
           loadingLabel={t.loadingKingdom}
           onSelect={handleBuildingSelect}

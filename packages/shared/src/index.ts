@@ -23,6 +23,7 @@ export const KINGDOM_BUILDING_TYPES = [
 export type KingdomBuildingType = (typeof KINGDOM_BUILDING_TYPES)[number];
 
 export type BuildingAppearanceVariant = 'WOOD' | 'STONE' | 'FORTIFIED';
+export type KingdomExpansionStage = 1 | 2 | 3 | 4 | 5;
 
 export const KINGDOM_EFFECT_TYPES = [
   'PRODUCTION_BONUS',
@@ -112,6 +113,7 @@ export interface KingdomStateResponse {
     lastCollectedAt: string;
   };
   progression: KingdomProgressionState;
+  kingdomExpansionStage: KingdomExpansionStage;
   unlocks: KingdomUnlockState[];
   balances: ResourceAmounts;
   storageCapacities: ResourceAmounts;

@@ -41,6 +41,7 @@ describe.sequential('authoritative economy integration', () => {
     expect(first.balances).toEqual({ GOLD: '8000', FOOD: '5000', WOOD: '5000', STONE: '3500', GEMS: '120' });
     expect(first.buildings).toHaveLength(9);
     expect(first.progression).toEqual({ level: 1, xp: 0, xpIntoLevel: 0, xpRequiredForNextLevel: 900 });
+    expect(first.kingdomExpansionStage).toBe(1);
     expect(first.storageCapacities.GOLD).toBe('10000');
     expect(first.buildings.find((building) => building.type === 'ACADEMY')).toMatchObject({ unlocked: false, unlockCastleLevel: 3 });
     expect(second.kingdom.id).toBe(first.kingdom.id);
@@ -57,7 +58,9 @@ describe.sequential('authoritative economy integration', () => {
     const expected = new Map([[2, 6], [3, 7], [4, 8], [5, 9]]);
     for (const [level, count] of expected) {
       await prisma.building.update({ where: { id: castle.id }, data: { level } });
-      expect((await economy.getKingdom(player)).buildings.filter((building) => building.unlocked)).toHaveLength(count);
+      const state = await economy.getKingdom(player);
+      expect(state.buildings.filter((building) => building.unlocked)).toHaveLength(count);
+      expect(state.kingdomExpansionStage).toBe(level);
     }
   });
 
