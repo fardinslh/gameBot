@@ -6,7 +6,7 @@ contentType: Reference
 
 # Check the current implementation state
 
-This snapshot describes commit `8b05b7330739ef0648736718fc0f3868a81eb7d5`. The labels distinguish working behavior from prepared interfaces and absent systems.
+This snapshot includes the Launch-Safety PvP implementation. The labels distinguish working behavior from prepared interfaces and absent systems.
 
 ## Feature status
 
@@ -19,7 +19,9 @@ This snapshot describes commit `8b05b7330739ef0648736718fc0f3868a81eb7d5`. The l
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Raid Team | Implemented | Exactly three unique owned Heroes in ordered persistent slots |
-| Matchmaking | Implemented | Trophy/power passes, recent-opponent avoidance, 180-second Match Offers |
+| Matchmaking | Implemented | Three bounded real-player passes, top-five pool selection, recent-eight memory, six-hour anti-farm, system fallback |
+| New Kingdom Shield | Implemented | Persistent 24-hour `Player.createdAt` protection; protected players attack system opponents and cannot be normal real defenders |
+| System opponents | Implemented | 30 persistent domain-backed opponents in six tiers with locked threshold replenishment and social exclusions |
 | Battle | Implemented | Server-seeded deterministic three-versus-three engine and persisted replay |
 | Loot | Implemented | Gold, Food, Wood, Stone only; protection, reserves, caps, paired ledger rows |
 | Trophy | Implemented | Rating-aware bounded deltas with zero floor |
@@ -65,11 +67,11 @@ Runtime bootstrap grants all three Heroes and fills Raid Team slots 1 through 3 
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, and participant-only battle replay. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, and participant-only battle replay. Raid overview/search also expose authoritative `newPlayerProtection`; offers identify `REAL` or `SYSTEM` for internal client state. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
-Eight ordered migrations exist:
+Nine ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -79,6 +81,7 @@ Eight ordered migrations exist:
 6. `20260825070000_kingdom_progression`
 7. `20260825070100_kingdom_building_backfill`
 8. `20260825070200_building_progression_constraints`
+9. `20260826090000_launch_safe_raid`
 
 ## Validation entry points
 

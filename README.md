@@ -176,9 +176,11 @@ maximumLevel = 20
 
 The client never submits level, stats, power, cost, balance, or ownership. Hero upgrades take the same PostgreSQL player advisory lock as Phase 03, conditionally decrement the GOLD balance, create one `EconomyTransaction(HERO_UPGRADE)` with before/delta/after/reference values, increment level, and persist an idempotent response in `EconomyRequest`.
 
-## Phase 05 Raid architecture
+## Launch-safe Raid architecture
 
-The client submits only a `matchOfferId` and an idempotency key. It never submits a defender ID, Hero stats, damage, winner, loot, Trophy delta, or duration. `/raid/search` derives team power from the Phase 04 calculator and searches configurable passes: ±150 Trophy/±15% power, ±300/±30%, a wider non-repeat fallback, then a population-safe repeat fallback. The last five offered defenders are avoided where possible. Offers expire after 180 seconds and are single-use.
+The client submits only a `matchOfferId` and an idempotency key. It never submits a defender ID, Hero stats, damage, winner, loot, Trophy delta, or duration. `/raid/search` derives team power from the Hero calculator and applies bounded real-player passes of ±150 Trophy/±15% power, ±300/±30%, then ±450/±40%. It ranks valid candidates, randomly selects within the best five, remembers eight recent offers, and falls back to a system opponent instead of making an unlimited real-player mismatch. Offers expire after 180 seconds and are single-use.
+
+A human Player receives a server-derived 24-hour New Kingdom Shield from persistent `Player.createdAt`. While active, normal search returns system opponents only and other real players cannot select that Player as a defender. Standard real attacker-to-defender repeats are blocked for six hours; Revenge remains a separate flow.
 
 `POST /raid/start` snapshots all six Heroes (key, slot, level, HP, ATK, DEF, power, skill), creates a cryptographic server seed, and runs rules version `1` immediately. The persisted event stream is the only combat input used by Pixi playback, so historical replays do not change after Hero upgrades.
 
@@ -209,9 +211,11 @@ Gems are never raidable. Final loot is recalculated during settlement as the min
 
 The temporary rating formula lightly adjusts for rating difference: winners gain 15–30 and losers lose 5–20, with a floor of zero. Battle persistence, offer consumption, Trophy changes, balance transfer, and the idempotent response share one PostgreSQL transaction. Both existing economy advisory locks are acquired in stable Player-ID order. Conditional decrements prevent negative defender balances. Each transfer writes paired `RAID_REWARD`/`RAID_LOSS` rows with exact before/delta/after values and `referenceId = battleId`.
 
-### Development opponents and debugging
+### System opponents and debugging
 
-The server idempotently bootstraps real domain rows for `Iron Wolf` (Lv1/~850), `Silver Fox` (Lv1/~920), `Lion Heart` (Lv2/~1000), `Black Raven` (Lv2/~1100), and `Storm Keep` (Lv3/~1220). Stable `raid-fixture:*` Web IDs prevent duplicates. Fixtures use normal Player, Kingdom, balance, Hero, and Raid Team models.
+The server idempotently bootstraps 30 persistent system opponents across six centralized tiers. They use normal Player, PlatformAccount, Kingdom, balances, buildings, Heroes, Raid Team, Trophy, Battle, and ledger models; the five original `raid-fixture:*` identities are retained without duplication. `Player.isSystemOpponent` is the durable server-owned classification.
+
+Each tier defines Trophy, Castle/building and Hero levels, resource targets, and 50% replenishment thresholds. Immediately before a selected system defender becomes a Match Offer, the API takes its advisory lock, re-reads balances, restores only resources below threshold, records exact `SYSTEM_OPPONENT_REPLENISH` ledger rows, and calculates loot from the refreshed state. System Trophy ratings do not mutate, and system Raids create neither defender notifications nor Revenge targets.
 
 Call `GET /battles/BATTLE_ID` as either participant to inspect the persisted seed, rules version, snapshots, ordered events, result, loot, duration, and Trophy deltas. Re-running `simulateBattle` with those snapshots/seed/version produces the same result.
 

@@ -34,9 +34,13 @@ Buildings return `STONE` at level 5 and `FORTIFIED` at level 10. Missing stage 2
 
 Barracks, Granary, Tavern, and Stable assets and future layout entries exist. The active scene and server shared building list exclude them.
 
-### Development matchmaking uses seeded opponents
+### Disposable-account shield farming remains possible
 
-Raid search creates five persistent development opponents when needed. Production matchmaking population and anti-bot policy remain undefined.
+A user can create disposable fresh development identities and farm system opponents during the 24-hour shield. This is an acceptable but monitored risk for the initial small cohort. Verified Bale identity, analytics, and production abuse controls are not implemented; no invasive device fingerprinting is used.
+
+### System-opponent tuning is temporary
+
+The 30-opponent, six-tier pool is production-intent cold-start infrastructure, but names, Trophy ranges, Hero levels, and replenishment resource targets remain soft-launch tuning rather than live-ops content.
 
 ### Rate limits are process-local
 
@@ -52,4 +56,4 @@ Older terrain files consume repository space but do not load at runtime. They re
 
 ## Confirmed bugs
 
-No open reproducible gameplay bug is documented at commit `8b05b7330739ef0648736718fc0f3868a81eb7d5`. Add a bug here only with reproduction steps, affected commit, and expected behavior.
+No open reproducible gameplay bug is documented for the Launch-Safety PvP baseline. Add a bug here only with reproduction steps, affected commit, and expected behavior.

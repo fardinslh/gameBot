@@ -45,13 +45,15 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 
 | Method | Path | Purpose | Requirements and response |
 | --- | --- | --- | --- |
-| `GET` | `/raid` | Return current team, power, balances, player level, and Trophies | `RaidOverviewResponse` |
-| `POST` | `/raid/search` | Select a defender and create a 180-second Match Offer | `RaidSearchResponse` |
+| `GET` | `/raid` | Return current team, power, balances, player level, Trophies, server time, and New Kingdom Shield state | `RaidOverviewResponse` |
+| `POST` | `/raid/search` | Select a safe real/system defender and create a 180-second Match Offer | `RaidSearchResponse` |
 | `POST` | `/raid/start` | Validate and consume one Match Offer, resolve and settle battle | `{ matchOfferId }`, idempotency key; `BattleReplayResponse` |
 | `GET` | `/raid/history` | Return up to 20 recent participant summaries | `RaidHistoryResponse` |
 | `GET` | `/battles/:battleId` | Return stored replay to attacker or defender | `BattleReplayResponse` |
 
 `POST /raid/start` accepts no defender ID, stats, damage, result, loot, or Trophy values.
+
+`RaidOverviewResponse.newPlayerProtection` contains authoritative `active` and `expiresAt` values. Search offers include internal opponent `kind: REAL | SYSTEM`; this does not grant the client target-selection authority.
 
 ## Defense inbox and Revenge
 

@@ -6,16 +6,20 @@ import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { RaidError } from './raid.errors';
-import { RaidFixtureService } from './raid-fixture.service';
+import { RaidCandidateSelector } from './raid.matchmaking';
 import { RaidRateLimiter } from './raid-rate-limiter.service';
 import { RaidService } from './raid.service';
 import { calculateRaidLoot } from './raid.calculator';
+import { SystemOpponentService } from './system-opponent.service';
+import { NEW_KINGDOM_SHIELD_MS, REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS } from './raid.config';
+import { SYSTEM_OPPONENTS } from './system-opponent.config';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
 const economy = new EconomyService(prisma, notifications);
-const fixtures = new RaidFixtureService(prisma, economy);
-const raids = new RaidService(prisma, economy, fixtures, new RaidRateLimiter(), notifications);
+const systems = new SystemOpponentService(prisma, economy);
+const selector = new RaidCandidateSelector();
+const raids = new RaidService(prisma, economy, systems, selector, new RaidRateLimiter(), notifications);
 
 function context(prefix = 'raid'): DevelopmentPlayerContext {
   return { platform: 'WEB', externalUserId: `${prefix}-${randomUUID()}` };
@@ -66,6 +70,140 @@ describe.sequential('authoritative Raid integration', () => {
     const balances = Object.fromEntries(opponent.kingdom!.resourceBalances.filter((row) => row.resource !== 'GEMS').map((row) => [row.resource, row.amount]));
     const watchtowerLevel = opponent.kingdom!.buildings[0]?.level ?? 1;
     expect(first.offer.potentialLoot).toEqual(calculateRaidLoot(balances, Math.min(1_500, Math.max(0, watchtowerLevel - 1) * 100)));
+  });
+
+  it('bootstraps exactly 30 durable system opponents idempotently with complete combat teams', async () => {
+    await systems.ensure();
+    await new SystemOpponentService(prisma, economy).ensure();
+    const accounts = await prisma.platformAccount.findMany({
+      where: { platform: 'WEB', externalUserId: { in: SYSTEM_OPPONENTS.map((item) => item.externalId) } },
+      include: { player: { include: { kingdom: { include: { buildings: true, resourceBalances: true } }, raidTeam: { include: { slots: true } }, heroes: true } } },
+    });
+    expect(accounts).toHaveLength(30);
+    expect(new Set(accounts.map((row) => row.playerId))).toHaveLength(30);
+    for (const account of accounts) {
+      expect(account.player.isSystemOpponent).toBe(true);
+      expect(account.player.kingdom?.buildings.length).toBeGreaterThanOrEqual(9);
+      expect(account.player.kingdom?.resourceBalances).toHaveLength(5);
+      expect(account.player.heroes).toHaveLength(3);
+      expect(account.player.raidTeam?.slots).toHaveLength(3);
+    }
+  });
+
+  it('keeps a persistent 24-hour shield and gives a fresh player varied system-only offers', async () => {
+    const fresh = context('shielded-search');
+    const firstOverview = await raids.overview(fresh);
+    const secondOverview = await raids.overview(fresh);
+    expect(firstOverview.newPlayerProtection.active).toBe(true);
+    expect(firstOverview.newPlayerProtection.expiresAt).toBe(secondOverview.newPlayerProtection.expiresAt);
+    const opponents = new Set<string>();
+    for (let index = 0; index < 6; index += 1) {
+      const result = await raids.search(fresh);
+      expect(result.offer.opponent.kind).toBe('SYSTEM');
+      opponents.add(result.offer.opponent.id);
+    }
+    expect(opponents.size).toBeGreaterThan(1);
+    expect((await raids.overview(fresh)).newPlayerProtection.active).toBe(true);
+  });
+
+  it('excludes a shielded real defender and permits safe real matchmaking after expiry', async () => {
+    const protectedContext = context('protected-defender');
+    const oldAttackerContext = context('old-attacker');
+    const protectedPlayer = await player(protectedContext);
+    const oldAttacker = await player(oldAttackerContext);
+    const exclusiveTrophies = 100_000_000 + Number.parseInt(randomUUID().slice(0, 6), 16);
+    await prisma.player.updateMany({ where: { id: { in: [protectedPlayer.id, oldAttacker.id] } }, data: { trophies: exclusiveTrophies } });
+    await prisma.player.update({ where: { id: oldAttacker.id }, data: { createdAt: new Date(Date.now() - NEW_KINGDOM_SHIELD_MS - 1_000) } });
+    const whileProtected = await raids.search(oldAttackerContext);
+    expect(whileProtected.offer.opponent.id).not.toBe(protectedPlayer.id);
+    expect(whileProtected.offer.opponent.kind).toBe('SYSTEM');
+
+    await prisma.player.update({ where: { id: protectedPlayer.id }, data: { createdAt: new Date(Date.now() - NEW_KINGDOM_SHIELD_MS - 1_000) } });
+    const afterExpiry = await raids.search(oldAttackerContext);
+    expect(afterExpiry.offer.opponent.id).toBe(protectedPlayer.id);
+    expect(afterExpiry.offer.opponent.kind).toBe('REAL');
+  });
+
+  it('blocks repeat farming of a real defender for six hours and allows it after cooldown', async () => {
+    const attackerContext = context('anti-farm-attacker');
+    const defenderContext = context('anti-farm-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    const exclusiveTrophies = 200_000_000 + Number.parseInt(randomUUID().slice(0, 6), 16);
+    await prisma.player.updateMany({
+      where: { id: { in: [attacker.id, defender.id] } },
+      data: { createdAt: new Date(Date.now() - NEW_KINGDOM_SHIELD_MS - 1_000), trophies: exclusiveTrophies },
+    });
+    const battle = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    const duringCooldown = await raids.search(attackerContext);
+    expect(duringCooldown.offer.opponent.id).not.toBe(defender.id);
+    expect(duringCooldown.offer.opponent.kind).toBe('SYSTEM');
+    await prisma.battle.update({ where: { id: battle.id }, data: { createdAt: new Date(Date.now() - REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS - 1_000) } });
+    await prisma.player.updateMany({ where: { id: { in: [attacker.id, defender.id] } }, data: { trophies: exclusiveTrophies } });
+    const systemPlayerIds = [...(await systems.configuredPlayers()).keys()].slice(0, 8);
+    for (const systemPlayerId of systemPlayerIds) await offer(attacker.id, systemPlayerId);
+    const afterCooldown = await raids.search(attackerContext);
+    expect(afterCooldown.offer.opponent.id).toBe(defender.id);
+    expect(afterCooldown.offer.opponent.kind).toBe('REAL');
+  });
+
+  it('replenishes a drained system opponent once under concurrency with an exact ledger delta', async () => {
+    const configured = (await systems.configuredPlayers()).entries().next().value as [string, (typeof SYSTEM_OPPONENTS)[number]];
+    const [systemPlayerId, systemConfig] = configured;
+    const systemPlayer = await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId }, include: { kingdom: { include: { resourceBalances: true } } } });
+    const gold = systemPlayer.kingdom!.resourceBalances.find((row) => row.resource === 'GOLD')!;
+    const before = systemConfig.tier.resourceThresholds.GOLD - 1n;
+    await prisma.resourceBalance.update({ where: { id: gold.id }, data: { amount: before } });
+    const ledgerBefore = await prisma.economyTransaction.count({ where: { playerId: systemPlayerId, resourceType: 'GOLD', reason: 'SYSTEM_OPPONENT_REPLENISH' } });
+    await Promise.all([
+      systems.prepareForOffer(systemPlayerId, systemConfig),
+      systems.prepareForOffer(systemPlayerId, systemConfig),
+    ]);
+    const refreshed = await prisma.resourceBalance.findUniqueOrThrow({ where: { id: gold.id } });
+    const ledger = await prisma.economyTransaction.findMany({
+      where: { playerId: systemPlayerId, resourceType: 'GOLD', reason: 'SYSTEM_OPPONENT_REPLENISH' },
+      orderBy: { createdAt: 'desc' }, take: 1,
+    });
+    expect(refreshed.amount).toBe(systemConfig.tier.resourceTargets.GOLD);
+    expect(await prisma.economyTransaction.count({ where: { playerId: systemPlayerId, resourceType: 'GOLD', reason: 'SYSTEM_OPPONENT_REPLENISH' } })).toBe(ledgerBefore + 1);
+    expect(ledger[0]).toMatchObject({ balanceBefore: before, balanceAfter: systemConfig.tier.resourceTargets.GOLD, delta: systemConfig.tier.resourceTargets.GOLD - before });
+  });
+
+  it('keeps system trophies stable and creates no defender social or Revenge state', async () => {
+    const attackerContext = context('system-social-attacker');
+    const attacker = await player(attackerContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    const [systemPlayerId] = (await systems.configuredPlayers()).keys();
+    const trophiesBefore = (await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId } })).trophies;
+    const battle = await raids.start(attackerContext, await offer(attacker.id, systemPlayerId), randomUUID());
+    expect((await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId } })).trophies).toBe(trophiesBefore);
+    expect(battle.defender.trophyDelta).toBe(0);
+    expect(await prisma.revengeTarget.count({ where: { sourceBattleId: battle.id } })).toBe(0);
+    expect(await prisma.notification.count({ where: { playerId: systemPlayerId, sourceKey: { contains: battle.id } } })).toBe(0);
+  });
+
+  it('serializes simultaneous Raids against one system defender without negative resources', async () => {
+    const firstContext = context('system-concurrent-a');
+    const secondContext = context('system-concurrent-b');
+    const first = await player(firstContext);
+    const second = await player(secondContext);
+    await prisma.playerHero.updateMany({ where: { playerId: { in: [first.id, second.id] } }, data: { level: 20 } });
+    const [systemPlayerId, configured] = (await systems.configuredPlayers()).entries().next().value as [string, (typeof SYSTEM_OPPONENTS)[number]];
+    await systems.prepareForOffer(systemPlayerId, configured);
+    const trophiesBefore = (await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId } })).trophies;
+    const [firstOffer, secondOffer] = await Promise.all([offer(first.id, systemPlayerId), offer(second.id, systemPlayerId)]);
+    const battles = await Promise.all([
+      raids.start(firstContext, firstOffer, randomUUID()),
+      raids.start(secondContext, secondOffer, randomUUID()),
+    ]);
+    expect(battles).toHaveLength(2);
+    expect((await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId } })).trophies).toBe(trophiesBefore);
+    const system = await prisma.player.findUniqueOrThrow({ where: { id: systemPlayerId }, include: { kingdom: { include: { resourceBalances: true } } } });
+    expect(system.kingdom!.resourceBalances.every((row) => row.amount >= 0n)).toBe(true);
+    const transfers = await prisma.economyTransaction.findMany({
+      where: { referenceId: { in: battles.map((battle) => battle.id) }, reason: { in: ['RAID_REWARD', 'RAID_LOSS'] } },
+    });
+    expect(transfers.every((row) => row.balanceAfter >= 0n && row.balanceAfter - row.balanceBefore === row.delta)).toBe(true);
   });
 
   it('uses Watchtower protection in authoritative Raid settlement and ledger amounts', async () => {

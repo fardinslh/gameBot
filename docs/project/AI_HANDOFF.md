@@ -55,6 +55,8 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Persist battle seed, rules version, snapshots, events, and final settlement
 - Reuse the existing battle engine for Revenge
 - Preserve Match Offer ownership, expiry, single use, and non-self checks
+- Preserve the 24-hour `Player.createdAt` shield, bounded real matchmaking passes, recent-eight memory, and six-hour standard-Raid anti-farm rule
+- Keep system-opponent classification server-owned, replenishment locked and ledgered, Trophy stable, and human social/Revenge state excluded
 - Preserve Revenge ownership, expiry, source validation, row lock, single use, and loop prevention
 - Never expose development identity as production authentication
 

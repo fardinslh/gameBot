@@ -784,6 +784,12 @@ button { color: inherit; }
 .raid-titlebar p { margin: 4px 0 0; color: var(--cream-muted); font-size: 8px; }
 .raid-titlebar > b { display: flex; align-items: center; gap: 4px; color: var(--gold-bright); font-size: 11px; }
 .raid-titlebar__log { display: flex; min-height: 34px; align-items: center; gap: 4px; padding: 0 7px; color: var(--gold-bright); background: rgba(226,180,71,.08); border: 0; border-radius: 10px; cursor: pointer; font-size: 7px; }
+.raid-shield-status { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 7px; margin: 6px 0; padding: 6px 8px; color: #b9d6ad; background: linear-gradient(90deg, rgba(62,102,69,.28), rgba(31,57,41,.18)); border: 1px solid rgba(150,199,139,.16); border-radius: 11px; }
+.raid-shield-status > svg { color: #9ec58e; }
+.raid-shield-status > span { display: grid; min-width: 0; gap: 1px; }
+.raid-shield-status strong { color: #d8e8cf; font-size: 8px; }
+.raid-shield-status small { overflow: hidden; color: #93a58d; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
+.raid-shield-status > b { color: #b9d6ad; font-size: 7px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .raid-match-card, .raid-result { padding: 13px; background: var(--surface-game); border-radius: 20px; box-shadow: 0 16px 34px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,215,108,.14), inset 0 1px rgba(255,255,255,.05); }
 .raid-opponent { display: flex; align-items: center; gap: 10px; }
 .raid-opponent > span { display: grid; width: 48px; height: 48px; place-items: center; color: #e8b876; background: rgba(126,58,46,.24); border-radius: 15px; }

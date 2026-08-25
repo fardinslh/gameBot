@@ -20,7 +20,7 @@ Before reading inbox data, the API changes due `AVAILABLE` targets to `EXPIRED`.
 
 - Battle type is `RAID`
 - The attacker wins
-- The defender is not a development opponent
+- The defender is a real Player, not a system opponent
 
 The target belongs to the defender, points at the original attacker, and expires after 24 hours. `sourceBattleId` is unique, so one source battle cannot create two targets.
 

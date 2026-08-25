@@ -42,6 +42,8 @@ async function scenario(kind) {
   await page.locator('.raid-empty .raid-primary').click();
   const searchResponse = await searchResponsePromise;
   const search = await searchResponse.json();
+  if (!search.newPlayerProtection?.active) throw new Error('Fresh Raid browser player is not shielded');
+  if (search.offer?.opponent?.kind !== 'SYSTEM') throw new Error('Shielded Raid browser player received a real opponent');
   await page.waitForSelector('[data-raid-state="offer"]');
   if (kind === 'victory') await page.screenshot({ path: new URL('phase-05-raid-fa-320.png', artifacts).pathname.slice(1) });
   if (kind === 'victory') await prisma.playerHero.updateMany({ where: { playerId: search.offer.opponent.id }, data: { level: 1 } });
@@ -92,10 +94,12 @@ try {
       const dimensions = await page.evaluate(() => ({
         overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         navHeight: document.querySelector('.bottom-navigation')?.getBoundingClientRect().height,
+        shieldHeight: document.querySelector('.raid-shield-status')?.getBoundingClientRect().height,
         direction: document.querySelector('.game-viewport')?.getAttribute('dir'),
       }));
       if (dimensions.overflow) throw new Error(`Horizontal overflow at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.navHeight !== 54) throw new Error(`Bottom navigation changed at ${locale} ${viewport.width}x${viewport.height}`);
+      if (!dimensions.shieldHeight || dimensions.shieldHeight > 44) throw new Error(`Shield indicator is missing or too tall at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.direction !== (locale === 'fa' ? 'rtl' : 'ltr')) throw new Error(`Direction failed for ${locale}`);
       await page.close();
     }
@@ -103,7 +107,8 @@ try {
   const victory = await scenario('victory');
   const defeat = await scenario('defeat');
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS Raid layout at 320x568, 375x812, 390x844 in English LTR and Persian RTL');
+  console.log('PASS compact New Kingdom Shield layout at 320x568, 375x812, 390x844 in English LTR and Persian RTL');
+  console.log('PASS fresh players receive system-only Raid offers from authoritative shield state');
   console.log('PASS server match offer + Pixi event playback + Victory/Defeat result screenshots');
   console.log('PASS post-Raid Kingdom HUD refresh + persisted snapshots/events');
   console.log(`DEBUG battle=${victory.id} seed=${victory.seed} rules=${victory.rulesVersion} result=${victory.result} duration=${victory.durationMs} events=${victory.events.length}`);

@@ -114,6 +114,8 @@ export const fa: Dictionary = {
     findAnother: 'حریف دیگر', ready: 'پیشتازان آماده‌اند', readyHint: 'یک پادشاهی رقیب پیدا کن و گروه سه‌نفره خود را به نبرد ببر.',
     yourTeam: 'گروه یورش شما', editTeam: 'ویرایش گروه', autoBattle: 'نبرد خودکار سرور', battleComplete: 'نبرد پایان یافت',
     victory: 'پیروزی', defeat: 'شکست', returnKingdom: 'بازگشت به پادشاهی', battleHistory: 'تاریخچه نبرد',
+    newKingdomShield: 'سپر پادشاهی نو', shieldHint: 'تا پایان محافظت فقط با رقیبان تمرینی روبه‌رو می‌شوی.',
+    shieldExpiresIn: '{count} ساعت باقی‌مانده',
   },
   inboxUi: {
     back: 'بازگشت', title: 'گزارش نبرد', incomingAttacks: 'حمله‌های دریافتی', loading: 'در حال خواندن دفتر جنگ…',

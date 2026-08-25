@@ -24,7 +24,7 @@ A retry with the same tuple returns the stored response. Unique constraints prev
 
 Economy and Hero mutations acquire `pg_advisory_xact_lock(hashtext(platform:externalUserId))`. Raid and Revenge resolve both participant identities, sort by player ID, then acquire both locks in that order. Stable ordering prevents two concurrent battles from deadlocking by reversing participants.
 
-Revenge start also locks its target row with `FOR UPDATE`. Services retry serialization conflicts up to three times.
+Revenge start also locks its target row with `FOR UPDATE`. System-opponent replenishment uses the same stable platform-identity advisory lock before it re-reads or changes balances, preventing concurrent searches from double-granting resources. Services retry serialization conflicts where applicable.
 
 ## Resource ledger
 
@@ -34,7 +34,11 @@ Every authoritative balance mutation records before, delta, after, reason, and r
 
 The server creates the seed and fixes `rulesVersion`. It stores six Hero snapshots and ordered events. Historical playback reads those records instead of current Hero state.
 
-Match Offers bind attacker and defender, expire after 180 seconds, and become single-use. The start endpoint validates caller ownership and rejects self attacks.
+Match Offers bind attacker and defender, expire after 180 seconds, and become single-use. The start endpoint validates caller ownership and rejects self attacks. Real matchmaking is bounded to ±450 Trophy and ±40% power at its widest; protected or recently farmed real defenders cannot be selected, and the fallback is a server-owned system opponent.
+
+## Launch protection boundaries
+
+`Player.isSystemOpponent` is a server-owned database field and is never inferred from display name or accepted from the client. New-player protection is derived from persistent `Player.createdAt` for 24 hours. Its API countdown is paired with server time. System replenishment is ledgered, system Trophy values remain stable, and system defenders are excluded from human notification/Revenge creation.
 
 ## Revenge integrity
 
@@ -54,5 +58,6 @@ Unique `sourceKey` values make `PLAYER_RAIDED`, `REVENGE_AVAILABLE`, and `UPGRAD
 - BullMQ has no worker security or job validation because no jobs exist
 - External notification delivery and payment verification do not exist
 - Administrative tools and audit access controls do not exist
+- Disposable fresh-account system-opponent farming is an acceptable but monitored soft-launch risk; no device fingerprinting exists
 
 Keep these gaps labeled as pending. Do not claim production security from the current development identity.

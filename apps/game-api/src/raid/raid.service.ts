@@ -37,16 +37,39 @@ import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { calculateRaidLoot, calculateTrophyDeltas } from './raid.calculator';
-import { EMPTY_RAID_LOOT, RAID_HISTORY_LIMIT, RAID_OFFER_TTL_MS, RAID_RECENT_OPPONENT_LIMIT, REVENGE_TTL_MS } from './raid.config';
+import {
+  EMPTY_RAID_LOOT,
+  NEW_KINGDOM_SHIELD_MS,
+  RAID_HISTORY_LIMIT,
+  RAID_OFFER_TTL_MS,
+  RAID_RECENT_OPPONENT_LIMIT,
+  REAL_PLAYER_MATCH_PASSES,
+  REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS,
+  REVENGE_TTL_MS,
+} from './raid.config';
 import { RaidError } from './raid.errors';
-import { RaidFixtureService } from './raid-fixture.service';
+import {
+  matchesRealPlayerPass,
+  newPlayerProtection,
+  RaidCandidateSelector,
+  rankMatchCandidates,
+} from './raid.matchmaking';
 import { RaidRateLimiter } from './raid-rate-limiter.service';
 import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
+import type { ConfiguredSystemOpponent } from './system-opponent.config';
+import { SystemOpponentService } from './system-opponent.service';
 
 const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
 });
 type TeamGraph = Prisma.RaidTeamGetPayload<typeof teamGraph>;
+const candidateGraph = Prisma.validator<Prisma.PlayerDefaultArgs>()({
+  include: {
+    kingdom: { include: { resourceBalances: true, buildings: { where: { type: { in: ['CASTLE', 'WATCHTOWER'] } } } } },
+    raidTeam: teamGraph,
+  },
+});
+type CandidatePlayer = Prisma.PlayerGetPayload<typeof candidateGraph>;
 type Tx = Prisma.TransactionClient;
 
 interface ResolveBattleInput {
@@ -58,6 +81,13 @@ interface ResolveBattleInput {
   revengeTargetId?: string;
 }
 
+interface MatchCandidate {
+  player: CandidatePlayer;
+  team: RaidTeamPreview;
+  kind: 'REAL' | 'SYSTEM';
+  systemConfig?: ConfiguredSystemOpponent;
+}
+
 @Injectable()
 export class RaidService {
   private readonly logger = new Logger(RaidService.name);
@@ -65,7 +95,8 @@ export class RaidService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly economy: EconomyService,
-    private readonly fixtures: RaidFixtureService,
+    private readonly systems: SystemOpponentService,
+    private readonly candidateSelector: RaidCandidateSelector,
     private readonly limiter: RaidRateLimiter,
     private readonly notifications: NotificationService,
   ) {}
@@ -79,54 +110,82 @@ export class RaidService {
   async search(context: DevelopmentPlayerContext): Promise<RaidSearchResponse> {
     const identity = await this.identity(context);
     this.limiter.assert(identity.playerId, 'search');
-    await this.fixtures.ensure();
-    const overview = await this.loadOverview(identity.playerId);
+    await this.systems.ensure();
+    const now = new Date();
+    const overview = await this.loadOverview(identity.playerId, now);
     if (overview.team.heroes.length !== 3) throw new RaidError('INVALID_RAID_TEAM', 'Select exactly three Heroes before searching.');
 
     const recent = await this.prisma.raidMatchOffer.findMany({
       where: { attackerPlayerId: identity.playerId }, orderBy: { createdAt: 'desc' }, take: RAID_RECENT_OPPONENT_LIMIT,
       select: { defenderPlayerId: true },
     });
-    const recentlySeen = recent.map((item) => item.defenderPlayerId);
-    const candidates = await this.prisma.player.findMany({
+    const recentlySeen = new Set(recent.map((item) => item.defenderPlayerId));
+    const immediateOpponentId = recent[0]?.defenderPlayerId;
+    const systemConfigs = await this.systems.configuredPlayers();
+    const systemPlayers = await this.prisma.player.findMany({
       where: {
-        id: { not: identity.playerId }, kingdom: { isNot: null }, raidTeam: { isNot: null },
+        id: { in: [...systemConfigs.keys()], not: identity.playerId },
+        isSystemOpponent: true,
+        kingdom: { isNot: null }, raidTeam: { isNot: null },
         NOT: { raidTeam: { slots: { none: {} } } },
       },
-      include: {
-        kingdom: { include: { resourceBalances: true, buildings: { where: { type: { in: ['CASTLE', 'WATCHTOWER'] } } } } },
-        raidTeam: teamGraph,
-      },
-      take: 100,
+      ...candidateGraph,
     });
-    const valid = candidates
-      .map((player) => ({ player, team: player.raidTeam ? this.presentTeam(player.raidTeam) : null }))
-      .filter((item): item is typeof item & { team: RaidTeamPreview } => item.team?.heroes.length === 3);
-    const passes = [
-      { trophy: 150, power: 0.15, recent: false },
-      { trophy: 300, power: 0.30, recent: false },
-      { trophy: Number.MAX_SAFE_INTEGER, power: Number.MAX_SAFE_INTEGER, recent: false },
-      { trophy: Number.MAX_SAFE_INTEGER, power: Number.MAX_SAFE_INTEGER, recent: true },
-    ];
-    let selected: (typeof valid)[number] | undefined;
-    for (const pass of passes) {
-      selected = valid
-        .filter(({ player, team }) => (pass.recent || !recentlySeen.includes(player.id))
-          && Math.abs(player.trophies - overview.player.trophies) <= pass.trophy
-          && Math.abs(team.power - overview.team.power) <= Math.max(1, overview.team.power * pass.power))
-        .sort((left, right) => {
-          const leftScore = Math.abs(left.player.trophies - overview.player.trophies) + Math.abs(left.team.power - overview.team.power) / 10;
-          const rightScore = Math.abs(right.player.trophies - overview.player.trophies) + Math.abs(right.team.power - overview.team.power) / 10;
-          return leftScore - rightScore || left.player.id.localeCompare(right.player.id);
-        })[0];
-      if (selected) break;
+    const systemCandidates = this.presentCandidates(systemPlayers, 'SYSTEM', systemConfigs);
+
+    let realCandidates: MatchCandidate[] = [];
+    let repeatFarmed = new Set<string>();
+    if (!overview.newPlayerProtection.active) {
+      const shieldCutoff = new Date(now.getTime() - NEW_KINGDOM_SHIELD_MS);
+      const minimumTrophies = Math.max(0, overview.player.trophies - REAL_PLAYER_MATCH_PASSES.at(-1)!.trophyDifference);
+      const maximumTrophies = overview.player.trophies + REAL_PLAYER_MATCH_PASSES.at(-1)!.trophyDifference;
+      const [realPlayers, recentBattles] = await Promise.all([
+        this.prisma.player.findMany({
+          where: {
+            id: { not: identity.playerId },
+            isSystemOpponent: false,
+            createdAt: { lte: shieldCutoff },
+            trophies: { gte: minimumTrophies, lte: maximumTrophies },
+            kingdom: { isNot: null }, raidTeam: { isNot: null },
+            NOT: { raidTeam: { slots: { none: {} } } },
+          },
+          ...candidateGraph,
+        }),
+        this.prisma.battle.findMany({
+          where: {
+            type: PrismaBattleType.RAID,
+            attackerPlayerId: identity.playerId,
+            createdAt: { gte: new Date(now.getTime() - REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS) },
+          },
+          select: { defenderPlayerId: true },
+        }),
+      ]);
+      repeatFarmed = new Set(recentBattles.map((battle) => battle.defenderPlayerId));
+      realCandidates = this.presentCandidates(realPlayers, 'REAL')
+        .filter((candidate) => !repeatFarmed.has(candidate.player.id));
+    }
+
+    const nonRecentReal = realCandidates.filter((candidate) => !recentlySeen.has(candidate.player.id));
+    const nonRecentSystem = systemCandidates.filter((candidate) => !recentlySeen.has(candidate.player.id));
+    const olderRecentReal = realCandidates.filter((candidate) => candidate.player.id !== immediateOpponentId);
+    const olderRecentSystem = systemCandidates.filter((candidate) => candidate.player.id !== immediateOpponentId);
+    let selected = this.selectRealCandidate(nonRecentReal, overview)
+      ?? this.selectRankedCandidate(nonRecentSystem, overview)
+      ?? this.selectRealCandidate(olderRecentReal, overview)
+      ?? this.selectRankedCandidate(olderRecentSystem, overview)
+      ?? this.selectRankedCandidate(systemCandidates, overview);
+    if (selected?.player.id === immediateOpponentId) {
+      this.logger.warn(`raid-immediate-repeat attacker=${identity.playerId} defender=${selected.player.id}`);
     }
     if (!selected?.player.kingdom) throw new RaidError('NO_OPPONENT_AVAILABLE', 'No eligible opponent is available right now.');
+    const defenderState = selected.kind === 'SYSTEM' && selected.systemConfig
+      ? await this.systems.prepareForOffer(selected.player.id, selected.systemConfig)
+      : selected.player.kingdom;
     const potentialLoot = calculateRaidLoot(
-      this.balanceMap(selected.player.kingdom.resourceBalances),
-      this.watchtowerProtectionBps(selected.player.kingdom.buildings),
+      this.balanceMap(defenderState.resourceBalances),
+      this.watchtowerProtectionBps(defenderState.buildings),
     );
-    const expiresAt = new Date(Date.now() + RAID_OFFER_TTL_MS);
+    const expiresAt = new Date(now.getTime() + RAID_OFFER_TTL_MS);
     const offer = await this.prisma.raidMatchOffer.create({
       data: {
         attackerPlayerId: identity.playerId,
@@ -139,7 +198,7 @@ export class RaidService {
     });
     return {
       ...overview,
-      offer: this.presentOffer(offer.id, expiresAt, overview.team.power, selected.player, selected.team, potentialLoot),
+      offer: this.presentOffer(offer.id, expiresAt, overview.team.power, selected.player, selected.team, potentialLoot, selected.kind),
     };
   }
 
@@ -371,7 +430,7 @@ export class RaidService {
     return { playerId: account.playerId, kingdomId: account.player.kingdom.id };
   }
 
-  private async loadOverview(playerId: string): Promise<RaidOverviewResponse> {
+  private async loadOverview(playerId: string, now = new Date()): Promise<RaidOverviewResponse> {
     const player = await this.prisma.player.findUniqueOrThrow({
       where: { id: playerId },
       include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'CASTLE' }, take: 1 } } }, raidTeam: teamGraph },
@@ -381,7 +440,8 @@ export class RaidService {
       player: { id: player.id, displayName: player.displayName ?? 'Warden of Dawnkeep', level: player.kingdom.buildings[0]?.level ?? player.kingdom.level, trophies: player.trophies },
       balances: this.presentBalances(player.kingdom.resourceBalances),
       team: this.presentTeam(player.raidTeam),
-      serverTime: new Date().toISOString(),
+      newPlayerProtection: newPlayerProtection(player.createdAt, player.isSystemOpponent, now),
+      serverTime: now.toISOString(),
     };
   }
 
@@ -400,15 +460,58 @@ export class RaidService {
     return { heroes, power: heroes.reduce((total, hero) => total + hero.power, 0) };
   }
 
-  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { type: string; level: number }[] } | null }, team: RaidTeamPreview, potentialLoot: RaidLootAmounts): RaidMatchOfferState {
+  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { type: string; level: number }[] } | null }, team: RaidTeamPreview, potentialLoot: RaidLootAmounts, kind: 'REAL' | 'SYSTEM'): RaidMatchOfferState {
     return {
       id, expiresAt: expiresAt.toISOString(), ownPower,
       opponent: {
         id: player.id, displayName: player.displayName ?? 'Unknown Warden', castleLevel: player.kingdom?.buildings.find((building) => building.type === 'CASTLE')?.level ?? player.kingdom?.level ?? 1,
-        trophies: player.trophies, teamPower: team.power, team: team.heroes,
+        trophies: player.trophies, teamPower: team.power, team: team.heroes, kind,
       },
       potentialLoot,
     };
+  }
+
+  private presentCandidates(
+    players: CandidatePlayer[],
+    kind: 'REAL' | 'SYSTEM',
+    systemConfigs?: Map<string, ConfiguredSystemOpponent>,
+  ): MatchCandidate[] {
+    return players.flatMap((player) => {
+      if (!player.raidTeam) return [];
+      const team = this.presentTeam(player.raidTeam);
+      if (team.heroes.length !== 3) return [];
+      const systemConfig = systemConfigs?.get(player.id);
+      if (kind === 'SYSTEM' && !systemConfig) return [];
+      return [{ player, team, kind, systemConfig }];
+    });
+  }
+
+  private selectRealCandidate(
+    candidates: MatchCandidate[],
+    overview: RaidOverviewResponse,
+  ): MatchCandidate | undefined {
+    for (const pass of REAL_PLAYER_MATCH_PASSES) {
+      const eligible = candidates.filter((candidate) => matchesRealPlayerPass(
+        candidate,
+        overview.player.trophies,
+        overview.team.power,
+        pass,
+      ));
+      const selected = this.selectRankedCandidate(eligible, overview);
+      if (selected) return selected;
+    }
+    return undefined;
+  }
+
+  private selectRankedCandidate(
+    candidates: MatchCandidate[],
+    overview: RaidOverviewResponse,
+  ): MatchCandidate | undefined {
+    return this.candidateSelector.select(rankMatchCandidates(
+      candidates,
+      overview.player.trophies,
+      overview.team.power,
+    ));
   }
 
   private async loadCombatTeam(tx: Tx, playerId: string, side: 'ATTACKER' | 'DEFENDER'): Promise<BattleCombatHero[]> {
@@ -441,8 +544,8 @@ export class RaidService {
       this.watchtowerProtectionBps(defender.kingdom.buildings),
     ) : { ...EMPTY_RAID_LOOT };
     const calculatedDeltas = calculateTrophyDeltas(attacker.trophies, defender.trophies, attackerWon);
-    const attackerDelta = Math.max(-attacker.trophies, calculatedDeltas.attacker);
-    const defenderDelta = Math.max(-defender.trophies, calculatedDeltas.defender);
+    const attackerDelta = attacker.isSystemOpponent ? 0 : Math.max(-attacker.trophies, calculatedDeltas.attacker);
+    const defenderDelta = defender.isSystemOpponent ? 0 : Math.max(-defender.trophies, calculatedDeltas.defender);
     const battleId = randomUUID();
     if (attackerWon) {
       await this.transferLoot(
@@ -453,8 +556,8 @@ export class RaidService {
         loot,
       );
     }
-    await tx.player.update({ where: { id: attacker.id }, data: { trophies: { increment: attackerDelta } } });
-    await tx.player.update({ where: { id: defender.id }, data: { trophies: { increment: defenderDelta } } });
+    if (attackerDelta !== 0) await tx.player.update({ where: { id: attacker.id }, data: { trophies: { increment: attackerDelta } } });
+    if (defenderDelta !== 0) await tx.player.update({ where: { id: defender.id }, data: { trophies: { increment: defenderDelta } } });
     const startedAt = new Date();
     const resolvedAt = new Date(startedAt.getTime() + engine.durationMs);
     await tx.battle.create({
@@ -504,7 +607,7 @@ export class RaidService {
       },
     });
 
-    if (input.type === PrismaBattleType.RAID && !defender.isDevelopmentOpponent) {
+    if (input.type === PrismaBattleType.RAID && !defender.isSystemOpponent) {
       await this.notifications.createNotification(tx, {
         playerId: defender.id,
         type: 'PLAYER_RAIDED',

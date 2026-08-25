@@ -113,6 +113,8 @@ export const en = {
     readyHint: 'Scout a rival kingdom and lead your three-Hero Raid Team into battle.', yourTeam: 'Your Raid Team',
     editTeam: 'Edit Team', autoBattle: 'Server-Resolved Auto Battle', battleComplete: 'Battle Complete',
     victory: 'Victory', defeat: 'Defeat', returnKingdom: 'Return to Kingdom', battleHistory: 'Battle History',
+    newKingdomShield: 'New Kingdom Shield', shieldHint: 'Training rivals only while protected.',
+    shieldExpiresIn: '{count}h remaining',
   },
   inboxUi: {
     back: 'Back', title: 'Battle Log', incomingAttacks: 'Incoming attacks', loading: 'Reading the war ledger…',

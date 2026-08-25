@@ -276,10 +276,16 @@ export interface RaidTeamPreview {
   power: number;
 }
 
+export interface NewPlayerProtectionState {
+  active: boolean;
+  expiresAt: string | null;
+}
+
 export interface RaidOverviewResponse {
   player: { id: string; displayName: string; level: number; trophies: number };
   balances: ResourceAmounts;
   team: RaidTeamPreview;
+  newPlayerProtection: NewPlayerProtectionState;
   serverTime: string;
 }
 
@@ -293,6 +299,7 @@ export interface RaidMatchOfferState {
     trophies: number;
     teamPower: number;
     team: HeroState[];
+    kind: 'REAL' | 'SYSTEM';
   };
   ownPower: number;
   potentialLoot: RaidLootAmounts;

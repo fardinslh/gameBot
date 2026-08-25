@@ -44,6 +44,7 @@ enum EconomyTransactionReason {
   RAID_LOSS
   QUEST_REWARD
   PURCHASE
+  SYSTEM_OPPONENT_REPLENISH
 }
 
 enum EconomyAction {
@@ -129,7 +130,7 @@ model Player {
   createdAt             DateTime             @default(now())
   updatedAt             DateTime             @updatedAt
   trophies              Int                  @default(1000)
-  isDevelopmentOpponent Boolean              @default(false)
+  isSystemOpponent      Boolean              @default(false)
   platformAccounts      PlatformAccount[]
   kingdom               Kingdom?
   economyTransactions   EconomyTransaction[]

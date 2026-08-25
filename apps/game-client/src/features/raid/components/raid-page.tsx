@@ -23,6 +23,9 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
   useEffect(() => { if (raid.battle) setBattleFinished(false); }, [raid.battle]);
   useEffect(() => { if (!comingSoon) return; const timer = window.setTimeout(() => setComingSoon(null), 1800); return () => clearTimeout(timer); }, [comingSoon]);
   const state = raid.overview;
+  const shieldHours = state?.newPlayerProtection.active && state.newPlayerProtection.expiresAt
+    ? Math.max(1, Math.ceil((Date.parse(state.newPlayerProtection.expiresAt) - Date.parse(state.serverTime)) / 3_600_000))
+    : 0;
 
   return (
     <div className="game-viewport" lang={locale} dir={locale === 'fa' ? 'rtl' : 'ltr'}>
@@ -53,6 +56,13 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
             ) : (
               <>
                 <header className="raid-titlebar"><span><Swords size={19} /></span><div><h1>{t.raidUi.title}</h1><p>{t.raidUi.subtitle}</p></div><button className="raid-titlebar__log" onClick={() => void raid.openInbox()} type="button"><History size={15} /><span>{t.inboxUi.title}</span></button><b><Trophy size={14} /> {state?.player.trophies ?? 1000}</b></header>
+                {state?.newPlayerProtection.active ? (
+                  <div className="raid-shield-status" role="status">
+                    <Shield size={17} />
+                    <span><strong>{t.raidUi.newKingdomShield}</strong><small>{t.raidUi.shieldHint}</small></span>
+                    <b>{t.raidUi.shieldExpiresIn.replace('{count}', String(shieldHours))}</b>
+                  </div>
+                ) : null}
                 <div className="raid-match-card">
                   {raid.offer ? (
                     <>

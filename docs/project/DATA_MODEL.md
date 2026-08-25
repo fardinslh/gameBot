@@ -33,7 +33,7 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 
 ## Identity models
 
-`Player` owns cross-platform game state, Trophies, and the development-opponent marker. `PlatformAccount` maps one `(platform, externalUserId)` pair to a Player. This unique pair forms the current advisory-lock identity.
+`Player` owns cross-platform game state, Trophies, persistent `createdAt`, and the durable server-owned `isSystemOpponent` classification. `createdAt` is also the source of truth for the 24-hour New Kingdom Shield. `PlatformAccount` maps one `(platform, externalUserId)` pair to a Player. This unique pair forms the current advisory-lock identity.
 
 `Platform` contains `BALE`, `TELEGRAM`, and `WEB`. Runtime player context currently resolves only `WEB`.
 
@@ -89,5 +89,6 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 | `20260825070000_kingdom_progression` | Watchtower, Workshop, completed-upgrade collection action |
 | `20260825070100_kingdom_building_backfill` | Idempotent four-building backfill for existing Kingdoms |
 | `20260825070200_building_progression_constraints` | Building and upgrade level checks |
+| `20260826090000_launch_safe_raid` | Rename system-opponent classification, add replenishment ledger reason and matchmaking index |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

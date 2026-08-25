@@ -19,10 +19,11 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Kingdom progression**: nine persistent buildings, Castle gates, XP, appearance state, four effects
 - **Progressive expansion**: five visual stages, active-only rendering, area reveals, Mine reposition
 - **Project handoff documentation**: canonical developer and AI context under `docs/project`
+- **Launch-Safety PvP**: 30 system opponents, six tiers, bounded matchmaking, new-player shield, anti-farm cooldown, safe replenishment
 
 ## Current and next
 
-No gameplay or visual implementation phase is selected at this baseline. A future task must define scope, acceptance criteria, migration impact, and validation before work begins.
+The next recommended scoped task is **First-Party Analytics Foundation**. It is not implemented by the Launch-Safety PvP pass and must not be inferred from server logs.
 
 Final stage 2 and stage 3 building artwork remains a known visual follow-up. The loader already supports those files; no current phase authorizes asset generation.
 
