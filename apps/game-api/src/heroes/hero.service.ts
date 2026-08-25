@@ -23,6 +23,7 @@ import { deriveHeroStats, heroUpgradeCost } from './hero.calculator';
 import { ensureHeroSystemForPlayer } from './hero.bootstrap';
 import { HERO_CONTENT, HERO_MAXIMUM_LEVEL } from './hero.config';
 import { HeroError } from './hero.errors';
+import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 
 const playerHeroGraph = Prisma.validator<Prisma.PlayerHeroDefaultArgs>()({
   include: { heroDefinition: true },
@@ -55,6 +56,7 @@ export class HeroService {
       const heroes = await this.loadHeroes(tx, playerId);
       const team = await this.loadTeam(tx, playerId);
       const balances = await this.loadBalances(tx, kingdomId);
+      const blacksmithDiscountBps = kingdomEffectBps(await this.loadBuildingLevel(tx, kingdomId, 'BLACKSMITH'));
       const player = await tx.player.findUniqueOrThrow({
         where: { id: playerId },
         include: { kingdom: { include: { buildings: { where: { type: 'CASTLE' }, take: 1 } } } },
@@ -65,7 +67,7 @@ export class HeroService {
           displayName: player.displayName ?? 'Warden of Dawnkeep',
           level: player.kingdom?.buildings[0]?.level ?? player.kingdom?.level ?? 1,
         },
-        heroes: heroes.map((hero) => this.presentHero(hero, balances.GOLD)),
+        heroes: heroes.map((hero) => this.presentHero(hero, balances.GOLD, blacksmithDiscountBps)),
         team: this.presentTeam(team),
         balances,
         serverTime: new Date().toISOString(),
@@ -131,7 +133,8 @@ export class HeroService {
       if (!hero.heroDefinition.enabled) throw new HeroError('HERO_DISABLED', 'This Hero is not currently enabled.');
       if (hero.level >= HERO_MAXIMUM_LEVEL) throw new HeroError('HERO_MAX_LEVEL', 'This Hero is at maximum level.');
 
-      const cost = heroUpgradeCost(hero.level);
+      const blacksmithDiscountBps = kingdomEffectBps(await this.loadBuildingLevel(tx, kingdomId, 'BLACKSMITH'));
+      const cost = heroUpgradeCost(hero.level, blacksmithDiscountBps);
       if (cost <= 0n) throw new Error('Hero upgrade cost must be positive.');
       const gold = await tx.resourceBalance.findUnique({
         where: { kingdomId_resource: { kingdomId, resource: PrismaResourceType.GOLD } },
@@ -165,7 +168,7 @@ export class HeroService {
       });
       const balances = await this.loadBalances(tx, kingdomId);
       const response: HeroUpgradeResponse = {
-        hero: this.presentHero(upgraded, balances.GOLD),
+        hero: this.presentHero(upgraded, balances.GOLD, blacksmithDiscountBps),
         team: this.presentTeam(await this.loadTeam(tx, playerId)),
         balances,
         serverTime: new Date().toISOString(),
@@ -228,12 +231,12 @@ export class HeroService {
     return balances;
   }
 
-  private presentHero(hero: PlayerHeroGraph, availableGold: string): HeroState {
+  private presentHero(hero: PlayerHeroGraph, availableGold: string, blacksmithDiscountBps: number): HeroState {
     const key = hero.heroDefinition.key as HeroKey;
     const config = HERO_CONTENT[key];
     const stats = deriveHeroStats(config, hero.level);
     const atMaximum = hero.level >= HERO_MAXIMUM_LEVEL;
-    const cost = atMaximum ? null : heroUpgradeCost(hero.level);
+    const cost = atMaximum ? null : heroUpgradeCost(hero.level, blacksmithDiscountBps);
     return {
       id: hero.id,
       key,
@@ -246,6 +249,17 @@ export class HeroService {
       maximumLevel: HERO_MAXIMUM_LEVEL,
       upgradeCost: cost === null ? null : { gold: cost.toString() },
     };
+  }
+
+  private async loadBuildingLevel(
+    tx: TransactionClient,
+    kingdomId: string,
+    type: 'BLACKSMITH',
+  ): Promise<number> {
+    return (await tx.building.findUnique({
+      where: { kingdomId_type: { kingdomId, type } },
+      select: { level: true },
+    }))?.level ?? 1;
   }
 
   private presentTeam(team: RaidTeamGraph): RaidTeamState {

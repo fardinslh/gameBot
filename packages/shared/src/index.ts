@@ -24,10 +24,25 @@ export type KingdomBuildingType = (typeof KINGDOM_BUILDING_TYPES)[number];
 
 export type BuildingAppearanceVariant = 'WOOD' | 'STONE' | 'FORTIFIED';
 
+export const KINGDOM_EFFECT_TYPES = [
+  'PRODUCTION_BONUS',
+  'HERO_UPGRADE_DISCOUNT',
+  'RAID_PROTECTION_BONUS',
+  'BUILDING_UPGRADE_SPEED',
+] as const;
+export type KingdomEffectType = (typeof KINGDOM_EFFECT_TYPES)[number];
+
+export interface KingdomBuildingEffectState {
+  type: KingdomEffectType;
+  valueBps: number;
+  nextLevelValueBps: number | null;
+}
+
 export interface KingdomProgressionState {
   level: number;
   xp: number;
-  nextLevelRequirement: number | null;
+  xpIntoLevel: number;
+  xpRequiredForNextLevel: number | null;
 }
 
 export interface KingdomUnlockState {
@@ -81,6 +96,7 @@ export interface KingdomBuildingState {
   unlockCastleLevel: number;
   upgradeAvailability: UpgradeAvailability;
   activeUpgrade: ActiveUpgradeState | null;
+  effects: KingdomBuildingEffectState[];
 }
 
 export interface KingdomStateResponse {

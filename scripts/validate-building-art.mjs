@@ -67,7 +67,7 @@ try {
   const main = await openPage({ width: 320, height: 568 });
   const host = main.locator('.kingdom-scene__canvas');
   const metadata = await host.evaluate((element) => ({ ...element.dataset }));
-  if (metadata.activeBuildingCount !== '9' || metadata.futureBuildingCount !== '0' || metadata.buildingCount !== '9' || metadata.districtCount) {
+  if (metadata.activeBuildingCount !== '5' || metadata.futureBuildingCount !== '0' || metadata.buildingCount !== '5' || metadata.districtCount) {
     throw new Error(`Building art metadata is invalid: ${JSON.stringify(metadata)}`);
   }
   await main.screenshot({ path: new URL('phase-building-art-after-fa-320.png', artifacts).pathname.slice(1) });
@@ -83,10 +83,6 @@ try {
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'mine', x: 170, y: 396 },
     { id: 'grandMarket', x: 320, y: 1172 },
-    { id: 'academy', x: 320, y: 316 },
-    { id: 'blacksmith', x: 89, y: 379 },
-    { id: 'watchtower', x: 590, y: 279 },
-    { id: 'workshop', x: 276, y: 200 },
   ];
   for (const building of active) {
     const page = await openPage({ width: 320, height: 568 });
@@ -177,7 +173,7 @@ try {
   const assetSizes = Object.fromEntries(assetNames.map((name) => [name, statSync(new URL(`apps/game-client/public/assets/kingdom/buildings/${name}-stage-1.webp`, root)).size]));
   if (Object.values(assetSizes).some((bytes) => bytes > 200_000)) throw new Error(`Building asset exceeds 200KB: ${JSON.stringify(assetSizes)}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS nine-building progression Kingdom and all active selections');
+  console.log('PASS five-building Castle-level-one Kingdom and all active selections');
   console.log('PASS 320x568, 375x812, 390x844 in English LTR and Persian RTL with unchanged 54px navigation');
   console.log(`PASS optimized local WebP assets: ${JSON.stringify(assetSizes)}`);
 } finally {

@@ -41,6 +41,7 @@ import { EMPTY_RAID_LOOT, RAID_HISTORY_LIMIT, RAID_OFFER_TTL_MS, RAID_RECENT_OPP
 import { RaidError } from './raid.errors';
 import { RaidFixtureService } from './raid-fixture.service';
 import { RaidRateLimiter } from './raid-rate-limiter.service';
+import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 
 const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
@@ -93,7 +94,7 @@ export class RaidService {
         NOT: { raidTeam: { slots: { none: {} } } },
       },
       include: {
-        kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'CASTLE' }, take: 1 } } },
+        kingdom: { include: { resourceBalances: true, buildings: { where: { type: { in: ['CASTLE', 'WATCHTOWER'] } } } } },
         raidTeam: teamGraph,
       },
       take: 100,
@@ -121,7 +122,10 @@ export class RaidService {
       if (selected) break;
     }
     if (!selected?.player.kingdom) throw new RaidError('NO_OPPONENT_AVAILABLE', 'No eligible opponent is available right now.');
-    const potentialLoot = calculateRaidLoot(this.balanceMap(selected.player.kingdom.resourceBalances));
+    const potentialLoot = calculateRaidLoot(
+      this.balanceMap(selected.player.kingdom.resourceBalances),
+      this.watchtowerProtectionBps(selected.player.kingdom.buildings),
+    );
     const expiresAt = new Date(Date.now() + RAID_OFFER_TTL_MS);
     const offer = await this.prisma.raidMatchOffer.create({
       data: {
@@ -239,7 +243,7 @@ export class RaidService {
         sourceBattle: true,
         targetPlayer: {
           include: {
-            kingdom: { include: { resourceBalances: true } },
+            kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' }, take: 1 } } },
             raidTeam: teamGraph,
           },
         },
@@ -261,7 +265,10 @@ export class RaidService {
         teamPower: targetTeam.power,
       },
       ownTeam: own.team,
-      potentialLoot: calculateRaidLoot(this.balanceMap(target.targetPlayer.kingdom.resourceBalances)),
+      potentialLoot: calculateRaidLoot(
+        this.balanceMap(target.targetPlayer.kingdom.resourceBalances),
+        this.watchtowerProtectionBps(target.targetPlayer.kingdom.buildings),
+      ),
       expiresAt: target.expiresAt.toISOString(),
       serverTime: now.toISOString(),
     };
@@ -393,11 +400,11 @@ export class RaidService {
     return { heroes, power: heroes.reduce((total, hero) => total + hero.power, 0) };
   }
 
-  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { level: number }[] } | null }, team: RaidTeamPreview, potentialLoot: RaidLootAmounts): RaidMatchOfferState {
+  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { type: string; level: number }[] } | null }, team: RaidTeamPreview, potentialLoot: RaidLootAmounts): RaidMatchOfferState {
     return {
       id, expiresAt: expiresAt.toISOString(), ownPower,
       opponent: {
-        id: player.id, displayName: player.displayName ?? 'Unknown Warden', castleLevel: player.kingdom?.buildings[0]?.level ?? player.kingdom?.level ?? 1,
+        id: player.id, displayName: player.displayName ?? 'Unknown Warden', castleLevel: player.kingdom?.buildings.find((building) => building.type === 'CASTLE')?.level ?? player.kingdom?.level ?? 1,
         trophies: player.trophies, teamPower: team.power, team: team.heroes,
       },
       potentialLoot,
@@ -423,13 +430,16 @@ export class RaidService {
     const engine = simulateBattle({ seed, rulesVersion: BATTLE_RULES_VERSION, attacker: attackerTeam, defender: defenderTeam });
     const players = await tx.player.findMany({
       where: { id: { in: [input.attackerPlayerId, input.defenderPlayerId] } },
-      include: { kingdom: { include: { resourceBalances: true } } },
+      include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' }, take: 1 } } } },
     });
     const attacker = players.find((player) => player.id === input.attackerPlayerId);
     const defender = players.find((player) => player.id === input.defenderPlayerId);
     if (!attacker?.kingdom || !defender?.kingdom) throw new RaidError('OPPONENT_NOT_FOUND', 'A battle participant is unavailable.');
     const attackerWon = engine.result === 'ATTACKER_WIN';
-    const loot = attackerWon ? calculateRaidLoot(this.balanceMap(defender.kingdom.resourceBalances)) : { ...EMPTY_RAID_LOOT };
+    const loot = attackerWon ? calculateRaidLoot(
+      this.balanceMap(defender.kingdom.resourceBalances),
+      this.watchtowerProtectionBps(defender.kingdom.buildings),
+    ) : { ...EMPTY_RAID_LOOT };
     const calculatedDeltas = calculateTrophyDeltas(attacker.trophies, defender.trophies, attackerWon);
     const attackerDelta = Math.max(-attacker.trophies, calculatedDeltas.attacker);
     const defenderDelta = Math.max(-defender.trophies, calculatedDeltas.defender);
@@ -621,6 +631,10 @@ export class RaidService {
     const result: Partial<Record<RaidResourceType, bigint>> = {};
     for (const row of rows) if (row.resource !== ResourceType.GEMS) result[row.resource] = row.amount;
     return result;
+  }
+
+  private watchtowerProtectionBps(buildings: readonly { type?: string; level: number }[]): number {
+    return kingdomEffectBps(buildings.find((building) => building.type === 'WATCHTOWER')?.level ?? 1);
   }
 
   private validateKey(value?: string): string {

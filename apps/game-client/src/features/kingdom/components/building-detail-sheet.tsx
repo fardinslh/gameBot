@@ -67,6 +67,16 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
 
       <p className="building-role"><Hammer aria-hidden="true" size={15} /><span><small>{t.role}</small>{presentation.role}</span></p>
 
+      {building?.effects.map((effect) => (
+        <div className="building-effect" data-effect={effect.type} key={effect.type}>
+          <small>{t.buildingEffect} · {t.effectNow}</small>
+          <strong>{formatEffect(t.effectLabels[effect.type], effect.valueBps)}</strong>
+          {effect.nextLevelValueBps !== null ? (
+            <span>{t.effectNext}: {formatEffect(t.effectLabels[effect.type], effect.nextLevelValueBps)}</span>
+          ) : null}
+        </div>
+      ))}
+
       <div className={activeUpgrade ? 'upgrade-preview upgrade-preview--active' : 'upgrade-preview'}>
         <span className="upgrade-preview__icon"><ArrowUp aria-hidden="true" size={18} /></span>
         <span>
@@ -107,4 +117,9 @@ function formatDuration(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
   return minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
+}
+
+function formatEffect(template: string, valueBps: number): string {
+  const value = valueBps / 100;
+  return template.replace('{value}', Number.isInteger(value) ? String(value) : value.toFixed(2));
 }

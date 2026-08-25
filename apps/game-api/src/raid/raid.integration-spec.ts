@@ -9,6 +9,7 @@ import { RaidError } from './raid.errors';
 import { RaidFixtureService } from './raid-fixture.service';
 import { RaidRateLimiter } from './raid-rate-limiter.service';
 import { RaidService } from './raid.service';
+import { calculateRaidLoot } from './raid.calculator';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
@@ -58,6 +59,28 @@ describe.sequential('authoritative Raid integration', () => {
     const persisted = await prisma.raidMatchOffer.findUniqueOrThrow({ where: { id: first.offer.id } });
     expect(persisted.attackerPlayerId).toBe(first.player.id);
     expect(persisted.expiresAt.getTime()).toBeGreaterThan(Date.now());
+    const opponent = await prisma.player.findUniqueOrThrow({
+      where: { id: first.offer.opponent.id },
+      include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' } } } } },
+    });
+    const balances = Object.fromEntries(opponent.kingdom!.resourceBalances.filter((row) => row.resource !== 'GEMS').map((row) => [row.resource, row.amount]));
+    const watchtowerLevel = opponent.kingdom!.buildings[0]?.level ?? 1;
+    expect(first.offer.potentialLoot).toEqual(calculateRaidLoot(balances, Math.min(1_500, Math.max(0, watchtowerLevel - 1) * 100)));
+  });
+
+  it('uses Watchtower protection in authoritative Raid settlement and ledger amounts', async () => {
+    const attackerContext = context('watchtower-attacker');
+    const defenderContext = context('watchtower-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 20 } });
+    await prisma.building.updateMany({ where: { kingdomId: defender.kingdomId, type: 'WATCHTOWER' }, data: { level: 16 } });
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: defender.kingdomId, resource: { not: 'GEMS' } }, data: { amount: 10_000n } });
+    const battle = await raids.start(attackerContext, await offer(attacker.id, defender.id), randomUUID());
+    expect(battle.result).toBe('ATTACKER_WIN');
+    expect(battle.loot).toEqual({ GOLD: '1500', FOOD: '1500', WOOD: '1500', STONE: '1500' });
+    const losses = await prisma.economyTransaction.findMany({ where: { referenceId: battle.id, reason: EconomyTransactionReason.RAID_LOSS } });
+    expect(Object.fromEntries(losses.map((row) => [row.resourceType, (-row.delta).toString()]))).toEqual(battle.loot);
   });
 
   it('rejects expired and foreign offers without creating a Battle', async () => {
@@ -178,6 +201,13 @@ describe.sequential('authoritative Raid integration', () => {
     expect(preview.target.id).toBe(attacker.id);
     expect(preview.ownTeam.heroes).toHaveLength(3);
     expect(preview.status).toBe('AVAILABLE');
+    const revengeDefender = await prisma.player.findUniqueOrThrow({
+      where: { id: attacker.id },
+      include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' } } } } },
+    });
+    const revengeBalances = Object.fromEntries(revengeDefender.kingdom!.resourceBalances.filter((row) => row.resource !== 'GEMS').map((row) => [row.resource, row.amount]));
+    const revengeWatchtowerLevel = revengeDefender.kingdom!.buildings[0]?.level ?? 1;
+    expect(preview.potentialLoot).toEqual(calculateRaidLoot(revengeBalances, Math.min(1_500, Math.max(0, revengeWatchtowerLevel - 1) * 100)));
     await raids.markInboxRead(defenderContext);
     expect((await raids.inbox(defenderContext)).unreadCount).toBe(0);
     await raids.history(defenderContext);

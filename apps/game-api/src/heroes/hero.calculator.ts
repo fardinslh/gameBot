@@ -1,5 +1,6 @@
 import type { HeroContentConfig } from './hero.config';
 import { HERO_UPGRADE_BASE_GOLD, HERO_UPGRADE_GROWTH_BPS } from './hero.config';
+import { applyBpsDiscount } from '../kingdom/kingdom-effects.config';
 
 const GROWTH_SCALE = 10_000n;
 
@@ -19,11 +20,11 @@ export function deriveHeroStats(config: HeroContentConfig, level: number): Deriv
   return { hp, atk, def, power };
 }
 
-export function heroUpgradeCost(currentLevel: number): bigint {
+export function heroUpgradeCost(currentLevel: number, discountBps = 0): bigint {
   const exponent = BigInt(Math.max(0, Math.trunc(currentLevel) - 1));
   const numerator = BigInt(HERO_UPGRADE_BASE_GOLD) * BigInt(HERO_UPGRADE_GROWTH_BPS) ** exponent;
   const denominator = GROWTH_SCALE ** exponent;
-  return (numerator + denominator - 1n) / denominator;
+  return applyBpsDiscount((numerator + denominator - 1n) / denominator, discountBps);
 }
 
 function growStat(base: number, growthBps: number, level: number): number {
@@ -32,4 +33,3 @@ function growStat(base: number, growthBps: number, level: number): number {
   const denominator = GROWTH_SCALE ** exponent;
   return Number((numerator + denominator / 2n) / denominator);
 }
-

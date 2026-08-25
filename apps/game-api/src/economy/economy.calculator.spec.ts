@@ -28,6 +28,16 @@ describe('server economy calculator', () => {
     });
   });
 
+  it('applies the Academy bonus before elapsed production and storage capping', () => {
+    const start = new Date('2026-08-23T10:00:00.000Z');
+    const results = calculateProduction(buildings, start, new Date('2026-08-23T11:00:00.000Z'), 100);
+    expect(Object.fromEntries(results.map((item) => [item.resource, item.gain]))).toEqual({
+      FOOD: 505n, WOOD: 424n, STONE: 303n, GOLD: 383n,
+    });
+    const capped = capProductionToStorage(results, { GOLD: '0', FOOD: '9998', WOOD: '0', STONE: '0', GEMS: '0' }, { GOLD: '10000', FOOD: '10000', WOOD: '10000', STONE: '8000', GEMS: '500' });
+    expect(capped.find((item) => item.resource === 'FOOD')?.gain).toBe(2n);
+  });
+
   it('caps production at exactly eight hours', () => {
     const start = new Date('2026-08-23T00:00:00.000Z');
     const atCap = calculateProduction(buildings, start, new Date(start.getTime() + OFFLINE_STORAGE_CAP_MS));
@@ -54,6 +64,7 @@ describe('server economy calculator', () => {
     expect(productionPerHour('FARM', 2)).toBe(590n);
     expect(upgradeCost('FARM', 2)).toEqual({ GOLD: 427n, WOOD: 147n });
     expect(upgradeDurationSeconds('FARM', 1)).toBeGreaterThanOrEqual(1);
+    expect(upgradeDurationSeconds('FARM', 1, 1_500)).toBeLessThan(upgradeDurationSeconds('FARM', 1));
     expect(requiredCastleLevel('FARM', 3)).toBe(1);
     expect(requiredCastleLevel('FARM', 4)).toBe(2);
     expect(requiredCastleLevel('CASTLE', 4)).toBeNull();

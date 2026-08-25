@@ -400,6 +400,10 @@ button { color: inherit; }
 .building-sheet__stats strong { display: block; overflow: hidden; margin-top: 2px; color: var(--gold-bright); font-size: 12px; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .building-role { display: flex; align-items: center; gap: 9px; margin: 0; color: var(--cream); font-size: 11px; line-height: 1.35; text-wrap: pretty; }
 .building-role > svg { flex: 0 0 auto; color: var(--gold); }
+.building-effect { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 7px 10px; border: 1px solid rgba(226,180,71,.24); border-radius: 10px; background: rgba(226,180,71,.07); }
+.building-effect small { grid-column: 1 / -1; color: var(--cream-muted); font-size: 8px; }
+.building-effect strong { color: var(--gold-pale); font-size: 10px; }
+.building-effect span { color: var(--cream-muted); font-size: 9px; }
 .building-lock-state { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: #e0be7d; background: rgba(183,130,53,.12); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(220,181,105,.12); }
 .building-lock-state > svg { flex: 0 0 auto; }
 .building-lock-state small { display: block; color: #aa9d87; font-size: 8px; }

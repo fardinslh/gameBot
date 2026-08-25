@@ -1,11 +1,16 @@
 import type { RaidLootAmounts, RaidResourceType } from '@crown-and-coin/shared';
 import { EMPTY_RAID_LOOT, RAID_LOOT_CAP, RAID_LOOT_RESERVE, RAID_PROTECTED_BPS } from './raid.config';
+import { normalizeKingdomEffectBps } from '../kingdom/kingdom-effects.config';
 
-export function calculateRaidLoot(balances: Partial<Record<RaidResourceType, bigint>>): RaidLootAmounts {
+export function calculateRaidLoot(
+  balances: Partial<Record<RaidResourceType, bigint>>,
+  watchtowerProtectionBps = 0,
+): RaidLootAmounts {
   const result = { ...EMPTY_RAID_LOOT };
+  const protectedBps = RAID_PROTECTED_BPS + BigInt(normalizeKingdomEffectBps(watchtowerProtectionBps));
   for (const resource of Object.keys(result) as RaidResourceType[]) {
     const balance = balances[resource] ?? 0n;
-    const exposed = balance - (balance * RAID_PROTECTED_BPS) / 10_000n;
+    const exposed = balance - (balance * protectedBps) / 10_000n;
     const aboveReserve = balance - RAID_LOOT_RESERVE[resource];
     result[resource] = max(0n, min(exposed, aboveReserve, RAID_LOOT_CAP[resource])).toString();
   }
@@ -25,4 +30,3 @@ export function calculateTrophyDeltas(attacker: number, defender: number, attack
 function min(...values: bigint[]): bigint { return values.reduce((a, b) => a < b ? a : b); }
 function max(a: bigint, b: bigint): bigint { return a > b ? a : b; }
 function clamp(value: number, low: number, high: number): number { return Math.max(low, Math.min(high, value)); }
-

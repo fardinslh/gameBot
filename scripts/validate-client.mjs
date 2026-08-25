@@ -59,8 +59,8 @@ try {
   await page.waitForSelector('.resource-hud__server');
   await page.waitForSelector('.collect-button');
   const buildingCount = await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count');
-  if (buildingCount !== '9') throw new Error(`Expected nine Pixi buildings, found ${buildingCount ?? 'none'}`);
-  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-active-building-count') !== '9') throw new Error('Expected nine active Pixi buildings');
+  if (buildingCount !== '5') throw new Error(`Expected five Castle-level-one Pixi buildings, found ${buildingCount ?? 'none'}`);
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-active-building-count') !== '5') throw new Error('Expected five active Pixi buildings');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-future-building-count') !== '0') throw new Error('Future buildings must stay out of the current Kingdom');
 
   const canvas = page.locator('.kingdom-canvas');
@@ -90,10 +90,6 @@ try {
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },
     { id: 'grandMarket', x: 320, y: 1172 },
-    { id: 'academy', x: 320, y: 316 },
-    { id: 'blacksmith', x: 89, y: 379 },
-    { id: 'watchtower', x: 590, y: 279 },
-    { id: 'workshop', x: 276, y: 200 },
   ];
 
   for (const building of buildingPoints) {
@@ -155,7 +151,7 @@ try {
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS progression Pixi scene + 9 active interactive buildings');
+  console.log('PASS Castle-level-one Pixi scene + 5 active interactive buildings');
   console.log('PASS server-backed Collect + persisted upgrade timer/completion');
   console.log('PASS detail sheet + coming-soon navigation');
   console.log('PASS 320/375/390 responsive + Persian RTL + browser console');

@@ -21,6 +21,7 @@ describe('Hero stat calculator', () => {
     expect(heroUpgradeCost(1)).toBe(300n);
     expect(heroUpgradeCost(2)).toBe(405n);
     expect(heroUpgradeCost(3)).toBe(547n);
+    expect(heroUpgradeCost(1, 100)).toBe(297n);
+    expect(heroUpgradeCost(1, 1_500)).toBe(255n);
   });
 });
-

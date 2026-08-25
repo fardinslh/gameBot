@@ -41,6 +41,9 @@ export const fa: Dictionary = {
   hour: 'ساعت',
   upgradeCost: 'هزینه ارتقا',
   upgradeDuration: 'زمان ارتقا',
+  buildingEffect: 'اثر ساختمان',
+  effectNow: 'فعلی',
+  effectNext: 'سطح بعد',
   upgradeInProgress: 'ارتقا در حال انجام',
   startingUpgrade: 'شروع ارتقا…',
   upgradePreview: 'پیش‌نمایش ارتقا',
@@ -143,6 +146,12 @@ export const fa: Dictionary = {
     WOOD: 'چوب',
     STONE: 'سنگ',
     GEMS: 'الماس',
+  },
+  effectLabels: {
+    PRODUCTION_BONUS: 'تولید منابع +{value}٪',
+    HERO_UPGRADE_DISCOUNT: 'هزینه طلای ارتقای قهرمان -{value}٪',
+    RAID_PROTECTION_BONUS: 'محافظت در غارت +{value} واحد',
+    BUILDING_UPGRADE_SPEED: 'زمان ارتقای ساختمان -{value}٪',
   },
   upgradeStates: {
     CAN_UPGRADE: 'ارتقا',

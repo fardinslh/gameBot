@@ -100,6 +100,26 @@ describe.sequential('server-authoritative Hero system', () => {
     expect(await prisma.economyRequest.count({ where: { playerId: account.playerId, action: 'HERO_UPGRADE' } })).toBe(1);
   });
 
+  it('uses the same Blacksmith discount for display, affordability, charge, ledger, and replay', async () => {
+    const player = context();
+    const kingdom = await economy.getKingdom(player);
+    await prisma.building.updateMany({ where: { kingdomId: kingdom.kingdom.id, type: 'CASTLE' }, data: { level: 5 } });
+    await prisma.building.updateMany({ where: { kingdomId: kingdom.kingdom.id, type: 'BLACKSMITH' }, data: { level: 6 } });
+    const roster = await heroes.getHeroes(player);
+    const knight = roster.heroes.find((hero) => hero.key === 'KNIGHT')!;
+    expect(knight.upgradeCost?.gold).toBe('285');
+    const requestKey = key();
+    const upgraded = await heroes.upgrade(player, knight.id, requestKey);
+    const replay = await heroes.upgrade(player, knight.id, requestKey);
+    expect(replay).toEqual(upgraded);
+    expect(BigInt(roster.balances.GOLD) - BigInt(upgraded.balances.GOLD)).toBe(285n);
+    const charges = await prisma.economyTransaction.findMany({
+      where: { playerId: kingdom.player.id, reason: EconomyTransactionReason.HERO_UPGRADE },
+    });
+    expect(charges).toHaveLength(1);
+    expect(charges[0].delta).toBe(-285n);
+  });
+
   it('rejects insufficient Gold, maximum level, invalid IDs, and foreign ownership', async () => {
     const poor = context();
     const poorRoster = await heroes.getHeroes(poor);

@@ -1,4 +1,5 @@
 import type { BuildingAppearanceVariant, KingdomBuildingType, ResourceType } from '@crown-and-coin/shared';
+import { applyDurationDiscount } from '../kingdom/kingdom-effects.config';
 
 export interface BuildingEconomyConfig {
   resource: ResourceType | null;
@@ -149,13 +150,14 @@ export function upgradeCost(type: KingdomBuildingType, currentLevel: number): Pa
   );
 }
 
-export function upgradeDurationSeconds(type: KingdomBuildingType, currentLevel: number): number {
+export function upgradeDurationSeconds(type: KingdomBuildingType, currentLevel: number, workshopSpeedBps = 0): number {
   const config = ECONOMY_CONFIG[type];
   const configuredMultiplier = Number(process.env.ECONOMY_TIMER_MULTIPLIER ?? 1);
   const multiplier = Number.isFinite(configuredMultiplier) && configuredMultiplier > 0
     ? configuredMultiplier
     : 1;
-  return Math.max(1, Math.ceil(config.baseUpgradeSeconds * config.durationGrowth ** (currentLevel - 1) * multiplier));
+  const baseSeconds = Math.max(1, Math.ceil(config.baseUpgradeSeconds * config.durationGrowth ** (currentLevel - 1) * multiplier));
+  return applyDurationDiscount(baseSeconds, workshopSpeedBps);
 }
 
 export function requiredCastleLevel(type: KingdomBuildingType, targetLevel: number): number | null {

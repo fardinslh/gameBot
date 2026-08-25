@@ -1,5 +1,6 @@
 import type { KingdomBuildingType, ResourceAmounts, ResourceType } from '@crown-and-coin/shared';
 import { ECONOMY_CONFIG, OFFLINE_STORAGE_CAP_HOURS, productionPerHour } from './economy.config';
+import { applyBpsIncrease } from '../kingdom/kingdom-effects.config';
 
 const HOUR_MS = 3_600_000n;
 export const OFFLINE_STORAGE_CAP_MS = OFFLINE_STORAGE_CAP_HOURS * Number(HOUR_MS);
@@ -23,6 +24,7 @@ export function calculateProduction(
   buildings: readonly ProductionBuildingInput[],
   lastCollectedAt: Date,
   serverNow: Date,
+  productionBonusBps = 0,
 ): ProductionResult[] {
   const elapsedMs = Math.max(0, Math.min(serverNow.getTime() - lastCollectedAt.getTime(), OFFLINE_STORAGE_CAP_MS));
   const elapsed = BigInt(elapsedMs);
@@ -31,7 +33,7 @@ export function calculateProduction(
     const config = ECONOMY_CONFIG[building.type];
     if (!config.resource) return [];
 
-    const rate = productionPerHour(building.type, building.level);
+    const rate = applyBpsIncrease(productionPerHour(building.type, building.level), productionBonusBps);
     const numerator = rate * elapsed + building.productionRemainder;
     return [{
       buildingId: building.id,

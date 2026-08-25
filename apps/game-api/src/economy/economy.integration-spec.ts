@@ -6,6 +6,7 @@ import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { EconomyService } from './economy.service';
 import { EconomyError } from './economy.errors';
+import { upgradeDurationSeconds } from './economy.config';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
@@ -39,11 +40,25 @@ describe.sequential('authoritative economy integration', () => {
     const second = await economy.getKingdom(player);
     expect(first.balances).toEqual({ GOLD: '8000', FOOD: '5000', WOOD: '5000', STONE: '3500', GEMS: '120' });
     expect(first.buildings).toHaveLength(9);
-    expect(first.progression).toEqual({ level: 1, xp: 900, nextLevelRequirement: 1800 });
+    expect(first.progression).toEqual({ level: 1, xp: 0, xpIntoLevel: 0, xpRequiredForNextLevel: 900 });
     expect(first.storageCapacities.GOLD).toBe('10000');
     expect(first.buildings.find((building) => building.type === 'ACADEMY')).toMatchObject({ unlocked: false, unlockCastleLevel: 3 });
     expect(second.kingdom.id).toBe(first.kingdom.id);
     expect(await prisma.kingdom.count({ where: { playerId: first.player.id } })).toBe(1);
+  });
+
+  it('exposes exactly the server-authoritative unlock sequence', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    const castle = initial.buildings.find((building) => building.type === 'CASTLE')!;
+    expect(initial.buildings.filter((building) => building.unlocked).map((building) => building.type).sort()).toEqual([
+      'CASTLE', 'FARM', 'GRAND_MARKET', 'LUMBER_MILL', 'MINE',
+    ]);
+    const expected = new Map([[2, 6], [3, 7], [4, 8], [5, 9]]);
+    for (const [level, count] of expected) {
+      await prisma.building.update({ where: { id: castle.id }, data: { level } });
+      expect((await economy.getKingdom(player)).buildings.filter((building) => building.unlocked)).toHaveLength(count);
+    }
   });
 
   it('backfills missing Phase 07 buildings without changing legacy balances', async () => {
@@ -209,5 +224,40 @@ describe.sequential('authoritative economy integration', () => {
     const collected = await economy.collect(player, key());
     expect(collected.gains.FOOD).toBe('100');
     expect(collected.balances.FOOD).toBe('10000');
+  });
+
+  it('applies the Academy bonus to offline production before the storage cap', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    await prisma.building.updateMany({ where: { kingdomId: initial.kingdom.id, type: 'CASTLE' }, data: { level: 3 } });
+    await prisma.building.updateMany({ where: { kingdomId: initial.kingdom.id, type: 'ACADEMY' }, data: { level: 2 } });
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: initial.kingdom.id, resource: { not: 'GEMS' } }, data: { amount: 0n } });
+    await prisma.kingdom.update({ where: { id: initial.kingdom.id }, data: { lastCollectedAt: new Date(Date.now() - 3_600_000) } });
+    const state = await economy.getKingdom(player);
+    expect(state.buildings.find((building) => building.type === 'ACADEMY')?.effects).toEqual([
+      { type: 'PRODUCTION_BONUS', valueBps: 100, nextLevelValueBps: 200 },
+    ]);
+    const collected = await economy.collect(player, key());
+    expect(BigInt(collected.gains.FOOD)).toBeGreaterThanOrEqual(505n);
+    expect(BigInt(collected.gains.WOOD)).toBeGreaterThanOrEqual(424n);
+    expect(collected.gains.GEMS).toBe('0');
+  });
+
+  it('uses Workshop speed only when starting an upgrade and never rewrites its finish timestamp', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    const farm = initial.buildings.find((building) => building.type === 'FARM')!;
+    await prisma.building.updateMany({ where: { kingdomId: initial.kingdom.id, type: 'CASTLE' }, data: { level: 4 } });
+    await prisma.building.update({ where: { id: farm.id }, data: { level: 10 } });
+    await prisma.building.updateMany({ where: { kingdomId: initial.kingdom.id, type: 'WORKSHOP' }, data: { level: 16 } });
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: initial.kingdom.id }, data: { amount: 10_000_000n } });
+    const before = await economy.getKingdom(player);
+    const discountedDuration = before.buildings.find((building) => building.id === farm.id)!.upgradeDurationSeconds!;
+    expect(discountedDuration).toBeLessThan(upgradeDurationSeconds('FARM', 10));
+    const started = await economy.upgrade(player, farm.id, key());
+    const immutableFinish = started.building.activeUpgrade!.finishAt;
+    await prisma.building.updateMany({ where: { kingdomId: initial.kingdom.id, type: 'WORKSHOP' }, data: { level: 1 } });
+    const refreshed = await economy.getKingdom(player);
+    expect(refreshed.buildings.find((building) => building.id === farm.id)?.activeUpgrade?.finishAt).toBe(immutableFinish);
   });
 });

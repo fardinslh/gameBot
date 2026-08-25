@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
-import { FUTURE_BUILDING_LAYOUT, KINGDOM_BUILDING_LAYOUT } from '../data/building-layout';
 
 interface KingdomSceneProps {
   buildingLabels: Record<WorldBuildingId, string>;
@@ -42,15 +41,7 @@ export function KingdomScene({
 
   useEffect(() => {
     buildingsRef.current = buildings;
-    sceneRef.current?.setBuildingStates(Object.fromEntries(buildings.map((building) => [
-      building.visualId,
-      {
-        indicator: building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
-        level: building.level,
-        locked: !building.unlocked,
-        appearanceVariant: building.appearanceVariant,
-      },
-    ])));
+    sceneRef.current?.setBuildingStates(toSceneStates(buildings));
   }, [buildings]);
 
   useEffect(() => {
@@ -67,15 +58,7 @@ export function KingdomScene({
           return;
         }
         sceneRef.current = scene;
-        scene.setBuildingStates(Object.fromEntries(buildingsRef.current.map((building) => [
-          building.visualId,
-          {
-            indicator: building.activeUpgrade ? 'active' : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' : null,
-            level: building.level,
-            locked: !building.unlocked,
-            appearanceVariant: building.appearanceVariant,
-          },
-        ])));
+        scene.setBuildingStates(toSceneStates(buildingsRef.current));
         setStatus('ready');
       })
       .catch(() => {
@@ -99,17 +82,24 @@ export function KingdomScene({
         <span>{status === 'error' ? errorLabel : loadingLabel}</span>
       </div>
       <div className="sr-only" aria-label={loadingLabel}>
-        {KINGDOM_BUILDING_LAYOUT.map((building) => (
-          <button key={building.id} onClick={() => onSelect(building.id)} type="button">
-            {buildingLabels[building.id]}
-          </button>
-        ))}
-        {FUTURE_BUILDING_LAYOUT.map((building) => (
-          <button key={building.id} onClick={() => onSelect(building.id)} type="button">
-            {buildingLabels[building.id]}
+        {buildings.filter((building) => building.unlocked).map((building) => (
+          <button key={building.visualId} onClick={() => onSelect(building.visualId)} type="button">
+            {buildingLabels[building.visualId]}
           </button>
         ))}
       </div>
     </section>
   );
+}
+
+function toSceneStates(buildings: KingdomBuildingView[]) {
+  return Object.fromEntries(buildings.map((building) => [
+    building.visualId,
+    {
+      indicator: building.activeUpgrade ? 'active' as const : building.upgradeAvailability === 'CAN_UPGRADE' ? 'upgrade' as const : null,
+      level: building.level,
+      locked: !building.unlocked,
+      appearanceVariant: building.appearanceVariant,
+    },
+  ]));
 }

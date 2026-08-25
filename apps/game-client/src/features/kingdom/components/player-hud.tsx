@@ -16,8 +16,8 @@ interface PlayerHudProps {
 export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, progression, section }: PlayerHudProps) {
   const sectionQuery = section ? `&section=${section}` : '';
   const displayedLevel = progression?.level ?? playerLevel;
-  const xpProgress = progression?.nextLevelRequirement
-    ? Math.min(100, Math.round((progression.xp / progression.nextLevelRequirement) * 100))
+  const xpProgress = progression?.xpRequiredForNextLevel
+    ? Math.min(100, Math.round((progression.xpIntoLevel / progression.xpRequiredForNextLevel) * 100))
     : 100;
   return (
     <header className="player-hud">

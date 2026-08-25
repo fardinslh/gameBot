@@ -48,7 +48,7 @@ try {
   await page.waitForTimeout(800);
   const canvasHost = page.locator('.kingdom-scene__canvas');
   const counts = await canvasHost.evaluate((element) => ({ ...element.dataset }));
-  if (counts.activeBuildingCount !== '9' || counts.futureBuildingCount !== '0' || counts.buildingCount !== '9' || counts.districtCount || counts.panEnabled !== 'true') throw new Error(`Progression world metadata is invalid: ${JSON.stringify(counts)}`);
+  if (counts.activeBuildingCount !== '5' || counts.futureBuildingCount !== '0' || counts.buildingCount !== '5' || counts.districtCount || counts.panEnabled !== 'true') throw new Error(`Progression world metadata is invalid: ${JSON.stringify(counts)}`);
   await page.screenshot({ path: new URL('phase-06-5-kingdom-after-fa-320.png', artifacts).pathname.slice(1) });
   await page.screenshot({ path: new URL('phase-06-6-simplified-after-fa-320.png', artifacts).pathname.slice(1) });
 
@@ -94,7 +94,7 @@ try {
       if (dimensions.overflow) throw new Error(`Horizontal overflow at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.navHeight !== 54) throw new Error(`Bottom navigation changed at ${locale} ${viewport.width}x${viewport.height}`);
       if (dimensions.direction !== (locale === 'fa' ? 'rtl' : 'ltr')) throw new Error(`Direction failed for ${locale}`);
-      if (dimensions.world.buildingCount !== '9' || dimensions.world.futureBuildingCount !== '0') throw new Error(`World failed at ${locale} ${viewport.width}x${viewport.height}`);
+      if (dimensions.world.buildingCount !== '5' || dimensions.world.futureBuildingCount !== '0') throw new Error(`World failed at ${locale} ${viewport.width}x${viewport.height}`);
       await layoutPage.close();
     }
   }
@@ -103,7 +103,7 @@ try {
   const castleBytes = statSync(new URL('apps/game-client/public/assets/kingdom/castle-production-v1.webp', root)).size;
   if (terrainBytes > 700_000 || castleBytes > 150_000) throw new Error(`Visual assets exceed mobile budget: terrain=${terrainBytes}, castle=${castleBytes}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log('PASS nine-building progression Kingdom + bounded mobile pan + active interactions');
+  console.log('PASS five-building Castle-level-one Kingdom + bounded mobile pan + active interactions');
   console.log('PASS 320x568, 375x812, 390x844 in English LTR and Persian RTL with unchanged 54px navigation');
   console.log(`PASS local WebP budget terrain=${terrainBytes}B castle=${castleBytes}B and clean browser console`);
 } finally {

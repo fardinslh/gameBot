@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07, the client presents a pan-enabled Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07.1, the client presents a pan-enabled, unlock-driven Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Architecture
 
@@ -249,7 +249,11 @@ The normalized `Building` + `BuildingUpgrade` model now covers Castle, Farm, Lum
 
 `GET /kingdom` returns current/next level, authoritative cost and remaining time, upgrade timestamps, unlock state, appearance variant, storage capacities, and calculated Kingdom progression (`level`, total `xp`, and the next requirement). Production collection discards rewards beyond the Castle-derived storage limit without lowering legacy balances. Academy unlocks at Castle 3, Blacksmith at Castle 5, and advanced PvP availability is declared at Castle 7; the rules remain data-driven and do not change Phase 05/06 battle settlement.
 
-The client renders all nine progression buildings at their already-approved world coordinates, with compact level/lock badges, server-driven locked detail states, countdown completion collection, capacity hints in the resource HUD, and stage-ready visual mapping (`WOOD`, `STONE`, `FORTIFIED`). Stage 2/3 artwork still falls back to the existing Stage 1 asset until final skins are produced.
+Phase 07.1 mounts only server-unlocked Pixi buildings. Castle level 1 renders exactly Castle, Farm, Lumber Mill, Mine, and Grand Market; Watchtower, Academy, Workshop, and Blacksmith join at Castle levels 2, 3, 4, and 5. Locked buildings have no sprite, hit area, accessibility target, texture request, or camera-bound impact. Runtime unlocks use a restrained reveal while retaining every approved world coordinate.
+
+Academy adds 1% production per level above 1, Blacksmith discounts Hero upgrade Gold by 1%, Watchtower adds one percentage point of Raid protection, and Workshop reduces future building-upgrade duration by 1%; every effect caps at 15%. All effects use centralized basis-point configuration and deterministic integer rounding. Academy is applied before storage caps, Blacksmith uses the same cost for display/affordability/charge/ledger, Watchtower flows through the shared search/settlement/Revenge loot calculator, and Workshop never changes an already-started timer. Kingdom XP is `sum(max(0, building level - 1) * 100)` with 900 XP per level and no Castle override.
+
+Building detail sheets expose localized structured current/next effects. Stage 2/3 artwork still falls back to the existing Stage 1 asset until final skins are produced.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 
@@ -268,6 +272,7 @@ npm run validate:heroes  # requires API + client; Hero/team/upgrade/RTL/mobile/K
 npm run validate:raid    # full match/battle/result/Kingdom flow + mobile screenshots
 npm run validate:revenge # incoming badge/log/preview/Revenge/result + Phase 06 screenshots
 npm run validate:visual  # expanded world/pan/locked/detail/RTL/mobile screenshots and asset budget
+npm run validate:progression # 5/6/7/8/9 runtime mounts, effect details, and Phase 07.1 screenshots
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.

@@ -24,6 +24,7 @@ import { ensureHeroSystemForPlayer } from '../heroes/hero.bootstrap';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { KingdomLevelService } from '../kingdom/kingdom-level.service';
+import { buildingEffect, kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 import { calculateProduction, capProductionToStorage } from './economy.calculator';
 import { isBuildingUnlocked, presentUnlocks, unlockCastleLevel } from './building-unlocks.config';
 import {
@@ -88,6 +89,7 @@ export class EconomyService {
       const now = new Date();
       await this.reconcileCompletedUpgrades(tx, kingdomId, now);
       const graph = await this.loadGraph(tx, kingdomId);
+      const academyBonusBps = kingdomEffectBps(this.buildingLevel(graph, 'ACADEMY'));
       const rawProduction = calculateProduction(
         graph.buildings.map((building) => ({
           id: building.id,
@@ -97,6 +99,7 @@ export class EconomyService {
         })),
         graph.lastCollectedAt,
         now,
+        academyBonusBps,
       );
       const production = capProductionToStorage(
         rawProduction,
@@ -185,7 +188,8 @@ export class EconomyService {
         if (!balance || balance.amount < amount) throw new EconomyError('INSUFFICIENT_RESOURCES', 'Not enough resources for this upgrade.');
       }
 
-      const durationSeconds = upgradeDurationSeconds(type, building.level);
+      const workshopSpeedBps = kingdomEffectBps(this.buildingLevel(graph, 'WORKSHOP'));
+      const durationSeconds = upgradeDurationSeconds(type, building.level, workshopSpeedBps);
       const finishAt = new Date(now.getTime() + durationSeconds * 1_000);
       const upgradeId = randomUUID();
       for (const [resource, amount] of Object.entries(costs) as [ResourceType, bigint][]) {
@@ -452,6 +456,8 @@ export class EconomyService {
   private presentBuildings(graph: KingdomGraph, now: Date): KingdomBuildingState[] {
     const balances = this.presentBalances(graph);
     const castleLevel = graph.buildings.find((building) => building.type === 'CASTLE')?.level ?? 1;
+    const academyBonusBps = kingdomEffectBps(this.buildingLevel(graph, 'ACADEMY'));
+    const workshopSpeedBps = kingdomEffectBps(this.buildingLevel(graph, 'WORKSHOP'));
     const production = capProductionToStorage(calculateProduction(
       graph.buildings.map((building) => ({
         id: building.id,
@@ -461,6 +467,7 @@ export class EconomyService {
       })),
       graph.lastCollectedAt,
       now,
+      academyBonusBps,
     ), balances, this.presentStorageCapacities(graph));
     return graph.buildings.map((building): KingdomBuildingState => {
       const type = building.type as KingdomBuildingType;
@@ -485,11 +492,16 @@ export class EconomyService {
         level: building.level,
         nextLevel: atMax ? null : building.level + 1,
         resource: config.resource,
-        productionPerHour: productionPerHour(type, building.level).toString(),
+        productionPerHour: (production.find((item) => item.buildingId === building.id)?.productionPerHour ?? productionPerHour(type, building.level)).toString(),
         collectable: production.find((item) => item.buildingId === building.id)?.gain.toString() ?? '0',
-        nextProductionPerHour: atMax || !config.resource ? null : productionPerHour(type, building.level + 1).toString(),
+        nextProductionPerHour: atMax || !config.resource ? null : calculateProduction([{
+          id: building.id,
+          type,
+          level: building.level + 1,
+          productionRemainder: 0n,
+        }], now, now, academyBonusBps)[0]?.productionPerHour.toString() ?? null,
         upgradeCost: (Object.entries(costs) as [ResourceType, bigint][]).map(([resource, amount]) => ({ resource, amount: amount.toString() })),
-        upgradeDurationSeconds: atMax ? null : upgradeDurationSeconds(type, building.level),
+        upgradeDurationSeconds: atMax ? null : upgradeDurationSeconds(type, building.level, workshopSpeedBps),
         requiredCastleLevel: castleRequirement,
         remainingSeconds: active?.completesAt ? Math.max(0, Math.ceil((active.completesAt.getTime() - now.getTime()) / 1_000)) : 0,
         upgradeStartedAt: active?.startedAt?.toISOString() ?? null,
@@ -505,8 +517,13 @@ export class EconomyService {
           startedAt: active.startedAt.toISOString(),
           finishAt: active.completesAt.toISOString(),
         } : null,
+        effects: buildingEffect(type, building.level, atMax),
       };
     });
+  }
+
+  private buildingLevel(graph: KingdomGraph, type: KingdomBuildingType): number {
+    return graph.buildings.find((building) => building.type === type)?.level ?? 1;
   }
 
   private emptyAmounts(): ResourceAmounts {

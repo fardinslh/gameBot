@@ -5,7 +5,7 @@ import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { createBuildingArtwork, type BuildingArtwork } from './building-art';
-import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture, type BuildingVisualId } from './building-visuals';
+import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from './building-visuals';
 
 interface KingdomSceneRuntime {
   destroy(): void;
@@ -31,15 +31,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const searchParams = new URLSearchParams(window.location.search);
   const debugBuildingLayout = searchParams.get('debugBuildingLayout') === '1';
   const debugKingdomLayers = searchParams.get('debugKingdomLayers');
-  const visualIds: BuildingVisualId[] = KINGDOM_BUILDING_LAYOUT
-    .filter((building) => building.id !== 'castle')
-    .map((building) => building.id as BuildingVisualId);
-  const [texture, castleTexture, ...buildingTextures] = await Promise.all([
+  const [texture, castleTexture] = await Promise.all([
     Assets.load(TERRAIN_TEXTURE),
     Assets.load(CASTLE_TEXTURE),
-    ...visualIds.map((id) => Assets.load(resolveBuildingTexture(id))),
   ]);
-  const textureById = new Map(visualIds.map((id, index) => [id, buildingTextures[index]]));
   // A mirrored top-edge extension only shows above a positively panned world.
   // Its lower edge shares source row zero with the terrain, avoiding a repeated
   // or hard seam while the camera keeps the upper building clear of the HUD.
@@ -59,9 +54,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
   const statusArtwork = new Map<BuildingId, Container>();
-  const lockedState = new Map<BuildingId, boolean>();
+  const knownUnlockState = new Map<BuildingId, boolean>();
   const texturePathById = new Map<BuildingId, string>();
   const unlockAnimation = new Map<BuildingId, number>();
+  let desiredStates: Partial<Record<BuildingId, BuildingSceneState>> = {};
   let selectedBuildingId: WorldBuildingId | null = null;
   let elapsed = 0;
   let didPan = false;
@@ -80,9 +76,41 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     buildingsLayer.addChild(buildingArt.container);
   };
 
-  for (const building of KINGDOM_BUILDING_LAYOUT) {
-    const buildingTexture = building.id === 'castle' ? castleTexture : textureById.get(building.id);
-    if (!buildingTexture) throw new Error(`Missing visual texture for ${building.id}`);
+  const syncBuildingCount = (): void => {
+    host.dataset.buildingCount = String(artwork.size);
+    host.dataset.activeBuildingCount = String(artwork.size);
+  };
+
+  const removeBuilding = (id: BuildingId): void => {
+    const item = artwork.get(id);
+    if (!item) return;
+    if (selectedBuildingId === id) selectedBuildingId = null;
+    artwork.delete(id);
+    indicatorArtwork.delete(id);
+    statusArtwork.delete(id);
+    texturePathById.delete(id);
+    unlockAnimation.delete(id);
+    item.container.destroy({ children: true });
+    syncBuildingCount();
+    if (laidOut) layout();
+  };
+
+  const mountBuilding = async (
+    building: (typeof KINGDOM_BUILDING_LAYOUT)[number],
+    state: BuildingSceneState,
+    reveal: boolean,
+  ): Promise<void> => {
+    const desiredTexturePath = resolveBuildingTexture(building.id, appearanceVariantStage(state.appearanceVariant));
+    const buildingTexture = building.id === 'castle' && desiredTexturePath === resolveBuildingTexture('castle')
+      ? castleTexture
+      : await Assets.load(desiredTexturePath);
+    const currentState = desiredStates[building.id];
+    if (currentState?.locked !== false || artwork.has(building.id)) return;
+    const currentTexturePath = resolveBuildingTexture(building.id, appearanceVariantStage(currentState.appearanceVariant));
+    if (currentTexturePath !== desiredTexturePath) {
+      void mountBuilding(building, currentState, reveal);
+      return;
+    }
     const buildingArt = createBuildingArtwork(building.id, buildingTexture, debugBuildingLayout);
     const indicator = createIndicator();
     const status = new Container();
@@ -95,12 +123,21 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       && (debugKingdomLayers !== 'castle' || building.id === 'castle');
     indicatorArtwork.set(building.id, indicator);
     statusArtwork.set(building.id, status);
-    texturePathById.set(building.id, resolveBuildingTexture(building.id));
+    texturePathById.set(building.id, desiredTexturePath);
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
-  }
+    drawIndicator(indicator, currentState.indicator);
+    drawBuildingStatus(status, currentState.level);
+    if (reveal && !reducedMotion) {
+      buildingArt.container.alpha = 0;
+      buildingArt.container.scale.set(building.scale * .9);
+      unlockAnimation.set(building.id, 0);
+    }
+    syncBuildingCount();
+    if (laidOut) layout();
+  };
 
-  host.dataset.buildingCount = String(artwork.size);
-  host.dataset.activeBuildingCount = String(KINGDOM_BUILDING_LAYOUT.length);
+  host.dataset.buildingCount = '0';
+  host.dataset.activeBuildingCount = '0';
   host.dataset.futureBuildingCount = '0';
   host.dataset.panEnabled = 'true';
   host.dataset.debugBuildingLayout = String(debugBuildingLayout);
@@ -209,14 +246,18 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       const unlockElapsed = unlockAnimation.get(id as BuildingId);
       if (unlockElapsed !== undefined) {
         const next = unlockElapsed + ticker.deltaMS;
-        const status = statusArtwork.get(id as BuildingId);
-        if (status) {
+        const layoutEntry = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === id);
+        if (layoutEntry) {
           const progress = Math.min(1, next / 420);
-          const bounce = 1 + Math.sin(progress * Math.PI) * .32;
-          status.scale.set(bounce);
-          status.alpha = progress;
+          const eased = 1 - (1 - progress) ** 3;
+          item.container.alpha = eased;
+          item.container.scale.set(layoutEntry.scale * (.9 + eased * .1));
         }
-        if (next >= 420) unlockAnimation.delete(id as BuildingId);
+        if (next >= 420) {
+          unlockAnimation.delete(id as BuildingId);
+          if (layoutEntry) item.container.scale.set(layoutEntry.scale);
+          item.container.alpha = 1;
+        }
         else unlockAnimation.set(id as BuildingId, next);
       }
     }
@@ -234,14 +275,24 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   return {
     select: (buildingId) => { selectedBuildingId = buildingId; syncSelection(); },
     setBuildingStates: (states) => {
-      for (const [id, indicator] of indicatorArtwork) {
+      desiredStates = states;
+      for (const building of KINGDOM_BUILDING_LAYOUT) {
+        const id = building.id;
         const state = states[id];
-        if (!state) continue;
-        drawIndicator(indicator, state.locked ? null : state.indicator);
-        const previousLocked = lockedState.get(id);
-        lockedState.set(id, state.locked);
+        const unlocked = state?.locked === false;
+        const previouslyUnlocked = knownUnlockState.get(id);
+        knownUnlockState.set(id, unlocked);
+        if (!unlocked || !state) {
+          removeBuilding(id);
+          continue;
+        }
+        const indicator = indicatorArtwork.get(id);
+        if (!indicator) {
+          void mountBuilding(building, state, previouslyUnlocked === false);
+          continue;
+        }
+        drawIndicator(indicator, state.indicator);
         const item = artwork.get(id);
-        if (item) item.sprite.alpha = state.locked ? .24 : 1;
         const desiredTexturePath = resolveBuildingTexture(id, appearanceVariantStage(state.appearanceVariant));
         if (item && texturePathById.get(id) !== desiredTexturePath) {
           texturePathById.set(id, desiredTexturePath);
@@ -250,14 +301,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
           });
         }
         const status = statusArtwork.get(id);
-        if (status) {
-          drawBuildingStatus(status, state.level, state.locked);
-          if (previousLocked === true && !state.locked) {
-            status.alpha = 0;
-            status.scale.set(.65);
-            unlockAnimation.set(id, 0);
-          }
-        }
+        if (status) drawBuildingStatus(status, state.level);
       }
     },
     destroy: () => {
@@ -273,21 +317,15 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   };
 }
 
-function drawBuildingStatus(status: Container, level: number, locked: boolean): void {
+function drawBuildingStatus(status: Container, level: number): void {
   status.removeChildren().forEach((child) => child.destroy());
-  const color = locked ? 0xbda46f : 0xe2b447;
-  const width = locked ? 24 : 30;
+  const color = 0xe2b447;
+  const width = 30;
   const background = new Graphics()
     .roundRect(-width / 2, -10, width, 20, 7)
     .fill({ color: 0x17140f, alpha: .94 })
     .stroke({ color, alpha: .9, width: 1.5 });
   status.addChild(background);
-  if (locked) {
-    status.addChild(new Graphics()
-      .roundRect(-4.5, -1, 9, 8, 2).stroke({ color, width: 1.7 })
-      .arc(0, -1, 4, Math.PI, 0).stroke({ color, width: 1.7 }));
-    return;
-  }
   const text = new Text({
     text: `Lv.${level}`,
     style: { fill: 0xffe7a1, fontFamily: 'Arial', fontSize: 8, fontWeight: '700' },

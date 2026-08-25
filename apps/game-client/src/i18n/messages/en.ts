@@ -39,6 +39,9 @@ export const en = {
   hour: 'hour',
   upgradeCost: 'Upgrade cost',
   upgradeDuration: 'Upgrade time',
+  buildingEffect: 'Building effect',
+  effectNow: 'Current',
+  effectNext: 'Next level',
   upgradeInProgress: 'Upgrade in progress',
   startingUpgrade: 'Starting upgrade…',
   upgradePreview: 'Upgrade preview',
@@ -142,6 +145,12 @@ export const en = {
     WOOD: 'Wood',
     STONE: 'Stone',
     GEMS: 'Gems',
+  },
+  effectLabels: {
+    PRODUCTION_BONUS: 'Resource production +{value}%',
+    HERO_UPGRADE_DISCOUNT: 'Hero upgrade Gold cost -{value}%',
+    RAID_PROTECTION_BONUS: 'Raid protection +{value} points',
+    BUILDING_UPGRADE_SPEED: 'Building upgrade time -{value}%',
   },
   upgradeStates: {
     CAN_UPGRADE: 'Upgrade',
