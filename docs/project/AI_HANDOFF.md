@@ -68,6 +68,33 @@ Do not start Guild, Season, Shop, payment, Bale, Telegram, additional Hero, equi
 
 Update the relevant files under `docs/project` in the same commit when work changes architecture, API, database models, formulas, phase status, visual progression, or a major decision. Skip documentation churn for formatting and behavior-preserving refactors.
 
+## Complete meaningful work
+
+Every AI agent that completes meaningful work must update project history before finishing. A phase, feature, important bug fix, architecture or balance change, gameplay or world change, roadmap or launch change, security change, significant refactor, or major art and user experience pass qualifies. Typos and formatting-only edits do not.
+
+Before work:
+
+1. Read current Git HEAD and [the project index](INDEX.md).
+2. Read the relevant system documentation.
+3. Read `.private/PROJECT_MASTER_PLAN.md` when local access permits.
+4. Read the latest `.private/AI_WORK_LOG.md` entries when local access permits.
+5. Verify the current implementation in code.
+
+After work:
+
+1. Run appropriate validation.
+2. Commit validated tracked changes when the project workflow requires it.
+3. Push when required.
+4. Update relevant canonical documentation.
+5. Update `.private/PROJECT_MASTER_PLAN.md` when roadmap or current state changes.
+6. Update `.private/PRODUCT_DECISIONS.md` when a meaningful decision changes.
+7. Update `.private/LAUNCH_CHECKLIST.md` when launch readiness changes.
+8. Append a meaningful entry to `.private/AI_WORK_LOG.md`.
+9. Record the exact commit SHA and actual validation results.
+10. Leave a clear next step.
+
+Private files are intentionally ignored. Commit and push tracked changes first, then record the final SHA in the private history. Never force-add `.private/`, amend or force-push to include it, or claim meaningful work complete without the history entry.
+
 Run `npm run validate:docs` after documentation changes.
 
 ## Git completion rules
