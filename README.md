@@ -1,6 +1,10 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07.1, the client presents a pan-enabled, unlock-driven Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07.2, the client presents a pan-enabled, unlock-driven Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+
+## Project documentation
+
+Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
 
 ## Architecture
 

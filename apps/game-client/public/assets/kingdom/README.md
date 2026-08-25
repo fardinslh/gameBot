@@ -16,8 +16,8 @@ can position and interact with every gameplay building independently.
 Runtime placement is independent from the image files:
 
 - `building-visuals.ts` owns sprite anchors, footprints, shadows, hit areas, and badges.
-- `building-layout.ts` positions the five currently active structures with deliberate
-  open space around the Castle.
+- `building-layout.ts` positions all nine progression structures. The scene mounts only
+  the structures unlocked by the current Castle level and preserves open space around the Castle.
 - `create-kingdom-scene.ts` preloads the textures and keeps gameplay IDs separate from
   asset names.
 
@@ -35,12 +35,13 @@ remain sourced from the clean baseline.
 The Stage 1 Mine source is 512x464 and its non-transparent pixels reach every canvas
 edge, so transparent padding is not used for registration. Its stable front rail contact
 is source pixel `(280, 453)`, normalized to ground anchor `(0.547, 0.976)`. Pixi pins
-that anchor to world target `(170, 396)` at scale `1`, with zero visual offset. The
+that anchor to world target `(145, 365)` at scale `1`, with zero visual offset. The
 Mine-specific shadow is intentionally faint because the raster already carries strong
 grounding detail.
 
-Future building definitions and local assets remain available for later progression,
-but they are intentionally not loaded or rendered in the current Kingdom composition.
+Watchtower, Academy, Workshop, and Blacksmith are progression assets that load only after
+their Castle-level gates open. Barracks, Granary, Tavern, and Stable remain unused future
+assets and are not part of the server building roster.
 
 Future art progression can add `*-stage-2.webp` and `*-stage-3.webp` entries without
 changing economy state or building interaction code.
