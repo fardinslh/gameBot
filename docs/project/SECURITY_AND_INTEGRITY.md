@@ -48,6 +48,10 @@ Revenge targets bind owner, target, and source battle. SQL and service checks re
 
 Unique `sourceKey` values make `PLAYER_RAIDED`, `REVENGE_AVAILABLE`, and `UPGRADE_COMPLETE` records exactly once. Deep-link intents contain domain IDs rather than platform URLs.
 
+## Analytics integrity and privacy
+
+Clients cannot choose player identity or emit progression events. Ingestion enforces batch, UUID, taxonomy, length, 2 KB property, and process-local rate bounds. Stable dedupe keys prevent replay inflation. System opponents are excluded from human milestones. Raw URLs, launch/auth payloads, credentials, and security/reward authority are not analytics properties.
+
 ## Current security gaps
 
 - `X-Dev-Player-Id` is caller-controlled and provides no authentication

@@ -68,6 +68,10 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 
 `NotificationService` has no controller. Redis and BullMQ expose no HTTP route. Platform adapters expose no authentication, notification, or payment controller.
 
+## `POST /analytics/events`
+
+Accepts 1-20 `app_open`, `app_resume`, or `screen_opened` events with UUID event/session IDs. Player/platform are server-resolved. Optional locale, app version, sanitized acquisition source, client timestamp, and properties up to 2 KB are supported. Returns `accepted`, `duplicates`, and `rejected`; server-only/reserved names fail validation.
+
 ## Error families
 
 Shared contracts define `EconomyErrorCode`, `HeroErrorCode`, and `RaidErrorCode`. Services use domain errors for ownership, state, expiry, funds, team validity, idempotency, rate limits, and transaction conflicts. NestJS global validation strips unknown DTO fields and transforms validated input.

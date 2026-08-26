@@ -13,16 +13,21 @@ import { calculateRaidLoot } from './raid.calculator';
 import { SystemOpponentService } from './system-opponent.service';
 import { NEW_KINGDOM_SHIELD_MS, REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS } from './raid.config';
 import { SYSTEM_OPPONENTS } from './system-opponent.config';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
-const economy = new EconomyService(prisma, notifications);
+const analytics = new AnalyticsService(prisma);
+const economy = new EconomyService(prisma, notifications, analytics);
 const systems = new SystemOpponentService(prisma, economy);
 const selector = new RaidCandidateSelector();
-const raids = new RaidService(prisma, economy, systems, selector, new RaidRateLimiter(), notifications);
+const raids = new RaidService(prisma, economy, systems, selector, new RaidRateLimiter(), notifications, analytics);
+const testExternalUserIds: string[] = [];
 
 function context(prefix = 'raid'): DevelopmentPlayerContext {
-  return { platform: 'WEB', externalUserId: `${prefix}-${randomUUID()}` };
+  const externalUserId = `${prefix}-${randomUUID()}`;
+  testExternalUserIds.push(externalUserId);
+  return { platform: 'WEB', externalUserId };
 }
 
 async function player(contextValue: DevelopmentPlayerContext) {
@@ -51,7 +56,10 @@ async function code(operation: Promise<unknown>): Promise<string> {
 
 describe.sequential('authoritative Raid integration', () => {
   beforeAll(async () => prisma.$connect());
-  afterAll(async () => prisma.$disconnect());
+  afterAll(async () => {
+    await prisma.analyticsEvent.deleteMany({ where: { player: { platformAccounts: { some: { externalUserId: { in: testExternalUserIds } } } } } });
+    await prisma.$disconnect();
+  });
 
   it('creates owned offers, excludes self, and avoids an immediate repeat when population allows', async () => {
     const attacker = context('matchmaking');

@@ -12,6 +12,7 @@ import { BattleScene } from './battle-scene';
 import { BattleDetail } from './battle-detail';
 import { BattleLog } from './battle-log';
 import { RevengePreview } from './revenge-preview';
+import { trackScreen } from '@/features/analytics/analytics-client';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
@@ -21,6 +22,9 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
   const [battleFinished, setBattleFinished] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
   useEffect(() => { if (raid.battle) setBattleFinished(false); }, [raid.battle]);
+  useEffect(() => {
+    trackScreen(raid.battle ? (battleFinished ? 'RESULT' : 'BATTLE') : raid.view === 'inbox' ? 'DEFENSE_INBOX' : 'RAID');
+  }, [battleFinished, raid.battle, raid.view]);
   useEffect(() => { if (!comingSoon) return; const timer = window.setTimeout(() => setComingSoon(null), 1800); return () => clearTimeout(timer); }, [comingSoon]);
   const state = raid.overview;
   const shieldHours = state?.newPlayerProtection.active && state.newPlayerProtection.expiresAt

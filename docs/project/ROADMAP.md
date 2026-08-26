@@ -42,6 +42,10 @@ The repository contains planning boundaries for:
 
 These items need product decisions before implementation. Current code does not define their behavior or data models.
 
+## Completed: pre-Bale analytics foundation
+
+Canonical storage, transactional server events, safe client delivery, funnel/activation/retention/acquisition/engagement reporting, integrity tooling, tests, and docs are complete. Next: Bale Mini App Integration. Onboarding, monetization, Guild, Season, and new gameplay remain deferred.
+
 ## Deferred complexity
 
 Additional Heroes, equipment, crafting, rarity, recruitment, research trees, live-ops jobs, and new active building types remain deferred. Do not infer them from unused assets, enums, or interface placeholders.

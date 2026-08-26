@@ -2,6 +2,27 @@ export const SUPPORTED_PLATFORMS = ['BALE', 'TELEGRAM', 'WEB'] as const;
 
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
+export const CLIENT_ANALYTICS_EVENT_NAMES = ['app_open', 'app_resume', 'screen_opened'] as const;
+export type ClientAnalyticsEventName = (typeof CLIENT_ANALYTICS_EVENT_NAMES)[number];
+
+export interface ClientAnalyticsEventInput {
+  eventId: string;
+  eventName: ClientAnalyticsEventName;
+  sessionId: string;
+  locale?: string;
+  appVersion?: string;
+  acquisitionSource?: string;
+  properties?: Record<string, unknown>;
+  clientOccurredAt?: string;
+}
+
+export interface AnalyticsEventsRequest { events: ClientAnalyticsEventInput[]; }
+export interface AnalyticsEventsResponse {
+  accepted: string[];
+  duplicates: string[];
+  rejected: Array<{ eventId: string; reason: string }>;
+}
+
 export interface HealthResponse {
   status: 'ok';
 }

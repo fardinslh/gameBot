@@ -8,5 +8,6 @@ export type RaidAnalyticsEvent =
   | 'raid_loss';
 
 export function trackRaidEvent(event: RaidAnalyticsEvent, properties: Record<string, string | number> = {}): void {
-  if (process.env.NODE_ENV !== 'production') console.info('[raid-analytics]', event, properties);
+  void event;
+  void properties;
 }

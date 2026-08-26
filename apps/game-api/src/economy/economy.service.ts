@@ -40,6 +40,7 @@ import {
   upgradeDurationSeconds,
 } from './economy.config';
 import { EconomyError } from './economy.errors';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const kingdomGraph = Prisma.validator<Prisma.KingdomDefaultArgs>()({
   include: {
@@ -67,6 +68,7 @@ export class EconomyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
+    private readonly analytics: AnalyticsService,
     private readonly kingdomLevels: KingdomLevelService = new KingdomLevelService(),
     private readonly kingdomExpansion: KingdomExpansionService = new KingdomExpansionService(),
   ) {}
@@ -145,6 +147,13 @@ export class EconomyService {
         serverTime: now.toISOString(),
       };
       await this.saveIdempotentResponse(tx, playerId, key, EconomyAction.COLLECT, response);
+      await this.analytics.recordServer(tx, {
+        playerId, eventName: 'collect_completed', dedupeKey: `collect_completed:${playerId}:${key}`,
+        properties: { gains }, occurredAt: now,
+      });
+      await this.analytics.recordServer(tx, {
+        playerId, eventName: 'first_collect', dedupeKey: `first_collect:${playerId}`, occurredAt: now,
+      });
       this.logger.log(`collect player=${playerId} reference=${referenceId} gains=${JSON.stringify(gains)}`);
       return response;
     });
@@ -235,6 +244,14 @@ export class EconomyService {
         serverTime: now.toISOString(),
       };
       await this.saveIdempotentResponse(tx, playerId, key, EconomyAction.UPGRADE, response);
+      await this.analytics.recordServer(tx, {
+        playerId, eventName: 'building_upgrade_started', dedupeKey: `building_upgrade_started:${upgradeId}`,
+        properties: { buildingType: type, fromLevel: building.level, toLevel: building.level + 1 }, occurredAt: now,
+      });
+      await this.analytics.recordServer(tx, {
+        playerId, eventName: 'first_upgrade', dedupeKey: `first_upgrade:${playerId}`,
+        properties: { buildingType: type }, occurredAt: now,
+      });
       this.logger.log(`upgrade-start player=${playerId} building=${buildingId} upgrade=${upgradeId} finish=${finishAt.toISOString()}`);
       return response;
     });
@@ -312,11 +329,15 @@ export class EconomyService {
       include: { player: { include: { kingdom: true } } },
     });
     if (!account) {
-      await tx.player.create({
+      const createdPlayer = await tx.player.create({
         data: {
           displayName: 'Warden of Dawnkeep',
           platformAccounts: { create: { platform: Platform.WEB, externalUserId: context.externalUserId, verifiedAt: new Date() } },
         },
+      });
+      await this.analytics.recordServer(tx, {
+        playerId: createdPlayer.id, eventName: 'player_created',
+        dedupeKey: `player_created:${createdPlayer.id}`, occurredAt: createdPlayer.createdAt,
       });
       account = await tx.platformAccount.findUniqueOrThrow({
         where: { platform_externalUserId: { platform: Platform.WEB, externalUserId: context.externalUserId } },

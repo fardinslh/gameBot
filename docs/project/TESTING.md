@@ -56,6 +56,10 @@ They cover English left-to-right and Persian right-to-left where relevant. Keep 
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
+## Analytics validation
+
+Run `npm test` for taxonomy/report windows, `npm run test:integration` for database dedupe/rollback/system exclusion, `npm run analytics:check` for live integrity, and `npm run analytics:report -- --json` for an operator report. Fixtures are explicit and cleaned up.
+
 ## Documentation validation
 
 `npm run validate:docs` checks the required canonical files, root AI entry links, baseline marker, README entry, and forbidden placeholder markers. It does not prove prose accuracy; compare formulas and routes against source before changing this documentation.

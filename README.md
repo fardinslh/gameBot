@@ -4,6 +4,8 @@ Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07.2, 
 
 ## Project documentation
 
+Launch-readiness analytics uses the existing API and PostgreSQL only. See [the analytics guide](docs/project/ANALYTICS.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
+
 Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
 
 ## Architecture
@@ -129,6 +131,7 @@ Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems.
 | `POST` | `/raid/start` | Validate one Match Offer, simulate, persist, and settle the Raid exactly once |
 | `GET` | `/raid/history` | Return the participant's recent persisted Raid summaries |
 | `GET` | `/battles/:battleId` | Return an authorized authoritative replay from stored snapshots/events |
+| `POST` | `/analytics/events` | Ingest a bounded, deduplicated batch of client lifecycle/screen events |
 
 Economy-changing requests require an `Idempotency-Key` header between 8 and 100 characters. An optional `X-Dev-Player-Id` selects an isolated development identity; otherwise the centralized `DEV_PLAYER_ID` value is used.
 

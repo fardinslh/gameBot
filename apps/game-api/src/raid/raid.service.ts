@@ -58,6 +58,7 @@ import { RaidRateLimiter } from './raid-rate-limiter.service';
 import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 import type { ConfiguredSystemOpponent } from './system-opponent.config';
 import { SystemOpponentService } from './system-opponent.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
@@ -99,6 +100,7 @@ export class RaidService {
     private readonly candidateSelector: RaidCandidateSelector,
     private readonly limiter: RaidRateLimiter,
     private readonly notifications: NotificationService,
+    private readonly analytics: AnalyticsService,
   ) {}
 
   async overview(context: DevelopmentPlayerContext): Promise<RaidOverviewResponse> {
@@ -186,15 +188,22 @@ export class RaidService {
       this.watchtowerProtectionBps(defenderState.buildings),
     );
     const expiresAt = new Date(now.getTime() + RAID_OFFER_TTL_MS);
-    const offer = await this.prisma.raidMatchOffer.create({
-      data: {
-        attackerPlayerId: identity.playerId,
-        defenderPlayerId: selected.player.id,
-        attackerPower: overview.team.power,
-        defenderPower: selected.team.power,
-        potentialLoot: potentialLoot as unknown as Prisma.InputJsonValue,
-        expiresAt,
-      },
+    const offer = await this.prisma.$transaction(async (tx) => {
+      const created = await tx.raidMatchOffer.create({
+        data: {
+          attackerPlayerId: identity.playerId,
+          defenderPlayerId: selected.player.id,
+          attackerPower: overview.team.power,
+          defenderPower: selected.team.power,
+          potentialLoot: potentialLoot as unknown as Prisma.InputJsonValue,
+          expiresAt,
+        },
+      });
+      await this.analytics.recordServer(tx, {
+        playerId: identity.playerId, eventName: 'raid_search', dedupeKey: `raid_search:${created.id}`,
+        properties: { opponentKind: selected.kind }, occurredAt: now,
+      });
+      return created;
     });
     return {
       ...overview,
@@ -606,6 +615,35 @@ export class RaidService {
         })) },
       },
     });
+
+    if (input.type === PrismaBattleType.RAID) {
+      const opponentKind = defender.isSystemOpponent ? 'SYSTEM' : 'REAL';
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: 'raid_started', dedupeKey: `raid_started:${battleId}`,
+        properties: { opponentKind }, occurredAt: startedAt,
+      });
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: 'raid_finished', dedupeKey: `raid_finished:${battleId}`,
+        properties: { result: engine.result, opponentKind }, occurredAt: resolvedAt,
+      });
+      const resultEvent = attackerWon ? 'raid_win' : 'raid_loss';
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: resultEvent, dedupeKey: `${resultEvent}:${battleId}`,
+        properties: { opponentKind }, occurredAt: resolvedAt,
+      });
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: 'first_raid_completed',
+        dedupeKey: `first_raid_completed:${attacker.id}`, occurredAt: resolvedAt,
+      });
+    } else {
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: 'revenge_started', dedupeKey: `revenge_started:${battleId}`, occurredAt: startedAt,
+      });
+      await this.analytics.recordServer(tx, {
+        playerId: attacker.id, eventName: 'revenge_finished', dedupeKey: `revenge_finished:${battleId}`,
+        properties: { result: engine.result }, occurredAt: resolvedAt,
+      });
+    }
 
     if (input.type === PrismaBattleType.RAID && !defender.isSystemOpponent) {
       await this.notifications.createNotification(tx, {

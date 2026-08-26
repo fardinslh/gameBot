@@ -16,6 +16,7 @@ const projectDocs = [
   "PROGRESSION.md",
   "DATA_MODEL.md",
   "API_REFERENCE.md",
+  "ANALYTICS.md",
   "FRONTEND.md",
   "ASSETS_AND_VISUALS.md",
   "LOCAL_DEVELOPMENT.md",

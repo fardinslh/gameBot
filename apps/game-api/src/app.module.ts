@@ -11,6 +11,7 @@ import { NotificationModule } from './notifications/notification.module';
 import { PlatformModule } from './platform/platform.module';
 import { PlayerModule } from './player/player.module';
 import { RaidModule } from './raid/raid.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { RaidModule } from './raid/raid.module';
     EconomyModule,
     NotificationModule,
     RaidModule,
+    AnalyticsModule,
   ],
 })
 export class AppModule {}

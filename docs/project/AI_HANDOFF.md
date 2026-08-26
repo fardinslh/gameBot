@@ -99,6 +99,10 @@ Private files are intentionally ignored. Commit and push tracked changes first, 
 
 Run `npm run validate:docs` after documentation changes.
 
+## Latest completed phase
+
+Pre-Bale Launch Readiness - First-Party Analytics Foundation. Server code is in `apps/game-api/src/analytics`, the client queue is in `apps/game-client/src/features/analytics`, and the contract is `docs/project/ANALYTICS.md`. Apply migration `20260826100000_first_party_analytics`. Do not emit reserved onboarding events before onboarding exists. Next: Bale Mini App Integration.
+
 ## Git completion rules
 
 After validated implementation work:

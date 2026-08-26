@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { AnalyticsModule } from '../analytics/analytics.module';
 import { EconomyModule } from '../economy/economy.module';
 import { PlayerModule } from '../player/player.module';
 import { NotificationModule } from '../notifications/notification.module';
@@ -9,7 +10,7 @@ import { RaidService } from './raid.service';
 import { SystemOpponentService } from './system-opponent.service';
 
 @Module({
-  imports: [EconomyModule, NotificationModule, PlayerModule],
+  imports: [EconomyModule, NotificationModule, PlayerModule, AnalyticsModule],
   controllers: [RaidController],
   providers: [RaidService, SystemOpponentService, RaidCandidateSelector, RaidRateLimiter],
   exports: [RaidService],

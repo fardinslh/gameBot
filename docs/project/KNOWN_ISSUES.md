@@ -54,6 +54,13 @@ Production, costs, timers, capacity growth, Hero curves, effects, Raid loot, and
 
 Older terrain files consume repository space but do not load at runtime. They remain for comparison and rollback.
 
+## Analytics limitations
+
+- Rate limiting is process-local until multi-instance topology needs a distributed limiter.
+- Offline delivery is best-effort/session-scoped; closing a tab can lose client-only events.
+- Retention is directional below mature-cohort thresholds.
+- Historical players are not synthetically backfilled with `player_created`.
+
 ## Confirmed bugs
 
 No open reproducible gameplay bug is documented for the Launch-Safety PvP baseline. Add a bug here only with reproduction steps, affected commit, and expected behavior.

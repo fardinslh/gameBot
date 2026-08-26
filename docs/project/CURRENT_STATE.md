@@ -71,7 +71,7 @@ The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, R
 
 ## Current migrations
 
-Nine ordered migrations exist:
+Ten ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -82,6 +82,11 @@ Nine ordered migrations exist:
 7. `20260825070100_kingdom_building_backfill`
 8. `20260825070200_building_progression_constraints`
 9. `20260826090000_launch_safe_raid`
+10. `20260826100000_first_party_analytics`
+
+## Launch-readiness analytics foundation complete
+
+Append-only first-party analytics, transactional server instrumentation, bounded client delivery, session/resume/screen tracking, activation-relative D1/D3/D7 reports, acquisition/engagement breakdowns, integrity checks, migration, and tests are complete. Bale integration has not started and is next.
 
 ## Validation entry points
 

@@ -7,13 +7,18 @@ import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { HeroError } from './hero.errors';
 import { HeroService } from './hero.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const prisma = new PrismaService();
-const economy = new EconomyService(prisma, new NotificationService(prisma));
-const heroes = new HeroService(prisma, economy);
+const analytics = new AnalyticsService(prisma);
+const economy = new EconomyService(prisma, new NotificationService(prisma), analytics);
+const heroes = new HeroService(prisma, economy, analytics);
+const testExternalUserIds: string[] = [];
 
 function context(): DevelopmentPlayerContext {
-  return { platform: 'WEB', externalUserId: `hero-test-${randomUUID()}` };
+  const externalUserId = `hero-test-${randomUUID()}`;
+  testExternalUserIds.push(externalUserId);
+  return { platform: 'WEB', externalUserId };
 }
 
 function key(): string {
@@ -32,7 +37,10 @@ async function errorCode(operation: Promise<unknown>): Promise<string> {
 
 describe.sequential('server-authoritative Hero system', () => {
   beforeAll(async () => prisma.$connect());
-  afterAll(async () => prisma.$disconnect());
+  afterAll(async () => {
+    await prisma.analyticsEvent.deleteMany({ where: { player: { platformAccounts: { some: { externalUserId: { in: testExternalUserIds } } } } } });
+    await prisma.$disconnect();
+  });
 
   it('grants starter Heroes during the first Kingdom bootstrap', async () => {
     const player = context();

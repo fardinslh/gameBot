@@ -77,6 +77,10 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 - No self Revenge target
 - Non-negative Player Trophies
 
+## AnalyticsEvent
+
+`AnalyticsEvent` belongs to one `Player` and stores optional unique dedupe/session data, source, app-defined name, schema version, platform context, bounded metadata, server occurrence time, and optional client time. Indexes cover player, event, cohort, and acquisition queries. Production exposes no event update/delete API.
+
 ## Migration history
 
 | Migration | Change |
@@ -90,5 +94,6 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 | `20260825070100_kingdom_building_backfill` | Idempotent four-building backfill for existing Kingdoms |
 | `20260825070200_building_progression_constraints` | Building and upgrade level checks |
 | `20260826090000_launch_safe_raid` | Rename system-opponent classification, add replenishment ledger reason and matchmaking index |
+| `20260826100000_first_party_analytics` | Append-only canonical event storage, dedupe, cohort and acquisition indexes |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

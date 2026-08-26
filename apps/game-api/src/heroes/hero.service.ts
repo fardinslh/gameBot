@@ -24,6 +24,7 @@ import { ensureHeroSystemForPlayer } from './hero.bootstrap';
 import { HERO_CONTENT, HERO_MAXIMUM_LEVEL } from './hero.config';
 import { HeroError } from './hero.errors';
 import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const playerHeroGraph = Prisma.validator<Prisma.PlayerHeroDefaultArgs>()({
   include: { heroDefinition: true },
@@ -49,6 +50,7 @@ export class HeroService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly economy: EconomyService,
+    private readonly analytics: AnalyticsService,
   ) {}
 
   getHeroes(context: DevelopmentPlayerContext): Promise<HeroesResponse> {
@@ -180,6 +182,10 @@ export class HeroService {
           action: EconomyAction.HERO_UPGRADE,
           response: response as unknown as Prisma.InputJsonValue,
         },
+      });
+      await this.analytics.recordServer(tx, {
+        playerId, eventName: 'hero_upgrade_completed', dedupeKey: `hero_upgrade_completed:${referenceId}`,
+        properties: { heroKey: upgraded.heroDefinition.key, fromLevel: hero.level, toLevel: upgraded.level },
       });
       this.logger.log(`hero-upgrade player=${playerId} hero=${hero.id} level=${upgraded.level} reference=${referenceId}`);
       return response;

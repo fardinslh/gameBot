@@ -68,6 +68,10 @@ Prisma maps the PostgreSQL schema. Migrations contain constraints that Prisma ca
 
 Redis participates in API startup and health checks unless `SKIP_REDIS_FOR_DEVELOPMENT=true`. `JobsService` creates a BullMQ queue named `game-jobs`, but no current service enqueues jobs and no worker consumes them.
 
+## Analytics boundary
+
+`AnalyticsModule` owns ingestion, validation, deduplication, event definitions, and reporting. React emits only lifecycle/screen transitions through a bounded best-effort queue. Economy, Hero, and Raid emit canonical server events beside authoritative writes. Analytics never feeds balances, unlocks, matchmaking, combat, or rewards.
+
 ## Platform independence
 
 Domain services resolve a temporary `WEB` development identity through `PlayerContextService`. They do not call Bale or Telegram SDKs. Future platform authentication should map verified external accounts to `Player` before domain services execute; it should not fork economy, Hero, or battle rules by platform.

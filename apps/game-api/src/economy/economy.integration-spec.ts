@@ -7,13 +7,18 @@ import type { DevelopmentPlayerContext } from '../player/player-context.service'
 import { EconomyService } from './economy.service';
 import { EconomyError } from './economy.errors';
 import { upgradeDurationSeconds } from './economy.config';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
-const economy = new EconomyService(prisma, notifications);
+const analytics = new AnalyticsService(prisma);
+const economy = new EconomyService(prisma, notifications, analytics);
+const testExternalUserIds: string[] = [];
 
 function context(): DevelopmentPlayerContext {
-  return { platform: 'WEB', externalUserId: `test-${randomUUID()}` };
+  const externalUserId = `test-${randomUUID()}`;
+  testExternalUserIds.push(externalUserId);
+  return { platform: 'WEB', externalUserId };
 }
 
 function key(): string {
@@ -32,7 +37,10 @@ async function errorCode(operation: Promise<unknown>): Promise<string> {
 
 describe.sequential('authoritative economy integration', () => {
   beforeAll(async () => prisma.$connect());
-  afterAll(async () => prisma.$disconnect());
+  afterAll(async () => {
+    await prisma.analyticsEvent.deleteMany({ where: { player: { platformAccounts: { some: { externalUserId: { in: testExternalUserIds } } } } } });
+    await prisma.$disconnect();
+  });
 
   it('bootstraps deterministic balances and required buildings once', async () => {
     const player = context();

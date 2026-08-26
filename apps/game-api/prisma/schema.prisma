@@ -13,6 +13,11 @@ enum Platform {
   WEB
 }
 
+enum AnalyticsSource {
+  SERVER
+  CLIENT
+}
+
 enum ResourceType {
   GOLD
   FOOD
@@ -145,6 +150,30 @@ model Player {
   revengeTargetsOwned   RevengeTarget[]      @relation("RevengeOwner")
   revengeTargetsAgainst RevengeTarget[]      @relation("RevengeTargetPlayer")
   notifications         Notification[]
+  analyticsEvents       AnalyticsEvent[]
+}
+
+model AnalyticsEvent {
+  id                String          @id @default(uuid())
+  dedupeKey         String?         @unique
+  playerId          String
+  sessionId         String?
+  source            AnalyticsSource
+  eventName         String
+  schemaVersion     Int             @default(1)
+  platform          Platform
+  locale            String?
+  appVersion        String?
+  acquisitionSource String?
+  properties        Json
+  occurredAt        DateTime        @default(now())
+  clientOccurredAt  DateTime?
+  player            Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, occurredAt])
+  @@index([eventName, occurredAt])
+  @@index([playerId, eventName, occurredAt])
+  @@index([acquisitionSource, occurredAt])
 }
 
 model PlatformAccount {

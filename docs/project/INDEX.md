@@ -62,6 +62,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Building and Kingdom progression](PROGRESSION.md)
 - [Prisma data model and migrations](DATA_MODEL.md)
 - [HTTP API inventory](API_REFERENCE.md)
+- [First-party analytics](ANALYTICS.md)
 - [Frontend architecture](FRONTEND.md)
 - [Assets and visual constraints](ASSETS_AND_VISUALS.md)
 - [Local development](LOCAL_DEVELOPMENT.md)

@@ -65,6 +65,10 @@ Resolved standard Raid
 
 Each mutation validates ownership and server state. `EconomyRequest` stores replayable responses for economy, Hero upgrade, Raid start, and Revenge start actions that require an idempotency key.
 
+## Analytics signals
+
+Collection, building upgrade start, Hero upgrade completion, Raid search/battle/result, Revenge battle/result, and first milestones emit server-owned analytics. Event writes share gameplay transactions where practical. Analytics is observational only.
+
 ## Presentation-only systems
 
 The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. Appearance fallback, animation timing, camera movement, labels, and HUD formatting do not decide gameplay eligibility.
