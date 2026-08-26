@@ -27,6 +27,11 @@ describe('first-party analytics integration', () => {
     await analytics.recordServer(prisma, { playerId: player.id, eventName: 'first_collect', dedupeKey: `first_collect:${player.id}` });
     await analytics.recordServer(prisma, { playerId: player.id, eventName: 'first_collect', dedupeKey: `first_collect:${player.id}` });
     await analytics.recordServer(prisma, { playerId: system.id, eventName: 'raid_finished', dedupeKey: `system:${system.id}` });
+    const systemClient = await analytics.ingestClient(system.id, Platform.WEB, [{
+      eventId: randomUUID(), eventName: 'app_open', sessionId: randomUUID(), properties: {},
+    }]);
+    expect(systemClient.accepted).toHaveLength(0);
+    expect(systemClient.rejected[0]?.reason).toBe('player_not_eligible');
     expect(await prisma.analyticsEvent.count({ where: { playerId: player.id } })).toBe(2);
     expect(await prisma.analyticsEvent.count({ where: { playerId: system.id } })).toBe(0);
   });

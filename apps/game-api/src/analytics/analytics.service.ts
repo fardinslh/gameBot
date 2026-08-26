@@ -43,6 +43,11 @@ export class AnalyticsService {
 
   async ingestClient(playerId: string, platform: Platform, events: ClientAnalyticsEventDto[]): Promise<AnalyticsEventsResponse> {
     const response: AnalyticsEventsResponse = { accepted: [], duplicates: [], rejected: [] };
+    const player = await this.prisma.player.findUnique({ where: { id: playerId }, select: { isSystemOpponent: true } });
+    if (!player || player.isSystemOpponent) {
+      response.rejected = events.map((event) => ({ eventId: event.eventId, reason: 'player_not_eligible' }));
+      return response;
+    }
     for (const event of events) {
       const properties = this.sanitizeProperties(event.properties ?? {});
       if (!properties) {
