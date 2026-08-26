@@ -20,8 +20,10 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 
 | Command | Coverage at verified baseline |
 | --- | --- |
-| `npm test` | 33 unit tests in 10 files: economy/Hero/battle/progression plus system-opponent config, shield, bounded passes, ranking and top-five selection |
-| `npm run test:integration` | 40 tests in 3 files: economy, Heroes, Raid/Revenge, system bootstrap, shield, safe real fallback, anti-farm, replenishment, social exclusion, transactions and concurrency |
+| `npm test` | 39 unit tests in 12 files: economy/Hero/battle/progression, analytics, system-opponent config, shield, bounded passes, ranking and top-five selection |
+| `npm run test:integration` | 47 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding persistence/transitions, analytics, transactions and concurrency |
+| `npm run test:client-analytics` | 2 client analytics contract tests |
+| `npm run test:client-experience` | 6 audio, Battle-SFX mapping, and bilingual Guide-content tests |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -38,6 +40,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, expansion areas, camera bounds, Mine point, effects, screenshots |
+| `npm run validate:player-experience` | Fresh Persian 320 flow through Collect/Upgrade/Raid/completion, skip persistence, eight Guide sections, technical audio triggers/settings, 320/375/390 RTL/LTR |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
 
 Browser scripts locate installed Edge or Chrome through known Windows paths and use Playwright Core. They fail on browser console errors and horizontal overflow.
@@ -55,6 +58,8 @@ They cover English left-to-right and Persian right-to-left where relevant. Keep 
 ## Manual acceptance paths
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
+
+For player experience, use a fresh identity, choose Start, perform a real Collect, start a real Farm upgrade, complete a standard Raid, return to Kingdom, then refresh and confirm `COMPLETED`. Separately skip with another identity and confirm persistence. Automated audio validation is technical only; listen on a real target device before launch.
 
 ## Analytics validation
 

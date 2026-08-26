@@ -5,10 +5,14 @@ import type { CollectResponse, KingdomStateResponse, ResourceAmounts } from '@cr
 import { BUILDING_TYPE_TO_ID } from '../data/building-layout';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
+import { useGameAudio } from '@/features/audio/audio-provider';
+import { usePlayerExperience } from '@/features/experience/player-experience-provider';
 
 type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade';
 
 export function useKingdomState() {
+  const audio = useGameAudio();
+  const experience = usePlayerExperience();
   const [state, setState] = useState<KingdomStateResponse | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [action, setAction] = useState<ActionState>('idle');
@@ -33,6 +37,7 @@ export function useKingdomState() {
     setAction('finishing-upgrade');
     try {
       await collectCompletedBuildingUpgrade(buildingId);
+      audio.playSfx('upgrade_complete');
       await refresh();
       setErrorCode(null);
     } catch (error) {
@@ -40,7 +45,7 @@ export function useKingdomState() {
     } finally {
       setAction('idle');
     }
-  }, [refresh]);
+  }, [refresh, audio]);
 
   useEffect(() => {
     if (initialLoadStarted.current) return;
@@ -89,13 +94,15 @@ export function useKingdomState() {
       setLastGains(response.gains);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
+      audio.playSfx('collect');
+      await experience.refreshOnboarding();
       window.setTimeout(() => setLastGains(null), 2_400);
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {
       setAction('idle');
     }
-  }, [state, action]);
+  }, [state, action, audio, experience]);
 
   const upgrade = useCallback(async (buildingId: string) => {
     if (!state || action !== 'idle') return;
@@ -110,12 +117,14 @@ export function useKingdomState() {
       } : current);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
+      audio.playSfx('upgrade_start');
+      await experience.refreshOnboarding();
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {
       setAction('idle');
     }
-  }, [state, action]);
+  }, [state, action, audio, experience]);
 
   const buildings = useMemo<KingdomBuildingView[]>(() => state?.buildings.map((building) => ({
     ...building,

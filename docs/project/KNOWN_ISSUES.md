@@ -10,6 +10,14 @@ The current baseline passes unit, integration, browser, type, lint, and producti
 
 ## Known limitations
 
+### Audio has no human listening sign-off
+
+Automated checks verify file presence, duration/size budgets, browser playback calls, context switching, and settings persistence. This environment cannot prove subjective loudness, mix quality, or speaker/device behavior; a human must audibly verify both music tracks and focused SFX before launch.
+
+### Bale lifecycle is not integrated
+
+Onboarding recovery and audio visibility handling work in Web browsers. Bale launch parameters, authenticated identity, lifecycle/reconnect behavior, device autoplay policy, and real-device audio remain unimplemented and untested.
+
 ### Development identity has no authentication
 
 `PlayerContextService` trusts `X-Dev-Player-Id` or `DEV_PLAYER_ID`. This setup supports local isolation and browser tests. It cannot protect a production account.

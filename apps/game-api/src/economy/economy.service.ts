@@ -41,6 +41,7 @@ import {
 } from './economy.config';
 import { EconomyError } from './economy.errors';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 
 const kingdomGraph = Prisma.validator<Prisma.KingdomDefaultArgs>()({
   include: {
@@ -69,6 +70,7 @@ export class EconomyService {
     private readonly prisma: PrismaService,
     private readonly notifications: NotificationService,
     private readonly analytics: AnalyticsService,
+    private readonly onboarding: OnboardingService = new OnboardingService(prisma, analytics),
     private readonly kingdomLevels: KingdomLevelService = new KingdomLevelService(),
     private readonly kingdomExpansion: KingdomExpansionService = new KingdomExpansionService(),
   ) {}
@@ -154,6 +156,7 @@ export class EconomyService {
       await this.analytics.recordServer(tx, {
         playerId, eventName: 'first_collect', dedupeKey: `first_collect:${playerId}`, occurredAt: now,
       });
+      await this.onboarding.advanceAfterCollect(tx, playerId, now);
       this.logger.log(`collect player=${playerId} reference=${referenceId} gains=${JSON.stringify(gains)}`);
       return response;
     });
@@ -252,6 +255,7 @@ export class EconomyService {
         playerId, eventName: 'first_upgrade', dedupeKey: `first_upgrade:${playerId}`,
         properties: { buildingType: type }, occurredAt: now,
       });
+      await this.onboarding.advanceAfterUpgrade(tx, playerId, now);
       this.logger.log(`upgrade-start player=${playerId} building=${buildingId} upgrade=${upgradeId} finish=${finishAt.toISOString()}`);
       return response;
     });

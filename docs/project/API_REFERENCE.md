@@ -68,9 +68,19 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 
 `NotificationService` has no controller. Redis and BullMQ expose no HTTP route. Platform adapters expose no authentication, notification, or payment controller.
 
+## Onboarding
+
+| Method | Path | Purpose |
+| --- | --- | --- |
+| `GET` | `/onboarding` | Return or history-reconcile persistent onboarding state |
+| `POST` | `/onboarding/start` | Move a new player from Welcome to the real Collect step |
+| `POST` | `/onboarding/skip` | Persist Skip without rewards, activation, or synthetic gameplay |
+
+The client cannot post a step or completion. Successful Collect, building Upgrade start, and standard Raid settlement advance the state inside server-owned write paths.
+
 ## `POST /analytics/events`
 
-Accepts 1-20 `app_open`, `app_resume`, or `screen_opened` events with UUID event/session IDs. Player/platform are server-resolved. Optional locale, app version, sanitized acquisition source, client timestamp, and properties up to 2 KB are supported. Returns `accepted`, `duplicates`, and `rejected`; server-only/reserved names fail validation.
+Accepts 1-20 `app_open`, `app_resume`, `screen_opened`, `onboarding_started`, or `onboarding_step_seen` events with UUID event/session IDs. Player/platform are server-resolved. Optional locale, app version, sanitized acquisition source, client timestamp, and properties up to 2 KB are supported. Returns `accepted`, `duplicates`, and `rejected`; server-only names such as `onboarding_completed` fail validation.
 
 ## Error families
 

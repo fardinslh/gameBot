@@ -52,6 +52,8 @@ function watchConsole(page) {
 try {
   await api('/kingdom', attackerIdentity);
   await api('/kingdom', defenderIdentity);
+  await api('/onboarding/skip', attackerIdentity, { method: 'POST' });
+  await api('/onboarding/skip', defenderIdentity, { method: 'POST' });
   const [attackerAccount, defenderAccount] = await Promise.all([
     prisma.platformAccount.findUniqueOrThrow({ where: { platform_externalUserId: { platform: 'WEB', externalUserId: attackerIdentity } } }),
     prisma.platformAccount.findUniqueOrThrow({ where: { platform_externalUserId: { platform: 'WEB', externalUserId: defenderIdentity } } }),

@@ -13,10 +13,17 @@ export const SERVER_ANALYTICS_EVENTS = [
   'first_raid_completed',
   'revenge_started',
   'revenge_finished',
+  'onboarding_completed',
 ] as const;
 
-export const CLIENT_ANALYTICS_EVENTS = ['app_open', 'app_resume', 'screen_opened'] as const;
-export const RESERVED_ANALYTICS_EVENTS = ['onboarding_started', 'onboarding_step_seen', 'onboarding_completed'] as const;
+export const CLIENT_ANALYTICS_EVENTS = [
+  'app_open',
+  'app_resume',
+  'screen_opened',
+  'onboarding_started',
+  'onboarding_step_seen',
+] as const;
+export const RESERVED_ANALYTICS_EVENTS: readonly string[] = [];
 
 export type ServerAnalyticsEventName = (typeof SERVER_ANALYTICS_EVENTS)[number];
 export type ClientAnalyticsEventName = (typeof CLIENT_ANALYTICS_EVENTS)[number];

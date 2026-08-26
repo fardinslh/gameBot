@@ -26,6 +26,7 @@ const consoleErrors = [];
 
 async function scenario(kind) {
   const externalUserId = `raid-browser-${kind}-${Date.now()}`;
+  await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': externalUserId } });
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': externalUserId } }));
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
@@ -88,6 +89,7 @@ try {
     for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
       const page = await browser.newPage({ viewport });
       const identity = `raid-layout-${locale}-${viewport.width}-${Date.now()}`;
+      await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
       await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': identity } }));
       await page.goto(`http://localhost:3000/?lang=${locale}&section=raid`, { waitUntil: 'domcontentloaded' });
       await page.waitForSelector('.raid-content[data-player-id]');

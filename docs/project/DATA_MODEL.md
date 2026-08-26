@@ -6,7 +6,7 @@ contentType: Reference
 
 # Understand the PostgreSQL data model
 
-Prisma defines identity, Kingdom economy, Heroes, battle history, Revenge, and notifications. SQL migrations add constraints and backfills that remain part of the authoritative schema.
+Prisma defines identity, Kingdom economy, Heroes, battle history, Revenge, notifications, analytics, and onboarding. SQL migrations add constraints and backfills that remain part of the authoritative schema.
 
 ## Relationship map
 
@@ -23,6 +23,8 @@ Player
   1--* Battle as attacker, defender, and winner
   1--* RevengeTarget as owner and target
   1--* Notification
+  1--1 OnboardingProgress
+  1--* AnalyticsEvent
 
 RaidMatchOffer 1--0..1 Battle
 Battle 1--6 BattleHeroSnapshot
@@ -83,6 +85,8 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 
 ## Migration history
 
+`OnboardingProgress` is a one-to-one Player record with `status`, `currentStep`, and started/completed/skipped timestamps. It stores no balances, rewards, tutorial inventory, or client-decided progress. Existing gameplay transactions advance it; system opponents receive only virtual skipped state.
+
 | Migration | Change |
 | --- | --- |
 | `20260823000000_initial_foundation` | Player, platform identity, Kingdom, resources, buildings, upgrades |
@@ -95,5 +99,6 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 | `20260825070200_building_progression_constraints` | Building and upgrade level checks |
 | `20260826090000_launch_safe_raid` | Rename system-opponent classification, add replenishment ledger reason and matchmaking index |
 | `20260826100000_first_party_analytics` | Append-only canonical event storage, dedupe, cohort and acquisition indexes |
+| `20260826110000_pre_bale_player_experience` | Persistent one-to-one onboarding state, steps, and lifecycle timestamps |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

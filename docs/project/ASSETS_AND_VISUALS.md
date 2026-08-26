@@ -58,6 +58,10 @@ The Mine source reaches the canvas edges and cannot rely on transparent padding.
 
 Barracks, Granary, Tavern, and Stable Stage 1 assets exist locally. They have visual definitions and future layout entries but no active server building contract or Pixi mount path. Treat them as unused art inventory.
 
+## Audio assets
+
+All shipping audio is local under `apps/game-client/public/assets/audio`. Two music tracks and 22 short effects were created for this repository by the deterministic generator in `scripts/generate-audio-assets.mjs`; they contain no sampled third-party recordings or melodies. See [audio](AUDIO.md) for size, provenance, and replacement rules.
+
 ## Validation and debug views
 
 `npm run validate:visual` checks active Stage 1 count, pan, interaction, mobile layout, console errors, and terrain/Castle budgets of 700 KB and 150 KB. `npm run validate:progression` checks active-only stage mounting and locked asset exclusion.

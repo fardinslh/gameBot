@@ -3,10 +3,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { HeroesResponse } from '@crown-and-coin/shared';
 import { fetchHeroes, HeroApiError, saveRaidTeam, upgradeHero } from '../api/hero-api';
+import { useGameAudio } from '@/features/audio/audio-provider';
 
 type HeroAction = 'idle' | 'saving-team' | 'upgrading';
 
 export function useHeroState() {
+  const audio = useGameAudio();
   const [state, setState] = useState<HeroesResponse | null>(null);
   const [draftHeroIds, setDraftHeroIds] = useState<string[]>([]);
   const [action, setAction] = useState<HeroAction>('idle');
@@ -19,6 +21,7 @@ export function useHeroState() {
       setState(response);
       setDraftHeroIds(response.team.slots.map((slot) => slot.playerHeroId));
       setErrorCode(null);
+      audio.playSfx('hero_upgrade');
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       setErrorCode(error instanceof HeroApiError ? error.code : 'SERVER_ERROR');
@@ -79,7 +82,7 @@ export function useHeroState() {
     } finally {
       setAction('idle');
     }
-  }, [state, action]);
+  }, [state, action, audio]);
 
   const persistedIds = useMemo(() => state?.team.slots.map((slot) => slot.playerHeroId) ?? [], [state]);
   const teamDirty = draftHeroIds.join('|') !== persistedIds.join('|');

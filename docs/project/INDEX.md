@@ -63,6 +63,8 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Prisma data model and migrations](DATA_MODEL.md)
 - [HTTP API inventory](API_REFERENCE.md)
 - [First-party analytics](ANALYTICS.md)
+- [Onboarding and permanent Game Guide](PLAYER_EXPERIENCE.md)
+- [Music, SFX, and audio settings](AUDIO.md)
 - [Frontend architecture](FRONTEND.md)
 - [Assets and visual constraints](ASSETS_AND_VISUALS.md)
 - [Local development](LOCAL_DEVELOPMENT.md)
@@ -75,11 +77,11 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5
-- **In progress**: no gameplay phase is active at this baseline
-- **Next**: no next implementation phase has been approved in the repository
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, first-party analytics, and the pre-Bale player-experience gate
+- **In progress**: no implementation phase is active
+- **Next**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
-- **Deferred**: Guild, Shop, Season, leaderboard, payments, Bale integration, Telegram integration, and additional building gameplay
+- **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay
 
 ## Product constraints
 

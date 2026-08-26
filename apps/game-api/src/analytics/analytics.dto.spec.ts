@@ -19,6 +19,15 @@ describe('AnalyticsEventsDto', () => {
     expect(await validate(oversized)).not.toHaveLength(0);
   });
 
+  it('accepts client onboarding presentation events but rejects server-owned completion', async () => {
+    const started = plainToInstance(AnalyticsEventsDto, { events: [{ ...valid(), eventName: 'onboarding_started' }] });
+    const seen = plainToInstance(AnalyticsEventsDto, { events: [{ ...valid(), eventName: 'onboarding_step_seen' }] });
+    const completed = plainToInstance(AnalyticsEventsDto, { events: [{ ...valid(), eventName: 'onboarding_completed' }] });
+    expect(await validate(started)).toHaveLength(0);
+    expect(await validate(seen)).toHaveLength(0);
+    expect(await validate(completed)).not.toHaveLength(0);
+  });
+
   it('strips a client-supplied playerId before controller handling', async () => {
     const pipe = new ValidationPipe({ whitelist: true, transform: true });
     const transformed = await pipe.transform({ events: [{ ...valid(), playerId: 'forged-player' }] }, {

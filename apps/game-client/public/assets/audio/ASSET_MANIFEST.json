@@ -1,0 +1,40 @@
+{
+  "generatedAt": "2026-08-26",
+  "creator": "Crown & Coin project",
+  "method": "Original deterministic procedural synthesis; no external samples or copyrighted melodies.",
+  "rights": "Project-owned original work. Cleared for commercial use in Crown & Coin.",
+  "music": {
+    "kingdom-hearth.mp3": {
+      "context": "Kingdom",
+      "durationSeconds": 72
+    },
+    "battle-march.mp3": {
+      "context": "Battle",
+      "durationSeconds": 48
+    }
+  },
+  "sfx": [
+    "ui-tap.mp3",
+    "panel-open.mp3",
+    "back.mp3",
+    "collect.mp3",
+    "upgrade-start.mp3",
+    "upgrade-complete.mp3",
+    "building-select.mp3",
+    "hero-select.mp3",
+    "hero-upgrade.mp3",
+    "find-enemy.mp3",
+    "attack-start.mp3",
+    "sword-hit.mp3",
+    "arrow-shot.mp3",
+    "arrow-impact.mp3",
+    "magic-cast.mp3",
+    "magic-impact.mp3",
+    "shield-wall.mp3",
+    "hero-defeated.mp3",
+    "victory.mp3",
+    "defeat.mp3",
+    "incoming-attack.mp3",
+    "revenge-available.mp3"
+  ]
+}

@@ -1,10 +1,10 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Through Phase 07.2, the client presents a pan-enabled, unlock-driven Kingdom with nine persistent progression buildings while preserving the authoritative Phase 03–06 gameplay loop. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. The pre-Bale player-experience gate is complete: the authoritative Kingdom/Hero/Raid loop now includes persistent first-session onboarding, a bilingual permanent Game Guide, and local music/SFX with device-persisted controls. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
-Launch-readiness analytics uses the existing API and PostgreSQL only. See [the analytics guide](docs/project/ANALYTICS.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
+Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), and [audio](docs/project/AUDIO.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
 
 Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
 

@@ -33,6 +33,10 @@ features/heroes
   api | components | hooks
 features/raid
   analytics | api | components | hooks
+features/experience
+  onboarding API | provider | coach, welcome, Guide, and settings UI
+features/audio
+  manager | provider | Battle event mapping
 ```
 
 `GameShell` imports feature pages but does not contain their server logic.
@@ -43,7 +47,9 @@ features/raid
 
 `useHeroState` loads roster/team state, maintains an ordered local draft, persists the team, upgrades Heroes, and updates balances from responses.
 
-`useRaidState` coordinates overview, Match Offer, battle playback, inbox, Revenge preview, replay detail, and post-battle refresh. Its analytics adapter currently logs client events rather than sending them to a production analytics backend.
+`useRaidState` coordinates overview, Match Offer, battle playback, inbox, Revenge preview, replay detail, and post-battle refresh. The experience provider refreshes persistent onboarding around successful actions; its UI remains non-blocking on API failure.
+
+`AudioProvider` owns a single session manager. Stable callbacks avoid restarting music when settings change. The manager waits for a user gesture, crossfades between Kingdom and Battle contexts, suspends with page visibility, and catches media failures.
 
 ## API clients
 

@@ -26,6 +26,7 @@ const root = new URL('../', import.meta.url);
 const artifacts = new URL('artifacts/', root);
 mkdirSync(artifacts, { recursive: true });
 const identity = `phase-072-${Date.now()}`;
+await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
 const requestedBuildingAssets = [];
 const consoleErrors = [];
 

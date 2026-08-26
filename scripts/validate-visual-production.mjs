@@ -23,6 +23,7 @@ const artifacts = new URL('artifacts/', root);
 mkdirSync(artifacts, { recursive: true });
 const consoleErrors = [];
 const identity = `phase065-browser-${Date.now()}`;
+await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
 
 async function attach(page) {
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': identity } }));

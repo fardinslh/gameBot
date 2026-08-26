@@ -45,6 +45,7 @@ try {
   browser = await chromium.launch({ executablePath: browserPath, headless: true });
   const page = await browser.newPage({ viewport: { width: 320, height: 740 } });
   const testPlayerId = `browser-validation-${Date.now()}`;
+  await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': testPlayerId } });
   await page.route('http://localhost:3001/**', (route) => route.continue({
     headers: { ...route.request().headers(), 'x-dev-player-id': testPlayerId },
   }));

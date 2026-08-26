@@ -20,10 +20,12 @@ import {
   startRevenge,
 } from '../api/raid-api';
 import { trackRaidEvent } from '../analytics/raid-analytics';
+import { useGameAudio } from '@/features/audio/audio-provider';
 
 export type RaidView = 'overview' | 'inbox';
 
 export function useRaidState(initialView: RaidView = 'overview') {
+  const audio = useGameAudio();
   const [overview, setOverview] = useState<RaidOverviewResponse | null>(null);
   const [offer, setOffer] = useState<RaidSearchResponse['offer'] | null>(null);
   const [battle, setBattle] = useState<BattleReplayResponse | null>(null);
@@ -62,6 +64,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
     try {
       const response = await fetchRaidInbox();
       setInbox(response);
+      if (response.unreadCount > 0) audio.playSfx(response.entries.some((entry) => entry.revengeStatus === 'AVAILABLE') ? 'revenge_available' : 'incoming_attack');
       setErrorCode(null);
       if (response.unreadCount > 0) {
         await markRaidInboxRead();
@@ -70,7 +73,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
     } catch (error) {
       setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR');
     } finally { setAction('idle'); }
-  }, []);
+  }, [audio]);
 
   useEffect(() => {
     if (initialView === 'inbox') void openInbox();
@@ -86,14 +89,16 @@ export function useRaidState(initialView: RaidView = 'overview') {
       setOverview(response);
       setOffer(response.offer);
       setErrorCode(null);
+      audio.playSfx('find_enemy');
       trackRaidEvent('raid_offer_received', { playerId: response.player.id, opponentPower: response.offer.opponent.teamPower, ownPower: response.offer.ownPower });
     } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
     finally { setAction('idle'); }
-  }, [action]);
+  }, [action, audio]);
 
   const attack = useCallback(async () => {
     if (!offer || action !== 'idle') return;
     setAction('attacking');
+    audio.playSfx('attack_start');
     trackRaidEvent('raid_started', { playerId: overview?.player.id ?? 'unknown', offerId: offer.id, opponentPower: offer.opponent.teamPower, ownPower: offer.ownPower });
     try {
       const response = await startRaid(offer.id);
@@ -102,7 +107,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
       setErrorCode(null);
     } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
     finally { setAction('idle'); }
-  }, [offer, action, overview]);
+  }, [offer, action, overview, audio]);
 
   const openRevengePreview = useCallback(async (revengeTargetId: string) => {
     if (action !== 'idle') return;
@@ -117,6 +122,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
   const revenge = useCallback(async () => {
     if (!revengePreview || action !== 'idle') return;
     setAction('attacking');
+    audio.playSfx('attack_start');
     try {
       setBattle(await startRevenge(revengePreview.revengeTargetId));
       setRevengePreview(null);
@@ -124,7 +130,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
       setErrorCode(null);
     } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
     finally { setAction('idle'); }
-  }, [revengePreview, action]);
+  }, [revengePreview, action, audio]);
 
   const openBattleDetail = useCallback(async (battleId: string) => {
     if (action !== 'idle') return;

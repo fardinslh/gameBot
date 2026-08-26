@@ -2,7 +2,13 @@ export const SUPPORTED_PLATFORMS = ['BALE', 'TELEGRAM', 'WEB'] as const;
 
 export type SupportedPlatform = (typeof SUPPORTED_PLATFORMS)[number];
 
-export const CLIENT_ANALYTICS_EVENT_NAMES = ['app_open', 'app_resume', 'screen_opened'] as const;
+export const CLIENT_ANALYTICS_EVENT_NAMES = [
+  'app_open',
+  'app_resume',
+  'screen_opened',
+  'onboarding_started',
+  'onboarding_step_seen',
+] as const;
 export type ClientAnalyticsEventName = (typeof CLIENT_ANALYTICS_EVENT_NAMES)[number];
 
 export interface ClientAnalyticsEventInput {
@@ -21,6 +27,20 @@ export interface AnalyticsEventsResponse {
   accepted: string[];
   duplicates: string[];
   rejected: Array<{ eventId: string; reason: string }>;
+}
+
+export const ONBOARDING_STATUSES = ['NOT_STARTED', 'IN_PROGRESS', 'COMPLETED', 'SKIPPED'] as const;
+export type OnboardingStatus = (typeof ONBOARDING_STATUSES)[number];
+export const ONBOARDING_STEPS = ['WELCOME', 'COLLECT', 'UPGRADE', 'RAID', 'COMPLETE'] as const;
+export type OnboardingStep = (typeof ONBOARDING_STEPS)[number];
+
+export interface OnboardingStateResponse {
+  status: OnboardingStatus;
+  currentStep: OnboardingStep;
+  startedAt: string | null;
+  completedAt: string | null;
+  skippedAt: string | null;
+  serverTime: string;
 }
 
 export interface HealthResponse {

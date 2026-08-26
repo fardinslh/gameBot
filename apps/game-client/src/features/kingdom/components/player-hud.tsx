@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
 import type { KingdomProgressionState } from '@crown-and-coin/shared';
+import { ExperienceControls } from '@/features/experience/player-experience-provider';
 
 interface PlayerHudProps {
   dictionary: Dictionary;
@@ -34,6 +35,7 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, prog
       </div>
 
       <div className="player-actions">
+        <ExperienceControls dictionary={t} />
         <ApiStatus labels={{ checking: t.serverChecking, online: t.serverOnline, offline: t.serverOffline }} />
         <div className="language-switch" aria-label={t.language}>
           <Link aria-current={locale === 'en' ? 'page' : undefined} href={`/?lang=en${sectionQuery}`}>{t.english}</Link>

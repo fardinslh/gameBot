@@ -15,6 +15,7 @@ Use this sequence before a major change. Code and migrations remain authoritativ
 3. [Architecture decisions](DECISIONS.md)
 4. The relevant system document for your task
 5. [Testing and browser validation](TESTING.md)
+6. [Player experience](PLAYER_EXPERIENCE.md) and [audio](AUDIO.md) when touching first-session or media behavior
 
 Check the `Last verified against commit` value in `INDEX.md`, then compare it with `git rev-parse HEAD`. Inspect changed source after that baseline before relying on a documented formula or route.
 
@@ -101,7 +102,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Latest completed phase
 
-Pre-Bale Launch Readiness - First-Party Analytics Foundation. Server code is in `apps/game-api/src/analytics`, the client queue is in `apps/game-client/src/features/analytics`, and the contract is `docs/project/ANALYTICS.md`. Apply migration `20260826100000_first_party_analytics`. Do not emit reserved onboarding events before onboarding exists. Next: Bale Mini App Integration.
+Pre-Bale Player Experience Pass. Persistent onboarding is in `apps/game-api/src/onboarding`, the React layer is in `apps/game-client/src/features/experience`, and centralized audio is in `apps/game-client/src/features/audio`. Apply migration `20260826110000_pre_bale_player_experience`. Preserve server-owned transitions and keep activation anchored to `first_raid_completed`. Next: Bale Mini App Integration.
 
 ## Git completion rules
 

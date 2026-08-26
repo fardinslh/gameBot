@@ -16,7 +16,9 @@ Events carry a UUID, server-resolved player, `SERVER` or `CLIENT` source, string
 
 Server events: `player_created`, `collect_completed`, `first_collect`, `building_upgrade_started`, `first_upgrade`, `hero_upgrade_completed`, `raid_search`, `raid_started`, `raid_finished`, `raid_win`, `raid_loss`, `first_raid_completed`, `revenge_started`, `revenge_finished`.
 
-Client events: `app_open`, `app_resume`, `screen_opened`. Reserved and not emitted: `onboarding_started`, `onboarding_step_seen`, `onboarding_completed`.
+Client events: `app_open`, `app_resume`, `screen_opened`, `onboarding_started`, `onboarding_step_seen`. Server-only onboarding event: `onboarding_completed`.
+
+Onboarding completion is a funnel milestone, not the activation definition. Activation and D1/D3/D7 retention remain anchored to the server-owned `first_raid_completed` event.
 
 System opponents never receive human milestones. Critical server events share the authoritative gameplay transaction where practical.
 

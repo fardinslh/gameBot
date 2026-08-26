@@ -59,6 +59,7 @@ import { kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 import type { ConfiguredSystemOpponent } from './system-opponent.config';
 import { SystemOpponentService } from './system-opponent.service';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { OnboardingService } from '../onboarding/onboarding.service';
 
 const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
@@ -101,6 +102,7 @@ export class RaidService {
     private readonly limiter: RaidRateLimiter,
     private readonly notifications: NotificationService,
     private readonly analytics: AnalyticsService,
+    private readonly onboarding: OnboardingService = new OnboardingService(prisma, analytics),
   ) {}
 
   async overview(context: DevelopmentPlayerContext): Promise<RaidOverviewResponse> {
@@ -635,6 +637,7 @@ export class RaidService {
         playerId: attacker.id, eventName: 'first_raid_completed',
         dedupeKey: `first_raid_completed:${attacker.id}`, occurredAt: resolvedAt,
       });
+      await this.onboarding.completeAfterStandardRaid(tx, attacker.id, battleId, resolvedAt);
     } else {
       await this.analytics.recordServer(tx, {
         playerId: attacker.id, eventName: 'revenge_started', dedupeKey: `revenge_started:${battleId}`, occurredAt: startedAt,

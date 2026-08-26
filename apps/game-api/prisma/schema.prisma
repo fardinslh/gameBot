@@ -18,6 +18,21 @@ enum AnalyticsSource {
   CLIENT
 }
 
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  SKIPPED
+}
+
+enum OnboardingStep {
+  WELCOME
+  COLLECT
+  UPGRADE
+  RAID
+  COMPLETE
+}
+
 enum ResourceType {
   GOLD
   FOOD
@@ -151,6 +166,22 @@ model Player {
   revengeTargetsAgainst RevengeTarget[]      @relation("RevengeTargetPlayer")
   notifications         Notification[]
   analyticsEvents       AnalyticsEvent[]
+  onboarding            OnboardingProgress?
+}
+
+model OnboardingProgress {
+  id          String           @id @default(uuid())
+  playerId    String           @unique
+  status      OnboardingStatus @default(NOT_STARTED)
+  currentStep OnboardingStep   @default(WELCOME)
+  startedAt   DateTime?
+  completedAt DateTime?
+  skippedAt   DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  player      Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([status, updatedAt])
 }
 
 model AnalyticsEvent {

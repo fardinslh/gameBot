@@ -24,6 +24,7 @@ const artifacts = new URL('artifacts/', root);
 mkdirSync(artifacts, { recursive: true });
 const consoleErrors = [];
 const identity = `building-art-${Date.now()}`;
+await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
 const WORLD_WIDTH = 640;
 
 async function openPage(viewport, locale = 'fa', debugBuildingLayout = false, debugKingdomLayers = '') {

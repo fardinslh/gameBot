@@ -4,10 +4,14 @@ import { useEffect, useRef } from 'react';
 import type { BattleReplayResponse, BattleSide } from '@crown-and-coin/shared';
 import { Assets, Container, Graphics, Sprite } from 'pixi.js';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
+import { useGameAudio } from '@/features/audio/audio-provider';
+import { sfxForBattleEvent } from '@/features/audio/battle-audio';
+import type { SfxKey } from '@/features/audio/audio-manager';
 
 interface BattleSceneProps { battle: BattleReplayResponse; onComplete(): void; }
 
 export function BattleScene({ battle, onComplete }: BattleSceneProps) {
+  const { playSfx } = useGameAudio();
   const hostRef = useRef<HTMLDivElement>(null);
   const completeRef = useRef(onComplete);
   completeRef.current = onComplete;
@@ -18,16 +22,16 @@ export function BattleScene({ battle, onComplete }: BattleSceneProps) {
     let disposed = false;
     let cleanup = () => {};
     const completionTimer = window.setTimeout(() => completeRef.current(), battle.durationMs + 450);
-    void buildBattle(host, battle).then((destroy) => {
+    void buildBattle(host, battle, playSfx).then((destroy) => {
       if (disposed) destroy(); else cleanup = destroy;
     }).catch((error) => console.error('Battle scene initialization failed', error));
     return () => { disposed = true; window.clearTimeout(completionTimer); cleanup(); };
-  }, [battle]);
+  }, [battle, playSfx]);
 
   return <div className="battle-scene" data-battle-id={battle.id} ref={hostRef} aria-label="Auto battle replay" />;
 }
 
-async function buildBattle(host: HTMLDivElement, battle: BattleReplayResponse): Promise<() => void> {
+async function buildBattle(host: HTMLDivElement, battle: BattleReplayResponse, playSfx: (key: SfxKey) => void): Promise<() => void> {
   const runtime = await createPixiRuntime(host);
   const { app } = runtime;
   app.canvas.className = 'battle-canvas';
@@ -75,6 +79,10 @@ async function buildBattle(host: HTMLDivElement, battle: BattleReplayResponse): 
   const timers: number[] = [];
   const schedule = (callback: () => void, delay: number) => { timers.push(window.setTimeout(callback, delay)); };
   for (const event of battle.events) {
+    const sourceHero = event.sourceSide && event.sourceSlot
+      ? battle.teams[event.sourceSide === 'ATTACKER' ? 'attacker' : 'defender'].find((hero) => hero.slot === event.sourceSlot)?.key
+      : undefined;
+    for (const key of sfxForBattleEvent(event, sourceHero)) schedule(() => playSfx(key), event.timeMs);
     if (event.type === 'SKILL_CAST' && event.sourceSide && event.sourceSlot) {
       schedule(() => showSkillEffect(app.stage, units, event.sourceSide!, event.sourceSlot!, event.skillKey, schedule), event.timeMs);
     }

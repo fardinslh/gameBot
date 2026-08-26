@@ -16,6 +16,10 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
+| First-session onboarding | Implemented | Server-persisted Welcome, Collect, Upgrade, Raid, Complete/Skip flow driven by real actions |
+| Permanent Game Guide | Implemented | Eight bilingual sections available from the compact Player HUD |
+| Music and SFX | Implemented | Two local music contexts, 22 focused local effects, gesture-safe playback |
+| Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Raid Team | Implemented | Exactly three unique owned Heroes in ordered persistent slots |
@@ -71,7 +75,7 @@ The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, R
 
 ## Current migrations
 
-Ten ordered migrations exist:
+Eleven ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -83,11 +87,12 @@ Ten ordered migrations exist:
 8. `20260825070200_building_progression_constraints`
 9. `20260826090000_launch_safe_raid`
 10. `20260826100000_first_party_analytics`
+11. `20260826110000_pre_bale_player_experience`
 
-## Launch-readiness analytics foundation complete
+## Pre-Bale player experience complete
 
-Append-only first-party analytics, transactional server instrumentation, bounded client delivery, session/resume/screen tracking, activation-relative D1/D3/D7 reports, acquisition/engagement breakdowns, integrity checks, migration, and tests are complete. Bale integration has not started and is next.
+First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, local Kingdom/Battle music, focused SFX, and persistent audio controls are complete. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started and is next.
 
 ## Validation entry points
 
-Run `npm test`, `npm run test:integration`, `npm run typecheck`, `npm run lint`, and `npm run build` for code changes. Browser flows live under `validate:client`, `validate:heroes`, `validate:raid`, `validate:revenge`, `validate:visual`, and `validate:progression`. See [testing](TESTING.md) for prerequisites and coverage.
+Run `npm test`, `npm run test:integration`, `npm run test:client-experience`, `npm run typecheck`, `npm run lint`, and `npm run build` for code changes. Browser flows include `validate:player-experience` and the existing regressions. See [testing](TESTING.md) for prerequisites and coverage.

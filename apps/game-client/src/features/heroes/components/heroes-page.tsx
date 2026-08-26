@@ -11,6 +11,7 @@ import { useHeroState } from '../hooks/use-hero-state';
 import { HeroCard } from './hero-card';
 import { HeroDetailSheet } from './hero-detail-sheet';
 import { RaidTeamPanel } from './raid-team-panel';
+import { useGameAudio } from '@/features/audio/audio-provider';
 
 interface HeroesPageProps {
   dictionary: Dictionary;
@@ -22,6 +23,7 @@ const EMPTY_BALANCES = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' 
 
 export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProps) {
   const roster = useHeroState();
+  const audio = useGameAudio();
   const [targetSlot, setTargetSlot] = useState(0);
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
@@ -82,7 +84,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
                           hero={hero}
                           key={hero.id}
                           onAssign={() => roster.assignHero(hero.id, targetSlot)}
-                          onOpen={() => setSelectedHeroId(hero.id)}
+                          onOpen={() => { audio.playSfx('hero_select'); setSelectedHeroId(hero.id); }}
                           targetSlot={targetSlot}
                           teamSlot={teamSlot < 0 ? null : teamSlot}
                         />

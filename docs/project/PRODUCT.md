@@ -31,6 +31,8 @@ The game stores all persistent state in PostgreSQL.
 
 ## Progression role
 
+The first session teaches the existing loop through real Collect, building Upgrade, and standard Raid actions; it creates no tutorial economy. Progress is durable and skippable. A permanent bilingual Game Guide remains available afterward, while audio adds atmosphere without gating gameplay.
+
 Castle level controls building unlocks and feature metadata. Building upgrades increase production, capacity through Castle level, special Kingdom effects, and Kingdom XP. Kingdom Level summarizes total building investment and does not unlock gameplay.
 
 Progressive Kingdom Expansion changes the world at Castle levels 2 through 5. New structures receive a local environment treatment and join the active camera only after the server marks them unlocked.

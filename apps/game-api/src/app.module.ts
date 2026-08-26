@@ -12,6 +12,7 @@ import { PlatformModule } from './platform/platform.module';
 import { PlayerModule } from './player/player.module';
 import { RaidModule } from './raid/raid.module';
 import { AnalyticsModule } from './analytics/analytics.module';
+import { OnboardingModule } from './onboarding/onboarding.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
     NotificationModule,
     RaidModule,
     AnalyticsModule,
+    OnboardingModule,
   ],
 })
 export class AppModule {}

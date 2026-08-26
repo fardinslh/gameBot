@@ -20,10 +20,25 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Progressive expansion**: five visual stages, active-only rendering, area reveals, Mine reposition
 - **Project handoff documentation**: canonical developer and AI context under `docs/project`
 - **Launch-Safety PvP**: 30 system opponents, six tiers, bounded matchmaking, new-player shield, anti-farm cooldown, safe replenishment
+- **First-Party Analytics**: canonical events, activation/retention reports, integrity tooling
+- **Pre-Bale Player Experience Pass**: persistent first session, permanent bilingual Guide, local music/SFX, persistent audio controls
 
 ## Current and next
 
-The next recommended scoped task is **First-Party Analytics Foundation**. It is not implemented by the Launch-Safety PvP pass and must not be inferred from server logs.
+The **Pre-Bale Player Experience Pass is complete**. The next recommended scoped task is **Bale Mini App Integration**; it has not started.
+
+The approved launch sequence is:
+
+```text
+First-Party Analytics (complete)
+  -> Pre-Bale Player Experience Pass (complete)
+  -> Bale Mini App Integration (next)
+  -> Production Readiness
+  -> Closed Bale Test
+  -> Soft Launch
+```
+
+Do not infer that Bale is implemented from platform placeholders. It requires its own scoped integration and device validation.
 
 Final stage 2 and stage 3 building artwork remains a known visual follow-up. The loader already supports those files; no current phase authorizes asset generation.
 
@@ -44,7 +59,7 @@ These items need product decisions before implementation. Current code does not 
 
 ## Completed: pre-Bale analytics foundation
 
-Canonical storage, transactional server events, safe client delivery, funnel/activation/retention/acquisition/engagement reporting, integrity tooling, tests, and docs are complete. Next: Bale Mini App Integration. Onboarding, monetization, Guild, Season, and new gameplay remain deferred.
+Canonical analytics and the subsequent Player Experience gate are complete. Bale Mini App Integration follows them. Monetization, Guild, Season, and new gameplay remain deferred.
 
 ## Deferred complexity
 

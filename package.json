@@ -27,7 +27,9 @@
     "analytics:report": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js",
     "analytics:check": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js --check",
     "validate:analytics": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node scripts/validate-analytics.mjs",
+    "validate:player-experience": "dotenv -e .env -- node scripts/validate-player-experience.mjs",
     "test:client-analytics": "npm run test:analytics --workspace @crown-and-coin/game-client",
+    "test:client-experience": "npm run test:experience --workspace @crown-and-coin/game-client",
     "test": "npm run test --workspace @crown-and-coin/game-api",
     "test:integration": "npm run test:integration --workspace @crown-and-coin/game-api",
     "start": "concurrently -n client,api -c cyan,magenta \"npm run start --workspace @crown-and-coin/game-client\" \"npm run start:prod --workspace @crown-and-coin/game-api\""
