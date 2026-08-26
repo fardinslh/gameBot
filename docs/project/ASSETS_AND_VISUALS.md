@@ -60,7 +60,7 @@ Barracks, Granary, Tavern, and Stable Stage 1 assets exist locally. They have vi
 
 ## Audio assets
 
-All shipping audio is local under `apps/game-client/public/assets/audio`. Two music tracks and 22 short effects were created for this repository by the deterministic generator in `scripts/generate-audio-assets.mjs`; they contain no sampled third-party recordings or melodies. See [audio](AUDIO.md) for size, provenance, and replacement rules.
+All audio remains local under `apps/game-client/public/assets/audio`. The two procedural music tracks and 22 procedural effects created by `scripts/generate-audio-assets.mjs` still preserve runtime compatibility, but the product owner rejected them for inadequate quality. Licensed replacement candidates are isolated under `assets/audio/candidates` and are not production mappings. See [audio](AUDIO.md) for the audit and [audio audition](AUDIO_AUDITION.md) for the human approval gate.
 
 ## Validation and debug views
 

@@ -62,4 +62,5 @@ It documents implemented mechanics only. Guild, Season, Shop, payments, leaderbo
 
 - Copy still needs final Persian real-user review.
 - The initial pass has one short mandatory path and no branching tutorial variants.
+- The initial procedural audio content was rejected by the product owner. Replacement candidates exist in the development-only Audio Lab, but production selection is pending human audition.
 - Bale launch/reconnect behavior is not implemented or device-tested yet.

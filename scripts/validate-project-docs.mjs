@@ -19,6 +19,7 @@ const projectDocs = [
   "ANALYTICS.md",
   "PLAYER_EXPERIENCE.md",
   "AUDIO.md",
+  "AUDIO_AUDITION.md",
   "FRONTEND.md",
   "ASSETS_AND_VISUALS.md",
   "LOCAL_DEVELOPMENT.md",

@@ -18,7 +18,8 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Server-persisted Welcome, Collect, Upgrade, Raid, Complete/Skip flow driven by real actions |
 | Permanent Game Guide | Implemented | Eight bilingual sections available from the compact Player HUD |
-| Music and SFX | Implemented | Two local music contexts, 22 focused local effects, gesture-safe playback |
+| Audio engine | Implemented | Two music contexts, 22 SFX triggers, gesture-safe playback, crossfade, visibility handling, and variant-ready SFX mappings |
+| Production audio selection | Pending human approval | The owner rejected all 24 initial procedural assets; 61 licensed local candidates across 24 groups are available in the development-only Audio Lab |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
@@ -89,10 +90,10 @@ Eleven ordered migrations exist:
 10. `20260826100000_first_party_analytics`
 11. `20260826110000_pre_bale_player_experience`
 
-## Pre-Bale player experience complete
+## Active launch gate: human audio approval
 
-First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, local Kingdom/Battle music, focused SFX, and persistent audio controls are complete. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started and is next.
+First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, the audio engine, and persistent audio controls are implemented. The initial music/SFX content was rejected by the product owner; no audition candidate is production-approved or mapped yet. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started and must not begin before the human audio selection gate closes.
 
 ## Validation entry points
 
-Run `npm test`, `npm run test:integration`, `npm run test:client-experience`, `npm run typecheck`, `npm run lint`, and `npm run build` for code changes. Browser flows include `validate:player-experience` and the existing regressions. See [testing](TESTING.md) for prerequisites and coverage.
+Run `npm test`, `npm run test:integration`, `npm run test:client-experience`, `npm run typecheck`, `npm run lint`, and `npm run build` for code changes. Audio work also requires `npm run validate:audio-lab`; that command verifies technical playback only, never subjective quality. Browser flows include `validate:player-experience` and the existing regressions. See [testing](TESTING.md) for prerequisites and coverage.

@@ -1,10 +1,10 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. The pre-Bale player-experience gate is complete: the authoritative Kingdom/Hero/Raid loop now includes persistent first-session onboarding, a bilingual permanent Game Guide, and local music/SFX with device-persisted controls. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, and device-persisted audio controls. The initial local music/SFX set was rejected for inadequate quality; a development-only Audio Lab now exposes licensed A/B/C replacements for human audition. Bale work remains blocked until that selection is approved. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
-Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), and [audio](docs/project/AUDIO.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
+Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), [audio](docs/project/AUDIO.md), and the [audio audition guide](docs/project/AUDIO_AUDITION.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
 
 Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
 

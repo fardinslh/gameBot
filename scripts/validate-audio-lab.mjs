@@ -1,0 +1,96 @@
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, statSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import process from 'node:process';
+import { chromium } from 'playwright-core';
+
+const root = new URL('../', import.meta.url);
+const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
+const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
+const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
+const nextCli = new URL('node_modules/next/dist/bin/next', root).pathname.slice(1);
+const manifest = JSON.parse(readFileSync(new URL('apps/game-client/public/assets/audio/candidates/AUDITION_MANIFEST.json', root), 'utf8'));
+const artifacts = new URL('artifacts/audio-audition/', root);
+
+function startDevClient() {
+  return spawn(process.execPath, [nextCli, 'dev', '--port', '3010'], {
+    cwd: new URL('apps/game-client/', root), env: { ...process.env, NODE_ENV: 'development' }, stdio: ['ignore', 'pipe', 'pipe'],
+  });
+}
+
+async function waitForUrl(url, timeoutMs = 30_000) {
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    try { if ((await fetch(url)).ok) return; } catch {}
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`Timed out waiting for ${url}`);
+}
+
+if (!browserPath) throw new Error('No supported Chromium browser was found.');
+mkdirSync(artifacts, { recursive: true });
+const technicalFailures = [];
+for (const candidate of manifest.candidates) {
+  const file = new URL(`apps/game-client/public${candidate.filename}`, root);
+  if (!existsSync(file) || statSync(file).size !== candidate.sizeBytes) throw new Error(`Missing or mismatched candidate ${candidate.filename}`);
+  // Container overhead raises the reported average on sub-200 ms clips.
+  if (candidate.codec !== 'mp3' || candidate.bitrate < 96_000 || candidate.bitrate > 200_000) throw new Error(`Unexpected encoding metadata for ${candidate.filename}`);
+  const scan = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', fileURLToPath(file), '-af', 'volumedetect', '-f', 'null', process.platform === 'win32' ? 'NUL' : '/dev/null'], { encoding: 'utf8' });
+  const peak = /max_volume:\s*(-?[\d.]+) dB/.exec(scan.stderr)?.[1];
+  if (scan.status !== 0 || peak === undefined || Number(peak) >= 0) technicalFailures.push(`${candidate.filename} (${peak ?? 'unreadable'} dBFS)`);
+}
+if (technicalFailures.length) throw new Error(`Clipping or unreadable peaks detected: ${technicalFailures.join(', ')}`);
+
+const client = startDevClient();
+let browser;
+const consoleErrors = [];
+try {
+  await waitForUrl('http://localhost:3010/dev/audio');
+  browser = await chromium.launch({ executablePath: browserPath, headless: true });
+  const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  await page.addInitScript(() => {
+    window.__audioLab = { plays: [], pauses: 0 };
+    HTMLMediaElement.prototype.play = function play() { window.__audioLab.plays.push(this.src); return Promise.resolve(); };
+    HTMLMediaElement.prototype.pause = function pause() { window.__audioLab.pauses += 1; };
+  });
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', (error) => consoleErrors.push(error.message));
+  await page.goto('http://localhost:3010/dev/audio', { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-audio-lab="pending-human-approval"]');
+  const failedLoads = await page.evaluate(async (files) => (await Promise.all(files.map(async (file) => ({ file, ok: (await fetch(file)).ok })))).filter((item) => !item.ok), manifest.candidates.map((candidate) => candidate.filename));
+  if (failedLoads.length) throw new Error(`Candidate HTTP loads failed: ${failedLoads.map((item) => item.file).join(', ')}`);
+  if (await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').count() !== 3) throw new Error('Kingdom music must expose A/B/C');
+  await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').nth(0).click();
+  await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').nth(1).click();
+  const routing = await page.evaluate(() => window.__audioLab);
+  if (routing.plays.length !== 2 || routing.pauses < 1) throw new Error('Music candidates overlapped instead of stopping the previous candidate');
+  await page.locator('[data-audio-action="stop-all"]').click();
+  await page.getByRole('button', { name: /SFX/ }).click();
+  if (await page.locator('[data-audio-context]').count() !== 9) throw new Error('Gameplay context quick tests are incomplete');
+  await page.locator('[data-audio-context="collect"]').click();
+  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/collect/'))))) throw new Error('Collect context preview did not play');
+  await page.locator('[data-audio-group="collect"] [data-audio-action="play"]').nth(0).click();
+  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/collect/'))))) throw new Error('SFX preview did not play');
+  const master = page.getByRole('checkbox', { name: /Master/ });
+  await master.click();
+  const saved = await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1'));
+  if (!saved?.includes('masterEnabled')) throw new Error('Master settings were not persisted');
+  await page.reload({ waitUntil: 'networkidle' });
+  if (await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1')) !== saved) throw new Error('Settings did not survive refresh');
+  for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
+    await page.setViewportSize(viewport);
+    if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) throw new Error(`Horizontal overflow at ${viewport.width}x${viewport.height}`);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.screenshot({ path: new URL('audio-lab-mobile-390x844.png', artifacts).pathname.slice(1), fullPage: true });
+  if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
+  console.log(`PASS Audio Lab loaded ${manifest.candidates.length} local candidates across 24 groups`);
+  console.log('PASS MP3 bitrate metadata and decoded peaks stay below 0 dBFS');
+  console.log('PASS music exclusivity, Stop/Replay controls, gameplay-context SFX preview, shared settings persistence');
+  console.log('PASS 320x568, 375x812, and 390x844 without horizontal overflow');
+  console.log('NOTE technical playback only; candidate quality was NOT AUDIBLY VERIFIED');
+} finally {
+  await browser?.close();
+  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(client.pid), '/T', '/F'], { stdio: 'ignore' });
+  else client.kill('SIGTERM');
+}

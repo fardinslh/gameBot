@@ -15,7 +15,7 @@ Use this sequence before a major change. Code and migrations remain authoritativ
 3. [Architecture decisions](DECISIONS.md)
 4. The relevant system document for your task
 5. [Testing and browser validation](TESTING.md)
-6. [Player experience](PLAYER_EXPERIENCE.md) and [audio](AUDIO.md) when touching first-session or media behavior
+6. [Player experience](PLAYER_EXPERIENCE.md), [audio](AUDIO.md), and [audio audition](AUDIO_AUDITION.md) when touching first-session or media behavior
 
 Check the `Last verified against commit` value in `INDEX.md`, then compare it with `git rev-parse HEAD`. Inspect changed source after that baseline before relying on a documented formula or route.
 
@@ -100,9 +100,9 @@ Private files are intentionally ignored. Commit and push tracked changes first, 
 
 Run `npm run validate:docs` after documentation changes.
 
-## Latest completed phase
+## Current launch gate
 
-Pre-Bale Player Experience Pass. Persistent onboarding is in `apps/game-api/src/onboarding`, the React layer is in `apps/game-client/src/features/experience`, and centralized audio is in `apps/game-client/src/features/audio`. Apply migration `20260826110000_pre_bale_player_experience`. Preserve server-owned transitions and keep activation anchored to `first_raid_completed`. Next: Bale Mini App Integration.
+The onboarding, Guide, and centralized audio runtime are implemented. Apply migration `20260826110000_pre_bale_player_experience`. The product owner rejected the initial procedural audio content. The development-only `/dev/audio` lab and licensed candidate catalog are ready, but production selection is **PENDING HUMAN APPROVAL**. Preserve server-owned onboarding transitions and keep activation anchored to `first_raid_completed`. Do not start Bale; the next action is owner audition and candidate selection.
 
 ## Git completion rules
 

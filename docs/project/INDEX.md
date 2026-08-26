@@ -65,6 +65,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [First-party analytics](ANALYTICS.md)
 - [Onboarding and permanent Game Guide](PLAYER_EXPERIENCE.md)
 - [Music, SFX, and audio settings](AUDIO.md)
+- [Audio candidate audition and approval](AUDIO_AUDITION.md)
 - [Frontend architecture](FRONTEND.md)
 - [Assets and visual constraints](ASSETS_AND_VISUALS.md)
 - [Local development](LOCAL_DEVELOPMENT.md)
@@ -77,9 +78,10 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, first-party analytics, and the pre-Bale player-experience gate
-- **In progress**: no implementation phase is active
-- **Next**: Bale Mini App Integration
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, first-party analytics, onboarding, Game Guide, and audio runtime
+- **In progress**: Audio Quality Selection Gate; the initial production assets are rejected and the replacement catalog is pending human approval
+- **Next**: owner audition and production candidate selection
+- **Blocked**: Bale Mini App Integration must not start before the audio gate closes
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay
 

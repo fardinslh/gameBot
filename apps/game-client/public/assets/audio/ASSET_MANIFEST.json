@@ -1,40 +1,38 @@
 {
-  "generatedAt": "2026-08-26",
-  "creator": "Crown & Coin project",
-  "method": "Original deterministic procedural synthesis; no external samples or copyrighted melodies.",
-  "rights": "Project-owned original work. Cleared for commercial use in Crown & Coin.",
-  "music": {
-    "kingdom-hearth.mp3": {
-      "context": "Kingdom",
-      "durationSeconds": 72
-    },
-    "battle-march.mp3": {
-      "context": "Battle",
-      "durationSeconds": 48
-    }
-  },
-  "sfx": [
-    "ui-tap.mp3",
-    "panel-open.mp3",
-    "back.mp3",
-    "collect.mp3",
-    "upgrade-start.mp3",
-    "upgrade-complete.mp3",
-    "building-select.mp3",
-    "hero-select.mp3",
-    "hero-upgrade.mp3",
-    "find-enemy.mp3",
-    "attack-start.mp3",
-    "sword-hit.mp3",
-    "arrow-shot.mp3",
-    "arrow-impact.mp3",
-    "magic-cast.mp3",
-    "magic-impact.mp3",
-    "shield-wall.mp3",
-    "hero-defeated.mp3",
-    "victory.mp3",
-    "defeat.mp3",
-    "incoming-attack.mp3",
-    "revenge-available.mp3"
-  ]
+  "auditedAt": "2026-08-26",
+  "catalogStatus": "REJECTED_BY_PRODUCT_OWNER",
+  "classification": "REPLACE",
+  "productionMapping": "LEGACY_PENDING_HUMAN_APPROVAL",
+  "source": "Crown & Coin deterministic procedural synthesis",
+  "author": "Crown & Coin project / Codex-generated",
+  "license": "Project-owned original work; commercial use cleared for Crown & Coin",
+  "sourceReference": "scripts/generate-audio-assets.mjs",
+  "reason": "Owner rejected the initial selection as cheap, generic, silly, and inconsistent with the premium medieval-fantasy direction.",
+  "assets": [
+    { "filename": "music/kingdom-hearth.mp3", "role": "Kingdom background music", "durationSeconds": 72, "sizeBytes": 576826, "currentTrigger": "KINGDOM music context", "classification": "REPLACE" },
+    { "filename": "music/battle-march.mp3", "role": "Battle background music", "durationSeconds": 48, "sizeBytes": 384774, "currentTrigger": "active Battle music context", "classification": "REPLACE" },
+    { "filename": "sfx/ui-tap.mp3", "role": "UI navigation", "durationSeconds": 0.16, "sizeBytes": 2132, "currentTrigger": "section navigation and compact confirmations", "classification": "REPLACE" },
+    { "filename": "sfx/panel-open.mp3", "role": "Panel open", "durationSeconds": 0.342, "sizeBytes": 3595, "currentTrigger": "Guide, settings, and inbox open", "classification": "REPLACE" },
+    { "filename": "sfx/back.mp3", "role": "Back/close", "durationSeconds": 0.24, "sizeBytes": 2759, "currentTrigger": "close and return actions", "classification": "REPLACE" },
+    { "filename": "sfx/collect.mp3", "role": "Resource collection", "durationSeconds": 0.65, "sizeBytes": 5894, "currentTrigger": "successful server Collect", "classification": "REPLACE" },
+    { "filename": "sfx/upgrade-start.mp3", "role": "Building upgrade start", "durationSeconds": 0.82, "sizeBytes": 7357, "currentTrigger": "successful server building-upgrade start", "classification": "REPLACE" },
+    { "filename": "sfx/upgrade-complete.mp3", "role": "Building upgrade completion", "durationSeconds": 1.152, "sizeBytes": 10074, "currentTrigger": "authoritative upgrade completion collection", "classification": "REPLACE" },
+    { "filename": "sfx/building-select.mp3", "role": "Building selection", "durationSeconds": 0.25, "sizeBytes": 2759, "currentTrigger": "Pixi building selection", "classification": "REPLACE" },
+    { "filename": "sfx/hero-select.mp3", "role": "Hero selection", "durationSeconds": 0.38, "sizeBytes": 3804, "currentTrigger": "Hero detail selection", "classification": "REPLACE" },
+    { "filename": "sfx/hero-upgrade.mp3", "role": "Hero progression", "durationSeconds": 0.9, "sizeBytes": 7984, "currentTrigger": "successful Hero upgrade", "classification": "REPLACE" },
+    { "filename": "sfx/find-enemy.mp3", "role": "Opponent search", "durationSeconds": 0.72, "sizeBytes": 6521, "currentTrigger": "successful Match Offer search", "classification": "REPLACE" },
+    { "filename": "sfx/attack-start.mp3", "role": "Battle transition", "durationSeconds": 1.05, "sizeBytes": 9238, "currentTrigger": "Raid or Revenge start request", "classification": "REPLACE" },
+    { "filename": "sfx/sword-hit.mp3", "role": "Knight/basic hit", "durationSeconds": 0.3, "sizeBytes": 3177, "currentTrigger": "persisted Knight/basic Damage event", "classification": "REPLACE" },
+    { "filename": "sfx/arrow-shot.mp3", "role": "Ranger bow release", "durationSeconds": 0.342, "sizeBytes": 3595, "currentTrigger": "persisted Power Shot cast", "classification": "REPLACE" },
+    { "filename": "sfx/arrow-impact.mp3", "role": "Ranger projectile impact", "durationSeconds": 0.25, "sizeBytes": 2759, "currentTrigger": "persisted Ranger Damage event", "classification": "REPLACE" },
+    { "filename": "sfx/magic-cast.mp3", "role": "Mage cast", "durationSeconds": 0.65, "sizeBytes": 5894, "currentTrigger": "persisted Arcane Blast cast", "classification": "REPLACE" },
+    { "filename": "sfx/magic-impact.mp3", "role": "Mage impact", "durationSeconds": 0.48, "sizeBytes": 4640, "currentTrigger": "persisted Mage Damage event", "classification": "REPLACE" },
+    { "filename": "sfx/shield-wall.mp3", "role": "Knight defensive skill", "durationSeconds": 0.72, "sizeBytes": 6521, "currentTrigger": "persisted Shield Wall cast", "classification": "REPLACE" },
+    { "filename": "sfx/hero-defeated.mp3", "role": "Hero defeated", "durationSeconds": 0.681, "sizeBytes": 6312, "currentTrigger": "persisted Hero defeated event", "classification": "REPLACE" },
+    { "filename": "sfx/victory.mp3", "role": "Victory result", "durationSeconds": 1.75, "sizeBytes": 14671, "currentTrigger": "attacker-win Battle completion", "classification": "REPLACE" },
+    { "filename": "sfx/defeat.mp3", "role": "Defeat result", "durationSeconds": 1.45, "sizeBytes": 12372, "currentTrigger": "defeat Battle completion", "classification": "REPLACE" },
+    { "filename": "sfx/incoming-attack.mp3", "role": "Incoming defense activity", "durationSeconds": 1.05, "sizeBytes": 9238, "currentTrigger": "new unread incoming attack", "classification": "REPLACE" },
+    { "filename": "sfx/revenge-available.mp3", "role": "Revenge availability", "durationSeconds": 1.2, "sizeBytes": 10283, "currentTrigger": "new available Revenge", "classification": "REPLACE" }
+  ],
+  "auditionManifest": "candidates/AUDITION_MANIFEST.json"
 }

@@ -10,9 +10,9 @@ The current baseline passes unit, integration, browser, type, lint, and producti
 
 ## Known limitations
 
-### Audio has no human listening sign-off
+### Production audio content is rejected and awaiting replacement approval
 
-Automated checks verify file presence, duration/size budgets, browser playback calls, context switching, and settings persistence. This environment cannot prove subjective loudness, mix quality, or speaker/device behavior; a human must audibly verify both music tracks and focused SFX before launch.
+The product owner rejected all 24 initial procedural production assets for inadequate quality. The development-only Audio Lab exposes 61 licensed local candidates across 24 music/SFX groups. Automated checks verify provenance metadata, encoding, file presence, browser playback calls, exclusivity, controls, and responsive layout; they cannot prove subjective quality, mix balance, fatigue, or target-device speaker behavior. No candidate is approved until the owner audibly compares and selects it.
 
 ### Bale lifecycle is not integrated
 

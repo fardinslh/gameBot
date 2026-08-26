@@ -21,18 +21,19 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Project handoff documentation**: canonical developer and AI context under `docs/project`
 - **Launch-Safety PvP**: 30 system opponents, six tiers, bounded matchmaking, new-player shield, anti-farm cooldown, safe replenishment
 - **First-Party Analytics**: canonical events, activation/retention reports, integrity tooling
-- **Pre-Bale Player Experience Pass**: persistent first session, permanent bilingual Guide, local music/SFX, persistent audio controls
+- **Pre-Bale Player Experience implementation**: persistent first session, permanent bilingual Guide, audio engine, and persistent audio controls
 
 ## Current and next
 
-The **Pre-Bale Player Experience Pass is complete**. The next recommended scoped task is **Bale Mini App Integration**; it has not started.
+The active task is the **Audio Quality Selection Gate**. The product owner rejected the initial procedural music/SFX set. A development-only Audio Lab now presents licensed A/B/C replacements, but no candidate is approved for production until the owner listens and records a choice. **Bale Mini App Integration is blocked behind this gate** and has not started.
 
 The approved launch sequence is:
 
 ```text
 First-Party Analytics (complete)
-  -> Pre-Bale Player Experience Pass (complete)
-  -> Bale Mini App Integration (next)
+  -> Pre-Bale Player Experience implementation (complete)
+  -> Audio Quality Selection Gate (pending human approval)
+  -> Bale Mini App Integration (blocked)
   -> Production Readiness
   -> Closed Bale Test
   -> Soft Launch
@@ -57,9 +58,9 @@ The repository contains planning boundaries for:
 
 These items need product decisions before implementation. Current code does not define their behavior or data models.
 
-## Completed: pre-Bale analytics foundation
+## Completed foundation, open content gate
 
-Canonical analytics and the subsequent Player Experience gate are complete. Bale Mini App Integration follows them. Monetization, Guild, Season, and new gameplay remain deferred.
+Canonical analytics, onboarding, the permanent Guide, and the audio runtime are implemented. Audio content approval remains open, so the overall pre-Bale quality gate is not complete. Monetization, Guild, Season, and new gameplay remain deferred.
 
 ## Deferred complexity
 

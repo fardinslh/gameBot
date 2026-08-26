@@ -32,30 +32,37 @@ export const MUSIC_TRACKS: Record<MusicContext, string> = {
   BATTLE: '/assets/audio/music/battle-march.mp3',
 };
 
-export const SFX_ASSETS: Record<SfxKey, string> = {
-  ui_tap: '/assets/audio/sfx/ui-tap.mp3',
-  panel_open: '/assets/audio/sfx/panel-open.mp3',
-  back: '/assets/audio/sfx/back.mp3',
-  collect: '/assets/audio/sfx/collect.mp3',
-  upgrade_start: '/assets/audio/sfx/upgrade-start.mp3',
-  upgrade_complete: '/assets/audio/sfx/upgrade-complete.mp3',
-  building_select: '/assets/audio/sfx/building-select.mp3',
-  hero_select: '/assets/audio/sfx/hero-select.mp3',
-  hero_upgrade: '/assets/audio/sfx/hero-upgrade.mp3',
-  find_enemy: '/assets/audio/sfx/find-enemy.mp3',
-  attack_start: '/assets/audio/sfx/attack-start.mp3',
-  sword_hit: '/assets/audio/sfx/sword-hit.mp3',
-  arrow_shot: '/assets/audio/sfx/arrow-shot.mp3',
-  arrow_impact: '/assets/audio/sfx/arrow-impact.mp3',
-  magic_cast: '/assets/audio/sfx/magic-cast.mp3',
-  magic_impact: '/assets/audio/sfx/magic-impact.mp3',
-  shield_wall: '/assets/audio/sfx/shield-wall.mp3',
-  hero_defeated: '/assets/audio/sfx/hero-defeated.mp3',
-  victory: '/assets/audio/sfx/victory.mp3',
-  defeat: '/assets/audio/sfx/defeat.mp3',
-  incoming_attack: '/assets/audio/sfx/incoming-attack.mp3',
-  revenge_available: '/assets/audio/sfx/revenge-available.mp3',
+export const SFX_ASSETS: Record<SfxKey, readonly string[]> = {
+  ui_tap: ['/assets/audio/sfx/ui-tap.mp3'],
+  panel_open: ['/assets/audio/sfx/panel-open.mp3'],
+  back: ['/assets/audio/sfx/back.mp3'],
+  collect: ['/assets/audio/sfx/collect.mp3'],
+  upgrade_start: ['/assets/audio/sfx/upgrade-start.mp3'],
+  upgrade_complete: ['/assets/audio/sfx/upgrade-complete.mp3'],
+  building_select: ['/assets/audio/sfx/building-select.mp3'],
+  hero_select: ['/assets/audio/sfx/hero-select.mp3'],
+  hero_upgrade: ['/assets/audio/sfx/hero-upgrade.mp3'],
+  find_enemy: ['/assets/audio/sfx/find-enemy.mp3'],
+  attack_start: ['/assets/audio/sfx/attack-start.mp3'],
+  sword_hit: ['/assets/audio/sfx/sword-hit.mp3'],
+  arrow_shot: ['/assets/audio/sfx/arrow-shot.mp3'],
+  arrow_impact: ['/assets/audio/sfx/arrow-impact.mp3'],
+  magic_cast: ['/assets/audio/sfx/magic-cast.mp3'],
+  magic_impact: ['/assets/audio/sfx/magic-impact.mp3'],
+  shield_wall: ['/assets/audio/sfx/shield-wall.mp3'],
+  hero_defeated: ['/assets/audio/sfx/hero-defeated.mp3'],
+  victory: ['/assets/audio/sfx/victory.mp3'],
+  defeat: ['/assets/audio/sfx/defeat.mp3'],
+  incoming_attack: ['/assets/audio/sfx/incoming-attack.mp3'],
+  revenge_available: ['/assets/audio/sfx/revenge-available.mp3'],
 };
+
+export function pickSfxAsset(key: SfxKey, previous?: string, random = Math.random): string {
+  const assets = SFX_ASSETS[key];
+  if (assets.length === 1) return assets[0];
+  const alternatives = previous ? assets.filter((asset) => asset !== previous) : assets;
+  return alternatives[Math.min(alternatives.length - 1, Math.floor(random() * alternatives.length))];
+}
 
 export function normalizeAudioSettings(value: unknown): AudioSettings {
   if (!value || typeof value !== 'object') return DEFAULT_AUDIO_SETTINGS;
@@ -82,6 +89,7 @@ export class GameAudioManager {
   private suspended = false;
   private fadeTimer: number | null = null;
   private readonly failedAssets = new Set<string>();
+  private readonly lastSfx = new Map<SfxKey, string>();
 
   setSettings(settings: AudioSettings): void {
     this.settings = normalizeAudioSettings(settings);
@@ -104,7 +112,8 @@ export class GameAudioManager {
 
   playSfx(key: SfxKey): void {
     if (!this.unlocked || this.suspended || !this.settings.masterEnabled || !this.settings.sfxEnabled) return;
-    const source = SFX_ASSETS[key];
+    const source = pickSfxAsset(key, this.lastSfx.get(key));
+    this.lastSfx.set(key, source);
     const audio = new Audio(source);
     audio.preload = 'none';
     audio.volume = this.settings.masterVolume * this.settings.sfxVolume;
