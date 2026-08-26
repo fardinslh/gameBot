@@ -6,48 +6,45 @@ contentType: How-to
 
 # Audio Audition
 
-## Human approval gate
+## Partial approval gate
 
-Run the client with `npm run dev`, then open `http://localhost:3000/dev/audio`. This route is development-only, is absent from game navigation, and returns 404 in production. Listen on headphones, desktop speakers, and a real phone. The local Shortlist action is a note only; it never changes production mappings.
+Run `npm run dev`, then open `http://localhost:3000/dev/audio`. The route is development-only and returns 404 in production. The owner's 15 approved groups are mapped into gameplay and no longer appear in the lab. Shortlist remains a device-local listening note; it never changes production.
 
-The SFX tab includes non-mutating Collect, Upgrade, Battle, and Result quick tests. Each button plays the locally shortlisted candidate for that action, or Candidate A as an audition fallback. It does not call the API or change gameplay state.
+Listen on headphones, desktop speakers, and a real phone. Report one letter per remaining group. Panel Open remains in round 1 because the owner did not provide a decision; the eight rejected groups use entirely new round-2 candidates.
 
-Report one letter per group. A production mapping commit must cite the owner's explicit choices. Until then every row remains **PENDING**.
+| Pending group | A | B | C |
+| --- | --- | --- | --- |
+| Panel Open | `panel-open-a.mp3` | `panel-open-b.mp3` | — |
+| Shield Wall | `shield-wall-a-r2.mp3` | `shield-wall-b-r2.mp3` | `shield-wall-c-r2.mp3` |
+| Defeat | `defeat-a-r2.mp3` | `defeat-b-r2.mp3` | `defeat-c-r2.mp3` |
+| UI Tap | `ui-tap-a-r2.mp3` | `ui-tap-b-r2.mp3` | `ui-tap-c-r2.mp3` |
+| Arrow Impact | `arrow-impact-a-r2.mp3` | `arrow-impact-b-r2.mp3` | `arrow-impact-c-r2.mp3` |
+| Magic Impact | `magic-impact-a-r2.mp3` | `magic-impact-b-r2.mp3` | `magic-impact-c-r2.mp3` |
+| Hero Defeated | `hero-defeated-a-r2.mp3` | `hero-defeated-b-r2.mp3` | `hero-defeated-c-r2.mp3` |
+| Incoming Attack | `incoming-attack-a-r2.mp3` | `incoming-attack-b-r2.mp3` | `incoming-attack-c-r2.mp3` |
+| Revenge Available | `revenge-available-a-r2.mp3` | `revenge-available-b-r2.mp3` | `revenge-available-c-r2.mp3` |
 
-| Group | A | B | C | Approved |
-| --- | --- | --- | --- | --- |
-| Kingdom Music | `kingdom-music-a.mp3` | `kingdom-music-b.mp3` | `kingdom-music-c.mp3` | PENDING |
-| Battle Music | `battle-music-a.mp3` | `battle-music-b.mp3` | `battle-music-c.mp3` | PENDING |
-| Collect | `collect-a.mp3` | `collect-b.mp3` | `collect-c.mp3` | PENDING |
-| Upgrade Start | `upgrade-start-a.mp3` | `upgrade-start-b.mp3` | `upgrade-start-c.mp3` | PENDING |
-| Upgrade Complete | `upgrade-complete-a.mp3` | `upgrade-complete-b.mp3` | `upgrade-complete-c.mp3` | PENDING |
-| Hero Upgrade | `hero-upgrade-a.mp3` | `hero-upgrade-b.mp3` | `hero-upgrade-c.mp3` | PENDING |
-| Attack Start | `attack-start-a.mp3` | `attack-start-b.mp3` | `attack-start-c.mp3` | PENDING |
-| Sword Hit | `sword-hit-a.mp3` | `sword-hit-b.mp3` | `sword-hit-c.mp3` | PENDING |
-| Arrow Shot | `arrow-shot-a.mp3` | `arrow-shot-b.mp3` | `arrow-shot-c.mp3` | PENDING |
-| Magic Cast | `magic-cast-a.mp3` | `magic-cast-b.mp3` | `magic-cast-c.mp3` | PENDING |
-| Shield Wall | `shield-wall-a.mp3` | `shield-wall-b.mp3` | `shield-wall-c.mp3` | PENDING |
-| Victory | `victory-a.mp3` | `victory-b.mp3` | `victory-c.mp3` | PENDING |
-| Defeat | `defeat-a.mp3` | `defeat-b.mp3` | `defeat-c.mp3` | PENDING |
-| UI Tap | `ui-tap-a.mp3` | `ui-tap-b.mp3` | — | PENDING |
-| Panel Open | `panel-open-a.mp3` | `panel-open-b.mp3` | — | PENDING |
-| Back / Close | `back-a.mp3` | `back-b.mp3` | — | PENDING |
-| Building Select | `building-select-a.mp3` | `building-select-b.mp3` | — | PENDING |
-| Hero Select | `hero-select-a.mp3` | `hero-select-b.mp3` | — | PENDING |
-| Find Enemy | `find-enemy-a.mp3` | `find-enemy-b.mp3` | — | PENDING |
-| Arrow Impact | `arrow-impact-a.mp3` | `arrow-impact-b.mp3` | — | PENDING |
-| Magic Impact | `magic-impact-a.mp3` | `magic-impact-b.mp3` | — | PENDING |
-| Hero Defeated | `hero-defeated-a.mp3` | `hero-defeated-b.mp3` | — | PENDING |
-| Incoming Attack | `incoming-attack-a.mp3` | `incoming-attack-b.mp3` | — | PENDING |
-| Revenge Available | `revenge-available-a.mp3` | `revenge-available-b.mp3` | — | PENDING |
+Pending gameplay actions are intentionally silent. No rejected legacy asset or unapproved candidate is used as a fallback.
+
+## Recorded owner approvals
+
+| Group | Choice | Group | Choice |
+| --- | --- | --- | --- |
+| Kingdom Music | B | Battle Music | A |
+| Collect | B | Upgrade Start | C |
+| Upgrade Complete | C | Hero Upgrade | A |
+| Attack Start | A | Sword Hit | A |
+| Arrow Shot | B | Magic Cast | C |
+| Victory | A | Back / Close | A |
+| Building Select | A | Hero Select | A |
+| Find Enemy | A |  |  |
+
+Victory A is mapped as a five-second sting. Find Enemy A is mapped as two un-stretched pulses separated by 280 ms. Exact provenance and technical metadata live in `public/assets/audio/approved/APPROVED_MANIFEST.json`; pending metadata lives in `public/assets/audio/candidates/AUDITION_MANIFEST.json`.
 
 ## Listening checklist
 
-- Kingdom loop: calm, grounded, prestigious, repeatable, no obvious seam
-- Battle loop: supports an 8–15 second fight without masking hits
-- Collect/Upgrade: physical and satisfying, never casino-like
-- Sword/Arrow/Magic/Shield: readable on phone speakers and mature in tone
-- Victory: earned and restrained; Defeat: serious and non-humiliating
-- Relative mix: music behind gameplay, UI subtle, skills brief, no clipping
-
-After selecting, explicitly identify whether Sword Hit should use two or three approved variants and whether Arrow Impact, Magic Impact, and UI Tap should use both candidates. Do not randomize music.
+- Shield and impacts must remain distinct on phone speakers.
+- UI Tap must be subtle enough for frequent use.
+- Defeat and Hero Defeated must feel serious, not comedic or humiliating.
+- Incoming Attack and Revenge must attract attention without masking the UI.
+- Panel Open must suit frequent menu use without fatigue.

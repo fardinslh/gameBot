@@ -24,16 +24,22 @@ interface Candidate {
   sizeBytes: number;
 }
 
-const manifest = manifestJson as { status: string; productionMappingChanged: boolean; candidates: Candidate[] };
+const manifest = manifestJson as {
+  status: string;
+  productionMappingChanged: boolean;
+  approvedGroupCount: number;
+  pendingGroupCount: number;
+  candidates: Candidate[];
+};
 const SHORTLIST_KEY = 'crown-coin-audio-audition-v1';
 
 export function AudioAuditionLab() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [tab, setTab] = useState<'music' | 'sfx'>('music');
+  const [tab] = useState<'sfx'>('sfx');
   const [playing, setPlaying] = useState<string | null>(null);
   const [settings, setSettings] = useState<AudioSettings>(DEFAULT_AUDIO_SETTINGS);
   const [shortlist, setShortlist] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState('Ready. Use headphones and phone speakers before deciding.');
+  const [message, setMessage] = useState('Round 2 is ready. Use headphones and phone speakers before deciding.');
 
   useEffect(() => {
     try {
@@ -88,7 +94,7 @@ export function AudioAuditionLab() {
     setPlaying(candidate.filename);
     try {
       await audio.play();
-      setMessage(`Playing ${candidate.label} ${candidate.candidate}. No production mapping changed.`);
+      setMessage(`Playing ${candidate.label} ${candidate.candidate}. Shortlisting stays local until you report your choice.`);
     } catch {
       setMessage(`Playback was blocked for ${candidate.label} ${candidate.candidate}. Tap Play again.`);
     }
@@ -115,13 +121,13 @@ export function AudioAuditionLab() {
   };
 
   return (
-    <main className={styles.lab} data-audio-lab="pending-human-approval">
+    <main className={styles.lab} data-audio-lab="partial-human-approval">
       <div className={styles.grain} aria-hidden="true" />
       <header className={styles.hero}>
         <div className={styles.eyebrow}><span>DEV ONLY</span><i /> AUDIO DIRECTION ROOM</div>
         <h1>Crown &amp; Coin<br /><em>Audio Audition</em></h1>
-        <p>Compare licensed candidates in context. Shortlisting is local and never changes the production game.</p>
-        <div className={styles.status}><ShieldAlert size={18} /><span>Production selection</span><strong>PENDING HUMAN APPROVAL</strong></div>
+        <p>Your approved choices are now in the game and removed from this page. Compare only the remaining licensed candidates.</p>
+        <div className={styles.status}><ShieldAlert size={18} /><span>Audio selection</span><strong>{manifest.approvedGroupCount} MAPPED · {manifest.pendingGroupCount} GROUPS PENDING</strong></div>
       </header>
 
       <section className={styles.console} aria-label="Audition controls">
@@ -135,18 +141,17 @@ export function AudioAuditionLab() {
       </section>
 
       <nav className={styles.tabs} aria-label="Candidate type">
-        <button aria-pressed={tab === 'music'} onClick={() => { stop(); setTab('music'); }} type="button">Music <b>6</b></button>
-        <button aria-pressed={tab === 'sfx'} onClick={() => { stop(); setTab('sfx'); }} type="button">SFX <b>55</b></button>
+        <button aria-pressed="true" type="button">Pending SFX <b>{manifest.candidates.length}</b></button>
       </nav>
 
       {tab === 'sfx' ? (
         <section className={styles.contextDeck} aria-label="Gameplay context quick tests">
           <header><small>NON-MUTATING PREVIEW</small><h2>Hear the shortlist in context</h2><p>Each control plays your local shortlist for that action, or Candidate A until you shortlist one.</p></header>
           <div className={styles.contextGrid}>
-            <ContextTest title="Collect test" groups={[['collect', 'Collect']]} onPlay={playGroupPreview} />
-            <ContextTest title="Upgrade test" groups={[['upgrade-start', 'Start'], ['upgrade-complete', 'Complete']]} onPlay={playGroupPreview} />
-            <ContextTest title="Battle test" groups={[['sword-hit', 'Sword'], ['arrow-shot', 'Arrow'], ['magic-cast', 'Magic'], ['shield-wall', 'Shield']]} onPlay={playGroupPreview} />
-            <ContextTest title="Result test" groups={[['victory', 'Victory'], ['defeat', 'Defeat']]} onPlay={playGroupPreview} />
+            <ContextTest title="Interface" groups={[['ui-tap', 'UI Tap'], ['panel-open', 'Panel Open']]} onPlay={playGroupPreview} />
+            <ContextTest title="Battle impact" groups={[['arrow-impact', 'Arrow'], ['magic-impact', 'Magic'], ['shield-wall', 'Shield']]} onPlay={playGroupPreview} />
+            <ContextTest title="Battle result" groups={[['hero-defeated', 'Hero Down'], ['defeat', 'Defeat']]} onPlay={playGroupPreview} />
+            <ContextTest title="Alerts" groups={[['incoming-attack', 'Incoming'], ['revenge-available', 'Revenge']]} onPlay={playGroupPreview} />
           </div>
         </section>
       ) : null}
@@ -178,7 +183,7 @@ export function AudioAuditionLab() {
         ))}
       </section>
 
-      <footer><strong>Nothing on this page is approved automatically.</strong><span>Test headphones, desktop speakers, and a real phone. Then report one letter per group.</span></footer>
+      <footer><strong>These remaining candidates are not approved automatically.</strong><span>Test headphones, desktop speakers, and a real phone. Then report one letter per group.</span></footer>
     </main>
   );
 }

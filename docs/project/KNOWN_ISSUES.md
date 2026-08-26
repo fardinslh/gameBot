@@ -10,9 +10,9 @@ The current baseline passes unit, integration, browser, type, lint, and producti
 
 ## Known limitations
 
-### Production audio content is rejected and awaiting replacement approval
+### Production audio selection is partially approved
 
-The product owner rejected all 24 initial procedural production assets for inadequate quality. The development-only Audio Lab exposes 61 licensed local candidates across 24 music/SFX groups. Automated checks verify provenance metadata, encoding, file presence, browser playback calls, exclusivity, controls, and responsive layout; they cannot prove subjective quality, mix balance, fatigue, or target-device speaker behavior. No candidate is approved until the owner audibly compares and selects it.
+The product owner approved 15 licensed choices and rejected eight groups without a selection; Panel Open received no decision. The development-only Audio Lab now exposes 26 candidates across those nine pending SFX groups. Pending production actions are intentionally silent. Automated checks verify provenance metadata, encoding, file presence, browser playback calls, controls, and responsive layout; they cannot prove subjective quality, mix balance, fatigue, or target-device speaker behavior.
 
 ### Bale lifecycle is not integrated
 

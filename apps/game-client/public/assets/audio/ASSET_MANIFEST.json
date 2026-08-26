@@ -1,13 +1,13 @@
 {
-  "auditedAt": "2026-08-26",
-  "catalogStatus": "REJECTED_BY_PRODUCT_OWNER",
+  "auditedAt": "2026-08-27",
+  "catalogStatus": "PARTIALLY_APPROVED",
   "classification": "REPLACE",
-  "productionMapping": "LEGACY_PENDING_HUMAN_APPROVAL",
+  "productionMapping": "15_OWNER_APPROVED_9_SILENT_PENDING",
   "source": "Crown & Coin deterministic procedural synthesis",
   "author": "Crown & Coin project / Codex-generated",
   "license": "Project-owned original work; commercial use cleared for Crown & Coin",
   "sourceReference": "scripts/generate-audio-assets.mjs",
-  "reason": "Owner rejected the initial selection as cheap, generic, silly, and inconsistent with the premium medieval-fantasy direction.",
+  "reason": "The legacy catalog remains retained for audit only. Fifteen explicit owner selections are mapped from the approved catalog; nine undecided actions are intentionally silent until approval.",
   "assets": [
     { "filename": "music/kingdom-hearth.mp3", "role": "Kingdom background music", "durationSeconds": 72, "sizeBytes": 576826, "currentTrigger": "KINGDOM music context", "classification": "REPLACE" },
     { "filename": "music/battle-march.mp3", "role": "Battle background music", "durationSeconds": 48, "sizeBytes": 384774, "currentTrigger": "active Battle music context", "classification": "REPLACE" },
@@ -34,5 +34,6 @@
     { "filename": "sfx/incoming-attack.mp3", "role": "Incoming defense activity", "durationSeconds": 1.05, "sizeBytes": 9238, "currentTrigger": "new unread incoming attack", "classification": "REPLACE" },
     { "filename": "sfx/revenge-available.mp3", "role": "Revenge availability", "durationSeconds": 1.2, "sizeBytes": 10283, "currentTrigger": "new available Revenge", "classification": "REPLACE" }
   ],
+  "approvedManifest": "approved/APPROVED_MANIFEST.json",
   "auditionManifest": "candidates/AUDITION_MANIFEST.json"
 }

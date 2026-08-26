@@ -10,6 +10,8 @@ const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
 const nextCli = new URL('node_modules/next/dist/bin/next', root).pathname.slice(1);
 const manifest = JSON.parse(readFileSync(new URL('apps/game-client/public/assets/audio/candidates/AUDITION_MANIFEST.json', root), 'utf8'));
+const approvedManifest = JSON.parse(readFileSync(new URL('apps/game-client/public/assets/audio/approved/APPROVED_MANIFEST.json', root), 'utf8'));
+const allAssets = [...manifest.candidates, ...approvedManifest.assets];
 const artifacts = new URL('artifacts/audio-audition/', root);
 
 function startDevClient() {
@@ -30,7 +32,7 @@ async function waitForUrl(url, timeoutMs = 30_000) {
 if (!browserPath) throw new Error('No supported Chromium browser was found.');
 mkdirSync(artifacts, { recursive: true });
 const technicalFailures = [];
-for (const candidate of manifest.candidates) {
+for (const candidate of allAssets) {
   const file = new URL(`apps/game-client/public${candidate.filename}`, root);
   if (!existsSync(file) || statSync(file).size !== candidate.sizeBytes) throw new Error(`Missing or mismatched candidate ${candidate.filename}`);
   // Container overhead raises the reported average on sub-200 ms clips.
@@ -41,11 +43,20 @@ for (const candidate of manifest.candidates) {
 }
 if (technicalFailures.length) throw new Error(`Clipping or unreadable peaks detected: ${technicalFailures.join(', ')}`);
 
-const client = startDevClient();
+const existingDevUrl = 'http://localhost:3000/dev/audio';
+let client;
+let devUrl;
+try {
+  if ((await fetch(existingDevUrl)).ok) devUrl = existingDevUrl;
+} catch {}
+if (!devUrl) {
+  client = startDevClient();
+  devUrl = 'http://localhost:3010/dev/audio';
+}
 let browser;
 const consoleErrors = [];
 try {
-  await waitForUrl('http://localhost:3010/dev/audio');
+  await waitForUrl(devUrl);
   browser = await chromium.launch({ executablePath: browserPath, headless: true });
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await page.addInitScript(() => {
@@ -55,22 +66,19 @@ try {
   });
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
-  await page.goto('http://localhost:3010/dev/audio', { waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-audio-lab="pending-human-approval"]');
-  const failedLoads = await page.evaluate(async (files) => (await Promise.all(files.map(async (file) => ({ file, ok: (await fetch(file)).ok })))).filter((item) => !item.ok), manifest.candidates.map((candidate) => candidate.filename));
+  await page.goto(devUrl, { waitUntil: 'networkidle' });
+  await page.waitForSelector('[data-audio-lab="partial-human-approval"]');
+  const failedLoads = await page.evaluate(async (files) => (await Promise.all(files.map(async (file) => ({ file, ok: (await fetch(file)).ok })))).filter((item) => !item.ok), allAssets.map((candidate) => candidate.filename));
   if (failedLoads.length) throw new Error(`Candidate HTTP loads failed: ${failedLoads.map((item) => item.file).join(', ')}`);
-  if (await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').count() !== 3) throw new Error('Kingdom music must expose A/B/C');
-  await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').nth(0).click();
-  await page.locator('[data-audio-group="kingdom-music"] [data-audio-action="play"]').nth(1).click();
-  const routing = await page.evaluate(() => window.__audioLab);
-  if (routing.plays.length !== 2 || routing.pauses < 1) throw new Error('Music candidates overlapped instead of stopping the previous candidate');
-  await page.locator('[data-audio-action="stop-all"]').click();
-  await page.getByRole('button', { name: /SFX/ }).click();
+  if (await page.locator('[data-audio-group="kingdom-music"]').count() !== 0) throw new Error('Approved groups must not remain in the audition lab');
+  if (await page.locator('[data-audio-group="shield-wall"] [data-audio-action="play"]').count() !== 3) throw new Error('Shield Wall round 2 must expose A/B/C');
   if (await page.locator('[data-audio-context]').count() !== 9) throw new Error('Gameplay context quick tests are incomplete');
-  await page.locator('[data-audio-context="collect"]').click();
-  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/collect/'))))) throw new Error('Collect context preview did not play');
-  await page.locator('[data-audio-group="collect"] [data-audio-action="play"]').nth(0).click();
-  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/collect/'))))) throw new Error('SFX preview did not play');
+  await page.locator('[data-audio-context="shield-wall"]').click();
+  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/shield-wall/'))))) throw new Error('Shield Wall context preview did not play');
+  await page.locator('[data-audio-group="shield-wall"] [data-audio-action="play"]').nth(1).click();
+  const routing = await page.evaluate(() => window.__audioLab);
+  if (routing.plays.length !== 2 || routing.pauses < 1) throw new Error('SFX candidate switching did not stop the previous candidate');
+  await page.locator('[data-audio-action="stop-all"]').click();
   const master = page.getByRole('checkbox', { name: /Master/ });
   await master.click();
   const saved = await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1'));
@@ -84,13 +92,13 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: new URL('audio-lab-mobile-390x844.png', artifacts).pathname.slice(1), fullPage: true });
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log(`PASS Audio Lab loaded ${manifest.candidates.length} local candidates across 24 groups`);
+  console.log(`PASS Audio Lab loaded ${manifest.candidates.length} pending candidates across ${manifest.pendingGroupCount} groups; ${approvedManifest.approvedGroupCount} approved assets also load`);
   console.log('PASS MP3 bitrate metadata and decoded peaks stay below 0 dBFS');
-  console.log('PASS music exclusivity, Stop/Replay controls, gameplay-context SFX preview, shared settings persistence');
+  console.log('PASS approved groups are removed, Stop/Replay controls, gameplay-context SFX preview, shared settings persistence');
   console.log('PASS 320x568, 375x812, and 390x844 without horizontal overflow');
   console.log('NOTE technical playback only; candidate quality was NOT AUDIBLY VERIFIED');
 } finally {
   await browser?.close();
-  if (process.platform === 'win32') spawnSync('taskkill', ['/pid', String(client.pid), '/T', '/F'], { stdio: 'ignore' });
-  else client.kill('SIGTERM');
+  if (client && process.platform === 'win32') spawnSync('taskkill', ['/pid', String(client.pid), '/T', '/F'], { stdio: 'ignore' });
+  else client?.kill('SIGTERM');
 }

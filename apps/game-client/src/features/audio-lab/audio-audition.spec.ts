@@ -1,42 +1,50 @@
 import { describe, expect, it } from 'vitest';
+import approvedManifest from '../../../public/assets/audio/approved/APPROVED_MANIFEST.json';
 import manifest from '../../../public/assets/audio/candidates/AUDITION_MANIFEST.json';
 import productionManifest from '../../../public/assets/audio/ASSET_MANIFEST.json';
 
+const approvedSelections = {
+  'kingdom-music': 'B', 'battle-music': 'A', collect: 'B', 'upgrade-start': 'C',
+  'upgrade-complete': 'C', 'hero-upgrade': 'A', 'attack-start': 'A', 'sword-hit': 'A',
+  'arrow-shot': 'B', 'magic-cast': 'C', victory: 'A', back: 'A',
+  'building-select': 'A', 'hero-select': 'A', 'find-enemy': 'A',
+};
+
 describe('audio audition quality gate', () => {
-  it('keeps every legacy production asset explicitly rejected pending approval', () => {
-    expect(productionManifest.catalogStatus).toBe('REJECTED_BY_PRODUCT_OWNER');
-    expect(productionManifest.productionMapping).toBe('LEGACY_PENDING_HUMAN_APPROVAL');
-    expect(productionManifest.assets).toHaveLength(24);
-    expect(productionManifest.assets.every((asset) => asset.classification === 'REPLACE')).toBe(true);
+  it('records and maps every explicit owner approval', () => {
+    expect(productionManifest.catalogStatus).toBe('PARTIALLY_APPROVED');
+    expect(productionManifest.productionMapping).toBe('15_OWNER_APPROVED_9_SILENT_PENDING');
+    expect(approvedManifest.status).toBe('PARTIALLY_APPROVED');
+    expect(approvedManifest.approvedGroupCount).toBe(15);
+    expect(Object.fromEntries(approvedManifest.assets.map((asset) => [asset.group, asset.selectedCandidate])))
+      .toEqual(approvedSelections);
+    expect(approvedManifest.assets.every((asset) => asset.filename.startsWith('/assets/audio/approved/'))).toBe(true);
   });
 
-  it('provides the required candidate counts without approving or remapping production', () => {
-    expect(manifest.status).toBe('PENDING_HUMAN_APPROVAL');
-    expect(manifest.productionMappingChanged).toBe(false);
-    expect(manifest.candidates).toHaveLength(61);
-    const counts = Object.fromEntries([...new Set(manifest.candidates.map((candidate) => candidate.group))]
-      .map((group) => [group, manifest.candidates.filter((candidate) => candidate.group === group).length]));
-    for (const group of ['kingdom-music', 'battle-music', 'collect', 'upgrade-start', 'upgrade-complete', 'hero-upgrade', 'attack-start', 'sword-hit', 'arrow-shot', 'magic-cast', 'shield-wall', 'victory', 'defeat']) {
-      expect(counts[group]).toBe(3);
-    }
-    for (const [group, count] of Object.entries(counts)) {
-      expect(count, group).toBeGreaterThanOrEqual(group === 'kingdom-music' || group === 'battle-music' ? 3 : 2);
-    }
+  it('keeps approved groups out of the reduced pending audition', () => {
+    expect(manifest.status).toBe('PARTIALLY_APPROVED');
+    expect(manifest.productionMappingChanged).toBe(true);
+    expect(manifest.approvedGroupCount).toBe(15);
+    expect(manifest.pendingGroupCount).toBe(9);
+    expect(manifest.candidates).toHaveLength(26);
+    const groups = [...new Set(manifest.candidates.map((candidate) => candidate.group))];
+    expect(groups).toEqual(['panel-open', 'shield-wall', 'defeat', 'ui-tap', 'arrow-impact', 'magic-impact', 'hero-defeated', 'incoming-attack', 'revenge-available']);
+    for (const group of Object.keys(approvedSelections)) expect(groups).not.toContain(group);
+    expect(manifest.candidates.filter((candidate) => candidate.group === 'panel-open')).toHaveLength(2);
+    expect(manifest.candidates.filter((candidate) => candidate.auditionRound === 2)).toHaveLength(24);
   });
 
-  it('records specific licensing and technical metadata for every candidate', () => {
-    for (const candidate of manifest.candidates) {
-      expect(candidate.filename).toMatch(/^\/assets\/audio\/candidates\/.+\.mp3$/);
-      expect(candidate.source).toBe('OpenGameArt.org');
-      expect(candidate.author.length).toBeGreaterThan(1);
-      expect(candidate.license).toMatch(/^CC(?:0|-BY)/);
-      expect(candidate.sourceReference).toMatch(/^https:\/\/opengameart\.org\/content\//);
-      expect(candidate.productionSafe).toBe('YES');
-      expect(candidate.approval).toBe('PENDING');
-      expect(candidate.durationSeconds).toBeGreaterThan(0);
-      expect(candidate.codec).toBe('mp3');
-      expect(candidate.bitrate).toBeGreaterThan(64_000);
-      expect(candidate.sizeBytes).toBeGreaterThan(500);
+  it('records licensing and technical metadata for approved and pending files', () => {
+    for (const asset of [...approvedManifest.assets, ...manifest.candidates]) {
+      expect(asset.filename).toMatch(/^\/assets\/audio\/.+\.mp3$/);
+      expect(asset.author.length).toBeGreaterThan(1);
+      expect(asset.license).toMatch(/^CC(?:0|-BY)/);
+      expect(asset.sourceReference).toMatch(/^https:\/\/opengameart\.org\/content\//);
+      expect(asset.durationSeconds).toBeGreaterThan(0);
+      expect(asset.codec).toBe('mp3');
+      expect(asset.bitrate).toBeGreaterThan(64_000);
+      expect(asset.sizeBytes).toBeGreaterThan(500);
     }
+    expect(manifest.candidates.every((candidate) => candidate.productionSafe === 'YES' && candidate.approval === 'PENDING')).toBe(true);
   });
 });

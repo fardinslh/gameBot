@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, and device-persisted audio controls. The initial local music/SFX set was rejected for inadequate quality; a development-only Audio Lab now exposes licensed A/B/C replacements for human audition. Bale work remains blocked until that selection is approved. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, and device-persisted audio controls. Fifteen owner-approved licensed audio groups are mapped into gameplay; a reduced development-only Audio Lab contains nine pending groups. Bale work remains blocked until the audio selection gate closes. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 

@@ -8,92 +8,48 @@ contentType: Reference
 
 ## Current quality status
 
-The audio engine is implemented and technically validated. The initial Codex-selected audio content was rejected by the product owner for inadequate quality. Every legacy production asset is classified **REPLACE**. Production selection is **PENDING HUMAN APPROVAL**; no audition candidate is mapped into gameplay automatically.
+The audio engine is implemented and technically validated. The product owner has approved 15 groups from the licensed audition catalog. Those exact choices are stored under `public/assets/audio/approved` and are the only audio assets mapped into gameplay.
 
-Use the development-only [Audio Audition](AUDIO_AUDITION.md) process before changing production mappings. `/dev/audio` returns the lab only under `next dev`; it is not linked from game navigation and production returns 404.
+Nine groups remain pending: UI Tap, Panel Open, Shield Wall, Defeat, Arrow Impact, Magic Impact, Hero Defeated, Incoming Attack, and Revenge Available. Pending gameplay actions are intentionally silent until the owner approves a candidate. The original procedural catalog remains classified **REPLACE** and is retained only for audit compatibility.
 
-## Preserved engine architecture
+Use the development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audio` for the remaining decisions. It is available only under `next dev`, is absent from game navigation, and returns 404 in production.
 
-`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. The manager preserves first-gesture unlock, 600 ms music crossfade, visibility suspend/resume, safe media failure handling, and persisted-Battle-event SFX timing. Music and audio never decide or block gameplay.
+## Runtime architecture
 
-`SFX_ASSETS` now accepts arrays and avoids an immediate repeated file when multiple approved variants are mapped later. Current production entries intentionally remain one-item legacy arrays until the owner approves replacements.
+`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. The manager preserves first-gesture unlock, 600 ms music crossfade, visibility suspend/resume, safe media failure handling, and persisted-Battle-event SFX timing. Audio never decides or blocks gameplay.
 
-## Legacy production audit
+`MUSIC_TRACKS` maps the approved Kingdom B and Battle A loops. `SFX_ASSETS` maps the 13 approved SFX and uses empty arrays for pending actions. `pickSfxAsset` returns `undefined` for a pending action, making silence explicit rather than falling back to rejected content.
 
-All rows share source `scripts/generate-audio-assets.mjs`, author `Crown & Coin project / Codex-generated`, project-owned commercial-use permission, mono MP3 at 22.05 kHz, and classification **REPLACE**.
+## Approved production mapping
 
-| File | Role/current trigger | Duration | Size |
-| --- | --- | ---: | ---: |
-| `music/kingdom-hearth.mp3` | Kingdom music context | 72.000 s | 576,826 B |
-| `music/battle-march.mp3` | active Battle music context | 48.000 s | 384,774 B |
-| `sfx/ui-tap.mp3` | navigation/confirmation | 0.160 s | 2,132 B |
-| `sfx/panel-open.mp3` | Guide/settings/inbox open | 0.342 s | 3,595 B |
-| `sfx/back.mp3` | close/return | 0.240 s | 2,759 B |
-| `sfx/collect.mp3` | successful Collect | 0.650 s | 5,894 B |
-| `sfx/upgrade-start.mp3` | successful building upgrade start | 0.820 s | 7,357 B |
-| `sfx/upgrade-complete.mp3` | authoritative upgrade completion | 1.152 s | 10,074 B |
-| `sfx/building-select.mp3` | Pixi building selection | 0.250 s | 2,759 B |
-| `sfx/hero-select.mp3` | Hero detail selection | 0.380 s | 3,804 B |
-| `sfx/hero-upgrade.mp3` | successful Hero upgrade | 0.900 s | 7,984 B |
-| `sfx/find-enemy.mp3` | successful Match Offer search | 0.720 s | 6,521 B |
-| `sfx/attack-start.mp3` | Raid/Revenge start | 1.050 s | 9,238 B |
-| `sfx/sword-hit.mp3` | persisted Knight/basic Damage | 0.300 s | 3,177 B |
-| `sfx/arrow-shot.mp3` | persisted Power Shot cast | 0.342 s | 3,595 B |
-| `sfx/arrow-impact.mp3` | persisted Ranger Damage | 0.250 s | 2,759 B |
-| `sfx/magic-cast.mp3` | persisted Arcane Blast cast | 0.650 s | 5,894 B |
-| `sfx/magic-impact.mp3` | persisted Mage Damage | 0.480 s | 4,640 B |
-| `sfx/shield-wall.mp3` | persisted Shield Wall cast | 0.720 s | 6,521 B |
-| `sfx/hero-defeated.mp3` | persisted Hero defeat | 0.681 s | 6,312 B |
-| `sfx/victory.mp3` | attacker-win result | 1.750 s | 14,671 B |
-| `sfx/defeat.mp3` | defeat result | 1.450 s | 12,372 B |
-| `sfx/incoming-attack.mp3` | new incoming unread attack | 1.050 s | 9,238 B |
-| `sfx/revenge-available.mp3` | new available Revenge | 1.200 s | 10,283 B |
+| Runtime role | Owner choice | Production file |
+| --- | --- | --- |
+| Kingdom Music | B | `approved/music/kingdom.mp3` |
+| Battle Music | A | `approved/music/battle.mp3` |
+| Collect | B | `approved/sfx/collect.mp3` |
+| Upgrade Start | C | `approved/sfx/upgrade-start.mp3` |
+| Upgrade Complete | C | `approved/sfx/upgrade-complete.mp3` |
+| Hero Upgrade | A | `approved/sfx/hero-upgrade.mp3` |
+| Attack Start | A | `approved/sfx/attack-start.mp3` |
+| Sword Hit | A | `approved/sfx/sword-hit.mp3` |
+| Arrow Shot | B | `approved/sfx/arrow-shot.mp3` |
+| Magic Cast | C | `approved/sfx/magic-cast.mp3` |
+| Victory | A | `approved/sfx/victory.mp3` |
+| Back / Close | A | `approved/sfx/back.mp3` |
+| Building Select | A | `approved/sfx/building-select.mp3` |
+| Hero Select | A | `approved/sfx/hero-select.mp3` |
+| Find Enemy | A | `approved/sfx/find-enemy.mp3` |
 
-The machine-readable audit is `public/assets/audio/ASSET_MANIFEST.json`.
+Victory was rebuilt from its selected full CC0 source as a five-second sting. Find Enemy uses the selected sound twice with a 280 ms gap and no time stretching.
 
-## Audition candidate catalog
+## Rights and provenance
 
-There are 61 local MP3 candidates across 24 groups. High-impact groups have A/B/C; the remaining groups have A/B. Candidates were transcoded to 44.1 kHz MP3 and prepared to a quieter music target or a readable SFX target. This is technical preparation, not an audio-quality endorsement.
+The machine-readable approved manifest records source, author, license, source URL, modifications, approval date, duration, codec, bitrate, and file size. Round-2 sources include JC Sounds Fantasy SFX Pack Vol 1 (CC-BY 4.0), 10 Impact/Shield Blocks (CC0), War Horns (CC0), 16 Button Clicks (CC0), Game Over II (CC0), Icy Game Over (CC0), and Muffled Distant Explosion/log drum (CC0).
 
-### Music
+CC-BY and CC-BY-SA assets retain their attribution obligations in the manifests. The technical metadata is an audit record, not a claim that automated tooling can judge subjective quality.
 
-| Group | Candidate | Duration | Size | Bitrate | Author | License |
-| --- | --- | ---: | ---: | ---: | --- | --- |
-| Kingdom | A | 25.612 s | 410,896 B | 128 kbps | beardalaxy | CC0 1.0 |
-| Kingdom | B | 49.951 s | 800,566 B | 128 kbps | RandomMind | CC0 1.0 |
-| Kingdom | C | 57.652 s | 923,595 B | 128 kbps | TAD | CC0 1.0 |
-| Battle | A | 108.000 s | 1,729,140 B | 128 kbps | Emma_MA | CC0 1.0 |
-| Battle | B | 14.769 s | 237,443 B | 128 kbps | William Hector | CC0 1.0 |
-| Battle | C | 69.818 s | 1,118,083 B | 128 kbps | MintoDog | CC0 1.0 |
+## Validation
 
-Music candidates use source-declared loop versions. Loop quality still requires human audition for audible seams.
+`npm run test:client-experience` checks the approved choice contract, pending-group reduction, production mapping, runtime silence for pending actions, and metadata. `npm run validate:audio-lab` checks all 26 pending candidates plus all 15 approved assets for file presence, MP3 metadata, decoded peak headroom, browser loading, Stop/Replay behavior, context previews, settings persistence, and 320/375/390 mobile overflow.
 
-### SFX sources and rights
-
-| Source pack/work | Author | License | Candidate use |
-| --- | --- | --- | --- |
-| RPG Sound Pack | artisticdude | CC0 1.0 | coins, UI, magic, unsheathe |
-| 100 CC0 metal and wood SFX | rubberduck | CC0 1.0 | construction, metal, wood |
-| UI Sound Effects | Robin Lamb | CC0 1.0 | tactile UI, notification, result |
-| Fantasy Weapons and Apparel | Vehicle | CC0 1.0 | sword clashes, equipment texture |
-| Swishes Sound Pack | artisticdude | CC0 1.0 | projectile/weapon air movement |
-| RPG Sound Package | Tuomo Untinen | CC-BY 3.0 | bow, construction, spell, combat |
-| Bow & Arrow Shot | dorkster / qubodup | CC-BY-SA 3.0 | bow release candidate |
-| Medieval Victory/Defeat | RandomMind | CC0 1.0 | restrained result candidates |
-| Victory Fanfare | ARoachIFoundOnMyPillow | CC0 1.0 | result candidate |
-
-The full candidate manifest records filename, group, letter, source file, author, exact license, source URL, modifications, duration, codec, bitrate, size, production-safety result, and `approval: PENDING` for every file at `public/assets/audio/candidates/AUDITION_MANIFEST.json`. CC-BY and CC-BY-SA candidates require the recorded attribution/share-alike obligations if selected.
-
-## Technical rejection log
-
-- The initial 24 procedural assets: technically functional and legally safe, but product-owner quality rejection; all marked REPLACE.
-- `Heartfelt Battle`: not admitted because its author describes it as riffing on a recognizable commercial-game theme.
-- Pixabay search candidates: not admitted because the automated environment could not obtain the original files and per-download provenance reliably through the site challenge.
-- An incorrectly resolved `80-CC0-RPG-SFX.zip` URL and a sword-clash archive response were invalid/non-audio downloads; neither entered the candidate catalog.
-- Retro, MIDI, chiptune, casino, comedic, vocal, gore, unclear-license, or ripped-game candidates were excluded by direction before integration.
-
-## Build and validation
-
-`node scripts/build-audio-audition-candidates.mjs` rebuilds the curated transcodes when the licensed source cache is present. `npm run test:client-experience` validates catalog contracts; `npm run validate:audio-lab` checks all 61 files, decoded peak headroom, browser loading, music exclusivity, Stop/Replay, non-mutating gameplay-context SFX previews, settings persistence, and mobile overflow.
-
-Automated checks cannot hear or judge quality. Headphones, desktop speakers, phone speakers, and later Bale WebView still require human listening.
+Human listening on headphones, desktop speakers, phone speakers, and later Bale WebView remains required for the nine pending groups.

@@ -41,7 +41,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, expansion areas, camera bounds, Mine point, effects, screenshots |
 | `npm run validate:player-experience` | Fresh Persian 320 flow through Collect/Upgrade/Raid/completion, skip persistence, eight Guide sections, technical audio triggers/settings, 320/375/390 RTL/LTR |
-| `npm run validate:audio-lab` | Starts an isolated development client; checks all 61 candidates, 24 groups, music exclusivity, Play/Pause/Replay/Stop All, shared settings persistence, and 320/375/390 layout |
+| `npm run validate:audio-lab` | Starts an isolated development client; checks 26 pending candidates and 15 approved assets, approved-group removal, Play/Pause/Replay/Stop All, shared settings persistence, and 320/375/390 layout |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
 
 Browser scripts locate installed Edge or Chrome through known Windows paths and use Playwright Core. They fail on browser console errors and horizontal overflow.

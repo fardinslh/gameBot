@@ -25,14 +25,14 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 
 ## Current and next
 
-The active task is the **Audio Quality Selection Gate**. The product owner rejected the initial procedural music/SFX set. A development-only Audio Lab now presents licensed A/B/C replacements, but no candidate is approved for production until the owner listens and records a choice. **Bale Mini App Integration is blocked behind this gate** and has not started.
+The active task is the **Audio Quality Selection Gate**. Fifteen explicit owner selections are mapped into production. A reduced development-only Audio Lab presents 26 candidates for nine pending groups. **Bale Mini App Integration is blocked until the remaining choices close this gate** and has not started.
 
 The approved launch sequence is:
 
 ```text
 First-Party Analytics (complete)
   -> Pre-Bale Player Experience implementation (complete)
-  -> Audio Quality Selection Gate (pending human approval)
+  -> Audio Quality Selection Gate (15 mapped; 9 groups pending human approval)
   -> Bale Mini App Integration (blocked)
   -> Production Readiness
   -> Closed Bale Test

@@ -102,7 +102,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current launch gate
 
-The onboarding, Guide, and centralized audio runtime are implemented. Apply migration `20260826110000_pre_bale_player_experience`. The product owner rejected the initial procedural audio content. The development-only `/dev/audio` lab and licensed candidate catalog are ready, but production selection is **PENDING HUMAN APPROVAL**. Preserve server-owned onboarding transitions and keep activation anchored to `first_raid_completed`. Do not start Bale; the next action is owner audition and candidate selection.
+The onboarding, Guide, and centralized audio runtime are implemented. Apply migration `20260826110000_pre_bale_player_experience`. Fifteen explicit owner audio choices are mapped into production. The reduced development-only `/dev/audio` lab contains 26 candidates for nine pending groups; pending runtime actions are intentionally silent. Preserve server-owned onboarding transitions and keep activation anchored to `first_raid_completed`. Do not start Bale; the next action is owner audition of the remaining groups.
 
 ## Git completion rules
 

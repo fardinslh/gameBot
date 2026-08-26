@@ -9,17 +9,25 @@ describe('audio settings and catalog', () => {
   });
 
   it('routes two local music contexts and every required local SFX', () => {
-    expect(Object.keys(MUSIC_TRACKS)).toEqual(['KINGDOM', 'BATTLE']);
-    expect(Object.values(MUSIC_TRACKS).every((path) => path.startsWith('/assets/audio/') && path.endsWith('.mp3'))).toBe(true);
+    expect(MUSIC_TRACKS).toEqual({
+      KINGDOM: '/assets/audio/approved/music/kingdom.mp3',
+      BATTLE: '/assets/audio/approved/music/battle.mp3',
+    });
     expect(Object.keys(SFX_ASSETS)).toEqual(expect.arrayContaining([
       'ui_tap', 'panel_open', 'back', 'collect', 'upgrade_start', 'upgrade_complete', 'building_select',
       'hero_select', 'hero_upgrade', 'find_enemy', 'attack_start', 'sword_hit', 'arrow_shot', 'arrow_impact',
       'magic_cast', 'magic_impact', 'shield_wall', 'hero_defeated', 'victory', 'defeat', 'incoming_attack', 'revenge_available',
     ]));
-    expect(Object.values(SFX_ASSETS).flat().every((path) => path.startsWith('/assets/audio/') && path.endsWith('.mp3'))).toBe(true);
+    const approved = ['back', 'collect', 'upgrade_start', 'upgrade_complete', 'building_select', 'hero_select',
+      'hero_upgrade', 'find_enemy', 'attack_start', 'sword_hit', 'arrow_shot', 'magic_cast', 'victory'] as const;
+    const pending = ['ui_tap', 'panel_open', 'arrow_impact', 'magic_impact', 'shield_wall', 'hero_defeated',
+      'defeat', 'incoming_attack', 'revenge_available'] as const;
+    expect(approved.every((key) => SFX_ASSETS[key].length === 1 && SFX_ASSETS[key][0].startsWith('/assets/audio/approved/'))).toBe(true);
+    expect(pending.every((key) => SFX_ASSETS[key].length === 0)).toBe(true);
   });
 
   it('keeps variant selection compatible with single assets and can avoid an immediate repeat', () => {
-    expect(pickSfxAsset('sword_hit', undefined, () => 0)).toBe('/assets/audio/sfx/sword-hit.mp3');
+    expect(pickSfxAsset('sword_hit', undefined, () => 0)).toBe('/assets/audio/approved/sfx/sword-hit.mp3');
+    expect(pickSfxAsset('shield_wall', undefined, () => 0)).toBeUndefined();
   });
 });
