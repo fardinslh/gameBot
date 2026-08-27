@@ -47,7 +47,9 @@ At Kingdom Level 20, `xpIntoLevel` becomes `0` and `xpRequiredForNextLevel` beco
 | 5 through 9 | `STONE` |
 | 10 through 20 | `FORTIFIED` |
 
-The renderer maps these variants to asset stages 1, 2, and 3. Stage 2 and 3 files do not exist, so the resolver uses Stage 1 art. The metadata and loader architecture are ready; final higher-stage art remains planned.
+The API retains these compatibility variants. Core-building presentation now derives directly from authoritative level instead: Early 1–4, Developed 5–8, Advanced 9–12, Fortified 13–16, and Prestige 17–20. Within each tier, levels map to minor steps 0–3 with cumulative visual details. Level 20 adds a capstone. No database appearance state was added.
+
+Academy, Blacksmith, Watchtower, and Workshop still use the three-variant fallback architecture until Retention 01B.
 
 ## Special building effects
 

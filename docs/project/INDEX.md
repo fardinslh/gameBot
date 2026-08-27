@@ -11,16 +11,16 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `8b05b7330739ef0648736718fc0f3868a81eb7d5`
-- **Commit message**: `feat: add progressive kingdom expansion`
-- **Verification date**: 2026-08-25
+- **Last verified against commit**: `c92758af45c8bc6abaa851f217d5bd0bd18b3666`
+- **Baseline commit message**: `fix: crossfade background music loops`
+- **Verification date**: 2026-08-27
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-The documentation commit follows this gameplay baseline and changes no game behavior.
+The containing Retention 01A commit adds core-building presentation only; it does not change authoritative gameplay behavior.
 
 ## Platform direction
 
-The product direction targets Bale Mini App, then Telegram Mini App, followed by a broader Web release. The repository currently runs as a Web development build. `PlatformAccount`, the platform adapter contract, and placeholder Bale/Telegram/Web adapters prepare the boundary, but Bale authentication, Telegram authentication, payments, and external notification delivery remain unimplemented.
+The product direction is retention-first: bounded content and progression phases precede Bale staging, production readiness, and closed test. Telegram and broader Web remain later platform concerns. `PlatformAccount` and placeholder adapters prepare boundaries only; authentication, payments, and external delivery remain unimplemented. See [retention roadmap](RETENTION_ROADMAP.md).
 
 ## Technology stack
 
@@ -60,6 +60,8 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Raid and deterministic battle](RAID_AND_BATTLE.md)
 - [Revenge and notifications](REVENGE_AND_NOTIFICATIONS.md)
 - [Building and Kingdom progression](PROGRESSION.md)
+- [Visible building evolution](BUILDING_EVOLUTION.md)
+- [Retention-first roadmap](RETENTION_ROADMAP.md)
 - [Prisma data model and migrations](DATA_MODEL.md)
 - [HTTP API inventory](API_REFERENCE.md)
 - [First-party analytics](ANALYTICS.md)
@@ -78,9 +80,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A core visual evolution, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: real-device mix review and the next explicitly scoped pre-launch task
+- **Next**: Retention 01B — Advanced Building Evolution and Kingdom Progression Goals, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay

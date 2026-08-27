@@ -15,13 +15,18 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, RTL/LTR |
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
+| Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level |
+| Advanced building visual evolution | Not implemented | Academy, Blacksmith, Watchtower, and Workshop remain Retention 01B |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
 | Permanent Game Guide | Implemented | Aren identity plus eight bilingual sections available from the compact Player HUD |
 | Audio engine | Implemented | Scheduled dual-source equal-power loop overlap, shared music bus, explicit decoded loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
 | Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
-| Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
+| Appearance progression | Implemented for core | Levels 1–20 deterministically select Early, Developed, Advanced, Fortified, or Prestige art; advanced buildings retain legacy fallback |
+| Missions / Achievements / Daily Return | Not implemented | Retention 02 only |
+| PvE Campaign | Not implemented | Retention 04 only |
+| Hero Expansion | Not implemented | Retention 03 only; the three current Heroes remain unchanged |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Raid Team | Implemented | Exactly three unique owned Heroes in ordered persistent slots |
 | Matchmaking | Implemented | Three bounded real-player passes, top-five pool selection, recent-eight memory, six-hour anti-farm, system fallback |
@@ -91,10 +96,10 @@ Twelve ordered migrations exist:
 11. `20260826110000_pre_bale_player_experience`
 12. `20260827090000_advisor_tip_progress`
 
-## Active launch gate: final human checks before Bale
+## Active retention gate
 
-First-party analytics remains observational. The Aren advisor repair, target-aware onboarding, persistent contextual counsel, scheduled overlapping Web Audio runtime, audio controls, and all 24 owner-approved mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the authority. Bale has not started. Owner approval of Aren, three-transition audible loop/mix review, and mobile screenshot confirmation remain human launch checks.
+Retention 01A engineering is complete and owner visual approval is pending. Retention 01B is next. Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
 
 ## Validation entry points
 
-Run `npm test`, `npm run test:integration`, `npm run test:client-experience`, `npm run typecheck`, `npm run lint`, and `npm run build` for code changes. Audio work also requires `npm run validate:audio-lab`; that command verifies technical playback only, never subjective quality. Browser flows include `validate:player-experience` and the existing regressions. See [testing](TESTING.md) for prerequisites and coverage.
+Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for core visual progression, plus the normal test, type, lint, build, Kingdom, player-experience, Raid, and Revenge regressions. See [testing](TESTING.md).

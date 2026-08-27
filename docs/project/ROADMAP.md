@@ -23,10 +23,11 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **First-Party Analytics**: canonical events, activation/retention reports, integrity tooling
 - **Pre-Bale Player Experience implementation**: persistent first session, permanent bilingual Guide, audio engine, and persistent audio controls
 - **Player Experience repair**: older Aren advisor candidate, target-aware action coaching, durable contextual counsel, derived seamless-loop masters, and buffered Web Audio playback
+- **Retention 01A — Visible Kingdom Growth**: five major raster tiers plus every-level modular evolution for Castle and the four core economy buildings
 
 ## Current and next
 
-The **Player Experience repair is complete in engineering**. All 24 explicit owner audio selections remain unchanged. Aren visual approval, audible three-boundary loop review, real-device relative mix, and the unavailable browser screenshot run remain human checks. Bale Mini App Integration has not started and still requires an explicit scoped task.
+The **Player Experience repair is complete in engineering**, and **Retention 01A is implemented**. Owner visual approval of the new building stages, Aren approval, audible loop review, and real-device mix remain human checks. Bale Mini App Integration is intentionally delayed until the bounded retention roadmap is complete.
 
 The approved launch sequence is:
 
@@ -35,7 +36,17 @@ First-Party Analytics (complete)
   -> Pre-Bale Player Experience implementation (complete)
   -> Audio Quality Selection Gate (complete; 24 mapped)
   -> Player Experience repair (engineering complete; human checks open)
-  -> Bale Mini App Integration (blocked)
+  -> Retention 01A Visible Kingdom Growth (implemented; owner art approval pending)
+  -> Retention 01B Advanced Building Evolution + Goals
+  -> Retention 02 Missions / Achievements / Daily Return
+  -> Retention 03 Hero Expansion
+  -> Retention 04 PvE Campaign
+  -> Retention 05 Shop + Gems
+  -> Retention 06 Guild MVP
+  -> Retention 07 Guild Cooperation
+  -> Retention 08 Leaderboards / Competitive Meta
+  -> Retention 09 Content / Balance / Retention QA
+  -> Bale Mini App Integration (staging)
   -> Production Readiness
   -> Closed Bale Test
   -> Soft Launch
@@ -43,7 +54,7 @@ First-Party Analytics (complete)
 
 Do not infer that Bale is implemented from platform placeholders. It requires its own scoped integration and device validation.
 
-Final stage 2 and stage 3 building artwork remains a known visual follow-up. The loader already supports those files; no current phase authorizes asset generation.
+Core building evolution is implemented. Academy, Blacksmith, Watchtower, Workshop, and progression goals are the bounded Retention 01B follow-up; do not start it automatically. See [retention roadmap](RETENTION_ROADMAP.md).
 
 ## Later product areas
 

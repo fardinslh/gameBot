@@ -14,6 +14,8 @@ const projectDocs = [
   "RAID_AND_BATTLE.md",
   "REVENGE_AND_NOTIFICATIONS.md",
   "PROGRESSION.md",
+  "BUILDING_EVOLUTION.md",
+  "RETENTION_ROADMAP.md",
   "DATA_MODEL.md",
   "API_REFERENCE.md",
   "ANALYTICS.md",
@@ -76,7 +78,7 @@ for (const fileName of projectDocs) {
 }
 
 const index = readRequiredFile("docs/project/INDEX.md");
-const baselineCommit = "8b05b7330739ef0648736718fc0f3868a81eb7d5";
+const baselineCommit = "c92758af45c8bc6abaa851f217d5bd0bd18b3666";
 if (!index.includes("Last verified against commit") || !index.includes(baselineCommit)) {
   failures.push("docs/project/INDEX.md does not identify the verified gameplay baseline");
 }

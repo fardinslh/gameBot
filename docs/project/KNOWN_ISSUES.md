@@ -22,6 +22,10 @@ The older Aren portrait is a current generated candidate, not final owner-approv
 
 After the music scheduler change, `validate:player-experience` repeatedly failed because Aren overlapped the expanded Upgrade target; one retry later timed out waiting for the active Raid tab. `validate:raid` timed out waiting for its match-search response in the same browser flow. Audio work did not change advisor positioning, onboarding text, Raid, or Battle, and this task explicitly forbids those fixes. API unit and integration suites still pass, including Raid/Battle settlement. Repair the browser-flow blocker in a separate scoped task, then rerun both validators.
 
+### Core evolution art needs owner approval
+
+Retention 01A contains five generated/curated raster tiers for each core building and passes automated Lab/mobile capture. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20 and N/N+1. Advanced building evolution remains deferred to Retention 01B.
+
 ### Bale lifecycle is not integrated
 
 Onboarding recovery and audio visibility handling work in Web browsers. Bale launch parameters, authenticated identity, lifecycle/reconnect behavior, device autoplay policy, and real-device audio remain unimplemented and untested.
@@ -42,9 +46,9 @@ The API stores notification records and uses them for inbox unread state. No not
 
 The API creates a `game-jobs` queue handle when Redis is enabled. No producer or worker uses it. Upgrade completion happens during reads and explicit completion collection.
 
-### Higher appearance variants use fallback art
+### Advanced-building appearance variants use fallback art
 
-Buildings return `STONE` at level 5 and `FORTIFIED` at level 10. Missing stage 2 and stage 3 files cause the loader to keep Stage 1 art.
+Academy, Blacksmith, Watchtower, and Workshop return `STONE` and `FORTIFIED` compatibility variants, but missing later files keep their Stage 1 art. Core buildings use the new five-tier Retention 01A system.
 
 ### Some local building assets are unused
 

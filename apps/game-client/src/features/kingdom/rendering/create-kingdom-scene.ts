@@ -4,8 +4,14 @@ import type { BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-an
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
-import { createBuildingArtwork, type BuildingArtwork } from './building-art';
+import { applyBuildingVisualState, createBuildingArtwork, type BuildingArtwork } from './building-art';
 import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from './building-visuals';
+import {
+  getBuildingVisualState,
+  getUpgradeTransition,
+  isCoreEvolutionBuilding,
+  type BuildingVisualState,
+} from './building-visual-progression';
 import { KINGDOM_EXPANSION_PRESENTATIONS, EXPANSION_PRESENTATION_BY_BUILDING } from '../data/kingdom-expansion-stages';
 import { createExpansionAreaArtwork, type ExpansionAreaArtwork } from './expansion-area-art';
 
@@ -24,7 +30,6 @@ export interface BuildingSceneState {
 }
 
 const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
-const CASTLE_TEXTURE = '/assets/kingdom/castle-production-v1.webp';
 const CASTLE_FOCUS_Y = 690;
 
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void): Promise<KingdomSceneRuntime> {
@@ -33,10 +38,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const searchParams = new URLSearchParams(window.location.search);
   const debugBuildingLayout = searchParams.get('debugBuildingLayout') === '1';
   const debugKingdomLayers = searchParams.get('debugKingdomLayers');
-  const [texture, castleTexture] = await Promise.all([
-    Assets.load(TERRAIN_TEXTURE),
-    Assets.load(CASTLE_TEXTURE),
-  ]);
+  const texture = await Assets.load(TERRAIN_TEXTURE);
   // A mirrored top-edge extension only shows above a positively panned world.
   // Its lower edge shares source row zero with the terrain, avoiding a repeated
   // or hard seam while the camera keeps the upper building clear of the HUD.
@@ -60,6 +62,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const statusArtwork = new Map<BuildingId, Container>();
   const knownUnlockState = new Map<BuildingId, boolean>();
   const texturePathById = new Map<BuildingId, string>();
+  const levelById = new Map<BuildingId, number>();
+  const transformationAnimation = new Map<BuildingId, { durationMs: number; elapsedMs: number; major: boolean }>();
   const unlockAnimation = new Map<BuildingId, number>();
   const expansionArtwork = new Map<BuildingId, ExpansionAreaArtwork>();
   const expansionAnimation = new Map<BuildingId, number>();
@@ -137,6 +141,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     indicatorArtwork.delete(id);
     statusArtwork.delete(id);
     texturePathById.delete(id);
+    levelById.delete(id);
+    transformationAnimation.delete(id);
     unlockAnimation.delete(id);
     item.container.destroy({ children: true });
     syncBuildingCount();
@@ -148,18 +154,24 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     state: BuildingSceneState,
     reveal: boolean,
   ): Promise<void> => {
-    const desiredTexturePath = resolveBuildingTexture(building.id, appearanceVariantStage(state.appearanceVariant));
-    const buildingTexture = building.id === 'castle' && desiredTexturePath === resolveBuildingTexture('castle')
-      ? castleTexture
-      : await Assets.load(desiredTexturePath);
+    const visualState = resolveEvolutionState(building.id, state.level);
+    const desiredTexturePath = visualState?.asset ?? resolveBuildingTexture(building.id, appearanceVariantStage(state.appearanceVariant));
+    const buildingTexture = await Assets.load(desiredTexturePath);
     const currentState = desiredStates[building.id];
     if (currentState?.locked !== false || artwork.has(building.id)) return;
-    const currentTexturePath = resolveBuildingTexture(building.id, appearanceVariantStage(currentState.appearanceVariant));
+    const currentVisualState = resolveEvolutionState(building.id, currentState.level);
+    const currentTexturePath = currentVisualState?.asset ?? resolveBuildingTexture(building.id, appearanceVariantStage(currentState.appearanceVariant));
     if (currentTexturePath !== desiredTexturePath) {
       void mountBuilding(building, currentState, reveal);
       return;
     }
-    const buildingArt = createBuildingArtwork(building.id, buildingTexture, debugBuildingLayout);
+    const buildingArt = createBuildingArtwork(
+      building.id,
+      buildingTexture,
+      debugBuildingLayout,
+      visualState,
+      currentState.indicator === 'active',
+    );
     const indicator = createIndicator();
     const status = new Container();
     const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
@@ -172,6 +184,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     indicatorArtwork.set(building.id, indicator);
     statusArtwork.set(building.id, status);
     texturePathById.set(building.id, desiredTexturePath);
+    levelById.set(building.id, currentState.level);
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
     drawIndicator(indicator, currentState.indicator);
     drawBuildingStatus(status, currentState.level);
@@ -282,6 +295,18 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   canvas.addEventListener('pointercancel', onPointerUp);
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const startTransformation = (id: BuildingId, previousLevel: number, nextLevel: number): void => {
+    const transition = getUpgradeTransition(previousLevel, nextLevel, reducedMotion);
+    const item = artwork.get(id);
+    if (!item || transition.durationMs === 0) {
+      if (item) item.transformation.visible = false;
+      return;
+    }
+    item.transformation.visible = true;
+    item.transformation.alpha = 0;
+    item.transformation.scale.set(.84);
+    transformationAnimation.set(id, { durationMs: transition.durationMs, elapsedMs: 0, major: transition.major });
+  };
   const animate = (ticker: Ticker): void => {
     elapsed += ticker.deltaMS / 1_000;
     for (const [id, item] of artwork) {
@@ -317,6 +342,25 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
           item.container.eventMode = 'static';
         }
         else unlockAnimation.set(id as BuildingId, next);
+      }
+      const transformation = transformationAnimation.get(id as BuildingId);
+      if (transformation) {
+        const nextElapsed = transformation.elapsedMs + ticker.deltaMS;
+        const progress = Math.min(1, nextElapsed / transformation.durationMs);
+        const wave = Math.sin(progress * Math.PI);
+        item.transformation.visible = true;
+        item.transformation.alpha = wave * (transformation.major ? 1 : .72);
+        item.transformation.scale.set(.84 + wave * (transformation.major ? .3 : .18));
+        item.sprite.alpha = .72 + (1 - wave) * .28;
+        if (progress >= 1) {
+          transformationAnimation.delete(id as BuildingId);
+          item.transformation.visible = false;
+          item.transformation.alpha = 0;
+          item.transformation.scale.set(1);
+          item.sprite.alpha = 1;
+        } else {
+          transformationAnimation.set(id as BuildingId, { ...transformation, elapsedMs: nextElapsed });
+        }
       }
     }
     for (const [id, area] of expansionArtwork) {
@@ -371,12 +415,22 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         }
         drawIndicator(indicator, state.indicator);
         const item = artwork.get(id);
-        const desiredTexturePath = resolveBuildingTexture(id, appearanceVariantStage(state.appearanceVariant));
+        const previousLevel = levelById.get(id) ?? state.level;
+        const visualState = resolveEvolutionState(id, state.level);
+        const desiredTexturePath = visualState?.asset ?? resolveBuildingTexture(id, appearanceVariantStage(state.appearanceVariant));
+        const levelAdvanced = state.level > previousLevel;
+        levelById.set(id, state.level);
+        if (item && visualState) applyBuildingVisualState(item, visualState.buildingId, visualState, state.indicator === 'active');
         if (item && texturePathById.get(id) !== desiredTexturePath) {
           texturePathById.set(id, desiredTexturePath);
           void Assets.load(desiredTexturePath).then((nextTexture) => {
-            if (texturePathById.get(id) === desiredTexturePath) item.sprite.texture = nextTexture;
+            if (texturePathById.get(id) !== desiredTexturePath) return;
+            item.sprite.texture = nextTexture;
+            if (visualState) applyBuildingVisualState(item, visualState.buildingId, visualState, state.indicator === 'active');
+            if (levelAdvanced) startTransformation(id, previousLevel, state.level);
           });
+        } else if (item && levelAdvanced) {
+          startTransformation(id, previousLevel, state.level);
         }
         const status = statusArtwork.get(id);
         if (status) drawBuildingStatus(status, state.level);
@@ -393,6 +447,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       runtime.destroy();
     },
   };
+}
+
+function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualState | undefined {
+  return isCoreEvolutionBuilding(id) ? getBuildingVisualState(id, level) : undefined;
 }
 
 function drawBuildingStatus(status: Container, level: number): void {

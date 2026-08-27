@@ -16,6 +16,7 @@ Use this sequence before a major change. Code and migrations remain authoritativ
 4. The relevant system document for your task
 5. [Testing and browser validation](TESTING.md)
 6. [Player experience](PLAYER_EXPERIENCE.md), [audio](AUDIO.md), and [audio audition](AUDIO_AUDITION.md) when touching first-session or media behavior
+7. [Retention roadmap](RETENTION_ROADMAP.md) and [building evolution](BUILDING_EVOLUTION.md) before retention or Kingdom-art work
 
 Check the `Last verified against commit` value in `INDEX.md`, then compare it with `git rev-parse HEAD`. Inspect changed source after that baseline before relying on a documented formula or route.
 
@@ -45,6 +46,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Keep world coordinates independent from UI direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`
+- For core buildings, derive visuals only through `getBuildingVisualState`; preserve all five tier assets, per-level detail rules, stable containers, and development Lab parity
 
 ## Backend integrity rules
 
@@ -65,7 +67,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 
 Unused assets, Prisma enum values, transaction reasons, or adapter interfaces do not make a feature implemented. Confirm a schema path, service, controller, shared contract, client flow, and validation before describing a system as complete.
 
-Do not start Guild, Season, Shop, payment, Bale, Telegram, additional Hero, equipment, or building gameplay work without a scoped user request.
+Retention work is split into explicit bounded tasks. After Retention 01A, do not automatically start 01B, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, Bale, Telegram, equipment, or new building gameplay.
 
 ## Documentation maintenance
 
@@ -100,9 +102,9 @@ Private files are intentionally ignored. Commit and push tracked changes first, 
 
 Run `npm run validate:docs` after documentation changes.
 
-## Current launch gate
+## Current retention gate
 
-The Aren-led onboarding repair, permanent Guide, contextual-tip persistence, and buffered Web Audio runtime are implemented. Apply migrations through `20260827090000_advisor_tip_progress`. All 24 audio selections remain mapped. Music decodes unchanged approved originals and uses scheduled non-looping source pairs with equal-power overlap; never restore native `AudioBufferSourceNode.loop` as production behavior. Kingdom timing is 0 to 49.951383 seconds with 3.5-second overlap. `/dev/audio` exposes the production scheduler through **Test Kingdom Loop**. Preserve server-owned onboarding transitions and `first_raid_completed` activation. Bale has not started. Older Aren needs owner approval; loop overlap needs three-transition owner listening; unavailable browser screenshots remain a launch check.
+Retention 01A core building evolution is implemented. `/dev/buildings` is the production-backed owner review surface; visual approval is pending. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. The prior Aren and audio human checks remain open. Bale has not started and is intentionally after the bounded retention roadmap.
 
 ## Git completion rules
 

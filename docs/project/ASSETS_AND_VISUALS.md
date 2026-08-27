@@ -10,6 +10,8 @@ The client loads local WebP art. Runtime mappings separate gameplay IDs, placeme
 
 ## Active Kingdom assets
 
+Core-building production now uses 25 files under `kingdom/evolution`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Individual files are about 42–92 KB; total core evolution art is about 1.76 MiB. The old core files are retained as rollback/reference inputs and as Developed-tier files, but production resolution uses the evolution paths.
+
 | Asset | Role | Approximate size |
 | --- | --- | ---: |
 | `terrain/kingdom-base-v3.webp` | Active 1024 by 1536 building-free environment | 460 KB |
@@ -35,6 +37,7 @@ The client loads local WebP art. Runtime mappings separate gameplay IDs, placeme
 - `kingdom-expansion-stages.ts`: Stage 2 through 5 placement and environment presentation
 - `building-visuals.ts`: texture stages, dimensions, ground anchors, offsets, footprint, shadow, hit area, and indicator anchors
 - `building-art.ts`: Pixi sprite container construction
+- `building-visual-progression.ts`: authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
 
@@ -48,7 +51,7 @@ Do not solve building placement with rectangular backgrounds, generic circular p
 
 ## Appearance stage fallback
 
-The loader supports `*-stage-1.webp`, `*-stage-2.webp`, and `*-stage-3.webp`. Current files cover stage 1 only. `STONE` and `FORTIFIED` variants use stage 1 fallback until approved artwork exists.
+Core buildings no longer use this fallback: they have five real raster tiers. Academy, Blacksmith, Watchtower, and Workshop still use Stage 1 fallback until Retention 01B.
 
 ## Mine source registration
 
@@ -64,6 +67,8 @@ All audio remains local under `apps/game-client/public/assets/audio`. All 24 exp
 
 ## Validation and debug views
 
-`npm run validate:visual` checks active Stage 1 count, pan, interaction, mobile layout, console errors, and terrain/Castle budgets of 700 KB and 150 KB. `npm run validate:progression` checks active-only stage mounting and locked asset exclusion.
+`npm run validate:building-evolution` tests every level for all five core buildings and inspects all 25 WebPs. `/dev/buildings` is development-only and renders the exact production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
+
+`npm run validate:visual` continues to check pan, interaction, mobile layout, console errors, and terrain budgets. `npm run validate:progression` checks active-only expansion mounting and locked asset exclusion.
 
 Query-only debug options include `?debugBuildingLayout=1`, `?debugKingdomLayers=terrain`, and `?debugKingdomLayers=castle`.

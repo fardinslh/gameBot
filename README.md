@@ -274,6 +274,14 @@ Academy adds 1% production per level above 1, Blacksmith discounts Hero upgrade 
 
 Building detail sheets expose localized structured current/next effects. Stage 2/3 artwork still falls back to the existing Stage 1 asset until final skins are produced.
 
+## Retention 01A visible building evolution
+
+Castle, Farm, Lumber Mill, Mine, and Grand Market now derive their exact visual state from the authoritative building level. Levels 1–4 use Early art, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Each tier has a local optimized WebP body; minor steps add a deliberate building-specific detail so every adjacent level differs, and level 20 receives a compact capstone.
+
+Production loads only the current required tier. Upgrade-in-progress buildings show restrained construction cues, reconciled upgrades use short minor/major Pixi transformations, reduced-motion is respected, and the stable coordinates, hit areas, selection, indicators, camera, RTL/LTR behavior, and 54px navigation are unchanged. Open `/dev/buildings` in development for exact production previews, N/N+1 comparison, and level 1 versus 20. Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for deterministic and visual checks.
+
+This starts the retention-first roadmap and intentionally delays Bale. Retention 01B advanced buildings and goals, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale are separate unimplemented tasks.
+
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 
 ## Validation and tests
@@ -292,6 +300,8 @@ npm run validate:raid    # full match/battle/result/Kingdom flow + mobile screen
 npm run validate:revenge # incoming badge/log/preview/Revenge/result + Phase 06 screenshots
 npm run validate:visual  # expanded world/pan/locked/detail/RTL/mobile screenshots and asset budget
 npm run validate:progression # Stage 1–5 mounts/areas/camera/effects and Phase 07.2 screenshots
+npm run validate:building-evolution # 20-level derivation + 25 core WebP assets
+npm run capture:building-evolution  # dev Lab sheets + 320/375/390 Kingdom screenshots
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.

@@ -24,6 +24,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
+| `npm run validate:building-evolution` | 15 client tests covering all 20 visual levels, adjacent differences, transitions, construction, stable selection/hit areas, plus 25 WebP integrity/budget checks |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -44,6 +45,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
 | `npm run validate:audio-loops` | Decodes both approved music sources and checks 19 format/timing/equal-power rules across three overlapping transitions per track |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
+| `npm run capture:building-evolution` | Development Lab levels 1/5/9/13/17/20 for all five core buildings, 1-vs-20 sheets, and 320/375/390 Persian Kingdom captures |
 
 Browser scripts locate installed Edge or Chrome through known Windows paths and use Playwright Core. They fail on browser console errors and horizontal overflow.
 
@@ -60,6 +62,8 @@ They cover English left-to-right and Persian right-to-left where relevant. Keep 
 ## Manual acceptance paths
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
+
+For building evolution, open `/dev/buildings`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction. Owner judgment—not passing automation—approves art quality.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 
