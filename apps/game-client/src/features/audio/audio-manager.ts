@@ -33,8 +33,8 @@ export const MUSIC_TRACKS: Record<MusicContext, string> = {
 };
 
 export const SFX_ASSETS: Record<SfxKey, readonly string[]> = {
-  ui_tap: [],
-  panel_open: [],
+  ui_tap: ['/assets/audio/approved/sfx/ui-tap.mp3'],
+  panel_open: ['/assets/audio/approved/sfx/panel-open.mp3'],
   back: ['/assets/audio/approved/sfx/back.mp3'],
   collect: ['/assets/audio/approved/sfx/collect.mp3'],
   upgrade_start: ['/assets/audio/approved/sfx/upgrade-start.mp3'],
@@ -46,15 +46,15 @@ export const SFX_ASSETS: Record<SfxKey, readonly string[]> = {
   attack_start: ['/assets/audio/approved/sfx/attack-start.mp3'],
   sword_hit: ['/assets/audio/approved/sfx/sword-hit.mp3'],
   arrow_shot: ['/assets/audio/approved/sfx/arrow-shot.mp3'],
-  arrow_impact: [],
+  arrow_impact: ['/assets/audio/approved/sfx/arrow-impact.mp3'],
   magic_cast: ['/assets/audio/approved/sfx/magic-cast.mp3'],
-  magic_impact: [],
-  shield_wall: [],
-  hero_defeated: [],
+  magic_impact: ['/assets/audio/approved/sfx/magic-impact.mp3'],
+  shield_wall: ['/assets/audio/approved/sfx/shield-wall.mp3'],
+  hero_defeated: ['/assets/audio/approved/sfx/hero-defeated.mp3'],
   victory: ['/assets/audio/approved/sfx/victory.mp3'],
-  defeat: [],
-  incoming_attack: [],
-  revenge_available: [],
+  defeat: ['/assets/audio/approved/sfx/defeat.mp3'],
+  incoming_attack: ['/assets/audio/approved/sfx/incoming-attack.mp3'],
+  revenge_available: ['/assets/audio/approved/sfx/revenge-available.mp3'],
 };
 
 export function pickSfxAsset(key: SfxKey, previous?: string, random = Math.random): string | undefined {

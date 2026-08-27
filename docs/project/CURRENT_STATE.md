@@ -19,7 +19,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | First-session onboarding | Implemented | Server-persisted Welcome, Collect, Upgrade, Raid, Complete/Skip flow driven by real actions |
 | Permanent Game Guide | Implemented | Eight bilingual sections available from the compact Player HUD |
 | Audio engine | Implemented | Two music contexts, 22 SFX triggers, gesture-safe playback, crossfade, visibility handling, and variant-ready SFX mappings |
-| Production audio selection | Partially approved | 15 explicit owner choices are mapped; 26 licensed candidates across nine pending groups remain in the development-only Audio Lab |
+| Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
@@ -92,7 +92,7 @@ Eleven ordered migrations exist:
 
 ## Active launch gate: human audio approval
 
-First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, the audio engine, and persistent audio controls are implemented. Fifteen owner-approved audio choices are mapped; nine groups remain pending and intentionally silent in production. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started and must not begin before the human audio selection gate closes.
+First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, the audio engine, persistent audio controls, and all 24 owner-approved audio mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started; real-device audio mix review remains a launch check.
 
 ## Validation entry points
 

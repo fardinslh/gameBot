@@ -1,13 +1,13 @@
 {
   "auditedAt": "2026-08-27",
-  "catalogStatus": "PARTIALLY_APPROVED",
+  "catalogStatus": "APPROVED",
   "classification": "REPLACE",
-  "productionMapping": "15_OWNER_APPROVED_9_SILENT_PENDING",
+  "productionMapping": "24_OWNER_APPROVED_0_PENDING",
   "source": "Crown & Coin deterministic procedural synthesis",
   "author": "Crown & Coin project / Codex-generated",
   "license": "Project-owned original work; commercial use cleared for Crown & Coin",
   "sourceReference": "scripts/generate-audio-assets.mjs",
-  "reason": "The legacy catalog remains retained for audit only. Fifteen explicit owner selections are mapped from the approved catalog; nine undecided actions are intentionally silent until approval.",
+  "reason": "The legacy catalog remains retained for audit only. All 24 explicit owner selections are mapped from the approved catalog.",
   "assets": [
     { "filename": "music/kingdom-hearth.mp3", "role": "Kingdom background music", "durationSeconds": 72, "sizeBytes": 576826, "currentTrigger": "KINGDOM music context", "classification": "REPLACE" },
     { "filename": "music/battle-march.mp3", "role": "Battle background music", "durationSeconds": 48, "sizeBytes": 384774, "currentTrigger": "active Battle music context", "classification": "REPLACE" },

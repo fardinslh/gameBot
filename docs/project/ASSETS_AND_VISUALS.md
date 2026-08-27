@@ -60,7 +60,7 @@ Barracks, Granary, Tavern, and Stable Stage 1 assets exist locally. They have vi
 
 ## Audio assets
 
-All audio remains local under `apps/game-client/public/assets/audio`. Fifteen explicit owner selections are stored under `assets/audio/approved` and mapped into gameplay. The rejected procedural catalog remains audit-only. The reduced `assets/audio/candidates` catalog contains 26 licensed candidates for nine pending groups; pending runtime actions are silent. See [audio](AUDIO.md) for the audit and [audio audition](AUDIO_AUDITION.md) for the remaining human approval gate.
+All audio remains local under `apps/game-client/public/assets/audio`. All 24 explicit owner selections are stored under `assets/audio/approved` and mapped into gameplay. The rejected procedural catalog and unselected candidate files remain audit-only. See [audio](AUDIO.md) for the mapping and [audio audition](AUDIO_AUDITION.md) for the completed approval record.
 
 ## Validation and debug views
 

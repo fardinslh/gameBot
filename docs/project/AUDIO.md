@@ -8,17 +8,15 @@ contentType: Reference
 
 ## Current quality status
 
-The audio engine is implemented and technically validated. The product owner has approved 15 groups from the licensed audition catalog. Those exact choices are stored under `public/assets/audio/approved` and are the only audio assets mapped into gameplay.
+The audio engine is implemented and technically validated. The product owner has approved all 24 groups from the licensed audition catalog. Those exact choices are stored under `public/assets/audio/approved` and mapped into gameplay. The original procedural catalog remains classified **REPLACE** and is retained only for audit compatibility.
 
-Nine groups remain pending: UI Tap, Panel Open, Shield Wall, Defeat, Arrow Impact, Magic Impact, Hero Defeated, Incoming Attack, and Revenge Available. Pending gameplay actions are intentionally silent until the owner approves a candidate. The original procedural catalog remains classified **REPLACE** and is retained only for audit compatibility.
-
-Use the development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audio` for the remaining decisions. It is available only under `next dev`, is absent from game navigation, and returns 404 in production.
+The development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audio` now shows that selection is complete. It is available only under `next dev`, is absent from game navigation, and returns 404 in production.
 
 ## Runtime architecture
 
 `AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. The manager preserves first-gesture unlock, 600 ms music crossfade, visibility suspend/resume, safe media failure handling, and persisted-Battle-event SFX timing. Audio never decides or blocks gameplay.
 
-`MUSIC_TRACKS` maps the approved Kingdom B and Battle A loops. `SFX_ASSETS` maps the 13 approved SFX and uses empty arrays for pending actions. `pickSfxAsset` returns `undefined` for a pending action, making silence explicit rather than falling back to rejected content.
+`MUSIC_TRACKS` maps the approved Kingdom B and Battle A loops. Every `SFX_ASSETS` key maps exactly one approved local file. `pickSfxAsset` remains variant-ready for future explicitly approved alternatives.
 
 ## Approved production mapping
 
@@ -39,6 +37,15 @@ Use the development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audi
 | Building Select | A | `approved/sfx/building-select.mp3` |
 | Hero Select | A | `approved/sfx/hero-select.mp3` |
 | Find Enemy | A | `approved/sfx/find-enemy.mp3` |
+| Panel Open | B | `approved/sfx/panel-open.mp3` |
+| Shield Wall | B | `approved/sfx/shield-wall.mp3` |
+| Defeat | A | `approved/sfx/defeat.mp3` |
+| UI Tap | A | `approved/sfx/ui-tap.mp3` |
+| Arrow Impact | C | `approved/sfx/arrow-impact.mp3` |
+| Magic Impact | A | `approved/sfx/magic-impact.mp3` |
+| Hero Defeated | A | `approved/sfx/hero-defeated.mp3` |
+| Incoming Attack | A | `approved/sfx/incoming-attack.mp3` |
+| Revenge Available | A | `approved/sfx/revenge-available.mp3` |
 
 Victory was rebuilt from its selected full CC0 source as a five-second sting. Find Enemy uses the selected sound twice with a 280 ms gap and no time stretching.
 
@@ -50,6 +57,6 @@ CC-BY and CC-BY-SA assets retain their attribution obligations in the manifests.
 
 ## Validation
 
-`npm run test:client-experience` checks the approved choice contract, pending-group reduction, production mapping, runtime silence for pending actions, and metadata. `npm run validate:audio-lab` checks all 26 pending candidates plus all 15 approved assets for file presence, MP3 metadata, decoded peak headroom, browser loading, Stop/Replay behavior, context previews, settings persistence, and 320/375/390 mobile overflow.
+`npm run test:client-experience` checks the complete approved-choice contract, production mapping, runtime catalog, and metadata. `npm run validate:audio-lab` checks all 24 approved assets for file presence, MP3 metadata, decoded peak headroom, browser loading, the completed lab state, and 320/375/390 mobile overflow.
 
-Human listening on headphones, desktop speakers, phone speakers, and later Bale WebView remains required for the nine pending groups.
+Final relative-mix review in the full game on headphones, desktop speakers, phone speakers, and later Bale WebView remains a launch check.

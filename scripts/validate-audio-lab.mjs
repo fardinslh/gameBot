@@ -67,24 +67,12 @@ try {
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
   await page.goto(devUrl, { waitUntil: 'networkidle' });
-  await page.waitForSelector('[data-audio-lab="partial-human-approval"]');
+  await page.waitForSelector('[data-audio-lab="full-human-approval"]');
   const failedLoads = await page.evaluate(async (files) => (await Promise.all(files.map(async (file) => ({ file, ok: (await fetch(file)).ok })))).filter((item) => !item.ok), allAssets.map((candidate) => candidate.filename));
   if (failedLoads.length) throw new Error(`Candidate HTTP loads failed: ${failedLoads.map((item) => item.file).join(', ')}`);
-  if (await page.locator('[data-audio-group="kingdom-music"]').count() !== 0) throw new Error('Approved groups must not remain in the audition lab');
-  if (await page.locator('[data-audio-group="shield-wall"] [data-audio-action="play"]').count() !== 3) throw new Error('Shield Wall round 2 must expose A/B/C');
-  if (await page.locator('[data-audio-context]').count() !== 9) throw new Error('Gameplay context quick tests are incomplete');
-  await page.locator('[data-audio-context="shield-wall"]').click();
-  if (!(await page.evaluate(() => window.__audioLab.plays.some((source) => source.includes('/candidates/shield-wall/'))))) throw new Error('Shield Wall context preview did not play');
-  await page.locator('[data-audio-group="shield-wall"] [data-audio-action="play"]').nth(1).click();
-  const routing = await page.evaluate(() => window.__audioLab);
-  if (routing.plays.length !== 2 || routing.pauses < 1) throw new Error('SFX candidate switching did not stop the previous candidate');
-  await page.locator('[data-audio-action="stop-all"]').click();
-  const master = page.getByRole('checkbox', { name: /Master/ });
-  await master.click();
-  const saved = await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1'));
-  if (!saved?.includes('masterEnabled')) throw new Error('Master settings were not persisted');
-  await page.reload({ waitUntil: 'networkidle' });
-  if (await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1')) !== saved) throw new Error('Settings did not survive refresh');
+  if (await page.locator('[data-audio-group]').count() !== 0) throw new Error('Approved groups must not remain in the audition lab');
+  if (await page.locator('[data-audio-context]').count() !== 0) throw new Error('No pending context controls should remain');
+  if (!(await page.getByText('24 MAPPED · SELECTION COMPLETE').isVisible())) throw new Error('Completion status is missing');
   for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
     if (await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth)) throw new Error(`Horizontal overflow at ${viewport.width}x${viewport.height}`);
@@ -92,9 +80,9 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.screenshot({ path: new URL('audio-lab-mobile-390x844.png', artifacts).pathname.slice(1), fullPage: true });
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
-  console.log(`PASS Audio Lab loaded ${manifest.candidates.length} pending candidates across ${manifest.pendingGroupCount} groups; ${approvedManifest.approvedGroupCount} approved assets also load`);
+  console.log(`PASS Audio Lab shows selection complete and all ${approvedManifest.approvedGroupCount} approved assets load`);
   console.log('PASS MP3 bitrate metadata and decoded peaks stay below 0 dBFS');
-  console.log('PASS approved groups are removed, Stop/Replay controls, gameplay-context SFX preview, shared settings persistence');
+  console.log('PASS no approved candidates or pending context controls remain in the lab');
   console.log('PASS 320x568, 375x812, and 390x844 without horizontal overflow');
   console.log('NOTE technical playback only; candidate quality was NOT AUDIBLY VERIFIED');
 } finally {

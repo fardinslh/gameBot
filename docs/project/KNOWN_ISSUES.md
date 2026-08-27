@@ -10,9 +10,9 @@ The current baseline passes unit, integration, browser, type, lint, and producti
 
 ## Known limitations
 
-### Production audio selection is partially approved
+### Production audio still needs real-device mix review
 
-The product owner approved 15 licensed choices and rejected eight groups without a selection; Panel Open received no decision. The development-only Audio Lab now exposes 26 candidates across those nine pending SFX groups. Pending production actions are intentionally silent. Automated checks verify provenance metadata, encoding, file presence, browser playback calls, controls, and responsive layout; they cannot prove subjective quality, mix balance, fatigue, or target-device speaker behavior.
+The product owner approved all 24 licensed production choices. Automated checks verify provenance metadata, encoding, file presence, browser loading, runtime mapping, decoded peak headroom, and responsive layout; they cannot prove relative mix balance, fatigue, or target-device speaker behavior. The complete game mix still requires review on headphones, desktop speakers, a real phone, and later Bale WebView.
 
 ### Bale lifecycle is not integrated
 

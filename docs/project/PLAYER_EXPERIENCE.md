@@ -62,5 +62,5 @@ It documents implemented mechanics only. Guild, Season, Shop, payments, leaderbo
 
 - Copy still needs final Persian real-user review.
 - The initial pass has one short mandatory path and no branching tutorial variants.
-- Fifteen explicit owner audio choices are mapped. Nine groups remain in the development-only Audio Lab, and their gameplay actions stay silent until approved.
+- All 24 explicit owner audio choices are mapped. The development-only Audio Lab records the completed selection gate; full-game real-device mix review remains open.
 - Bale launch/reconnect behavior is not implemented or device-tested yet.

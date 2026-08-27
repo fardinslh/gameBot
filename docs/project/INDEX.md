@@ -79,9 +79,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 ## Current development status
 
 - **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, first-party analytics, onboarding, Game Guide, and audio runtime
-- **In progress**: Audio Quality Selection Gate; 15 owner choices are mapped and nine groups remain pending human approval
-- **Next**: owner audition and production candidate selection
-- **Blocked**: Bale Mini App Integration must not start before the audio gate closes
+- **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
+- **Next**: real-device mix review and the next explicitly scoped pre-launch task
+- **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay
 

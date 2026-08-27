@@ -35,7 +35,6 @@ const SHORTLIST_KEY = 'crown-coin-audio-audition-v1';
 
 export function AudioAuditionLab() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [tab] = useState<'sfx'>('sfx');
   const [playing, setPlaying] = useState<string | null>(null);
   const [settings, setSettings] = useState<AudioSettings>(DEFAULT_AUDIO_SETTINGS);
   const [shortlist, setShortlist] = useState<Record<string, string>>({});
@@ -58,14 +57,15 @@ export function AudioAuditionLab() {
     audio.volume = enabled ? settings.masterVolume * channelVolume : 0;
   }, [playing, settings]);
 
+  const selectionComplete = manifest.pendingGroupCount === 0;
   const groups = useMemo(() => {
-    const current = manifest.candidates.filter((candidate) => candidate.kind === tab);
+    const current = manifest.candidates;
     return [...new Set(current.map((candidate) => candidate.group))].map((id) => ({
       id,
       label: current.find((candidate) => candidate.group === id)?.label ?? id,
       candidates: current.filter((candidate) => candidate.group === id),
     }));
-  }, [tab]);
+  }, []);
 
   const stop = (): void => {
     audioRef.current?.pause();
@@ -121,16 +121,16 @@ export function AudioAuditionLab() {
   };
 
   return (
-    <main className={styles.lab} data-audio-lab="partial-human-approval">
+    <main className={styles.lab} data-audio-lab={selectionComplete ? 'full-human-approval' : 'partial-human-approval'}>
       <div className={styles.grain} aria-hidden="true" />
       <header className={styles.hero}>
         <div className={styles.eyebrow}><span>DEV ONLY</span><i /> AUDIO DIRECTION ROOM</div>
         <h1>Crown &amp; Coin<br /><em>Audio Audition</em></h1>
-        <p>Your approved choices are now in the game and removed from this page. Compare only the remaining licensed candidates.</p>
-        <div className={styles.status}><ShieldAlert size={18} /><span>Audio selection</span><strong>{manifest.approvedGroupCount} MAPPED · {manifest.pendingGroupCount} GROUPS PENDING</strong></div>
+        <p>{selectionComplete ? 'Every owner-approved choice is mapped into the game. No candidates remain for audition.' : 'Compare only the remaining licensed candidates.'}</p>
+        <div className={styles.status}><ShieldAlert size={18} /><span>Audio selection</span><strong>{selectionComplete ? `${manifest.approvedGroupCount} MAPPED · SELECTION COMPLETE` : `${manifest.approvedGroupCount} MAPPED · ${manifest.pendingGroupCount} GROUPS PENDING`}</strong></div>
       </header>
 
-      <section className={styles.console} aria-label="Audition controls">
+      {!selectionComplete ? <section className={styles.console} aria-label="Audition controls">
         <div className={styles.consoleTitle}><Headphones size={20} /><div><strong>Listening chain</strong><small>Shared with game settings</small></div><button data-audio-action="stop-all" onClick={stop} type="button"><Square size={15} /> Stop all</button></div>
         <div className={styles.mixer}>
           <Toggle label="Master" enabled={settings.masterEnabled} volume={settings.masterVolume} onEnabled={(value) => updateSettings({ ...settings, masterEnabled: value })} onVolume={(value) => updateSettings({ ...settings, masterVolume: value })} />
@@ -138,13 +138,13 @@ export function AudioAuditionLab() {
           <Toggle label="SFX" enabled={settings.sfxEnabled} volume={settings.sfxVolume} onEnabled={(value) => updateSettings({ ...settings, sfxEnabled: value })} onVolume={(value) => updateSettings({ ...settings, sfxVolume: value })} />
         </div>
         <p className={styles.live} aria-live="polite">{message}</p>
-      </section>
+      </section> : null}
 
-      <nav className={styles.tabs} aria-label="Candidate type">
+      {!selectionComplete ? <nav className={styles.tabs} aria-label="Candidate type">
         <button aria-pressed="true" type="button">Pending SFX <b>{manifest.candidates.length}</b></button>
-      </nav>
+      </nav> : null}
 
-      {tab === 'sfx' ? (
+      {!selectionComplete ? (
         <section className={styles.contextDeck} aria-label="Gameplay context quick tests">
           <header><small>NON-MUTATING PREVIEW</small><h2>Hear the shortlist in context</h2><p>Each control plays your local shortlist for that action, or Candidate A until you shortlist one.</p></header>
           <div className={styles.contextGrid}>
@@ -183,7 +183,7 @@ export function AudioAuditionLab() {
         ))}
       </section>
 
-      <footer><strong>These remaining candidates are not approved automatically.</strong><span>Test headphones, desktop speakers, and a real phone. Then report one letter per group.</span></footer>
+      <footer><strong>{selectionComplete ? 'Owner selection is complete.' : 'Candidates are not approved automatically.'}</strong><span>{selectionComplete ? 'Use the game for the final real-device mix review.' : 'Then report one letter per group.'}</span></footer>
     </main>
   );
 }
