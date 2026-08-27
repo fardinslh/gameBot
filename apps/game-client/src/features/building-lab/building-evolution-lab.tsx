@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_KINGDOM_THEME } from '@/features/kingdom/domain/kingdom-theme';
 import type { CoreEvolutionBuildingId } from '@/features/kingdom/rendering/building-visual-progression';
 import { getBuildingVisualState } from '@/features/kingdom/rendering/building-visual-progression';
 import styles from './building-evolution-lab.module.css';
@@ -19,7 +20,7 @@ export function BuildingEvolutionLab() {
   const [level, setLevel] = useState(1);
   const [mode, setMode] = useState<'single' | 'adjacent' | 'extremes'>('single');
   const [construction, setConstruction] = useState(false);
-  const state = getBuildingVisualState(buildingId, level);
+  const state = getBuildingVisualState({ buildingId, level, theme: DEFAULT_KINGDOM_THEME });
   const comparisons = mode === 'single'
     ? [level]
     : mode === 'adjacent'
@@ -27,7 +28,7 @@ export function BuildingEvolutionLab() {
       : [1, 20];
 
   return (
-    <main className={styles.lab}>
+    <main className={styles.lab} data-kingdom-theme={state.theme}>
       <header className={styles.header}>
         <div>
           <p>Development tool · production renderer</p>
@@ -36,6 +37,7 @@ export function BuildingEvolutionLab() {
         <div className={styles.stateBadge}>
           <span>Tier {state.tierNumber}</span>
           <strong>{state.tier}</strong>
+          <small>Theme {state.theme}</small>
           <small>Minor step {state.minorStep}{state.capstone ? ' · MAX' : ''}</small>
         </div>
       </header>
@@ -89,7 +91,7 @@ export function BuildingEvolutionLab() {
 
 function BuildingPreview({ buildingId, construction, level }: { buildingId: CoreEvolutionBuildingId; construction: boolean; level: number }) {
   const hostRef = useRef<HTMLDivElement>(null);
-  const state = getBuildingVisualState(buildingId, level);
+  const state = getBuildingVisualState({ buildingId, level, theme: DEFAULT_KINGDOM_THEME });
 
   useEffect(() => {
     const host = hostRef.current;

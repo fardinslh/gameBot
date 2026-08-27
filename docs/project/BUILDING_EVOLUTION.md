@@ -6,7 +6,15 @@ contentType: Conceptual
 
 # Extend visible building evolution
 
-Retention 01A makes every successful core-building upgrade visibly change the Kingdom. Building level remains server-authoritative; the client derives presentation without a database appearance column.
+Retention 01A makes every successful core-building upgrade visibly change the Kingdom. Building level remains server-authoritative; the client derives presentation without a database appearance or theme column.
+
+Building visual identity is now derived from:
+
+```text
+Building Type + Building Level + Kingdom Theme
+```
+
+`DEFAULT` is the only implemented Kingdom Theme. Planned historical IDs are documentation and future-domain intent, not selectable or complete themes.
 
 ## Five major tiers
 
@@ -18,11 +26,15 @@ Retention 01A makes every successful core-building upgrade visibly change the Ki
 | Fortified | 13–16 | 13 |
 | Prestige | 17–20 | 17 |
 
-`getBuildingVisualState(buildingId, level)` clamps level to 1–20 and returns tier, minor step, local base asset, render width, detail IDs, and the level-20 capstone flag. Levels inside a tier use minor steps 0–3. Each later step cumulatively adds a deliberate local detail, so adjacent levels never resolve to the same visual configuration.
+`getBuildingVisualState({ buildingId, level, theme })` clamps level to 1–20 and returns building ID, level, resolved theme, tier, tier number, minor step, local base asset, render width, detail IDs, and the level-20 capstone flag. `theme` defaults to `DEFAULT`. Levels inside a tier use minor steps 0–3. Each later step cumulatively adds a deliberate local detail, so adjacent levels never resolve to the same visual configuration.
 
 ## Asset and rendering architecture
 
-Core assets live under `public/assets/kingdom/evolution/<building>/tier-1.webp` through `tier-5.webp`. Production loads only the current base tier for each visible building. It does not preload all 25 files. Pixi adds small building-specific props and effects around the raster body; gameplay IDs and file names remain separate.
+Core assets live under `public/assets/kingdom/evolution/default/<building>/tier-1.webp` through `tier-5.webp`. `BUILDING_VISUAL_CATALOG` maps Theme → Building → Tier asset/render metadata. Production loads only the current base tier for each visible building. It does not preload all 25 files. Pixi adds small building-specific props and effects around the raster body; gameplay IDs and file names remain separate.
+
+Future complete Theme Packs may replace Castle, Farm, Lumber Mill, Mine, Grand Market, Academy, Blacksmith, Watchtower, and Workshop presentation. They may later include roads, banners, lamps, fences, ground details, and environmental accents. Adding a complete theme should register its theme domain value and catalog rather than rewrite `create-kingdom-scene.ts`. Minor props remain shared for `DEFAULT`; `BuildingVisualState.theme` is the extension point for future theme-specific props, capstones, widths, or offsets.
+
+Theme is cosmetic only. It cannot change production, storage, building effects, Hero stats, Raid power, Battle rules, loot, Trophies, upgrade cost/duration, PvP strength, or resource generation.
 
 `building-visual-progression.ts` owns derivation. `building-art.ts` owns raster sizing, minor props, construction details, and transformation graphics. `create-kingdom-scene.ts` owns asynchronous texture replacement and short transition timing while preserving the existing container, selection, hit area, coordinate, and indicator anchors.
 
@@ -42,6 +54,12 @@ An active authoritative upgrade adds restrained scaffolding and material piles w
 
 ## Development comparison tool
 
-In development, open `/dev/buildings`. The Lab uses the production resolver and `building-art` renderer. It supports all five buildings, levels 1–20, quick levels 1/5/9/13/17/20, previous/next, construction state, adjacent N/N+1 comparison, and level 1 versus 20.
+In development, open `/dev/buildings`. The Lab displays `Theme DEFAULT` and uses the same theme-aware production resolver and `building-art` renderer. It supports all five buildings, levels 1–20, quick levels 1/5/9/13/17/20, previous/next, construction state, adjacent N/N+1 comparison, and level 1 versus 20. It does not offer fake historical selections.
+
+## Future historical art direction and distribution
+
+Planned themes may draw from Achaemenid, Parthian, Sasanian, Seljuk, Ilkhanid, Timurid, Safavid, Zand, and Qajar architecture. They are **historically inspired**, not museum-grade archaeological reconstruction claims; fantasy progression tiers and production buildings require artistic interpretation.
+
+Future distribution may include gameplay unlocks, direct cosmetic purchases, Season rewards, premium Season Pass rewards, or collection rewards. Not every theme must be paid. Theme ownership can never grant gameplay power. Selection, ownership, commerce, Seasons, and historical artwork belong to future Retention 05B or later work and are not implemented.
 
 Use `npm run validate:building-evolution` for deterministic derivation and asset checks. Use `npm run capture:building-evolution` while API and development client are running to create Lab and mobile Kingdom screenshots under ignored `artifacts/building-evolution`.

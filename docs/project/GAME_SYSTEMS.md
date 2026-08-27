@@ -21,7 +21,8 @@ Castle level
 All building levels
   +-> Kingdom XP and Kingdom Level
   +-> appearance variant
-  +-> derived core-building visual tier and minor step (presentation only)
+  +-> derived core-building visual tier and minor step
+      +-> current DEFAULT Kingdom Theme catalog (presentation only)
 
 Academy level
   +-> production basis-point bonus
@@ -74,7 +75,7 @@ Onboarding advances inside successful authoritative Collect, building-upgrade, a
 
 ## Presentation-only systems
 
-The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For the five core buildings, authoritative level deterministically selects a five-tier raster asset and minor detail set; no appearance column or client economy state exists. Appearance fallback, construction cues, transformation timing, camera movement, labels, and HUD formatting do not decide gameplay eligibility.
+The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For the five core buildings, authoritative level plus explicit presentation Theme deterministically selects a five-tier raster asset and minor detail set. `DEFAULT` is the only implemented theme; no appearance/theme column or client economy state exists. Theme, appearance fallback, construction cues, transformation timing, camera movement, labels, and HUD formatting do not decide gameplay eligibility or power.
 
 Coach marks and the permanent Guide explain server behavior but never decide progress. Music context, Battle-event-to-SFX mapping, volume, and mute state are presentation-only and fail safely.
 

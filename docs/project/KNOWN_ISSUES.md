@@ -6,7 +6,7 @@ contentType: Troubleshooting
 
 # Check known limitations and issues
 
-The current repair passes unit, integration, audio-boundary, type, lint, documentation, and production build checks. Browser automation normally covers the mobile flow, but no browser binding was available for this run. The list separates accepted limitations from confirmed defects.
+The current theme-ready evolution correction passes targeted tests, asset validation, type, lint, documentation, production build, local Lab/mobile capture, Kingdom visual validation, and expansion progression validation. Broader browser flows still reproduce the documented Aren target-overlap defect below. The list separates accepted limitations from confirmed defects.
 
 ## Known limitations
 
@@ -25,6 +25,10 @@ After the music scheduler change, `validate:player-experience` repeatedly failed
 ### Core evolution art needs owner approval
 
 Retention 01A contains five generated/curated raster tiers for each core building and passes automated Lab/mobile capture. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20 and N/N+1. Advanced building evolution remains deferred to Retention 01B.
+
+### Kingdom Themes are architecture-only
+
+Building evolution accepts an explicit Theme and resolves through the `default` asset namespace, but `DEFAULT` is the only implemented catalog. No historical assets, selection UI, persistence, ownership, entitlement, Shop, Season, or gameplay unlock exists. Planned historical IDs must not be presented as available content.
 
 ### Bale lifecycle is not integrated
 

@@ -16,6 +16,12 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level |
+| Theme-ready building evolution architecture | Implemented | Visual requests resolve Building Type + Building Level + Kingdom Theme through one catalog; `DEFAULT` is the only implemented theme |
+| Selectable Kingdom Themes | Not implemented | No selection UI, persistence, ownership, or API exists |
+| Historical Theme assets | Not implemented | Planned historically-inspired eras have no generated or registered production catalogs |
+| Theme ownership | Not implemented | No Prisma field, inventory, entitlement, or account state exists |
+| Theme Shop integration | Not implemented | Retention 05 Shop and Gems remains future work |
+| Theme Season integration | Not implemented | Season remains future work; no reward or pass system exists |
 | Advanced building visual evolution | Not implemented | Academy, Blacksmith, Watchtower, and Workshop remain Retention 01B |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
@@ -98,7 +104,7 @@ Twelve ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A engineering is complete and owner visual approval is pending. Retention 01B is next. Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
+Retention 01A engineering and its DEFAULT theme-ready architecture are complete; owner visual approval is pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
 
 ## Validation entry points
 

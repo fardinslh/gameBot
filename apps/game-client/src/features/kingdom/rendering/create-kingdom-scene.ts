@@ -4,6 +4,7 @@ import type { BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-an
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
+import { DEFAULT_KINGDOM_THEME } from '../domain/kingdom-theme';
 import { applyBuildingVisualState, createBuildingArtwork, type BuildingArtwork } from './building-art';
 import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from './building-visuals';
 import {
@@ -450,7 +451,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 }
 
 function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualState | undefined {
-  return isCoreEvolutionBuilding(id) ? getBuildingVisualState(id, level) : undefined;
+  return isCoreEvolutionBuilding(id)
+    ? getBuildingVisualState({ buildingId: id, level, theme: DEFAULT_KINGDOM_THEME })
+    : undefined;
 }
 
 function drawBuildingStatus(status: Container, level: number): void {

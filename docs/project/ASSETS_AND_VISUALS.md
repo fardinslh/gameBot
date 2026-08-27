@@ -10,7 +10,7 @@ The client loads local WebP art. Runtime mappings separate gameplay IDs, placeme
 
 ## Active Kingdom assets
 
-Core-building production now uses 25 files under `kingdom/evolution`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Individual files are about 42–92 KB; total core evolution art is about 1.76 MiB. The old core files are retained as rollback/reference inputs and as Developed-tier files, but production resolution uses the evolution paths.
+Core-building production now uses 25 files under `kingdom/evolution/default`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Individual files are about 42–92 KB; total core evolution art is about 1.76 MiB. The old core files are retained as rollback/reference inputs and as Developed-tier files, but production resolution uses the theme-namespaced evolution paths.
 
 | Asset | Role | Approximate size |
 | --- | --- | ---: |
@@ -37,11 +37,14 @@ Core-building production now uses 25 files under `kingdom/evolution`: five optim
 - `kingdom-expansion-stages.ts`: Stage 2 through 5 placement and environment presentation
 - `building-visuals.ts`: texture stages, dimensions, ground anchors, offsets, footprint, shadow, hit area, and indicator anchors
 - `building-art.ts`: Pixi sprite container construction
-- `building-visual-progression.ts`: authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
+- `kingdom-theme.ts`: implemented `DEFAULT` identity and separately listed planned theme IDs
+- `building-visual-progression.ts`: Theme → Building → Tier catalog plus authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
 
 File names do not decide gameplay. Shared building type and server state select a visual ID, then the mapping resolves its texture.
+
+Current path shape is `evolution/default/<building>/tier-X.webp`. Future complete catalogs may add another theme namespace, but no historical catalog, selection, ownership, or UI exists. Theme-specific base art and metadata can be registered centrally; `BuildingVisualState.theme` leaves a bounded extension point for future minor props and capstones without coupling Pixi scene orchestration to a theme.
 
 ## Base terrain rule
 
@@ -67,7 +70,7 @@ All audio remains local under `apps/game-client/public/assets/audio`. All 24 exp
 
 ## Validation and debug views
 
-`npm run validate:building-evolution` tests every level for all five core buildings and inspects all 25 WebPs. `/dev/buildings` is development-only and renders the exact production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
+`npm run validate:building-evolution` tests every level for all five core buildings under `DEFAULT`, rejects legacy non-theme paths, and inspects all 25 namespaced WebPs. `/dev/buildings` is development-only and renders the exact theme-aware production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
 
 `npm run validate:visual` continues to check pan, interaction, mobile layout, console errors, and terrain budgets. `npm run validate:progression` checks active-only expansion mounting and locked asset exclusion.
 

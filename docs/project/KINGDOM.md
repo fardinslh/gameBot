@@ -62,7 +62,9 @@ During a live stage increase, the environment fades in while a local mist clears
 
 `building-visuals.ts` defines each sprite path, rendered dimensions, normalized ground anchor, visual offset, footprint, contact shadow, hit area, level/upgrade indicator anchor, and lock anchor. `building-art.ts` converts those definitions into Pixi containers.
 
-For Castle, Farm, Lumber Mill, Mine, and Grand Market, `building-visual-progression.ts` derives one of five production raster tiers from authoritative level: 1–4 Early, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Minor steps 0–3 add local building-specific details, and level 20 adds a compact capstone. No gameplay coordinate changes.
+For Castle, Farm, Lumber Mill, Mine, and Grand Market, `building-visual-progression.ts` resolves explicit `{ buildingId, level, theme }` requests through the centralized Theme → Building → Tier catalog. `DEFAULT` is the only implemented theme. Authoritative levels derive tiers 1–4 Early, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Minor steps 0–3 add local building-specific details, and level 20 adds a compact capstone. No gameplay coordinate changes.
+
+Production currently passes `DEFAULT` explicitly. Theme is presentation-only and has no database, ownership, selection, economy, effect, Hero, Raid, Battle, or PvP authority. Assets resolve under `/assets/kingdom/evolution/default/<building>/tier-X.webp`.
 
 For advanced buildings, the legacy `appearanceVariantStage` maps:
 

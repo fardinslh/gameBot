@@ -30,6 +30,14 @@ const buildings = [
   ['grandMarket', 'Grand Market'],
 ];
 const levels = [1, 5, 9, 13, 17, 20];
+const snapshotSet = process.argv.find((argument) => argument.startsWith('--snapshot-set='))?.split('=')[1];
+const representativeStates = [
+  ['castle', 1],
+  ['castle', 20],
+  ['farm', 7],
+  ['mine', 13],
+  ['grandMarket', 20],
+];
 
 try {
   const lab = await browser.newPage({ viewport: { width: 900, height: 760 }, deviceScaleFactor: 1 });
@@ -37,6 +45,8 @@ try {
   lab.on('pageerror', (error) => errors.push(`lab page: ${error.stack ?? error.message}`));
   await lab.goto('http://localhost:3000/dev/buildings', { waitUntil: 'domcontentloaded' });
   await lab.waitForSelector('[data-visual-state]');
+  const activeTheme = await lab.locator('main').getAttribute('data-kingdom-theme');
+  if (activeTheme !== 'DEFAULT') throw new Error(`Building Lab theme mismatch: ${activeTheme}`);
   for (const [buildingId, label] of buildings) {
     await lab.locator('select').selectOption(buildingId);
     for (const level of levels) {
@@ -50,6 +60,20 @@ try {
       await lab.locator('article').first().screenshot({ path: new URL(`${buildingId}-level-${level}.png`, artifacts).pathname.slice(1) });
     }
     console.log(`CAPTURED ${label}: ${levels.join(', ')}`);
+  }
+  if (snapshotSet) {
+    for (const [buildingId, level] of representativeStates) {
+      await lab.locator('select').selectOption(String(buildingId));
+      await lab.locator('input[type="range"]').fill(String(level));
+      await lab.waitForFunction(
+        (expectedLevel) => document.querySelector('article header span')?.textContent === `Level ${expectedLevel}`,
+        level,
+      );
+      await lab.waitForTimeout(140);
+      await lab.locator('article').first().screenshot({
+        path: new URL(`${snapshotSet}-${buildingId}-level-${level}.png`, artifacts).pathname.slice(1),
+      });
+    }
   }
   await lab.getByRole('button', { name: '1 vs 20' }).click();
   for (const [buildingId] of buildings) {

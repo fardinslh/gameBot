@@ -46,7 +46,8 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Keep world coordinates independent from UI direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`
-- For core buildings, derive visuals only through `getBuildingVisualState`; preserve all five tier assets, per-level detail rules, stable containers, and development Lab parity
+- For core buildings, derive visuals only through explicit `{ buildingId, level, theme }` requests to `getBuildingVisualState`; preserve `DEFAULT` as the sole implemented theme, all five tier assets, per-level detail rules, stable containers, and development Lab parity
+- Keep Kingdom Theme presentation-only. Do not add persistence, ownership, selection, historical catalogs, commerce, Seasons, or gameplay bonuses without their explicit future phase
 
 ## Backend integrity rules
 
@@ -104,7 +105,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A core building evolution is implemented. `/dev/buildings` is the production-backed owner review surface; visual approval is pending. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. The prior Aren and audio human checks remain open. Bale has not started and is intentionally after the bounded retention roadmap.
+Retention 01A core building evolution and its DEFAULT theme-ready architecture are implemented. `/dev/buildings` is the production-backed owner review surface; visual approval is pending. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. The prior Aren and audio human checks remain open. Bale has not started and is intentionally after the bounded retention roadmap.
 
 ## Git completion rules
 

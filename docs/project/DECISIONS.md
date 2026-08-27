@@ -98,3 +98,17 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: Debugging, idempotency, and historical playback need durable evidence
 - **Consequences**: Future cleanup jobs must preserve integrity and retention requirements before deleting these records
 - **Status**: Active
+
+## ADR-014: Keep Kingdom Themes cosmetic and catalog-driven
+
+- **Decision**: Building presentation resolves from Building Type + Building Level + Kingdom Theme through one catalog; `DEFAULT` is the only implemented Theme
+- **Reason**: Future full architectural packs must not require renderer rewrites or create alternate gameplay balance
+- **Consequences**: Theme can replace art and visual metadata but cannot change production, storage, effects, Hero stats, Raid/Battle power, loot, Trophies, costs, durations, PvP strength, or resources. Selection, ownership, and persistence remain future work
+- **Status**: Active architecture; future Theme Foundation is not implemented
+
+## ADR-015: Treat historical themes as inspired cosmetic interpretations
+
+- **Decision**: Future Achaemenid, Parthian, Sasanian, Seljuk, Ilkhanid, Timurid, Safavid, Zand, and Qajar packs are historically inspired rather than museum-grade reconstruction claims
+- **Reason**: Fantasy progression tiers and production structures require coherent artistic interpretation where exact archaeological references may not exist
+- **Consequences**: Future packs need consistent period cues and respectful review without claiming exact reconstruction. Distribution may include gameplay unlocks, direct cosmetic purchase, Season/Pass rewards, or collection rewards; no Theme grants gameplay power
+- **Status**: Planned content direction only; no historical assets or commerce implemented

@@ -1,4 +1,9 @@
 import type { BuildingId } from '../domain/kingdom-types';
+import {
+  DEFAULT_KINGDOM_THEME,
+  KINGDOM_THEMES,
+  type KingdomThemeId,
+} from '../domain/kingdom-theme';
 
 export const CORE_EVOLUTION_BUILDINGS = ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket'] as const;
 
@@ -17,44 +22,72 @@ export interface BuildingVisualState {
   renderWidth: number;
   tier: BuildingVisualTier;
   tierNumber: BuildingVisualTierNumber;
+  theme: KingdomThemeId;
+}
+
+export interface BuildingVisualRequest {
+  buildingId: CoreEvolutionBuildingId;
+  level: number;
+  theme?: KingdomThemeId;
+}
+
+type TierAssets = readonly [string, string, string, string, string];
+interface BuildingThemeVisuals {
+  assets: TierAssets;
+  renderWidths: readonly [number, number, number, number, number];
 }
 
 const TIER_NAMES: readonly BuildingVisualTier[] = ['EARLY', 'DEVELOPED', 'ADVANCED', 'FORTIFIED', 'PRESTIGE'];
-const ASSET_FOLDERS: Readonly<Record<CoreEvolutionBuildingId, string>> = {
-  castle: 'castle',
-  farm: 'farm',
-  lumberMill: 'lumber-mill',
-  mine: 'mine',
-  grandMarket: 'grand-market',
+const createTierAssets = (theme: KingdomThemeId, folder: string): TierAssets => {
+  const namespace = KINGDOM_THEMES[theme].assetNamespace;
+  const base = `/assets/kingdom/evolution/${namespace}/${folder}`;
+  return [
+    `${base}/tier-1.webp`,
+    `${base}/tier-2.webp`,
+    `${base}/tier-3.webp`,
+    `${base}/tier-4.webp`,
+    `${base}/tier-5.webp`,
+  ];
 };
-const RENDER_WIDTHS: Readonly<Record<CoreEvolutionBuildingId, readonly [number, number, number, number, number]>> = {
-  castle: [158, 186, 202, 214, 224],
-  farm: [154, 170, 182, 190, 198],
-  lumberMill: [150, 168, 180, 190, 198],
-  mine: [158, 178, 190, 198, 206],
-  grandMarket: [156, 176, 194, 204, 212],
+
+export const BUILDING_VISUAL_CATALOG: Readonly<
+  Record<KingdomThemeId, Readonly<Record<CoreEvolutionBuildingId, BuildingThemeVisuals>>>
+> = {
+  DEFAULT: {
+    castle: { assets: createTierAssets('DEFAULT', 'castle'), renderWidths: [158, 186, 202, 214, 224] },
+    farm: { assets: createTierAssets('DEFAULT', 'farm'), renderWidths: [154, 170, 182, 190, 198] },
+    lumberMill: { assets: createTierAssets('DEFAULT', 'lumber-mill'), renderWidths: [150, 168, 180, 190, 198] },
+    mine: { assets: createTierAssets('DEFAULT', 'mine'), renderWidths: [158, 178, 190, 198, 206] },
+    grandMarket: { assets: createTierAssets('DEFAULT', 'grand-market'), renderWidths: [156, 176, 194, 204, 212] },
+  },
 };
 
 export function isCoreEvolutionBuilding(id: BuildingId): id is CoreEvolutionBuildingId {
   return (CORE_EVOLUTION_BUILDINGS as readonly BuildingId[]).includes(id);
 }
 
-export function getBuildingVisualState(buildingId: CoreEvolutionBuildingId, rawLevel: number): BuildingVisualState {
+export function getBuildingVisualState({
+  buildingId,
+  level: rawLevel,
+  theme = DEFAULT_KINGDOM_THEME,
+}: BuildingVisualRequest): BuildingVisualState {
   const level = clampBuildingLevel(rawLevel);
   const tierNumber = (Math.floor((level - 1) / 4) + 1) as BuildingVisualTierNumber;
   const minorStep = ((level - 1) % 4) as BuildingVisualMinorStep;
+  const visuals = BUILDING_VISUAL_CATALOG[theme][buildingId];
   const detailIds = Array.from({ length: minorStep }, (_, index) => `${buildingId}-tier-${tierNumber}-detail-${index + 1}`);
   if (level === 20) detailIds.push(`${buildingId}-prestige-capstone`);
   return {
-    asset: `/assets/kingdom/evolution/${ASSET_FOLDERS[buildingId]}/tier-${tierNumber}.webp`,
+    asset: visuals.assets[tierNumber - 1],
     buildingId,
     capstone: level === 20,
     detailIds,
     level,
     minorStep,
-    renderWidth: RENDER_WIDTHS[buildingId][tierNumber - 1],
+    renderWidth: visuals.renderWidths[tierNumber - 1],
     tier: TIER_NAMES[tierNumber - 1],
     tierNumber,
+    theme,
   };
 }
 

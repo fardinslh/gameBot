@@ -24,6 +24,7 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Pre-Bale Player Experience implementation**: persistent first session, permanent bilingual Guide, audio engine, and persistent audio controls
 - **Player Experience repair**: older Aren advisor candidate, target-aware action coaching, durable contextual counsel, derived seamless-loop masters, and buffered Web Audio playback
 - **Retention 01A — Visible Kingdom Growth**: five major raster tiers plus every-level modular evolution for Castle and the four core economy buildings
+- **Retention 01A architecture correction**: DEFAULT visual evolution now resolves through an explicit Kingdom Theme domain and namespaced catalog
 
 ## Current and next
 
@@ -42,6 +43,7 @@ First-Party Analytics (complete)
   -> Retention 03 Hero Expansion
   -> Retention 04 PvE Campaign
   -> Retention 05 Shop + Gems
+  -> Retention 05B Kingdom Themes Foundation + First Historical Theme
   -> Retention 06 Guild MVP
   -> Retention 07 Guild Cooperation
   -> Retention 08 Leaderboards / Competitive Meta
@@ -55,6 +57,8 @@ First-Party Analytics (complete)
 Do not infer that Bale is implemented from platform placeholders. It requires its own scoped integration and device validation.
 
 Core building evolution is implemented. Academy, Blacksmith, Watchtower, Workshop, and progression goals are the bounded Retention 01B follow-up; do not start it automatically. See [retention roadmap](RETENTION_ROADMAP.md).
+
+Retention 05B is a future bounded milestone after Shop/Gem architecture and before Guild. It may add theme selection, ownership, and one complete historically-inspired cosmetic pack. This architecture correction does not implement that milestone.
 
 ## Later product areas
 

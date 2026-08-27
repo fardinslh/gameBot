@@ -11,12 +11,12 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `c92758af45c8bc6abaa851f217d5bd0bd18b3666`
-- **Baseline commit message**: `fix: crossfade background music loops`
+- **Last verified against commit**: `d40afc3384a4112f1e378ae83a68af80f997c3a1`
+- **Baseline commit message**: `feat: add progressive building evolution`
 - **Verification date**: 2026-08-27
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-The containing Retention 01A commit adds core-building presentation only; it does not change authoritative gameplay behavior.
+The containing architecture-fix commit makes Retention 01A theme-ready without changing authoritative gameplay behavior or adding selectable themes.
 
 ## Platform direction
 
@@ -80,7 +80,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A core visual evolution, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A theme-ready core visual evolution, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
 - **Next**: Retention 01B — Advanced Building Evolution and Kingdom Progression Goals, only when explicitly scoped
 - **Not started**: Bale Mini App Integration

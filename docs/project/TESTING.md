@@ -24,7 +24,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
-| `npm run validate:building-evolution` | 15 client tests covering all 20 visual levels, adjacent differences, transitions, construction, stable selection/hit areas, plus 25 WebP integrity/budget checks |
+| `npm run validate:building-evolution` | 16 client tests covering DEFAULT registration, all 20 visual levels, theme identity/path namespace, adjacent differences, transitions, construction, stable selection/hit areas, plus 25 WebP integrity/budget checks |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -63,7 +63,7 @@ They cover English left-to-right and Persian right-to-left where relevant. Keep 
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
-For building evolution, open `/dev/buildings`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction. Owner judgment—not passing automation—approves art quality.
+For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction. Owner judgment—not passing automation—approves art quality. For theme-architecture refactors, compare Castle 1/20, Farm 7, Mine 13, and Grand Market 20 before/after; expected pixels remain unchanged.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 
