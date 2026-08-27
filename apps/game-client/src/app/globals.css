@@ -37,6 +37,14 @@ button { color: inherit; }
     #090a08;
 }
 
+.bidi-value {
+  unicode-bidi: isolate;
+}
+.bidi-value--ltr {
+  direction: ltr;
+  font-variant-numeric: tabular-nums;
+}
+
 .skip-link {
   position: fixed;
   z-index: 100;

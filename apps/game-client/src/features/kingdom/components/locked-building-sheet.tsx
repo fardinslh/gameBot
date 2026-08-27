@@ -2,6 +2,7 @@ import { Castle, LockKeyhole, Shield, Warehouse, Wine, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
 import type { FutureBuildingId, FutureBuildingLayout } from '../domain/kingdom-types';
+import { BidiTemplate } from '@/i18n/bidi';
 
 const ICONS: Record<FutureBuildingId, LucideIcon> = {
   barracks: Shield,
@@ -36,7 +37,7 @@ export function LockedBuildingSheet({ building, dictionary: t, onClose }: Locked
       <p>{presentation.role}</p>
       <div className="locked-building-sheet__requirement">
         <span><LockKeyhole aria-hidden="true" size={17} /></span>
-        <div><small>{t.unlockRequirement}</small><strong>{t.requiresCastle.replace('{level}', String(building?.castleLevel ?? 1))}</strong></div>
+        <div><small>{t.unlockRequirement}</small><strong><BidiTemplate template={t.requiresCastle} values={{ level: { direction: 'ltr', value: building?.castleLevel ?? 1 } }} /></strong></div>
       </div>
       <div className="locked-building-sheet__future"><span />{t.plannedContent}</div>
       <button className="locked-building-sheet__close" onClick={onClose} type="button">{t.unlocksLater}</button>

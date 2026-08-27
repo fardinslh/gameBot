@@ -4,6 +4,7 @@ import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
 import type { KingdomProgressionState } from '@crown-and-coin/shared';
 import { ExperienceControls } from '@/features/experience/player-experience-provider';
+import { BidiValue } from '@/i18n/bidi';
 
 interface PlayerHudProps {
   dictionary: Dictionary;
@@ -26,10 +27,10 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, prog
         <span className="player-avatar"><Crown aria-hidden="true" size={20} /></span>
         <span className="player-copy">
           <h1>{t.appName}</h1>
-          <small>{playerName || t.playerTitle}</small>
+          <small><BidiValue>{playerName || t.playerTitle}</BidiValue></small>
         </span>
         <span className="player-level" aria-label={`${t.playerLevel} ${displayedLevel}`} title={progression ? `${progression.xp} XP` : undefined}>
-          <small>{t.playerLevel}</small><strong>{displayedLevel}</strong>
+          <small>{t.playerLevel}</small><strong><BidiValue direction="ltr">{displayedLevel}</BidiValue></strong>
           {progression ? <i aria-hidden="true"><b style={{ width: `${xpProgress}%` }} /></i> : null}
         </span>
       </div>

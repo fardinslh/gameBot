@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
 import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
 import { formatAmount } from './resource-hud';
+import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 
 const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
   castle: Castle,
@@ -54,14 +55,14 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       </div>
 
       <div className="building-sheet__stats">
-        <div><small>{t.currentLevel}</small><strong>{building?.level ?? 0}</strong></div>
-        <div><small>{t.currentProduction}</small><strong>{building?.resource ? `${formatAmount(building.productionPerHour)} / ${t.hour}` : presentation.production}</strong></div>
+        <div><small>{t.currentLevel}</small><strong><BidiValue direction="ltr">{building?.level ?? 0}</BidiValue></strong></div>
+        <div><small>{t.currentProduction}</small><strong>{building?.resource ? <><BidiValue direction="ltr">{formatAmount(building.productionPerHour)}</BidiValue> / {t.hour}</> : presentation.production}</strong></div>
       </div>
 
       {building && !building.unlocked ? (
         <div className="building-lock-state">
           <LockKeyhole aria-hidden="true" size={17} />
-          <span><small>{t.unlockRequirement}</small><strong>{t.requiresCastle.replace('{level}', String(building.unlockCastleLevel))}</strong></span>
+          <span><small>{t.unlockRequirement}</small><strong><BidiTemplate template={t.requiresCastle} values={{ level: { direction: 'ltr', value: building.unlockCastleLevel } }} /></strong></span>
         </div>
       ) : null}
 
@@ -70,9 +71,9 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       {building?.effects.map((effect) => (
         <div className="building-effect" data-effect={effect.type} key={effect.type}>
           <small>{t.buildingEffect} · {t.effectNow}</small>
-          <strong>{formatEffect(t.effectLabels[effect.type], effect.valueBps)}</strong>
+          <strong><BidiTemplate template={t.effectLabels[effect.type]} values={{ value: { direction: 'ltr', value: formatEffectValue(effect.type, effect.valueBps) } }} /></strong>
           {effect.nextLevelValueBps !== null ? (
-            <span>{t.effectNext}: {formatEffect(t.effectLabels[effect.type], effect.nextLevelValueBps)}</span>
+            <span>{t.effectNext}: <BidiTemplate template={t.effectLabels[effect.type]} values={{ value: { direction: 'ltr', value: formatEffectValue(effect.type, effect.nextLevelValueBps) } }} /></span>
           ) : null}
         </div>
       ))}
@@ -80,12 +81,12 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       <div className={activeUpgrade ? 'upgrade-preview upgrade-preview--active' : 'upgrade-preview'}>
         <span className="upgrade-preview__icon"><ArrowUp aria-hidden="true" size={18} /></span>
         <span>
-          <small>{activeUpgrade ? t.upgradeInProgress : `${t.nextLevel} · ${building?.level ?? 0} → ${(building?.level ?? 0) + 1}`}</small>
+          <small>{activeUpgrade ? t.upgradeInProgress : <>{t.nextLevel} · <BidiValue direction="ltr">{building?.level ?? 0} → {(building?.level ?? 0) + 1}</BidiValue></>}</small>
           <strong>
             {activeUpgrade
-              ? <><Clock3 aria-hidden="true" size={13} /> {formatDuration(remainingSeconds)}</>
+              ? <><Clock3 aria-hidden="true" size={13} /> <BidiValue direction="ltr">{formatDuration(remainingSeconds)}</BidiValue></>
               : building?.nextProductionPerHour
-                ? `${formatAmount(building.nextProductionPerHour)} / ${t.hour}`
+                ? <><BidiValue direction="ltr">{formatAmount(building.nextProductionPerHour)}</BidiValue> / {t.hour}</>
                 : presentation.upgrade}
           </strong>
         </span>
@@ -93,8 +94,8 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
 
       {!activeUpgrade && building ? (
         <div className="upgrade-economy">
-          <div><small>{t.upgradeCost}</small><strong>{building.upgradeCost.map((cost) => `${formatAmount(cost.amount)} ${t.resourceShort[cost.resource]}`).join(' · ') || '—'}</strong></div>
-          <div><small>{t.upgradeDuration}</small><strong>{formatDuration(building.upgradeDurationSeconds ?? 0)}</strong></div>
+          <div><small>{t.upgradeCost}</small><strong>{building.upgradeCost.length ? building.upgradeCost.map((cost, index) => <span key={cost.resource}>{index ? ' · ' : ''}<BidiValue direction="ltr">{formatAmount(cost.amount)}</BidiValue> {t.resourceShort[cost.resource]}</span>) : '—'}</strong></div>
+          <div><small>{t.upgradeDuration}</small><strong><BidiValue direction="ltr">{formatDuration(building.upgradeDurationSeconds ?? 0)}</BidiValue></strong></div>
         </div>
       ) : null}
 
@@ -120,7 +121,8 @@ function formatDuration(totalSeconds: number): string {
   return minutes > 0 ? `${minutes}:${seconds.toString().padStart(2, '0')}` : `${seconds}s`;
 }
 
-function formatEffect(template: string, valueBps: number): string {
+function formatEffectValue(type: keyof Dictionary['effectLabels'], valueBps: number): string {
   const value = valueBps / 100;
-  return template.replace('{value}', Number.isInteger(value) ? String(value) : value.toFixed(2));
+  const amount = Number.isInteger(value) ? String(value) : value.toFixed(2);
+  return `${type === 'HERO_UPGRADE_DISCOUNT' || type === 'BUILDING_UPGRADE_SPEED' ? '-' : '+'}${amount}`;
 }

@@ -3,6 +3,7 @@ import { Check, Save, Swords } from 'lucide-react';
 import type { HeroState } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import { HeroClassIcon } from './hero-class-icon';
+import { BidiValue } from '@/i18n/bidi';
 
 interface RaidTeamPanelProps {
   dictionary: Dictionary;
@@ -33,7 +34,7 @@ export function RaidTeamPanel({
     <section className="raid-team-panel" aria-labelledby="raid-team-title">
       <div className="hero-section-heading">
         <div><Swords aria-hidden="true" size={16} /><h2 id="raid-team-title">{t.heroUi.raidTeam}</h2></div>
-        <span><small>{t.heroUi.teamPower}</small><strong>{teamPower.toLocaleString('en-US')}</strong></span>
+        <span><small>{t.heroUi.teamPower}</small><strong><BidiValue direction="ltr">{teamPower.toLocaleString('en-US')}</BidiValue></strong></span>
       </div>
       <div className="raid-team-slots">
         {[0, 1, 2].map((slotIndex) => {
@@ -51,9 +52,9 @@ export function RaidTeamPanel({
             >
               {hero ? <Image alt="" className="raid-team-slot__portrait" height={76} src={hero.portraitAsset} width={76} /> : null}
               <span className="raid-team-slot__shade" />
-              <span className="raid-team-slot__number">{slotIndex + 1}</span>
+              <span className="raid-team-slot__number"><BidiValue direction="ltr">{slotIndex + 1}</BidiValue></span>
               {hero ? <span className="raid-team-slot__class"><HeroClassIcon combatClass={hero.class} size={12} /></span> : null}
-              <span className="raid-team-slot__copy"><strong>{name}</strong>{hero ? <small>{t.heroUi.level} {hero.level}</small> : null}</span>
+              <span className="raid-team-slot__copy"><strong>{name}</strong>{hero ? <small>{t.heroUi.level} <BidiValue direction="ltr">{hero.level}</BidiValue></small> : null}</span>
             </button>
           );
         })}
@@ -68,4 +69,3 @@ export function RaidTeamPanel({
     </section>
   );
 }
-

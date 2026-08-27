@@ -10,6 +10,7 @@ import type { RaidView } from '@/features/raid/hooks/use-raid-state';
 import { initializeAnalytics, trackScreen } from '@/features/analytics/analytics-client';
 import { AudioProvider, useGameAudio } from '@/features/audio/audio-provider';
 import { PlayerExperienceProvider } from '@/features/experience/player-experience-provider';
+import { LocalizedGameRoot } from '@/i18n/bidi';
 
 interface GameShellProps {
   locale: Locale;
@@ -18,7 +19,11 @@ interface GameShellProps {
 }
 
 export function GameShell({ locale, dictionary, initialSection }: GameShellProps) {
-  return <AudioProvider><GameShellContent locale={locale} dictionary={dictionary} initialSection={initialSection} /></AudioProvider>;
+  return (
+    <LocalizedGameRoot className="game-viewport" locale={locale}>
+      <AudioProvider><GameShellContent locale={locale} dictionary={dictionary} initialSection={initialSection} /></AudioProvider>
+    </LocalizedGameRoot>
+  );
 }
 
 function GameShellContent({ locale, dictionary, initialSection }: GameShellProps) {

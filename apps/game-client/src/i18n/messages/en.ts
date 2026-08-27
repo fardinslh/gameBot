@@ -192,10 +192,10 @@ export const en = {
     GEMS: 'Gems',
   },
   effectLabels: {
-    PRODUCTION_BONUS: 'Resource production +{value}%',
-    HERO_UPGRADE_DISCOUNT: 'Hero upgrade Gold cost -{value}%',
-    RAID_PROTECTION_BONUS: 'Raid protection +{value} points',
-    BUILDING_UPGRADE_SPEED: 'Building upgrade time -{value}%',
+    PRODUCTION_BONUS: 'Resource production {value}%',
+    HERO_UPGRADE_DISCOUNT: 'Hero upgrade Gold cost {value}%',
+    RAID_PROTECTION_BONUS: 'Raid protection {value} points',
+    BUILDING_UPGRADE_SPEED: 'Building upgrade time {value}%',
   },
   upgradeStates: {
     CAN_UPGRADE: 'Upgrade',

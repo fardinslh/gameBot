@@ -13,6 +13,7 @@ import { HeroDetailSheet } from './hero-detail-sheet';
 import { RaidTeamPanel } from './raid-team-panel';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { usePlayerExperience } from '@/features/experience/player-experience-provider';
+import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 
 interface HeroesPageProps {
   dictionary: Dictionary;
@@ -44,10 +45,9 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
     if (roster.state) experience.requestAdvisorTip('HEROES_INTRO');
   }, [experience, roster.state]);
 
-  const direction = locale === 'fa' ? 'rtl' : 'ltr';
   const state = roster.state;
   return (
-    <div className="game-viewport" lang={locale} dir={direction}>
+    <>
       <main className="heroes-shell">
         <div className="heroes-backdrop" aria-hidden="true" />
         <div className="game-ui-layer">
@@ -80,7 +80,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
                   teamPower={state.team.power}
                 />
                 <section className="hero-roster" aria-labelledby="hero-roster-title">
-                  <div className="hero-roster__heading"><h2 id="hero-roster-title">{t.heroUi.roster}</h2><span>{state.heroes.length}</span></div>
+                  <div className="hero-roster__heading"><h2 id="hero-roster-title">{t.heroUi.roster}</h2><span><BidiValue direction="ltr">{state.heroes.length}</BidiValue></span></div>
                   <div className="hero-roster__list">
                     {state.heroes.map((hero) => {
                       const teamSlot = roster.draftHeroIds.indexOf(hero.id);
@@ -113,7 +113,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
           />
           <BottomNavigation activeSection="heroes" dictionary={t} onComingSoon={setComingSoonSection} onNavigate={onNavigate} />
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
-            {comingSoonSection ? t.comingSoonMessage.replace('{section}', comingSoonSection) : ''}
+            {comingSoonSection ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoonSection }} /> : ''}
           </div>
           <div className={roster.errorCode ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">
             {roster.errorCode ? heroErrorMessage(roster.errorCode, t) : ''}
@@ -121,7 +121,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
 

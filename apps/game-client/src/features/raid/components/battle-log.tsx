@@ -2,6 +2,7 @@ import { ArrowLeft, Clock3, Coins, Eye, History, Shield, Swords, Trophy } from '
 import type { DefenseInboxResponse, RevengeStatus } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import { formatAmount } from '@/features/kingdom/components/resource-hud';
+import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 
 interface BattleLogProps {
   dictionary: Dictionary;
@@ -21,7 +22,7 @@ export function BattleLog({ dictionary: t, inbox, loading, onBack, onRefresh, on
         <button aria-label={t.inboxUi.back} onClick={onBack} type="button"><ArrowLeft size={19} /></button>
         <span><History size={21} /></span>
         <div><h1>{t.inboxUi.title}</h1><p>{t.inboxUi.incomingAttacks}</p></div>
-        <b><Shield size={14} /> {inbox?.entries.length ?? 0}</b>
+        <b><Shield size={14} /> <BidiValue direction="ltr">{inbox?.entries.length ?? 0}</BidiValue></b>
       </header>
       {loading && !inbox ? <div className="battle-log__empty"><span /><p>{t.inboxUi.loading}</p></div> : null}
       {!loading && inbox?.entries.length === 0 ? (
@@ -35,16 +36,16 @@ export function BattleLog({ dictionary: t, inbox, loading, onBack, onRefresh, on
               <div className="battle-entry__crest"><Swords size={22} /></div>
               <div className="battle-entry__identity">
                 <small>{t.inboxUi.attackedYou}</small>
-                <h2>{entry.attacker.displayName}</h2>
+                <h2><BidiValue>{entry.attacker.displayName}</BidiValue></h2>
                 <span><Clock3 size={11} /> {relativeTime(entry.createdAt, serverNow, t)}</span>
               </div>
               <strong className="battle-entry__result">{loss ? t.inboxUi.defenseDefeat : t.inboxUi.defenseVictory}</strong>
               <div className="battle-entry__impact">
-                <span><Trophy size={13} /> {entry.trophyDelta > 0 ? '+' : ''}{entry.trophyDelta}</span>
+                <span><Trophy size={13} /> <BidiValue direction="ltr">{entry.trophyDelta > 0 ? '+' : ''}{entry.trophyDelta}</BidiValue></span>
                 <span><Coins size={13} /> {loss ? t.inboxUi.resourcesLost : t.inboxUi.noResourcesLost}</span>
               </div>
               {loss ? <div className="battle-entry__loot">{Object.entries(entry.lootLost).map(([resource, amount]) => (
-                <span key={resource}><b>-{formatAmount(amount)}</b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>
+                <span key={resource}><b><BidiValue direction="ltr">-{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>
               ))}</div> : null}
               <div className="battle-entry__actions">
                 <button className="battle-entry__detail" onClick={() => onViewBattle(entry.battleId)} type="button"><Eye size={14} /> {t.inboxUi.viewBattle}</button>
@@ -66,13 +67,13 @@ function revengeStatus(status: RevengeStatus, t: Dictionary): string {
   return t.inboxUi.revengeUnavailable;
 }
 
-function relativeTime(timestamp: string, serverNow: number, t: Dictionary): string {
+function relativeTime(timestamp: string, serverNow: number, t: Dictionary) {
   const elapsed = Math.max(0, serverNow - Date.parse(timestamp));
   const minutes = Math.floor(elapsed / 60_000);
   if (minutes < 1) return t.inboxUi.now;
-  if (minutes < 60) return t.inboxUi.minutesAgo.replace('{count}', String(minutes));
+  if (minutes < 60) return <BidiTemplate template={t.inboxUi.minutesAgo} values={{ count: { direction: 'ltr', value: minutes } }} />;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return t.inboxUi.hoursAgo.replace('{count}', String(hours));
+  if (hours < 24) return <BidiTemplate template={t.inboxUi.hoursAgo} values={{ count: { direction: 'ltr', value: hours } }} />;
   if (hours < 48) return t.inboxUi.yesterday;
-  return t.inboxUi.daysAgo.replace('{count}', String(Math.floor(hours / 24)));
+  return <BidiTemplate template={t.inboxUi.daysAgo} values={{ count: { direction: 'ltr', value: Math.floor(hours / 24) } }} />;
 }

@@ -6,9 +6,13 @@ contentType: Troubleshooting
 
 # Check known limitations and issues
 
-The current theme-ready evolution correction passes targeted tests, asset validation, type, lint, documentation, production build, local Lab/mobile capture, Kingdom visual validation, and expansion progression validation. Broader browser flows still reproduce the documented Aren target-overlap defect below. The list separates accepted limitations from confirmed defects.
+The current theme-ready evolution correction and Persian RTL corrective pass have targeted automated coverage. The RTL pass uses semantic `lang`/`dir`, isolated dynamic values, and live browser screenshots; broader browser flows still reproduce the separately documented Aren target-overlap defect below. The list separates accepted limitations from confirmed defects.
 
 ## Known limitations
+
+### Persian still needs final human device review
+
+Automated semantic and visual checks now pass for Kingdom HUD, Building Detail, Aren, Heroes/Detail, Raid opponent, Battle Log, long Persian copy, mixed names, signed values, timers, and English regression at 320x568, 375x812, and 390x844. Final launch acceptance still requires a Persian-speaking human to inspect the target Bale device font, shaping, truncation, and copy tone. This is a human quality gate, not a known semantic RTL defect.
 
 ### Production audio still needs real-device mix review
 

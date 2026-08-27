@@ -4,6 +4,7 @@ import type { Dictionary } from '@/i18n/config';
 import type { ResourceAmounts, ResourceType } from '@crown-and-coin/shared';
 import { RESOURCE_TYPES } from '@crown-and-coin/shared';
 import { RESOURCE_TO_ID, type ResourceId } from '../domain/kingdom-types';
+import { BidiValue } from '@/i18n/bidi';
 
 const RESOURCE_ICONS: Record<ResourceId, LucideIcon> = {
   gold: Coins,
@@ -39,8 +40,8 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
         return (
           <div className={`resource-chip resource-chip--${id}`} data-balance={balances[resource]} data-capacity={capacities?.[resource]} key={resource} aria-label={`${labels[id]} ${value}${capacity ? ` / ${capacity}` : ''}`}>
             <span className="resource-chip__icon"><Icon aria-hidden="true" size={14} strokeWidth={2.4} /></span>
-            <strong>{value}</strong>
-            <small>{labels[id]}{capacity ? ` · ${capacity}` : ''}</small>
+            <strong><BidiValue direction="ltr">{value}</BidiValue></strong>
+            <small>{labels[id]}{capacity ? <> · <BidiValue direction="ltr">{capacity}</BidiValue></> : null}</small>
           </div>
         );
       })}

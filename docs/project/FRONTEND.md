@@ -37,6 +37,8 @@ features/experience
   onboarding API | provider | coach, welcome, Guide, and settings UI
 features/audio
   manager | provider | Battle event mapping
+features/rtl-lab
+  development-only semantic mixed-content fixture
 ```
 
 `GameShell` imports feature pages but does not contain their server logic.
@@ -65,9 +67,11 @@ Avoid per-frame React state for Pixi motion. Use the Pixi ticker, browser timers
 
 ## Localization and direction
 
-`apps/game-client/src/i18n/config.ts` supports `en` and `fa`. English defaults to left-to-right; Persian sets right-to-left on `.game-viewport`. Both languages use the same component tree.
+`apps/game-client/src/i18n/config.ts` supports `en` and `fa`. `getLocaleDirection` is the single direction rule: English maps to `ltr` and Persian maps to `rtl`. `LocalizedGameRoot` wraps the shared section shell, owns semantic `lang` and `dir`, and synchronizes `document.documentElement` after query-parameter locale changes. Both languages use the same component tree.
 
-Kingdom world coordinates, battle layout, image assets, and numeric scene geometry stay left-to-right internally. CSS logical properties and selected direction handle UI mirroring.
+`BidiValue` renders external names with `<bdi dir="auto">` and numeric/timer/signed values with `<bdi dir="ltr">`. `BidiTemplate` keeps localized sentence punctuation in the parent direction while isolating interpolated tokens. Use these primitives for player-supplied names, IDs, amounts, levels, percentages, Trophy deltas, timers, and mixed-script placeholders; do not concatenate those values into a Persian sentence.
+
+Kingdom world coordinates, Battle Pixi layout, ordered team/loot grids, image assets, and numeric scene geometry stay left-to-right internally. CSS logical properties handle semantic UI mirroring. Explicit `direction: ltr` is permitted only for spatial or ordered game content that must not mirror.
 
 ## Mobile layout
 

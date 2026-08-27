@@ -193,10 +193,10 @@ export const fa: Dictionary = {
     GEMS: 'الماس',
   },
   effectLabels: {
-    PRODUCTION_BONUS: 'تولید منابع +{value}٪',
-    HERO_UPGRADE_DISCOUNT: 'هزینه طلای ارتقای قهرمان -{value}٪',
-    RAID_PROTECTION_BONUS: 'محافظت در غارت +{value} واحد',
-    BUILDING_UPGRADE_SPEED: 'زمان ارتقای ساختمان -{value}٪',
+    PRODUCTION_BONUS: 'تولید منابع {value}٪',
+    HERO_UPGRADE_DISCOUNT: 'هزینه طلای ارتقای قهرمان {value}٪',
+    RAID_PROTECTION_BONUS: 'محافظت در غارت {value} واحد',
+    BUILDING_UPGRADE_SPEED: 'زمان ارتقای ساختمان {value}٪',
   },
   upgradeStates: {
     CAN_UPGRADE: 'ارتقا',

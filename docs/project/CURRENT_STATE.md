@@ -12,7 +12,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 
 | Area | Status | Current implementation |
 | --- | --- | --- |
-| Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, RTL/LTR |
+| Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level |
@@ -105,6 +105,12 @@ Twelve ordered migrations exist:
 ## Active retention gate
 
 Retention 01A engineering and its DEFAULT theme-ready architecture are complete; owner visual approval is pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
+
+## Persian RTL and bidirectional text
+
+The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Log, sheets, onboarding, Guide, errors, and overlays. It sets semantic `lang`/`dir` attributes and synchronizes the document root when `?lang=fa` or `?lang=en` changes. Player names use automatic Unicode isolation; numeric amounts, levels, timers, signed Trophy deltas, and percentages use explicit left-to-right isolation. Pixi Kingdom and Battle coordinates remain left-to-right internally and are not mirrored.
+
+`/dev/rtl` is a development-only mixed-content fixture. `npm run validate:rtl` checks semantic DOM and computed direction in a real browser, no horizontal overflow, English regression, and the supported 320x568, 375x812, and 390x844 viewports.
 
 ## Validation entry points
 

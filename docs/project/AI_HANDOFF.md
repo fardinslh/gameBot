@@ -44,6 +44,10 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Match current perspective, light direction, scale, ground contact, and mobile sharpness
 - Use irregular, region-specific terrain integration instead of circular pads or terrain cards
 - Keep world coordinates independent from UI direction
+- Use `getLocaleDirection` and the shared `LocalizedGameRoot`; do not add page-local direction checks
+- Isolate external names with `BidiValue`/`dir="auto"` and numeric, timer, percentage, ID, or signed values with `dir="ltr"`
+- Keep sentence punctuation in the localized parent and render placeholders through `BidiTemplate`; never rely on `text-align` alone for Persian
+- Never mirror Pixi Kingdom/Battle geometry or ordered spatial grids when correcting interface direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`
 - For core buildings, derive visuals only through explicit `{ buildingId, level, theme }` requests to `getBuildingVisualState`; preserve `DEFAULT` as the sole implemented theme, all five tier assets, per-level detail rules, stable containers, and development Lab parity
@@ -105,7 +109,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A core building evolution and its DEFAULT theme-ready architecture are implemented. `/dev/buildings` is the production-backed owner review surface; visual approval is pending. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. The prior Aren and audio human checks remain open. Bale has not started and is intentionally after the bounded retention roadmap.
+Retention 01A core building evolution and its DEFAULT theme-ready architecture are implemented. The Persian RTL corrective pass is implemented with `/dev/rtl`, semantic root/document direction, bidi primitives, and browser validation. `/dev/buildings` remains the production-backed owner review surface; visual approval is pending. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. The prior Aren and audio human checks remain open. Bale has not started and is intentionally after the bounded retention roadmap.
 
 ## Git completion rules
 

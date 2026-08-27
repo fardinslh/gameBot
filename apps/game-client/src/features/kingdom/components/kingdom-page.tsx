@@ -18,6 +18,7 @@ import { useInboxCount } from '@/features/raid/hooks/use-inbox-count';
 import { LockedBuildingSheet } from './locked-building-sheet';
 import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
+import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -36,7 +37,6 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
   const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
-  const direction = locale === 'fa' ? 'rtl' : 'ltr';
   const buildingLabels: Record<WorldBuildingId, string> = {
     castle: t.buildings.castle.name,
     farm: t.buildings.farm.name,
@@ -69,7 +69,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   }, [audio]);
 
   return (
-    <div className="game-viewport" lang={locale} dir={direction}>
+    <>
       <a className="skip-link" href="#kingdom-world">{t.skipToGame}</a>
       <main className="kingdom-shell" id="kingdom-world">
         <KingdomScene
@@ -95,7 +95,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
             <History aria-hidden="true" size={17} />
             <span>{t.inboxUi.title}</span>
-            {inboxCount > 0 ? <b>{inboxCount > 99 ? '99+' : inboxCount}</b> : null}
+            {inboxCount > 0 ? <b><BidiValue direction="ltr">{inboxCount > 99 ? '99+' : inboxCount}</BidiValue></b> : null}
           </button>
           {economy.state ? (
             <CollectControl
@@ -126,7 +126,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             ? <AdvisorCoach title={t.experience.raidTitle} body={t.experience.advisor.raid} target="raid-tab" /> : null}
           <BottomNavigation activeSection="kingdom" dictionary={t} onComingSoon={setComingSoonSection} onNavigate={onNavigate} />
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
-            {comingSoonSection ? t.comingSoonMessage.replace('{section}', comingSoonSection) : ''}
+            {comingSoonSection ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoonSection }} /> : ''}
           </div>
           <div className={economy.errorCode ? 'economy-error economy-error--visible' : 'economy-error'} role="alert">
             {economy.errorCode ? errorMessage(economy.errorCode, t) : ''}
@@ -134,7 +134,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           </div>
         </div>
       </main>
-    </div>
+    </>
   );
 }
 

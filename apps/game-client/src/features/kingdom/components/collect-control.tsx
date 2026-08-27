@@ -3,6 +3,7 @@ import type { ResourceAmounts } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { formatAmount } from './resource-hud';
+import { BidiValue } from '@/i18n/bidi';
 
 interface CollectControlProps {
   buildings: KingdomBuildingView[];
@@ -44,11 +45,11 @@ export function CollectControl({
         type="button"
       >
         <span className="collect-button__icon"><Coins aria-hidden="true" size={19} /></span>
-        <span><small>{t.resourcesReady}</small><strong>{disabled ? t.collecting : t.collect} · {formatAmount(ready.toString())}</strong></span>
+        <span><small>{t.resourcesReady}</small><strong>{disabled ? t.collecting : t.collect} · <BidiValue direction="ltr">{formatAmount(ready.toString())}</BidiValue></strong></span>
       </button>
       <div className={feedback.length ? 'collect-feedback collect-feedback--visible' : 'collect-feedback'} aria-live="polite">
         <Sparkles aria-hidden="true" size={15} />
-        <span>{feedback.length ? feedback.map(([resource, value]) => `+${formatAmount(value)} ${t.resourceShort[resource as keyof typeof t.resourceShort]}`).join('  ·  ') : ''}</span>
+        <span>{feedback.map(([resource, value], index) => <span key={resource}>{index ? ' · ' : ''}<BidiValue direction="ltr">+{formatAmount(value)}</BidiValue> {t.resourceShort[resource as keyof typeof t.resourceShort]}</span>)}</span>
       </div>
     </div>
   );

@@ -25,6 +25,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
 | `npm run validate:building-evolution` | 16 client tests covering DEFAULT registration, all 20 visual levels, theme identity/path namespace, adjacent differences, transitions, construction, stable selection/hit areas, plus 25 WebP integrity/budget checks |
+| `npm run test:rtl --workspace @crown-and-coin/game-client` | 4 unit/render tests for locale-direction mapping, semantic game-root attributes, `<bdi>` isolation, and punctuation outside placeholders |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -42,6 +43,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, expansion areas, camera bounds, Mine point, effects, screenshots |
 | `npm run validate:player-experience` | Fresh Persian 320 flow through Collect/Upgrade/Raid/completion, skip persistence, eight Guide sections, technical audio triggers/settings, 320/375/390 RTL/LTR |
+| `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
 | `npm run validate:audio-loops` | Decodes both approved music sources and checks 19 format/timing/equal-power rules across three overlapping transitions per track |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
@@ -58,6 +60,8 @@ Visual, Hero, Raid, Revenge, and progression scripts use:
 - 390 by 844
 
 They cover English left-to-right and Persian right-to-left where relevant. Keep bottom navigation height at 54 pixels unless a scoped product change approves another value.
+
+For localization changes, also open `/dev/rtl` in development. Verify the Persian paragraph, final punctuation, mixed player names, `12,500`, `+18`, `-12`, `12:05`, parentheses, and the English comparison. Source-string matching is not an RTL validator; acceptance requires semantic DOM plus computed browser direction.
 
 ## Manual acceptance paths
 
