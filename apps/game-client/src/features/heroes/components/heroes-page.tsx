@@ -12,6 +12,7 @@ import { HeroCard } from './hero-card';
 import { HeroDetailSheet } from './hero-detail-sheet';
 import { RaidTeamPanel } from './raid-team-panel';
 import { useGameAudio } from '@/features/audio/audio-provider';
+import { usePlayerExperience } from '@/features/experience/player-experience-provider';
 
 interface HeroesPageProps {
   dictionary: Dictionary;
@@ -24,6 +25,7 @@ const EMPTY_BALANCES = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' 
 export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProps) {
   const roster = useHeroState();
   const audio = useGameAudio();
+  const experience = usePlayerExperience();
   const [targetSlot, setTargetSlot] = useState(0);
   const [selectedHeroId, setSelectedHeroId] = useState<string | null>(null);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
@@ -37,6 +39,10 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
     const timeout = window.setTimeout(() => setComingSoonSection(null), 2_200);
     return () => window.clearTimeout(timeout);
   }, [comingSoonSection]);
+
+  useEffect(() => {
+    if (roster.state) experience.requestAdvisorTip('HEROES_INTRO');
+  }, [experience, roster.state]);
 
   const direction = locale === 'fa' ? 'rtl' : 'ltr';
   const state = roster.state;

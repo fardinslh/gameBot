@@ -30,6 +30,7 @@ export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onC
           aria-current={active ? 'page' : undefined}
           className={active ? 'navigation-item navigation-item--active' : 'navigation-item'}
           data-nav-id={id}
+          data-guide-target={id === 'raid' ? 'raid-tab' : undefined}
           key={id}
           onClick={active ? undefined : enabled ? () => { audio.playSfx('ui_tap'); onNavigate(id as GameSection); } : () => { audio.playSfx('ui_tap'); onComingSoon(label); }}
           type="button"

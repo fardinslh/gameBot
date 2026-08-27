@@ -6,13 +6,17 @@ contentType: Troubleshooting
 
 # Check known limitations and issues
 
-The current baseline passes unit, integration, browser, type, lint, and production build checks. The list separates accepted limitations from confirmed defects.
+The current repair passes unit, integration, audio-boundary, type, lint, documentation, and production build checks. Browser automation normally covers the mobile flow, but no browser binding was available for this run. The list separates accepted limitations from confirmed defects.
 
 ## Known limitations
 
 ### Production audio still needs real-device mix review
 
-The product owner approved all 24 licensed production choices. Automated checks verify provenance metadata, encoding, file presence, browser loading, runtime mapping, decoded peak headroom, and responsive layout; they cannot prove relative mix balance, fatigue, or target-device speaker behavior. The complete game mix still requires review on headphones, desktop speakers, a real phone, and later Bale WebView.
+The product owner approved all 24 licensed production choices. Derived 2.5-second circular-crossfade loop masters pass three-boundary technical validation, but were **not audibly verified**. The owner must listen through at least three Kingdom and Battle boundaries and review the complete mix on headphones, desktop speakers, a real phone, and later Bale WebView.
+
+### Aren art and browser screenshots need owner/manual review
+
+The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry unit tests pass at 320x568, 375x812, and 390x844, but no in-app/connected browser was available for this repair run, so the required screenshots and real tap flow remain manually unverified.
 
 ### Bale lifecycle is not integrated
 

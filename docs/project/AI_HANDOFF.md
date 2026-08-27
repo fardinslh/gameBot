@@ -102,7 +102,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current launch gate
 
-The onboarding, Guide, and centralized audio runtime are implemented. Apply migration `20260826110000_pre_bale_player_experience`. All 24 audio groups have explicit owner selections and are mapped into production; `/dev/audio` records the completed gate. Preserve server-owned onboarding transitions and keep activation anchored to `first_raid_completed`. Bale has not started; complete the real-device mix review before treating audio as launch-verified.
+The Aren-led onboarding repair, permanent Guide, contextual-tip persistence, and buffered Web Audio runtime are implemented. Apply migrations through `20260827090000_advisor_tip_progress`. All 24 audio selections remain mapped; music runtime uses derived loop-ready masters while originals remain unchanged. Preserve server-owned onboarding transitions and `first_raid_completed` activation. Bale has not started. The older Aren candidate needs owner approval; loop boundaries need owner listening; the unavailable browser screenshot run must be completed before launch verification.
 
 ## Git completion rules
 

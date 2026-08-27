@@ -1,0 +1,27 @@
+{
+  "method": "2.5-second equal-power-compatible linear circular crossfade from approved tail into approved head",
+  "tracks": {
+    "KINGDOM": {
+      "source": "../kingdom.mp3",
+      "derived": "kingdom-loop.mp3",
+      "sourceDuration": 49.951383,
+      "loopStart": 0,
+      "loopEnd": 47.451383,
+      "crossfadeSeconds": 2.5,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp3"
+    },
+    "BATTLE": {
+      "source": "../battle.mp3",
+      "derived": "battle-loop.mp3",
+      "sourceDuration": 108,
+      "loopStart": 0,
+      "loopEnd": 105.5,
+      "crossfadeSeconds": 2.5,
+      "sampleRate": 44100,
+      "channels": 2,
+      "codec": "mp3"
+    }
+  }
+}

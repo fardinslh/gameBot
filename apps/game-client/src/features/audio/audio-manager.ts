@@ -1,59 +1,46 @@
 export type MusicContext = 'KINGDOM' | 'BATTLE';
 export type SfxKey =
-  | 'ui_tap' | 'panel_open' | 'back'
-  | 'collect' | 'upgrade_start' | 'upgrade_complete' | 'building_select'
-  | 'hero_select' | 'hero_upgrade'
-  | 'find_enemy' | 'attack_start'
-  | 'sword_hit' | 'arrow_shot' | 'arrow_impact' | 'magic_cast' | 'magic_impact'
-  | 'shield_wall' | 'hero_defeated' | 'victory' | 'defeat'
+  | 'ui_tap' | 'panel_open' | 'back' | 'collect' | 'upgrade_start' | 'upgrade_complete' | 'building_select'
+  | 'hero_select' | 'hero_upgrade' | 'find_enemy' | 'attack_start' | 'sword_hit' | 'arrow_shot' | 'arrow_impact'
+  | 'magic_cast' | 'magic_impact' | 'shield_wall' | 'hero_defeated' | 'victory' | 'defeat'
   | 'incoming_attack' | 'revenge_available';
 
 export interface AudioSettings {
-  masterEnabled: boolean;
-  musicEnabled: boolean;
-  sfxEnabled: boolean;
-  masterVolume: number;
-  musicVolume: number;
-  sfxVolume: number;
+  masterEnabled: boolean; musicEnabled: boolean; sfxEnabled: boolean;
+  masterVolume: number; musicVolume: number; sfxVolume: number;
+}
+
+export interface MusicTrackConfig {
+  src: string; loopStart: number; loopEnd: number; sourceDuration: number; crossfadeSeconds: number;
+}
+
+interface PlayingMusic { context: MusicContext; source: AudioBufferSourceNode; gain: GainNode; }
+interface AudioDependencies {
+  createContext(): AudioContext;
+  fetch(input: RequestInfo | URL): Promise<Response>;
+  createAudio(src: string): HTMLAudioElement;
 }
 
 export const AUDIO_STORAGE_KEY = 'crown-coin-audio-v1';
+export const MUSIC_CONTEXT_FADE_SECONDS = 0.6;
 export const DEFAULT_AUDIO_SETTINGS: AudioSettings = {
-  masterEnabled: true,
-  musicEnabled: true,
-  sfxEnabled: true,
-  masterVolume: 0.8,
-  musicVolume: 0.42,
-  sfxVolume: 0.72,
+  masterEnabled: true, musicEnabled: true, sfxEnabled: true,
+  masterVolume: 0.8, musicVolume: 0.42, sfxVolume: 0.72,
 };
 
-export const MUSIC_TRACKS: Record<MusicContext, string> = {
-  KINGDOM: '/assets/audio/approved/music/kingdom.mp3',
-  BATTLE: '/assets/audio/approved/music/battle.mp3',
+export const MUSIC_TRACKS: Record<MusicContext, MusicTrackConfig> = {
+  KINGDOM: { src: '/assets/audio/approved/music/loop-ready/kingdom-loop.mp3', loopStart: 0, loopEnd: 47.451383, sourceDuration: 49.951383, crossfadeSeconds: 2.5 },
+  BATTLE: { src: '/assets/audio/approved/music/loop-ready/battle-loop.mp3', loopStart: 0, loopEnd: 105.5, sourceDuration: 108, crossfadeSeconds: 2.5 },
 };
 
 export const SFX_ASSETS: Record<SfxKey, readonly string[]> = {
-  ui_tap: ['/assets/audio/approved/sfx/ui-tap.mp3'],
-  panel_open: ['/assets/audio/approved/sfx/panel-open.mp3'],
-  back: ['/assets/audio/approved/sfx/back.mp3'],
-  collect: ['/assets/audio/approved/sfx/collect.mp3'],
-  upgrade_start: ['/assets/audio/approved/sfx/upgrade-start.mp3'],
-  upgrade_complete: ['/assets/audio/approved/sfx/upgrade-complete.mp3'],
-  building_select: ['/assets/audio/approved/sfx/building-select.mp3'],
-  hero_select: ['/assets/audio/approved/sfx/hero-select.mp3'],
-  hero_upgrade: ['/assets/audio/approved/sfx/hero-upgrade.mp3'],
-  find_enemy: ['/assets/audio/approved/sfx/find-enemy.mp3'],
-  attack_start: ['/assets/audio/approved/sfx/attack-start.mp3'],
-  sword_hit: ['/assets/audio/approved/sfx/sword-hit.mp3'],
-  arrow_shot: ['/assets/audio/approved/sfx/arrow-shot.mp3'],
-  arrow_impact: ['/assets/audio/approved/sfx/arrow-impact.mp3'],
-  magic_cast: ['/assets/audio/approved/sfx/magic-cast.mp3'],
-  magic_impact: ['/assets/audio/approved/sfx/magic-impact.mp3'],
-  shield_wall: ['/assets/audio/approved/sfx/shield-wall.mp3'],
-  hero_defeated: ['/assets/audio/approved/sfx/hero-defeated.mp3'],
-  victory: ['/assets/audio/approved/sfx/victory.mp3'],
-  defeat: ['/assets/audio/approved/sfx/defeat.mp3'],
-  incoming_attack: ['/assets/audio/approved/sfx/incoming-attack.mp3'],
+  ui_tap: ['/assets/audio/approved/sfx/ui-tap.mp3'], panel_open: ['/assets/audio/approved/sfx/panel-open.mp3'], back: ['/assets/audio/approved/sfx/back.mp3'],
+  collect: ['/assets/audio/approved/sfx/collect.mp3'], upgrade_start: ['/assets/audio/approved/sfx/upgrade-start.mp3'], upgrade_complete: ['/assets/audio/approved/sfx/upgrade-complete.mp3'],
+  building_select: ['/assets/audio/approved/sfx/building-select.mp3'], hero_select: ['/assets/audio/approved/sfx/hero-select.mp3'], hero_upgrade: ['/assets/audio/approved/sfx/hero-upgrade.mp3'],
+  find_enemy: ['/assets/audio/approved/sfx/find-enemy.mp3'], attack_start: ['/assets/audio/approved/sfx/attack-start.mp3'], sword_hit: ['/assets/audio/approved/sfx/sword-hit.mp3'],
+  arrow_shot: ['/assets/audio/approved/sfx/arrow-shot.mp3'], arrow_impact: ['/assets/audio/approved/sfx/arrow-impact.mp3'], magic_cast: ['/assets/audio/approved/sfx/magic-cast.mp3'],
+  magic_impact: ['/assets/audio/approved/sfx/magic-impact.mp3'], shield_wall: ['/assets/audio/approved/sfx/shield-wall.mp3'], hero_defeated: ['/assets/audio/approved/sfx/hero-defeated.mp3'],
+  victory: ['/assets/audio/approved/sfx/victory.mp3'], defeat: ['/assets/audio/approved/sfx/defeat.mp3'], incoming_attack: ['/assets/audio/approved/sfx/incoming-attack.mp3'],
   revenge_available: ['/assets/audio/approved/sfx/revenge-available.mp3'],
 };
 
@@ -69,13 +56,15 @@ export function normalizeAudioSettings(value: unknown): AudioSettings {
   if (!value || typeof value !== 'object') return DEFAULT_AUDIO_SETTINGS;
   const input = value as Partial<AudioSettings>;
   return {
-    masterEnabled: input.masterEnabled ?? true,
-    musicEnabled: input.musicEnabled ?? true,
-    sfxEnabled: input.sfxEnabled ?? true,
+    masterEnabled: input.masterEnabled ?? true, musicEnabled: input.musicEnabled ?? true, sfxEnabled: input.sfxEnabled ?? true,
     masterVolume: clamp(input.masterVolume ?? DEFAULT_AUDIO_SETTINGS.masterVolume),
     musicVolume: clamp(input.musicVolume ?? DEFAULT_AUDIO_SETTINGS.musicVolume),
     sfxVolume: clamp(input.sfxVolume ?? DEFAULT_AUDIO_SETTINGS.sfxVolume),
   };
+}
+
+export function validLoopPoints(track: MusicTrackConfig, decodedDuration: number): boolean {
+  return track.loopStart >= 0 && track.loopStart < track.loopEnd && track.loopEnd <= decodedDuration;
 }
 
 function clamp(value: number): number {
@@ -85,16 +74,35 @@ function clamp(value: number): number {
 export class GameAudioManager {
   private settings = DEFAULT_AUDIO_SETTINGS;
   private context: MusicContext = 'KINGDOM';
-  private currentMusic: HTMLAudioElement | null = null;
+  private webContext: AudioContext | null = null;
+  private currentMusic: PlayingMusic | null = null;
+  private fallbackMusic: HTMLAudioElement | null = null;
+  private readonly buffers = new Map<MusicContext, AudioBuffer>();
+  private pending: Promise<void> | null = null;
+  private pendingContext: MusicContext | null = null;
   private unlocked = false;
   private suspended = false;
-  private fadeTimer: number | null = null;
+  private transitionVersion = 0;
+  private webAudioFailed = false;
   private readonly failedAssets = new Set<string>();
   private readonly lastSfx = new Map<SfxKey, string>();
+  private readonly dependencies: AudioDependencies;
+
+  constructor(dependencies: Partial<AudioDependencies> = {}) {
+    this.dependencies = {
+      createContext: dependencies.createContext ?? (() => {
+        const Constructor = window.AudioContext ?? (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+        if (!Constructor) throw new Error('Web Audio unavailable');
+        return new Constructor();
+      }),
+      fetch: dependencies.fetch ?? ((input) => window.fetch(input)),
+      createAudio: dependencies.createAudio ?? ((src) => new Audio(src)),
+    };
+  }
 
   setSettings(settings: AudioSettings): void {
     this.settings = normalizeAudioSettings(settings);
-    if (!this.settings.masterEnabled || !this.settings.musicEnabled) this.pauseMusic();
+    if (!this.musicAllowed()) this.pauseMusic();
     else if (this.unlocked && !this.suspended) void this.ensureMusic();
     this.applyMusicVolume();
   }
@@ -102,13 +110,14 @@ export class GameAudioManager {
   setContext(context: MusicContext): void {
     if (this.context === context) return;
     this.context = context;
-    if (this.unlocked && !this.suspended && this.settings.masterEnabled && this.settings.musicEnabled) void this.crossfade(context);
+    this.transitionVersion += 1;
+    if (this.unlocked && !this.suspended && this.musicAllowed()) void this.ensureMusic();
   }
 
   async unlock(): Promise<void> {
     if (this.unlocked) return;
     this.unlocked = true;
-    if (this.settings.masterEnabled && this.settings.musicEnabled && !this.suspended) await this.ensureMusic();
+    if (this.musicAllowed() && !this.suspended) await this.ensureMusic();
   }
 
   playSfx(key: SfxKey): void {
@@ -116,82 +125,121 @@ export class GameAudioManager {
     const source = pickSfxAsset(key, this.lastSfx.get(key));
     if (!source) return;
     this.lastSfx.set(key, source);
-    const audio = new Audio(source);
+    const audio = this.dependencies.createAudio(source);
     audio.preload = 'none';
     audio.volume = this.settings.masterVolume * this.settings.sfxVolume;
     audio.play().catch(() => this.reportFailure(source));
   }
 
   suspend(): void {
+    if (this.suspended) return;
     this.suspended = true;
-    this.currentMusic?.pause();
+    this.fallbackMusic?.pause();
+    void this.webContext?.suspend();
   }
 
   resume(): void {
+    if (!this.suspended) return;
     this.suspended = false;
-    if (this.unlocked && this.settings.masterEnabled && this.settings.musicEnabled) void this.ensureMusic();
+    if (!this.unlocked || !this.musicAllowed()) return;
+    if (this.webContext) void this.webContext.resume().then(() => this.ensureMusic());
+    else void this.ensureMusic();
   }
 
   destroy(): void {
-    if (this.fadeTimer !== null) window.clearInterval(this.fadeTimer);
-    this.currentMusic?.pause();
-    this.currentMusic = null;
+    this.transitionVersion += 1;
+    this.stopCurrent();
+    this.fallbackMusic?.pause();
+    this.fallbackMusic = null;
+    void this.webContext?.close();
+    this.webContext = null;
+    this.buffers.clear();
   }
 
-  private async ensureMusic(): Promise<void> {
-    const source = MUSIC_TRACKS[this.context];
-    if (this.currentMusic?.dataset.source === source) {
+  private musicAllowed(): boolean { return this.settings.masterEnabled && this.settings.musicEnabled; }
+
+  private ensureMusic(): Promise<void> {
+    if (this.currentMusic?.context === this.context || this.fallbackMusic?.dataset.source === MUSIC_TRACKS[this.context].src) {
       this.applyMusicVolume();
-      if (this.currentMusic.paused) await this.currentMusic.play().catch(() => this.reportFailure(source));
-      return;
+      if (this.fallbackMusic?.paused) void this.fallbackMusic.play().catch(() => undefined);
+      if (this.currentMusic && this.webContext?.state === 'suspended' && !this.suspended) return this.webContext.resume().then(() => undefined);
+      return Promise.resolve();
     }
-    await this.crossfade(this.context);
+    if (this.pending && this.pendingContext === this.context) return this.pending;
+    const requested = this.context;
+    const version = this.transitionVersion;
+    this.pendingContext = requested;
+    this.pending = this.startWebMusic(requested, version).catch(() => {
+      this.webAudioFailed = true;
+      return this.startFallback(requested, version);
+    }).finally(() => {
+      if (this.pendingContext === requested) { this.pending = null; this.pendingContext = null; }
+    });
+    return this.pending;
   }
 
-  private async crossfade(context: MusicContext): Promise<void> {
-    const source = MUSIC_TRACKS[context];
-    if (this.currentMusic?.dataset.source === source) return;
-    const previous = this.currentMusic;
-    const next = new Audio(source);
-    next.dataset.source = source;
-    next.loop = true;
-    next.preload = 'metadata';
-    next.volume = 0;
-    this.currentMusic = next;
-    try {
-      await next.play();
-    } catch {
-      if (this.currentMusic === next) this.currentMusic = previous;
-      this.reportFailure(source);
-      return;
+  private async startWebMusic(context: MusicContext, version: number): Promise<void> {
+    if (this.webAudioFailed) throw new Error('Web Audio disabled after initialization failure');
+    const audioContext = this.webContext ?? this.dependencies.createContext();
+    this.webContext = audioContext;
+    if (audioContext.state === 'suspended') await audioContext.resume();
+    let buffer = this.buffers.get(context);
+    if (!buffer) {
+      const response = await this.dependencies.fetch(MUSIC_TRACKS[context].src);
+      if (!response.ok) throw new Error(`Music request failed (${response.status})`);
+      buffer = await audioContext.decodeAudioData(await response.arrayBuffer());
+      this.buffers.set(context, buffer);
     }
-    if (this.fadeTimer !== null) window.clearInterval(this.fadeTimer);
-    const target = this.settings.masterVolume * this.settings.musicVolume;
-    let frame = 0;
-    this.fadeTimer = window.setInterval(() => {
-      frame += 1;
-      const ratio = Math.min(1, frame / 12);
-      next.volume = target * ratio;
-      if (previous) previous.volume = Math.max(0, target * (1 - ratio));
-      if (ratio >= 1) {
-        if (this.fadeTimer !== null) window.clearInterval(this.fadeTimer);
-        this.fadeTimer = null;
-        previous?.pause();
-      }
-    }, 50);
+    if (version !== this.transitionVersion || context !== this.context || this.suspended || !this.musicAllowed()) return;
+    const track = MUSIC_TRACKS[context];
+    if (!validLoopPoints(track, buffer.duration)) throw new Error('Music loop metadata is outside decoded duration');
+    const source = audioContext.createBufferSource();
+    const gain = audioContext.createGain();
+    source.buffer = buffer; source.loop = true; source.loopStart = track.loopStart; source.loopEnd = Math.min(track.loopEnd, buffer.duration);
+    source.connect(gain); gain.connect(audioContext.destination);
+    const now = audioContext.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(this.musicVolume(), now + MUSIC_CONTEXT_FADE_SECONDS);
+    source.start(now, track.loopStart);
+    const previous = this.currentMusic;
+    this.currentMusic = { context, source, gain };
+    if (previous) {
+      previous.gain.gain.cancelScheduledValues(now);
+      previous.gain.gain.setValueAtTime(previous.gain.gain.value, now);
+      previous.gain.gain.linearRampToValueAtTime(0, now + MUSIC_CONTEXT_FADE_SECONDS);
+      previous.source.stop(now + MUSIC_CONTEXT_FADE_SECONDS);
+    }
+    this.fallbackMusic?.pause(); this.fallbackMusic = null;
+  }
+
+  private async startFallback(context: MusicContext, version: number): Promise<void> {
+    const track = MUSIC_TRACKS[context];
+    const next = this.dependencies.createAudio(track.src);
+    next.dataset.source = track.src; next.loop = true; next.preload = 'auto'; next.volume = this.musicVolume();
+    try { await next.play(); } catch { this.reportFailure(track.src); return; }
+    if (version !== this.transitionVersion || context !== this.context || this.suspended || !this.musicAllowed()) { next.pause(); return; }
+    this.fallbackMusic?.pause(); this.stopCurrent(); this.fallbackMusic = next;
   }
 
   private pauseMusic(): void {
-    this.currentMusic?.pause();
+    this.fallbackMusic?.pause();
+    if (this.webContext?.state === 'running') void this.webContext.suspend();
   }
 
   private applyMusicVolume(): void {
-    if (this.currentMusic) this.currentMusic.volume = this.settings.masterVolume * this.settings.musicVolume;
+    const volume = this.musicVolume();
+    if (this.fallbackMusic) this.fallbackMusic.volume = volume;
+    if (this.currentMusic && this.webContext) this.currentMusic.gain.gain.setValueAtTime(volume, this.webContext.currentTime);
   }
 
+  private musicVolume(): number { return this.settings.masterVolume * this.settings.musicVolume; }
+  private stopCurrent(): void {
+    if (!this.currentMusic) return;
+    try { this.currentMusic.source.stop(); } catch { /* already stopped */ }
+    this.currentMusic.source.disconnect(); this.currentMusic.gain.disconnect(); this.currentMusic = null;
+  }
   private reportFailure(source: string): void {
     if (this.failedAssets.has(source)) return;
-    this.failedAssets.add(source);
-    console.warn(`Audio asset unavailable: ${source}`);
+    this.failedAssets.add(source); console.warn(`Audio asset unavailable: ${source}`);
   }
 }

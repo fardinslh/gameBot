@@ -75,6 +75,10 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 | `GET` | `/onboarding` | Return or history-reconcile persistent onboarding state |
 | `POST` | `/onboarding/start` | Move a new player from Welcome to the real Collect step |
 | `POST` | `/onboarding/skip` | Persist Skip without rewards, activation, or synthetic gameplay |
+| `GET` | `/onboarding/advisor-tips` | Return durable one-time contextual advisor keys already seen |
+| `POST` | `/onboarding/advisor-tips/:tipKey` | Idempotently mark one supported contextual advisor tip seen |
+
+Supported advisor keys are `HEROES_INTRO`, `CASTLE_PROGRESSION`, `NEW_KINGDOM_SHIELD`, `DEFENSE_INBOX`, and `REVENGE`. They are presentation state only and grant no gameplay authority.
 
 The client cannot post a step or completion. Successful Collect, building Upgrade start, and standard Raid settlement advance the state inside server-owned write paths.
 

@@ -43,6 +43,16 @@ export interface OnboardingStateResponse {
   serverTime: string;
 }
 
+export const ADVISOR_TIP_KEYS = [
+  'HEROES_INTRO',
+  'CASTLE_PROGRESSION',
+  'NEW_KINGDOM_SHIELD',
+  'DEFENSE_INBOX',
+  'REVENGE',
+] as const;
+export type AdvisorTipKey = (typeof ADVISOR_TIP_KEYS)[number];
+export interface AdvisorTipsResponse { seen: AdvisorTipKey[]; }
+
 export interface HealthResponse {
   status: 'ok';
 }

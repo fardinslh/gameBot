@@ -21,9 +21,9 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | Command | Coverage at verified baseline |
 | --- | --- |
 | `npm test` | 39 unit tests in 12 files: economy/Hero/battle/progression, analytics, system-opponent config, shield, bounded passes, ranking and top-five selection |
-| `npm run test:integration` | 47 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding persistence/transitions, analytics, transactions and concurrency |
+| `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
-| `npm run test:client-experience` | 10 audio runtime, Battle-SFX mapping, audition-catalog, and bilingual Guide-content tests |
+| `npm run test:client-experience` | 31 audio lifecycle, loop/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -42,6 +42,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, expansion areas, camera bounds, Mine point, effects, screenshots |
 | `npm run validate:player-experience` | Fresh Persian 320 flow through Collect/Upgrade/Raid/completion, skip persistence, eight Guide sections, technical audio triggers/settings, 320/375/390 RTL/LTR |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
+| `npm run validate:audio-loops` | Checks both loop-ready masters, format, duration, loop bounds, and three consecutive boundaries without a 0.5-second silent gap |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
 
 Browser scripts locate installed Edge or Chrome through known Windows paths and use Playwright Core. They fail on browser console errors and horizontal overflow.
@@ -60,7 +61,7 @@ They cover English left-to-right and Persian right-to-left where relevant. Keep 
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
-For player experience, use a fresh identity, choose Start, perform a real Collect, start a real Farm upgrade, complete a standard Raid, return to Kingdom, then refresh and confirm `COMPLETED`. Separately skip with another identity and confirm persistence.
+For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 
 For audio selection, run the client in development, open `/dev/audio`, compare every required A/B/C group, and record the human choice in [the audition guide](AUDIO_AUDITION.md). A local shortlist is not production approval. Automated audio validation is technical only; listen on real target devices before launch.
 

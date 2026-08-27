@@ -24,6 +24,7 @@ Player
   1--* RevengeTarget as owner and target
   1--* Notification
   1--1 OnboardingProgress
+  1--* AdvisorTipProgress
   1--* AnalyticsEvent
 
 RaidMatchOffer 1--0..1 Battle
@@ -87,6 +88,8 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 
 `OnboardingProgress` is a one-to-one Player record with `status`, `currentStep`, and started/completed/skipped timestamps. It stores no balances, rewards, tutorial inventory, or client-decided progress. Existing gameplay transactions advance it; system opponents receive only virtual skipped state.
 
+`AdvisorTipProgress` stores one presentation-only row per `(playerId, tipKey)` with seen and audit timestamps. Missing rows never block gameplay, and the table has no relationship to economy, shield, Raid, Battle, or Revenge eligibility.
+
 | Migration | Change |
 | --- | --- |
 | `20260823000000_initial_foundation` | Player, platform identity, Kingdom, resources, buildings, upgrades |
@@ -100,5 +103,6 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 | `20260826090000_launch_safe_raid` | Rename system-opponent classification, add replenishment ledger reason and matchmaking index |
 | `20260826100000_first_party_analytics` | Append-only canonical event storage, dedupe, cohort and acquisition indexes |
 | `20260826110000_pre_bale_player_experience` | Persistent one-to-one onboarding state, steps, and lifecycle timestamps |
+| `20260827090000_advisor_tip_progress` | Durable one-time Aren contextual-tip acknowledgements |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

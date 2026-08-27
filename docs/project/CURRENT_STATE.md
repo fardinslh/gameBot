@@ -16,9 +16,9 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
-| First-session onboarding | Implemented | Server-persisted Welcome, Collect, Upgrade, Raid, Complete/Skip flow driven by real actions |
-| Permanent Game Guide | Implemented | Eight bilingual sections available from the compact Player HUD |
-| Audio engine | Implemented | Two music contexts, 22 SFX triggers, gesture-safe playback, crossfade, visibility handling, and variant-ready SFX mappings |
+| First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
+| Permanent Game Guide | Implemented | Aren identity plus eight bilingual sections available from the compact Player HUD |
+| Audio engine | Implemented | Buffered Web Audio loop masters, explicit loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
 | Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
@@ -76,7 +76,7 @@ The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, R
 
 ## Current migrations
 
-Eleven ordered migrations exist:
+Twelve ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -89,10 +89,11 @@ Eleven ordered migrations exist:
 9. `20260826090000_launch_safe_raid`
 10. `20260826100000_first_party_analytics`
 11. `20260826110000_pre_bale_player_experience`
+12. `20260827090000_advisor_tip_progress`
 
-## Active launch gate: human audio approval
+## Active launch gate: final human checks before Bale
 
-First-party analytics remains observational. Persistent onboarding, the bilingual Game Guide, the audio engine, persistent audio controls, and all 24 owner-approved audio mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the activation authority. Bale integration has not started; real-device audio mix review remains a launch check.
+First-party analytics remains observational. The Aren advisor repair, target-aware onboarding, persistent contextual counsel, loop-ready Web Audio runtime, audio controls, and all 24 owner-approved mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the authority. Bale has not started. Owner approval of Aren, audible loop/mix review, and mobile screenshot confirmation remain human launch checks.
 
 ## Validation entry points
 

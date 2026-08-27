@@ -167,6 +167,7 @@ model Player {
   notifications         Notification[]
   analyticsEvents       AnalyticsEvent[]
   onboarding            OnboardingProgress?
+  advisorTips           AdvisorTipProgress[]
 }
 
 model OnboardingProgress {
@@ -182,6 +183,19 @@ model OnboardingProgress {
   player      Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([status, updatedAt])
+}
+
+model AdvisorTipProgress {
+  id        String   @id @default(uuid())
+  playerId  String
+  tipKey    String
+  seenAt    DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, tipKey])
+  @@index([playerId, seenAt])
 }
 
 model AnalyticsEvent {

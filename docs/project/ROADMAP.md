@@ -22,10 +22,11 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Launch-Safety PvP**: 30 system opponents, six tiers, bounded matchmaking, new-player shield, anti-farm cooldown, safe replenishment
 - **First-Party Analytics**: canonical events, activation/retention reports, integrity tooling
 - **Pre-Bale Player Experience implementation**: persistent first session, permanent bilingual Guide, audio engine, and persistent audio controls
+- **Player Experience repair**: older Aren advisor candidate, target-aware action coaching, durable contextual counsel, derived seamless-loop masters, and buffered Web Audio playback
 
 ## Current and next
 
-The **Audio Quality Selection Gate is complete**. All 24 explicit owner selections are mapped into production. Real-device relative-mix review remains a pre-launch check. Bale Mini App Integration has not started and still requires an explicit scoped task.
+The **Player Experience repair is complete in engineering**. All 24 explicit owner audio selections remain unchanged. Aren visual approval, audible three-boundary loop review, real-device relative mix, and the unavailable browser screenshot run remain human checks. Bale Mini App Integration has not started and still requires an explicit scoped task.
 
 The approved launch sequence is:
 
@@ -33,6 +34,7 @@ The approved launch sequence is:
 First-Party Analytics (complete)
   -> Pre-Bale Player Experience implementation (complete)
   -> Audio Quality Selection Gate (complete; 24 mapped)
+  -> Player Experience repair (engineering complete; human checks open)
   -> Bale Mini App Integration (blocked)
   -> Production Readiness
   -> Closed Bale Test
@@ -58,9 +60,9 @@ The repository contains planning boundaries for:
 
 These items need product decisions before implementation. Current code does not define their behavior or data models.
 
-## Completed foundation, open content gate
+## Completed foundation, open human review gate
 
-Canonical analytics, onboarding, the permanent Guide, and the audio runtime are implemented. Audio content approval remains open, so the overall pre-Bale quality gate is not complete. Monetization, Guild, Season, and new gameplay remain deferred.
+Canonical analytics, Aren-led onboarding, the permanent Guide, and the buffered audio runtime are implemented. Audio selection is approved; audible loop/device review, Aren visual approval, and the pending mobile screenshot run keep the human pre-Bale quality gate open. Monetization, Guild, Season, and new gameplay remain deferred.
 
 ## Deferred complexity
 

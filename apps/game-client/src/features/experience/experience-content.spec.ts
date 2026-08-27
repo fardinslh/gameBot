@@ -11,9 +11,17 @@ describe('localized player experience content', () => {
   });
 
   it('keeps the mandatory first session focused on Collect, Upgrade, and Raid', () => {
-    expect(en.experience.collectBody).toContain('Collect');
-    expect(en.experience.upgradeBody).toContain('upgrade');
-    expect(en.experience.raidBody).toContain('Raid');
-    expect(en.experience.welcomeBody).not.toContain('Heroes');
+    expect(en.experience.advisor.collect).toContain('Collect');
+    expect(en.experience.advisor.upgrade.toLowerCase()).toContain('upgrade');
+    expect(en.experience.advisor.raid).toContain('Raid');
+    expect(en.experience.advisor.welcome).not.toContain('Heroes');
+  });
+
+  it('localizes Aren and every mandatory or contextual counsel line', () => {
+    const expected = ['name', 'role', 'guideRole', 'welcome', 'collect', 'upgrade', 'raid', 'findEnemy', 'attack', 'battle', 'result', 'complete', 'heroes', 'castle', 'shield', 'defense', 'revenge', 'reminder', 'gotIt'];
+    expect(Object.keys(en.experience.advisor)).toEqual(expected);
+    expect(Object.keys(fa.experience.advisor)).toEqual(expected);
+    expect(fa.experience.advisor.name).toBe('آرِن');
+    expect(Object.values(fa.experience.advisor).every((line) => line.length > 0)).toBe(true);
   });
 });

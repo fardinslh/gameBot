@@ -4,15 +4,18 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { OnboardingService } from './onboarding.service';
+import { AdvisorTipsService } from './advisor-tips.service';
 
 describe('onboarding integration', () => {
   const prisma = new PrismaService();
   const analytics = new AnalyticsService(prisma);
   const onboarding = new OnboardingService(prisma, analytics);
+  const advisorTips = new AdvisorTipsService(prisma);
   const playerIds: string[] = [];
 
   beforeAll(() => prisma.$connect());
   afterAll(async () => {
+    await prisma.advisorTipProgress.deleteMany({ where: { playerId: { in: playerIds } } });
     await prisma.analyticsEvent.deleteMany({ where: { playerId: { in: playerIds } } });
     await prisma.onboardingProgress.deleteMany({ where: { playerId: { in: playerIds } } });
     await prisma.player.deleteMany({ where: { id: { in: playerIds } } });
@@ -68,5 +71,15 @@ describe('onboarding integration', () => {
     const system = await player(true);
     expect(await onboarding.get(system.id)).toMatchObject({ status: OnboardingStatus.SKIPPED, currentStep: OnboardingStep.COMPLETE });
     expect(await prisma.onboardingProgress.count({ where: { playerId: system.id } })).toBe(0);
+  });
+
+  it('persists each contextual advisor introduction once and remains idempotent', async () => {
+    const owner = await player();
+    expect(await advisorTips.get(owner.id)).toEqual({ seen: [] });
+    await advisorTips.dismiss(owner.id, 'HEROES_INTRO');
+    await advisorTips.dismiss(owner.id, 'HEROES_INTRO');
+    await advisorTips.dismiss(owner.id, 'CASTLE_PROGRESSION');
+    expect((await new AdvisorTipsService(prisma).get(owner.id)).seen.sort()).toEqual(['CASTLE_PROGRESSION', 'HEROES_INTRO']);
+    expect(await prisma.advisorTipProgress.count({ where: { playerId: owner.id } })).toBe(2);
   });
 });

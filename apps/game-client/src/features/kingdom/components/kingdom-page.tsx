@@ -16,7 +16,7 @@ import { PlayerHud } from './player-hud';
 import { ResourceHud } from './resource-hud';
 import { useInboxCount } from '@/features/raid/hooks/use-inbox-count';
 import { LockedBuildingSheet } from './locked-building-sheet';
-import { OnboardingCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
+import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
 
 interface KingdomPageProps {
@@ -58,6 +58,10 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
     const timeout = window.setTimeout(() => setComingSoonSection(null), 2_200);
     return () => window.clearTimeout(timeout);
   }, [comingSoonSection]);
+
+  useEffect(() => {
+    if (selectedBuildingId === 'castle') experience.requestAdvisorTip('CASTLE_PROGRESSION');
+  }, [experience, selectedBuildingId]);
 
   const handleBuildingSelect = useCallback((buildingId: WorldBuildingId) => {
     audio.playSfx('building_select');
@@ -115,11 +119,11 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           />
           <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'COLLECT'
-            ? <OnboardingCoach title={t.experience.collectTitle} body={t.experience.collectBody} /> : null}
+            ? <AdvisorCoach title={t.experience.collectTitle} body={t.experience.advisor.collect} target="collect" /> : null}
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'UPGRADE'
-            ? <OnboardingCoach title={t.experience.upgradeTitle} body={t.experience.upgradeBody} placement="bottom" /> : null}
+            ? <AdvisorCoach title={t.experience.upgradeTitle} body={t.experience.advisor.upgrade} target="upgrade" /> : null}
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'RAID'
-            ? <OnboardingCoach title={t.experience.raidTitle} body={t.experience.raidBody} placement="bottom" /> : null}
+            ? <AdvisorCoach title={t.experience.raidTitle} body={t.experience.advisor.raid} target="raid-tab" /> : null}
           <BottomNavigation activeSection="kingdom" dictionary={t} onComingSoon={setComingSoonSection} onNavigate={onNavigate} />
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
             {comingSoonSection ? t.comingSoonMessage.replace('{section}', comingSoonSection) : ''}

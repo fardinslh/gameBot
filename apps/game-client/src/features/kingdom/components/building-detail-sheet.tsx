@@ -101,6 +101,7 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       {building ? (
         <button
           className="upgrade-button"
+          data-guide-target="upgrade"
           data-upgrade-state={availability}
           disabled={availability !== 'CAN_UPGRADE' || actionPending}
           onClick={() => onUpgrade(building.id)}

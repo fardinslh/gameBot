@@ -13,7 +13,7 @@ import { BattleDetail } from './battle-detail';
 import { BattleLog } from './battle-log';
 import { RevengePreview } from './revenge-preview';
 import { trackScreen } from '@/features/analytics/analytics-client';
-import { OnboardingCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
+import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
@@ -36,6 +36,11 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
     ? Math.max(1, Math.ceil((Date.parse(state.newPlayerProtection.expiresAt) - Date.parse(state.serverTime)) / 3_600_000))
     : 0;
   const tutorialRaid = experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'RAID';
+  useEffect(() => {
+    if (state?.newPlayerProtection.active && raid.view === 'overview') experience.requestAdvisorTip('NEW_KINGDOM_SHIELD');
+    if (raid.view === 'inbox' && raid.inbox?.entries.length) experience.requestAdvisorTip('DEFENSE_INBOX');
+    if (raid.inbox?.entries.some((entry) => entry.revengeStatus === 'AVAILABLE')) experience.requestAdvisorTip('REVENGE');
+  }, [experience, raid.inbox, raid.view, state?.newPlayerProtection.active]);
   const returnToKingdom = async (): Promise<void> => {
     await experience.refreshOnboarding();
     playSfx('back');
@@ -57,7 +62,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                 <h1>{raid.battle.type === 'REVENGE' ? (raid.battle.result === 'ATTACKER_WIN' ? t.inboxUi.revengeVictory : t.inboxUi.revengeDefeat) : (raid.battle.result === 'ATTACKER_WIN' ? t.raidUi.victory : t.raidUi.defeat)}</h1>
                 <p><Trophy size={15} /> {raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta} {t.raidUi.trophies}</p>
                 <div className="raid-loot-grid">{Object.entries(raid.battle.loot).map(([resource, amount]) => <span key={resource}><b>{formatAmount(amount)}</b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
-                <button className="raid-primary" onClick={raid.battle.type === 'REVENGE' ? raid.clearBattle : () => void returnToKingdom()} type="button">{raid.battle.type === 'REVENGE' ? t.inboxUi.title : t.raidUi.returnKingdom}</button>
+                <button className="raid-primary" data-guide-target="result-return" onClick={raid.battle.type === 'REVENGE' ? raid.clearBattle : () => void returnToKingdom()} type="button">{raid.battle.type === 'REVENGE' ? t.inboxUi.title : t.raidUi.returnKingdom}</button>
                 <button className="raid-secondary" onClick={raid.battle.type === 'REVENGE' ? () => onNavigate('kingdom') : raid.clearBattle} type="button">{raid.battle.type === 'REVENGE' ? t.raidUi.returnKingdom : t.raidUi.findAnother}</button>
               </div>
             ) : (
@@ -86,21 +91,21 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                       <div className="raid-portraits">{raid.offer.opponent.team.map((hero) => <figure key={hero.id}><img alt={t.heroNames[hero.key]} src={hero.portraitAsset} /><figcaption>{t.heroNames[hero.key]} · {hero.level}</figcaption></figure>)}</div>
                       <h3><Coins size={15} /> {t.raidUi.potentialLoot}</h3>
                       <div className="raid-loot-grid">{Object.entries(raid.offer.potentialLoot).map(([resource, amount]) => <span key={resource}><b>{formatAmount(amount)}</b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
-                      <button className="raid-primary" disabled={raid.action !== 'idle'} onClick={() => void raid.attack()} type="button">{raid.action === 'attacking' ? t.raidUi.marching : t.raidUi.attack}</button>
+                      <button className="raid-primary" data-guide-target="attack" disabled={raid.action !== 'idle'} onClick={() => void raid.attack()} type="button">{raid.action === 'attacking' ? t.raidUi.marching : t.raidUi.attack}</button>
                       <button className="raid-secondary" disabled={raid.action !== 'idle'} onClick={() => void raid.search()} type="button">{t.raidUi.findAnother}</button>
                     </>
                   ) : (
-                    <div className="raid-empty"><span><Swords size={38} /></span><h2>{t.raidUi.ready}</h2><p>{t.raidUi.readyHint}</p><button className="raid-primary" disabled={raid.action !== 'idle'} onClick={() => void raid.search()} type="button">{raid.action === 'searching' || raid.action === 'loading' ? t.raidUi.searching : t.raidUi.findOpponent}</button></div>
+                    <div className="raid-empty"><span><Swords size={38} /></span><h2>{t.raidUi.ready}</h2><p>{t.raidUi.readyHint}</p><button className="raid-primary" data-guide-target="find-enemy" disabled={raid.action !== 'idle'} onClick={() => void raid.search()} type="button">{raid.action === 'searching' || raid.action === 'loading' ? t.raidUi.searching : t.raidUi.findOpponent}</button></div>
                   )}
                 </div>
                 <div className="raid-own-team"><strong>{t.raidUi.yourTeam}</strong><span>{state?.team.heroes.map((hero) => `${t.heroNames[hero.key]} ${t.heroUi.level}${hero.level} · ${hero.power}`).join('  |  ')}</span><b>{state?.team.power ?? 0}</b><button onClick={() => onNavigate('heroes')} type="button">{t.raidUi.editTeam}</button></div>
               </>
             )}
           </section>
-          {tutorialRaid && raid.battle && !battleFinished ? <OnboardingCoach title={t.experience.battleTitle} body={t.experience.battleBody} /> : null}
-          {tutorialRaid && raid.battle && battleFinished ? <OnboardingCoach title={t.experience.resultTitle} body={t.experience.resultBody} placement="bottom" /> : null}
-          {tutorialRaid && !raid.battle && raid.offer ? <OnboardingCoach title={t.experience.attackTitle} body={t.experience.attackBody} placement="bottom" /> : null}
-          {tutorialRaid && !raid.battle && !raid.offer ? <OnboardingCoach title={t.experience.findTitle} body={t.experience.findBody} placement="bottom" /> : null}
+          {tutorialRaid && raid.battle && !battleFinished ? <AdvisorCoach title={t.experience.battleTitle} body={t.experience.advisor.battle} durationMs={3500} /> : null}
+          {tutorialRaid && raid.battle && battleFinished ? <AdvisorCoach title={t.experience.resultTitle} body={t.experience.advisor.result} target="result-return" /> : null}
+          {tutorialRaid && !raid.battle && raid.offer ? <AdvisorCoach title={t.experience.attackTitle} body={t.experience.advisor.attack} target="attack" /> : null}
+          {tutorialRaid && !raid.battle && !raid.offer ? <AdvisorCoach title={t.experience.findTitle} body={t.experience.advisor.findEnemy} target="find-enemy" /> : null}
           <BottomNavigation activeSection="raid" dictionary={t} onComingSoon={setComingSoon} onNavigate={onNavigate} />
           <div className={comingSoon ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">{comingSoon ? t.comingSoonMessage.replace('{section}', comingSoon) : ''}</div>
           <div className={raid.errorCode ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{raid.errorCode ? (t.raidErrors[raid.errorCode as keyof typeof t.raidErrors] ?? t.raidErrors.SERVER_ERROR) : ''}{raid.errorCode ? <button onClick={() => void raid.refresh()} type="button">{t.retry}</button> : null}</div>

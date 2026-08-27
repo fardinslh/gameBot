@@ -14,9 +14,24 @@ The development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audio` n
 
 ## Runtime architecture
 
-`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. The manager preserves first-gesture unlock, 600 ms music crossfade, visibility suspend/resume, safe media failure handling, and persisted-Battle-event SFX timing. Audio never decides or blocks gameplay.
+`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. Music uses one lazily created Web Audio `AudioContext`, decoded `AudioBuffer` caches, looping `AudioBufferSourceNode`s, and per-source `GainNode`s. Context changes crossfade for 600 ms and schedule the old source to stop. Same-context renders and volume changes do not recreate music. Visibility suspends/resumes the intended context. Audio never decides or blocks gameplay.
 
-`MUSIC_TRACKS` maps the approved Kingdom B and Battle A loops. Every `SFX_ASSETS` key maps exactly one approved local file. `pickSfxAsset` remains variant-ready for future explicitly approved alternatives.
+If Web Audio initialization, fetch, decode, or loop validation fails, the manager falls back to one conservative looping `HTMLAudioElement`. SFX intentionally retain lightweight `HTMLAudioElement` playback.
+
+`MUSIC_TRACKS` maps the approved Kingdom B and Battle A compositions through derived loop-ready files and explicit timing. Every `SFX_ASSETS` key maps exactly one approved local file. `pickSfxAsset` remains variant-ready for future explicitly approved alternatives.
+
+## Loop-ready derivation
+
+The approved source files remain unchanged. Both are stereo 44.1 kHz MP3. `ffprobe` reports Kingdom as 49.951383 seconds and Battle as 108 seconds, with MP3 stream start at 0.025057 seconds. `silencedetect` found no silence of at least 150 ms at -45 dB. The audible restart risk came from incompatible musical tail/head material plus non-sample-accurate `HTMLAudioElement.loop`, not a large baked-in silent region.
+
+Each derived master replaces the final 2.5 seconds with a circular linear crossfade from the approved tail into the approved first 2.5 seconds. The loop jump therefore returns to the musical point reached at the render end instead of restarting after an outro.
+
+| Context | Approved source | Derived runtime file | loopStart | loopEnd |
+| --- | --- | --- | ---: | ---: |
+| Kingdom | `approved/music/kingdom.mp3` | `approved/music/loop-ready/kingdom-loop.mp3` | 0 | 47.451383 s |
+| Battle | `approved/music/battle.mp3` | `approved/music/loop-ready/battle-loop.mp3` | 0 | 105.5 s |
+
+`loop-ready/LOOP_MANIFEST.json` is the provenance/timing record. The source selection did not change.
 
 ## Approved production mapping
 
@@ -57,6 +72,6 @@ CC-BY and CC-BY-SA assets retain their attribution obligations in the manifests.
 
 ## Validation
 
-`npm run test:client-experience` checks the complete approved-choice contract, production mapping, runtime catalog, and metadata. `npm run validate:audio-lab` checks all 24 approved assets for file presence, MP3 metadata, decoded peak headroom, browser loading, the completed lab state, and 320/375/390 mobile overflow.
+`npm run test:client-experience` checks music lifecycle, loop metadata, fallback, the approved-choice contract, Battle-SFX mapping, and advisor positioning. `npm run validate:audio-loops` checks both derived files, stream format, duration, nonzero size, loop bounds, and three consecutive decoded boundaries without a 0.5-second silent gap. `npm run validate:audio-lab` continues to validate the approved catalog.
 
-Final relative-mix review in the full game on headphones, desktop speakers, phone speakers, and later Bale WebView remains a launch check.
+The loop boundaries are **NOT AUDIBLY VERIFIED** in the automated environment. Product-owner listening across at least three consecutive Kingdom and Battle loops, real-device mix review, and later Bale WebView behavior remain launch checks.

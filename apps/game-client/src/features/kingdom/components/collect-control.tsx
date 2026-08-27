@@ -37,6 +37,7 @@ export function CollectControl({
   return (
     <div className="collect-control">
       <button
+        data-guide-target="collect"
         className={ready > BigInt(0) ? 'collect-button collect-button--ready' : 'collect-button'}
         disabled={disabled}
         onClick={onCollect}

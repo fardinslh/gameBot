@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test:analytics": "vitest run src/features/analytics/analytics-queue.spec.ts",
-    "test:experience": "vitest run src/features/audio/audio-manager.spec.ts src/features/audio/battle-audio.spec.ts src/features/audio-lab/audio-audition.spec.ts src/features/experience/experience-content.spec.ts"
+    "test:experience": "vitest run src/features/audio/audio-manager.spec.ts src/features/audio/battle-audio.spec.ts src/features/audio-lab/audio-audition.spec.ts src/features/experience/experience-content.spec.ts src/features/experience/advisor-positioning.spec.ts"
   },
   "dependencies": {
     "@crown-and-coin/shared": "*",

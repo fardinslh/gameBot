@@ -60,6 +60,17 @@ async function assertViewport(page, width, height, direction) {
   if (!nav || nav.height < 50 || nav.height > 70) throw new Error(`Navigation height ${nav?.height ?? 0} is invalid at ${width}x${height}`);
 }
 
+async function assertCoachClear(page, targetSelector) {
+  const coach = await page.locator('.advisor-coach').boundingBox();
+  const target = await page.locator(targetSelector).boundingBox();
+  if (!coach || !target) throw new Error(`Missing advisor or target ${targetSelector}`);
+  const gap = 12;
+  const overlap = coach.x < target.x + target.width + gap && coach.x + coach.width > target.x - gap
+    && coach.y < target.y + target.height + gap && coach.y + coach.height > target.y - gap;
+  if (overlap) throw new Error(`Advisor overlaps expanded target ${targetSelector}`);
+  await page.locator(targetSelector).click({ trial: true });
+}
+
 async function cleanupPlayers(externalUserIds) {
   const accounts = await prisma.platformAccount.findMany({
     where: { platform: 'WEB', externalUserId: externalUserIds ? { in: externalUserIds } : { startsWith: 'experience-' } },
@@ -84,6 +95,7 @@ mkdirSync(artifacts, { recursive: true });
 let client;
 let browser;
 const consoleErrors = [];
+const musicRequests = [];
 try {
   await cleanupPlayers();
   await waitForUrl('http://localhost:3001/health');
@@ -99,6 +111,7 @@ try {
     HTMLMediaElement.prototype.pause = function pause() {};
   });
   await routePlayer(page, playerIds[0]);
+  page.on('request', (request) => { if (request.url().includes('/approved/music/loop-ready/')) musicRequests.push(request.url()); });
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
@@ -106,31 +119,37 @@ try {
   await page.waitForSelector('[data-onboarding-step="WELCOME"]');
   await page.screenshot({ path: new URL('01-welcome-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.experience-primary').click();
-  await page.waitForSelector('.onboarding-coach');
-  if (await page.locator('.onboarding-coach strong').textContent() !== 'ذخایرت را جمع کن') throw new Error('Collect coach did not appear in Persian');
+  await page.waitForSelector('.advisor-coach');
+  await assertCoachClear(page, '[data-guide-target="collect"]');
   await page.screenshot({ path: new URL('02-collect-fa-320x568.png', artifacts).pathname.slice(1) });
 
   await page.locator('.collect-button').click();
-  await page.waitForFunction(() => document.querySelector('.onboarding-coach strong')?.textContent?.includes('نیرومند'));
+  await page.waitForFunction(() => document.querySelector('.advisor-coach'));
   await clickWorldBuilding(page, 88, 958);
   await page.waitForSelector('[data-building-sheet="farm"]');
+  await assertCoachClear(page, '[data-guide-target="upgrade"]');
   await page.screenshot({ path: new URL('03-upgrade-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.upgrade-button').click();
-  await page.waitForFunction(() => document.querySelector('.onboarding-coach strong')?.textContent?.includes('یورش'));
-  await page.locator('[data-nav-id="raid"]').click();
+  await page.waitForSelector('[data-guide-target="raid-tab"][data-guide-active="true"]');
+  await assertCoachClear(page, '[data-guide-target="raid-tab"]');
+  await page.screenshot({ path: new URL('04-raid-target-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('[data-guide-target="raid-tab"]').click();
   await page.waitForSelector('[data-raid-state="overview"]');
-  await page.screenshot({ path: new URL('04-raid-fa-320x568.png', artifacts).pathname.slice(1) });
-  await page.locator('.raid-primary').click();
+  await assertCoachClear(page, '[data-guide-target="find-enemy"]');
+  await page.screenshot({ path: new URL('05-find-enemy-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('[data-guide-target="find-enemy"]').click();
   await page.waitForSelector('[data-raid-state="offer"]');
   const opponentKind = await page.evaluate(async () => {
     const response = await fetch('http://localhost:3001/raid/search', { method: 'POST' });
     return response.ok ? (await response.json()).offer.opponent.kind : 'FAILED';
   });
   if (opponentKind !== 'SYSTEM') throw new Error(`Fresh onboarding player received ${opponentKind} opponent`);
-  await page.locator('.raid-primary').click();
+  await assertCoachClear(page, '[data-guide-target="attack"]');
+  await page.locator('[data-guide-target="attack"]').click();
   await page.waitForSelector('[data-raid-state="battle"]');
   await page.waitForSelector('[data-raid-state="result"]', { timeout: 25_000 });
-  await page.locator('.raid-result .raid-primary').click();
+  await assertCoachClear(page, '[data-guide-target="result-return"]');
+  await page.locator('[data-guide-target="result-return"]').click();
   await page.waitForSelector('[data-onboarding-step="COMPLETE"]');
   await page.locator('.experience-complete-button').click();
   await page.waitForSelector('[data-scene-status="ready"]');
@@ -138,19 +157,27 @@ try {
   const status = await page.evaluate(async () => (await (await fetch('http://localhost:3001/onboarding')).json()));
   if (status.status !== 'COMPLETED' || status.currentStep !== 'COMPLETE') throw new Error('Onboarding did not complete authoritatively');
   const audioCalls = await page.evaluate(() => window.__crownAudioCalls);
-  for (const required of ['kingdom-hearth.mp3', 'collect.mp3', 'upgrade-start.mp3', 'find-enemy.mp3', 'attack-start.mp3', 'battle-march.mp3']) {
-    if (!audioCalls.some((source) => source.includes(required))) throw new Error(`Audio route was not technically triggered: ${required}`);
+  for (const required of ['collect.mp3', 'upgrade-start.mp3', 'find-enemy.mp3', 'attack-start.mp3']) {
+    if (!audioCalls.some((source) => source.includes(required))) throw new Error(`SFX route was not technically triggered: ${required}`);
   }
+  for (const required of ['kingdom-loop.mp3', 'battle-loop.mp3']) if (!musicRequests.some((source) => source.includes(required))) throw new Error(`Buffered music was not requested: ${required}`);
+
+  await page.locator('[data-nav-id="heroes"]').click();
+  await page.waitForSelector('[data-heroes-status="ready"]');
+  await page.waitForSelector('.advisor-context-tip');
+  await page.screenshot({ path: new URL('06-heroes-advisor-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.advisor-context-tip button').click();
+  await page.locator('[data-nav-id="kingdom"]').click();
 
   await page.locator('.experience-controls button').first().click();
   await page.waitForSelector('[data-experience-panel="guide"]');
   if (await page.locator('.guide-sections article').count() !== 8) throw new Error('Game Guide must contain eight sections');
-  await page.screenshot({ path: new URL('05-guide-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: new URL('07-guide-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.experience-panel > header > button').click();
   await page.locator('.experience-controls button').nth(1).click();
   await page.waitForSelector('[data-experience-panel="audio"]');
   if (await page.locator('.audio-setting-row').count() !== 3) throw new Error('Audio settings must contain Master, Music, and SFX rows');
-  await page.screenshot({ path: new URL('06-audio-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: new URL('08-audio-fa-320x568.png', artifacts).pathname.slice(1) });
   const toggles = page.locator('.audio-setting-row input[type="checkbox"]');
   await toggles.nth(0).click(); await toggles.nth(1).click(); await toggles.nth(2).click();
   const saved = await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1'));
@@ -159,7 +186,10 @@ try {
   await page.waitForSelector('[data-scene-status="ready"]');
   if (await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1')) !== saved) throw new Error('Audio settings did not persist after refresh');
 
-  for (const viewport of [{ width: 375, height: 812 }, { width: 390, height: 844 }]) await assertViewport(page, viewport.width, viewport.height, 'rtl');
+  for (const viewport of [{ width: 375, height: 812 }, { width: 390, height: 844 }]) {
+    await assertViewport(page, viewport.width, viewport.height, 'rtl');
+    await page.screenshot({ path: new URL(`kingdom-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+  }
 
   const english = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await routePlayer(english, playerIds[1]);
@@ -179,7 +209,7 @@ try {
   await english.close();
 
   const assetRoot = new URL('apps/game-client/public/assets/audio/', root);
-  const requiredAssets = ['music/kingdom-hearth.mp3', 'music/battle-march.mp3'];
+  const requiredAssets = ['approved/music/loop-ready/kingdom-loop.mp3', 'approved/music/loop-ready/battle-loop.mp3'];
   for (const asset of requiredAssets) {
     const size = statSync(new URL(asset, assetRoot));
     if (size.size < 10_000 || size.size > 3_000_000) throw new Error(`Audio asset budget failed for ${asset}: ${size.size}`);
