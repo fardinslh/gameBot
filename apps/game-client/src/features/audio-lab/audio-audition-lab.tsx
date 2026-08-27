@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Check, Headphones, Pause, Play, RotateCcw, ShieldAlert, Square } from 'lucide-react';
 import manifestJson from '../../../public/assets/audio/candidates/AUDITION_MANIFEST.json';
-import { AUDIO_STORAGE_KEY, DEFAULT_AUDIO_SETTINGS, normalizeAudioSettings, type AudioSettings } from '@/features/audio/audio-manager';
+import { AUDIO_STORAGE_KEY, DEFAULT_AUDIO_SETTINGS, GameAudioManager, normalizeAudioSettings, type AudioSettings } from '@/features/audio/audio-manager';
 import styles from './audio-audition-lab.module.css';
 
 interface Candidate {
@@ -35,18 +35,21 @@ const SHORTLIST_KEY = 'crown-coin-audio-audition-v1';
 
 export function AudioAuditionLab() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const loopManagerRef = useRef<GameAudioManager | null>(null);
   const [playing, setPlaying] = useState<string | null>(null);
   const [settings, setSettings] = useState<AudioSettings>(DEFAULT_AUDIO_SETTINGS);
   const [shortlist, setShortlist] = useState<Record<string, string>>({});
-  const [message, setMessage] = useState('Round 2 is ready. Use headphones and phone speakers before deciding.');
+  const [message, setMessage] = useState(manifest.pendingGroupCount === 0 ? 'Press Test Kingdom Loop. Listen through at least 3 transitions.' : 'Round 2 is ready. Use headphones and phone speakers before deciding.');
 
   useEffect(() => {
     try {
       setSettings(normalizeAudioSettings(JSON.parse(localStorage.getItem(AUDIO_STORAGE_KEY) ?? 'null')));
       setShortlist(JSON.parse(localStorage.getItem(SHORTLIST_KEY) ?? '{}'));
     } catch { /* keep safe defaults */ }
-    return () => { audioRef.current?.pause(); };
+    return () => { audioRef.current?.pause(); loopManagerRef.current?.destroy(); };
   }, []);
+
+  useEffect(() => { loopManagerRef.current?.setSettings(settings); }, [settings]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -71,11 +74,13 @@ export function AudioAuditionLab() {
     audioRef.current?.pause();
     if (audioRef.current) audioRef.current.currentTime = 0;
     audioRef.current = null;
+    loopManagerRef.current?.stopMusic();
     setPlaying(null);
     setMessage('Stopped.');
   };
 
   const play = async (candidate: Candidate, restart = false): Promise<void> => {
+    loopManagerRef.current?.stopMusic();
     if (audioRef.current && playing === candidate.filename && !restart) {
       if (audioRef.current.paused) await audioRef.current.play(); else audioRef.current.pause();
       setMessage(audioRef.current.paused ? `Paused ${candidate.label} ${candidate.candidate}.` : `Playing ${candidate.label} ${candidate.candidate}.`);
@@ -120,6 +125,21 @@ export function AudioAuditionLab() {
     if (candidate) void play(candidate, true);
   };
 
+  const testKingdomLoop = async (): Promise<void> => {
+    audioRef.current?.pause();
+    audioRef.current = null;
+    setPlaying(null);
+    const manager = loopManagerRef.current ?? new GameAudioManager();
+    loopManagerRef.current = manager;
+    manager.setSettings(settings);
+    try {
+      await manager.previewLoopBoundary('KINGDOM');
+      setMessage('Kingdom loop test: final 8 seconds, real 3.5-second overlap, then first 8 seconds. Listen through 3 tests.');
+    } catch {
+      setMessage('FAILED to start Kingdom loop boundary test.');
+    }
+  };
+
   return (
     <main className={styles.lab} data-audio-lab={selectionComplete ? 'full-human-approval' : 'partial-human-approval'}>
       <div className={styles.grain} aria-hidden="true" />
@@ -130,13 +150,23 @@ export function AudioAuditionLab() {
         <div className={styles.status}><ShieldAlert size={18} /><span>Audio selection</span><strong>{selectionComplete ? `${manifest.approvedGroupCount} MAPPED · SELECTION COMPLETE` : `${manifest.approvedGroupCount} MAPPED · ${manifest.pendingGroupCount} GROUPS PENDING`}</strong></div>
       </header>
 
-      {!selectionComplete ? <section className={styles.console} aria-label="Audition controls">
-        <div className={styles.consoleTitle}><Headphones size={20} /><div><strong>Listening chain</strong><small>Shared with game settings</small></div><button data-audio-action="stop-all" onClick={stop} type="button"><Square size={15} /> Stop all</button></div>
+      <section className={`${styles.console} ${styles.loopConsole}`} aria-label="Music loop boundary test" data-audio-loop-test="production-scheduler">
+        <div className={styles.consoleTitle}>
+          <Headphones size={20} />
+          <div><strong>True loop boundary test</strong><small>Uses production dual-source scheduler</small></div>
+          <button data-audio-action="test-kingdom-loop" onClick={() => void testKingdomLoop()} type="button"><Play size={15} /> Test Kingdom Loop</button>
+          <button data-audio-action="stop-loop-test" onClick={stop} type="button"><Square size={15} /> Stop</button>
+        </div>
         <div className={styles.mixer}>
           <Toggle label="Master" enabled={settings.masterEnabled} volume={settings.masterVolume} onEnabled={(value) => updateSettings({ ...settings, masterEnabled: value })} onVolume={(value) => updateSettings({ ...settings, masterVolume: value })} />
           <Toggle label="Music" enabled={settings.musicEnabled} volume={settings.musicVolume} onEnabled={(value) => updateSettings({ ...settings, musicEnabled: value })} onVolume={(value) => updateSettings({ ...settings, musicVolume: value })} />
           <Toggle label="SFX" enabled={settings.sfxEnabled} volume={settings.sfxVolume} onEnabled={(value) => updateSettings({ ...settings, sfxEnabled: value })} onVolume={(value) => updateSettings({ ...settings, sfxVolume: value })} />
         </div>
+        <p className={styles.live} aria-live="polite">{message}</p>
+      </section>
+
+      {!selectionComplete ? <section className={styles.console} aria-label="Audition controls">
+        <div className={styles.consoleTitle}><Headphones size={20} /><div><strong>Listening chain</strong><small>Shared with game settings</small></div><button data-audio-action="stop-all" onClick={stop} type="button"><Square size={15} /> Stop all</button></div>
         <p className={styles.live} aria-live="polite">{message}</p>
       </section> : null}
 

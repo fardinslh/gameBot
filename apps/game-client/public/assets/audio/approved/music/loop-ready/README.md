@@ -1,5 +1,5 @@
 # Loop-ready approved music
 
-These files are derived from the unchanged owner-approved `../kingdom.mp3` and `../battle.mp3` sources. Each render keeps the approved composition, removes no musical body, and replaces the last 2.5 seconds with a circular crossfade from the source tail into its first 2.5 seconds. The rendered end therefore approaches the same musical point used at loop start.
+`kingdom-loop.mp3` and `battle-loop.mp3` are legacy derived files from the first loop-repair attempt. They remain only for provenance and rollback. Production no longer loads them because their tails already contain baked head material.
 
-`LOOP_MANIFEST.json` is the production timing/provenance record. The client uses buffered Web Audio playback and explicit loop points. The originals remain untouched. Technical boundary validation is automated; audible owner approval remains required.
+Production decodes the unchanged owner-approved `../kingdom.mp3` and `../battle.mp3` sources. `CrossfadeLoopPlayer` schedules separate non-looping `AudioBufferSourceNode` instances. Before one source ends, the next starts from `loopStart`; 128-sample equal-power curves fade tail out and head in simultaneously. `LOOP_MANIFEST.json` records exact timing. Technical scheduling validation is automated; audible owner approval remains required.

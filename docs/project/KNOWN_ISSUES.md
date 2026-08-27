@@ -12,11 +12,15 @@ The current repair passes unit, integration, audio-boundary, type, lint, documen
 
 ### Production audio still needs real-device mix review
 
-The product owner approved all 24 licensed production choices. Derived 2.5-second circular-crossfade loop masters pass three-boundary technical validation, but were **not audibly verified**. The owner must listen through at least three Kingdom and Battle boundaries and review the complete mix on headphones, desktop speakers, a real phone, and later Bale WebView.
+The product owner approved all 24 licensed production choices. Production now uses scheduled overlapping sources with 128-sample equal-power curves: Kingdom overlaps for 3.5 seconds and Battle for 2.5 seconds. Scheduler and three-transition decoded-PCM checks pass, but the new overlap remains **not audibly verified**. The owner must use **Test Kingdom Loop** on `/dev/audio` for at least three transitions, then review the complete mix on headphones, desktop speakers, a real phone, and later Bale WebView.
 
 ### Aren art and browser screenshots need owner/manual review
 
-The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry unit tests pass at 320x568, 375x812, and 390x844, but no in-app/connected browser was available for this repair run, so the required screenshots and real tap flow remain manually unverified.
+The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry unit tests pass at 320x568, 375x812, and 390x844. Browser automation is now available, but the full flow does not complete because of the Upgrade-target regression below; required Aren screenshots and real tap flow remain unverified.
+
+### Existing onboarding browser regression remains outside audio scope
+
+After the music scheduler change, `validate:player-experience` repeatedly failed because Aren overlapped the expanded Upgrade target; one retry later timed out waiting for the active Raid tab. `validate:raid` timed out waiting for its match-search response in the same browser flow. Audio work did not change advisor positioning, onboarding text, Raid, or Battle, and this task explicitly forbids those fixes. API unit and integration suites still pass, including Raid/Battle settlement. Repair the browser-flow blocker in a separate scoped task, then rerun both validators.
 
 ### Bale lifecycle is not integrated
 

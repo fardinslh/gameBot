@@ -14,24 +14,28 @@ The development-only [Audio Audition](AUDIO_AUDITION.md) route at `/dev/audio` n
 
 ## Runtime architecture
 
-`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. Music uses one lazily created Web Audio `AudioContext`, decoded `AudioBuffer` caches, looping `AudioBufferSourceNode`s, and per-source `GainNode`s. Context changes crossfade for 600 ms and schedule the old source to stop. Same-context renders and volume changes do not recreate music. Visibility suspends/resumes the intended context. Audio never decides or blocks gameplay.
+`AudioProvider` owns one `GameAudioManager`. Master/Music/SFX toggles and volumes remain device-local under `crown-coin-audio-v1`. Music uses one lazily created Web Audio `AudioContext`, decoded `AudioBuffer` caches, and `CrossfadeLoopPlayer`. Every loop instance is a non-looping scheduled `AudioBufferSourceNode`; production never sets `source.loop = true`. Before one instance ends, the scheduler starts the next from `loopStart` and overlaps their gains. Context changes separately crossfade for 600 ms. Same-context renders and volume changes do not recreate music. Visibility suspends/resumes the audio clock and existing schedule. Audio never decides or blocks gameplay.
 
-If Web Audio initialization, fetch, decode, or loop validation fails, the manager falls back to one conservative looping `HTMLAudioElement`. SFX intentionally retain lightweight `HTMLAudioElement` playback.
+The graph is `source -> LoopFadeGain -> ContextGain -> MusicBusGain -> destination`. Per-instance gains own loop envelopes. Per-player context gain owns Kingdom/Battle changes. Shared music bus owns Master/Music mute and volume, so settings never overwrite overlap curves. If Web Audio initialization, fetch, decode, or loop validation fails, the manager falls back to one conservative looping `HTMLAudioElement`; this compatibility fallback cannot promise crossfaded looping. SFX intentionally retain lightweight `HTMLAudioElement` playback.
 
-`MUSIC_TRACKS` maps the approved Kingdom B and Battle A compositions through derived loop-ready files and explicit timing. Every `SFX_ASSETS` key maps exactly one approved local file. `pickSfxAsset` remains variant-ready for future explicitly approved alternatives.
+`MUSIC_TRACKS` maps the unchanged approved Kingdom B and Battle A files with explicit timing. Scheduling clamps configured `loopEnd` to decoded `AudioBuffer.duration`, avoiding reliance on MP3 container duration when decoded PCM differs. Every `SFX_ASSETS` key maps exactly one approved local file. `pickSfxAsset` remains variant-ready for future explicitly approved alternatives.
 
-## Loop-ready derivation
+## Overlapping loop schedule
 
-The approved source files remain unchanged. Both are stereo 44.1 kHz MP3. `ffprobe` reports Kingdom as 49.951383 seconds and Battle as 108 seconds, with MP3 stream start at 0.025057 seconds. `silencedetect` found no silence of at least 150 ms at -45 dB. The audible restart risk came from incompatible musical tail/head material plus non-sample-accurate `HTMLAudioElement.loop`, not a large baked-in silent region.
+The approved source files remain unchanged. Both are stereo 44.1 kHz MP3. Decoded PCM duration is 49.951383 seconds for Kingdom and 108 seconds for Battle. Runtime decodes the complete file, then schedules from decoded timing.
 
-Each derived master replaces the final 2.5 seconds with a circular linear crossfade from the approved tail into the approved first 2.5 seconds. The loop jump therefore returns to the musical point reached at the render end instead of restarting after an outro.
+For source start `T`, loop start `S`, loop end `E`, and overlap `X`, the next source starts at `T + (E - S) - X` from buffer offset `S`. Tail gain follows `cos(t * PI / 2)` while head gain follows `sin(t * PI / 2)`, using 128-sample `setValueCurveAtTime` curves. Old source stops at `T + (E - S)`. First playback starts only one audible copy; second copy begins later at the overlap point.
 
-| Context | Approved source | Derived runtime file | loopStart | loopEnd |
-| --- | --- | --- | ---: | ---: |
-| Kingdom | `approved/music/kingdom.mp3` | `approved/music/loop-ready/kingdom-loop.mp3` | 0 | 47.451383 s |
-| Battle | `approved/music/battle.mp3` | `approved/music/loop-ready/battle-loop.mp3` | 0 | 105.5 s |
+| Context | Runtime source | loopStart | loopEnd | overlap | next-start interval |
+| --- | --- | ---: | ---: | ---: | ---: |
+| Kingdom | `approved/music/kingdom.mp3` | 0 | 49.951383 s | 3.5 s | 46.451383 s |
+| Battle | `approved/music/battle.mp3` | 0 | 108 s | 2.5 s | 105.5 s |
 
-`loop-ready/LOOP_MANIFEST.json` is the provenance/timing record. The source selection did not change.
+`loop-ready/LOOP_MANIFEST.json` is the timing/provenance record. Previous baked-crossfade files remain there only as legacy rollback artifacts and are not loaded by production.
+
+## Development boundary preview
+
+Run `npm run dev`, open `/dev/audio`, and press **Test Kingdom Loop**. The control uses `GameAudioManager.previewLoopBoundary`, therefore the same production scheduler and equal-power curves. It begins eight seconds before Kingdom `loopEnd`, performs the real 3.5-second overlap, and continues eight seconds past the old source end. Press it at least three times for owner approval.
 
 ## Approved production mapping
 
@@ -72,6 +76,6 @@ CC-BY and CC-BY-SA assets retain their attribution obligations in the manifests.
 
 ## Validation
 
-`npm run test:client-experience` checks music lifecycle, loop metadata, fallback, the approved-choice contract, Battle-SFX mapping, and advisor positioning. `npm run validate:audio-loops` checks both derived files, stream format, duration, nonzero size, loop bounds, and three consecutive decoded boundaries without a 0.5-second silent gap. `npm run validate:audio-lab` continues to validate the approved catalog.
+`npm run test:client-experience` checks scheduler math, first/second/third instances, exact overlap, equal-power envelopes, bounded node lifecycle, cancellation, music bus isolation, mute, suspend/resume, fallback, Battle-SFX mapping, and unaffected player experience. `npm run validate:audio-loops` decodes approved originals, checks exact PCM timing, verifies three scheduled overlap transitions per track, and rejects silent overlap windows. `npm run validate:audio-lab` validates the development route and boundary control.
 
 The loop boundaries are **NOT AUDIBLY VERIFIED** in the automated environment. Product-owner listening across at least three consecutive Kingdom and Battle loops, real-device mix review, and later Bale WebView behavior remain launch checks.

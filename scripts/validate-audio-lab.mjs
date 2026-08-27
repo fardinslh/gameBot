@@ -72,6 +72,8 @@ try {
   if (failedLoads.length) throw new Error(`Candidate HTTP loads failed: ${failedLoads.map((item) => item.file).join(', ')}`);
   if (await page.locator('[data-audio-group]').count() !== 0) throw new Error('Approved groups must not remain in the audition lab');
   if (await page.locator('[data-audio-context]').count() !== 0) throw new Error('No pending context controls should remain');
+  if (!(await page.locator('[data-audio-loop-test="production-scheduler"]').isVisible())) throw new Error('Production loop boundary test is missing');
+  if (!(await page.locator('[data-audio-action="test-kingdom-loop"]').isVisible())) throw new Error('Test Kingdom Loop control is missing');
   if (!(await page.getByText('24 MAPPED · SELECTION COMPLETE').isVisible())) throw new Error('Completion status is missing');
   for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
@@ -83,6 +85,7 @@ try {
   console.log(`PASS Audio Lab shows selection complete and all ${approvedManifest.approvedGroupCount} approved assets load`);
   console.log('PASS MP3 bitrate metadata and decoded peaks stay below 0 dBFS');
   console.log('PASS no approved candidates or pending context controls remain in the lab');
+  console.log('PASS production-scheduler Kingdom loop boundary control is visible');
   console.log('PASS 320x568, 375x812, and 390x844 without horizontal overflow');
   console.log('NOTE technical playback only; candidate quality was NOT AUDIBLY VERIFIED');
 } finally {

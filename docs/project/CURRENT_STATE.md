@@ -18,7 +18,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
 | Permanent Game Guide | Implemented | Aren identity plus eight bilingual sections available from the compact Player HUD |
-| Audio engine | Implemented | Buffered Web Audio loop masters, explicit loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
+| Audio engine | Implemented | Scheduled dual-source equal-power loop overlap, shared music bus, explicit decoded loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
 | Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Partial | `WOOD`, `STONE`, `FORTIFIED` state works; stages 2 and 3 fall back to stage 1 art |
@@ -93,7 +93,7 @@ Twelve ordered migrations exist:
 
 ## Active launch gate: final human checks before Bale
 
-First-party analytics remains observational. The Aren advisor repair, target-aware onboarding, persistent contextual counsel, loop-ready Web Audio runtime, audio controls, and all 24 owner-approved mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the authority. Bale has not started. Owner approval of Aren, audible loop/mix review, and mobile screenshot confirmation remain human launch checks.
+First-party analytics remains observational. The Aren advisor repair, target-aware onboarding, persistent contextual counsel, scheduled overlapping Web Audio runtime, audio controls, and all 24 owner-approved mappings are implemented. Onboarding completion is not activation; `first_raid_completed` remains the authority. Bale has not started. Owner approval of Aren, three-transition audible loop/mix review, and mobile screenshot confirmation remain human launch checks.
 
 ## Validation entry points
 

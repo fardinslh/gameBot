@@ -209,7 +209,7 @@ try {
   await english.close();
 
   const assetRoot = new URL('apps/game-client/public/assets/audio/', root);
-  const requiredAssets = ['approved/music/loop-ready/kingdom-loop.mp3', 'approved/music/loop-ready/battle-loop.mp3'];
+  const requiredAssets = ['approved/music/kingdom.mp3', 'approved/music/battle.mp3'];
   for (const asset of requiredAssets) {
     const size = statSync(new URL(asset, assetRoot));
     if (size.size < 10_000 || size.size > 3_000_000) throw new Error(`Audio asset budget failed for ${asset}: ${size.size}`);
