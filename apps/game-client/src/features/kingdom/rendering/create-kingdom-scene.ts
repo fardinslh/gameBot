@@ -10,7 +10,7 @@ import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from
 import {
   getBuildingVisualState,
   getUpgradeTransition,
-  isCoreEvolutionBuilding,
+  isEvolutionBuilding,
   type BuildingVisualState,
 } from './building-visual-progression';
 import { KINGDOM_EXPANSION_PRESENTATIONS, EXPANSION_PRESENTATION_BY_BUILDING } from '../data/kingdom-expansion-stages';
@@ -484,7 +484,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 }
 
 function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualState | undefined {
-  return isCoreEvolutionBuilding(id)
+  return isEvolutionBuilding(id)
     ? getBuildingVisualState({ buildingId: id, level, theme: DEFAULT_KINGDOM_THEME })
     : undefined;
 }

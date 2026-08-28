@@ -50,7 +50,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Never mirror Pixi Kingdom/Battle geometry or ordered spatial grids when correcting interface direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`
-- For core buildings, derive visuals only through explicit `{ buildingId, level, theme }` requests to `getBuildingVisualState`; preserve `DEFAULT` as the sole implemented theme, all five tier assets, per-level detail rules, stable containers, and development Lab parity
+- For all nine active buildings, derive visuals only through explicit `{ buildingId, level, theme }` requests to `getBuildingVisualState`; preserve `DEFAULT` as the sole implemented theme, all five tier assets, per-level detail rules, stable containers, and development Lab parity
 - Keep building world labels and compact upgrade status screen-legible; do not parent compact UI so it blindly inherits building and world shrink. Preserve the shared screen-space overlay, one semantic `statusStackAnchor` per building, exact centered indicator-above-badge layout, and device-pixel snapping unless a measured replacement is better.
 - Judge core texture quality from effective opaque-pixel resolution at production size, DPR, and moderate 150/200% inspection. Never claim improvement from naive raster upscaling; preserve current-stage lazy loading and the per-file budget.
 - Keep Kingdom Theme presentation-only. Do not add persistence, ownership, selection, historical catalogs, commerce, Seasons, or gameplay bonuses without their explicit future phase
@@ -74,7 +74,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 
 Unused assets, Prisma enum values, transaction reasons, or adapter interfaces do not make a feature implemented. Confirm a schema path, service, controller, shared contract, client flow, and validation before describing a system as complete.
 
-Retention work is split into explicit bounded tasks. After Retention 01A, do not automatically start 01B, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, Bale, Telegram, equipment, or new building gameplay.
+Retention work is split into explicit bounded tasks. After Retention 01B, do not automatically start Retention 02 Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, Bale, Telegram, equipment, or new building gameplay.
 
 ## Documentation maintenance
 
@@ -111,7 +111,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A core building evolution, its DEFAULT theme-ready architecture, and the final pre-retention corrective pass are implemented. Level badges and compact upgrade/active indicators share one intentional screen-space stack with a semantic per-building anchor, exact horizontal alignment, and a fixed 6px gap. Castle moved from world Y 690 to 665 while camera composition focus remains 690. The Persian RTL corrective pass remains intact with `/dev/rtl`, semantic root/document direction, bidi primitives, and browser validation. `/dev/buildings` includes 100/150/200% review plus exact production status fixtures for all nine active progression buildings. Aren's authoritative Collect-to-Result path and Raid regression pass at 320/375/390; owner portrait/copy review and real-device audio review remain open. Retention 01B advanced buildings and progression goals are next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. Bale has not started and is intentionally after the bounded retention roadmap.
+Retention 01A and 01B building evolution are implemented. All nine active buildings share the DEFAULT five-tier resolver and `/dev/buildings` inspection matrix. Castle detail opens authoritative Kingdom Progress goals; unused Castle-7 feature metadata is not exposed. Level badges and compact upgrade/active indicators retain the semantic screen-space stack, Castle remains at world Y 665, camera focus remains 690, and Persian RTL remains intact. Advanced building art, Aren portrait/copy, and real-device audio still require owner review. Retention 02 is next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. Bale has not started.
 
 ## Git completion rules
 

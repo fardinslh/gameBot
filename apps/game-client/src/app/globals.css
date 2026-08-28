@@ -413,6 +413,9 @@ button { color: inherit; }
 .building-effect small { grid-column: 1 / -1; color: var(--cream-muted); font-size: 8px; }
 .building-effect strong { color: var(--gold-pale); font-size: 10px; }
 .building-effect span { color: var(--cream-muted); font-size: 9px; }
+.kingdom-progress-open { display: flex; min-height: 44px; align-items: center; gap: 8px; padding: 0 11px; color: var(--gold-pale); background: linear-gradient(90deg, rgba(226,180,71,.13), rgba(80,104,61,.1)); border: 0; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(226,180,71,.18); cursor: pointer; font-size: 10px; font-weight: 800; }
+.kingdom-progress-open span { flex: 1; text-align: start; }
+.kingdom-progress-open svg:last-child { transform: rotate(90deg); }
 .building-lock-state { display: flex; align-items: center; gap: 9px; padding: 9px 10px; color: #e0be7d; background: rgba(183,130,53,.12); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(220,181,105,.12); }
 .building-lock-state > svg { flex: 0 0 auto; }
 .building-lock-state small { display: block; color: #aa9d87; font-size: 8px; }
@@ -431,6 +434,48 @@ button { color: inherit; }
 .upgrade-button:active { transform: scale(.98); }
 .upgrade-button:disabled { color: #918879; background: rgba(255,255,255,.07); box-shadow: inset 0 0 0 1px rgba(255,255,255,.07); cursor: not-allowed; }
 .preview-note { margin: -2px 0 0; color: #9e9485; font-size: 8px; text-align: center; }
+
+.kingdom-progress-sheet { position: absolute; z-index: 42; inset-inline: 8px; inset-block-end: calc(max(4px, env(safe-area-inset-bottom)) + 61px); display: grid; gap: 9px; max-height: calc(100% - 132px); overflow-y: auto; padding: 14px; pointer-events: none; visibility: hidden; opacity: 0; color: var(--cream); background: radial-gradient(circle at 15% 0, rgba(226,180,71,.17), transparent 28%), linear-gradient(145deg, rgba(255,255,255,.05), transparent 44%), rgba(20,19,16,.98); border-radius: 23px; box-shadow: 0 26px 65px rgba(0,0,0,.62), inset 0 0 0 1px rgba(255,215,108,.18); backdrop-filter: blur(20px); transform: translateY(24px); transition: transform 240ms var(--ease), opacity 200ms var(--ease), visibility 240ms var(--ease); }
+.kingdom-progress-sheet--open { pointer-events: auto; visibility: visible; opacity: 1; transform: translateY(0); }
+.kingdom-progress-sheet__handle { justify-self: center; width: 34px; height: 3px; margin: -6px 0 -2px; background: rgba(255,255,255,.22); border-radius: 3px; }
+.kingdom-progress-sheet__heading { display: grid; grid-template-columns: 44px 1fr 44px; align-items: center; gap: 9px; }
+.kingdom-progress-sheet__heading > span { display: grid; width: 44px; height: 44px; place-items: center; color: var(--gold-bright); background: rgba(226,180,71,.11); border-radius: 13px; box-shadow: inset 0 0 0 1px rgba(255,215,108,.17); }
+.kingdom-progress-sheet__heading div { min-width: 0; }
+.kingdom-progress-sheet__heading small { display: block; overflow: hidden; color: var(--cream-muted); font-size: 7px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.kingdom-progress-sheet__heading h2 { margin: 2px 0 0; font: 700 19px/1.05 Georgia, "Times New Roman", serif; }
+.kingdom-progress-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.kingdom-progress-summary div { display: flex; min-height: 43px; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; background: rgba(255,255,255,.045); border-radius: 11px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.055); }
+.kingdom-progress-summary small { color: var(--cream-muted); font-size: 8px; }
+.kingdom-progress-summary strong { color: var(--gold-bright); font: 700 18px/1 Georgia, "Times New Roman", serif; }
+.kingdom-progress-xp { padding: 7px 10px; background: rgba(255,255,255,.03); border-radius: 10px; }
+.kingdom-progress-xp > span { display: flex; justify-content: space-between; color: var(--cream-muted); font-size: 8px; }
+.kingdom-progress-xp > span b { color: var(--cream); font-variant-numeric: tabular-nums; }
+.kingdom-progress-xp > i { display: block; height: 4px; margin-top: 6px; overflow: hidden; background: rgba(255,255,255,.08); border-radius: 4px; }
+.kingdom-progress-xp > i b { display: block; height: 100%; background: linear-gradient(90deg, #8eaf62, var(--gold-bright)); border-radius: inherit; }
+.kingdom-next-goal { display: grid; grid-template-columns: 34px 1fr 20px; align-items: center; gap: 9px; padding: 9px; background: linear-gradient(100deg, rgba(226,180,71,.15), rgba(107,140,76,.08)); border-radius: 13px; box-shadow: inset 0 0 0 1px rgba(226,180,71,.14); }
+.kingdom-next-goal > span { display: grid; width: 34px; height: 34px; place-items: center; color: var(--gold-bright); background: rgba(226,180,71,.1); border-radius: 10px; }
+.kingdom-next-goal div { min-width: 0; }
+.kingdom-next-goal small { display: block; color: var(--cream-muted); font-size: 7px; }
+.kingdom-next-goal strong { display: block; margin-top: 1px; color: var(--gold-pale); font-size: 11px; }
+.kingdom-next-goal p { margin: 2px 0 0; color: #bcb19e; font-size: 8px; line-height: 1.25; }
+.kingdom-next-goal--complete { grid-template-columns: 34px 1fr; background: linear-gradient(100deg, rgba(91,134,67,.18), rgba(226,180,71,.08)); }
+.kingdom-next-goal--complete > span { color: #d9efbd; background: rgba(96,141,70,.18); }
+.kingdom-milestones h3, .kingdom-effect-goals h3 { margin: 0 0 6px; color: #c9bea9; font-size: 9px; font-weight: 700; }
+.kingdom-milestones > div { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+.kingdom-milestones article { display: grid; min-width: 0; min-height: 51px; align-content: center; justify-items: center; gap: 2px; padding: 5px 3px; color: #8e8576; background: rgba(255,255,255,.035); border-radius: 9px; text-align: center; }
+.kingdom-milestones article[data-unlocked="true"] { color: #cae6ab; background: rgba(93,137,69,.11); box-shadow: inset 0 0 0 1px rgba(150,190,111,.09); }
+.kingdom-milestones strong { overflow: hidden; width: 100%; color: inherit; font-size: 7.5px; text-overflow: ellipsis; white-space: nowrap; }
+.kingdom-milestones small { color: inherit; font-size: 6.75px; line-height: 1.1; }
+.kingdom-effect-goals h3 { display: flex; align-items: center; gap: 5px; }
+.kingdom-effect-goals > div { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.kingdom-effect-goals article { min-width: 0; padding: 7px; background: rgba(255,255,255,.035); border-radius: 10px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.045); }
+.kingdom-effect-goals article[data-unlocked="false"] { opacity: .58; }
+.kingdom-effect-goals header { display: flex; align-items: baseline; justify-content: space-between; gap: 5px; margin-bottom: 4px; }
+.kingdom-effect-goals header strong { overflow: hidden; color: var(--gold-pale); font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
+.kingdom-effect-goals header small { flex: 0 0 auto; color: var(--cream-muted); font-size: 7px; }
+.kingdom-effect-goals p { display: grid; grid-template-columns: auto 1fr; gap: 5px; margin: 2px 0 0; font-size: 7.5px; line-height: 1.2; }
+.kingdom-effect-goals p span { color: var(--cream-muted); }
+.kingdom-effect-goals p b { overflow: hidden; color: #d5cbb9; text-align: end; text-overflow: ellipsis; white-space: nowrap; }
 
 .locked-building-sheet {
   position: absolute; z-index: 41; inset-inline: 8px; inset-block-end: calc(max(4px, env(safe-area-inset-bottom)) + 61px);

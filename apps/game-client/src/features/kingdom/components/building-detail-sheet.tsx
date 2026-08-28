@@ -22,11 +22,12 @@ interface BuildingDetailSheetProps {
   building: KingdomBuildingView | null;
   dictionary: Dictionary;
   onClose(): void;
+  onOpenProgress(): void;
   onUpgrade(buildingId: string): void;
   serverNow: number;
 }
 
-export function BuildingDetailSheet({ actionPending, building, dictionary: t, onClose, onUpgrade, serverNow }: BuildingDetailSheetProps) {
+export function BuildingDetailSheet({ actionPending, building, dictionary: t, onClose, onOpenProgress, onUpgrade, serverNow }: BuildingDetailSheetProps) {
   const presentation = building ? t.buildings[building.visualId] : t.buildings.castle;
   const Icon = building ? BUILDING_ICONS[building.visualId] : Castle;
   const activeUpgrade = building?.activeUpgrade ?? null;
@@ -67,6 +68,14 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       ) : null}
 
       <p className="building-role"><Hammer aria-hidden="true" size={15} /><span><small>{t.role}</small>{presentation.role}</span></p>
+
+      {building?.visualId === 'castle' ? (
+        <button className="kingdom-progress-open" onClick={onOpenProgress} type="button">
+          <Castle aria-hidden="true" size={16} />
+          <span>{t.kingdomProgress.open}</span>
+          <ArrowUp aria-hidden="true" size={15} />
+        </button>
+      ) : null}
 
       {building?.effects.map((effect) => (
         <div className="building-effect" data-effect={effect.type} key={effect.type}>

@@ -27,6 +27,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   const testPlayerId = `hero-browser-${Date.now()}`;
   await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': testPlayerId } });
+  await fetch('http://localhost:3001/onboarding/advisor-tips/HEROES_INTRO', { method: 'POST', headers: { 'x-dev-player-id': testPlayerId } });
   await page.route('http://localhost:3001/**', (route) => route.continue({
     headers: { ...route.request().headers(), 'x-dev-player-id': testPlayerId },
   }));

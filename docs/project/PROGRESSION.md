@@ -23,9 +23,8 @@ Only one `QUEUED` or `IN_PROGRESS` upgrade can exist for a building because migr
 | 3 | Academy |
 | 4 | Workshop |
 | 5 | Blacksmith |
-| 7 | `ADVANCED_PVP` metadata only |
 
-`building-unlocks.config.ts` owns these rules. The API includes every persistent building in state and marks locked rows with `unlocked: false`. The Pixi scene mounts only unlocked rows.
+`building-unlocks.config.ts` owns these rules. Internal configuration retains a reserved Castle-7 feature rule, but the public Kingdom response and goal UI expose only real building milestones. The API includes every persistent building in state and marks locked rows with `unlocked: false`. The Pixi scene mounts only unlocked rows.
 
 ## Kingdom Level and XP
 
@@ -49,7 +48,11 @@ At Kingdom Level 20, `xpIntoLevel` becomes `0` and `xpRequiredForNextLevel` beco
 
 The API retains these compatibility variants. Core-building presentation now derives from authoritative level plus the presentation-only `DEFAULT` Kingdom Theme: Early 1–4, Developed 5–8, Advanced 9–12, Fortified 13–16, and Prestige 17–20. Within each tier, levels map to minor steps 0–3 with cumulative visual details. Level 20 adds a capstone. No database appearance or theme state was added.
 
-Academy, Blacksmith, Watchtower, and Workshop still use the three-variant fallback architecture until Retention 01B.
+Academy, Blacksmith, Watchtower, and Workshop now use the same five-tier, four-minor-step, level-20-capstone resolver as the core five buildings. Compatibility `appearanceVariant` values remain in the API but do not select active DEFAULT raster art.
+
+## Kingdom Progress goals
+
+`KingdomProgressGoalsService` derives a presentation-safe, authoritative goals snapshot from persistent building levels. `GET /kingdom` returns Castle level, the four real district milestones, the next locked district or an all-current-districts-unlocked state, and current/next basis-point values for Watchtower, Academy, Workshop, and Blacksmith. The client cannot post progress, rewards, claims, or missions; none exist in Retention 01B.
 
 ## Special building effects
 

@@ -10,7 +10,7 @@ The client loads local WebP art. Runtime mappings separate gameplay IDs, placeme
 
 ## Active Kingdom assets
 
-Core-building production now uses 25 files under `kingdom/evolution/default`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Files are about 50–240 KiB and total about 2.62 MiB. All five Castle tiers and Grand Market Prestige use inspected 1024px-class restored sources; other tiers remain 512px-class because their measured opaque bounds already satisfy the DPR-2 moderate-zoom gate. Production uses the theme-namespaced paths and loads only the current visible tier.
+Active-building production now uses 45 files under `kingdom/evolution/default`: five optimized local WebPs for each of the nine active buildings. Files are about 50–240 KiB and total about 5.27 MiB. Advanced tier candidates are 368–720px transparent cutouts and about 60–177 KiB each. Production uses theme-namespaced paths and loads only the current visible tier; locked advanced tiers do not preload.
 
 | Asset | Role | Approximate size |
 | --- | --- | ---: |
@@ -38,7 +38,7 @@ Core-building production now uses 25 files under `kingdom/evolution/default`: fi
 - `building-visuals.ts`: texture stages, dimensions, ground anchors, offsets, footprint, shadow, hit area, and one semantic status-stack anchor per building
 - `building-art.ts`: Pixi sprite container construction
 - `kingdom-theme.ts`: implemented `DEFAULT` identity and separately listed planned theme IDs
-- `building-visual-progression.ts`: Theme → Building → Tier catalog plus authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
+- `building-visual-progression.ts`: Theme → Building → Tier catalog plus authoritative-level-to-tier/minor-detail derivation for all nine active buildings
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
 - `building-status-badge.ts`: constant-size screen-space level/upgrade presentation, device-pixel-snapped world-anchor conversion, and a structurally aligned indicator-above-badge stack
@@ -53,9 +53,9 @@ Keep major gameplay structures out of the terrain image. The current base contai
 
 Do not solve building placement with rectangular backgrounds, generic circular pads, giant ground decals, or baked labels.
 
-## Appearance stage fallback
+## Appearance compatibility
 
-Core buildings no longer use this fallback: they have five real raster tiers. Academy, Blacksmith, Watchtower, and Workshop still use Stage 1 fallback until Retention 01B.
+All nine active buildings use five real raster tiers. The API still returns `WOOD`, `STONE`, and `FORTIFIED` compatibility variants for older consumers, but the DEFAULT renderer selects art from authoritative level and the tier catalog.
 
 ## Mine source registration
 
@@ -71,7 +71,7 @@ All audio remains local under `apps/game-client/public/assets/audio`. All 24 exp
 
 ## Validation and debug views
 
-`npm run validate:building-evolution` tests every level for all five core buildings under `DEFAULT`, rejects legacy non-theme paths, and inspects all 25 namespaced WebPs. `/dev/buildings` is development-only and renders the exact theme-aware production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
+`npm run validate:building-evolution` tests every level for all nine active buildings under `DEFAULT`, rejects legacy non-theme paths, and inspects all 45 namespaced WebPs. `/dev/buildings` is development-only and renders the exact theme-aware production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
 
 `npm run audit:building-textures` uses Sharp to report dimensions, bytes, alpha, effective opaque bounds, production display size, and DPR-2 ratios at 100/150/200%. Never improve quality by resizing a low-detail raster upward. Use a genuine higher-detail source or inspected restoration, compare WebP settings in the real renderer, keep each tier below 250 KiB, and preserve current-stage lazy loading.
 

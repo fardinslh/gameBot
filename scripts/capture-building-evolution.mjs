@@ -28,6 +28,10 @@ const buildings = [
   ['lumberMill', 'Lumber Mill'],
   ['mine', 'Mine'],
   ['grandMarket', 'Grand Market'],
+  ['academy', 'Academy'],
+  ['blacksmith', 'Blacksmith'],
+  ['watchtower', 'Watchtower'],
+  ['workshop', 'Workshop'],
 ];
 const levels = [1, 5, 9, 13, 17, 20];
 const snapshotSet = process.argv.find((argument) => argument.startsWith('--snapshot-set='))?.split('=')[1];
@@ -38,6 +42,10 @@ const representativeStates = [
   ['farm', 7],
   ['mine', 13],
   ['grandMarket', 20],
+  ['academy', 20],
+  ['blacksmith', 20],
+  ['watchtower', 20],
+  ['workshop', 20],
 ];
 const fidelityStates = [
   ['castle', 20],
@@ -45,6 +53,10 @@ const fidelityStates = [
   ['lumberMill', 20],
   ['mine', 20],
   ['grandMarket', 20],
+  ['academy', 20],
+  ['blacksmith', 20],
+  ['watchtower', 20],
+  ['workshop', 20],
 ];
 const statusBuildings = ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket', 'academy', 'blacksmith', 'watchtower', 'workshop'];
 const statusStates = ['normal', 'upgrade', 'active', 'selected'];
@@ -166,7 +178,7 @@ try {
       const levels = previews.map((element) => element.getAttribute('data-building-level'));
       return levels.includes('1') && levels.includes('20');
     }, { expectedBuildingId: buildingId });
-    await lab.locator('section').filter({ has: lab.locator('article') }).last().screenshot({ path: new URL(`${buildingId}-comparison-1-vs-20.png`, artifacts).pathname.slice(1) });
+    await lab.locator('[data-evolution-stage]').screenshot({ path: new URL(`${buildingId}-comparison-1-vs-20.png`, artifacts).pathname.slice(1) });
     lab.off('console', comparisonConsoleHandler);
     lab.off('pageerror', comparisonPageErrorHandler);
     await lab.close();

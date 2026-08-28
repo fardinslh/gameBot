@@ -19,6 +19,7 @@ import { LockedBuildingSheet } from './locked-building-sheet';
 import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
+import { KingdomProgressSheet } from './kingdom-progress-sheet';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -34,6 +35,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const inboxCount = useInboxCount();
   const [selectedBuildingId, setSelectedBuildingId] = useState<WorldBuildingId | null>(null);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
+  const [progressOpen, setProgressOpen] = useState(false);
   const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
   const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
@@ -114,8 +116,16 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             building={selectedBuilding}
             dictionary={t}
             onClose={() => setSelectedBuildingId(null)}
+            onOpenProgress={() => { setSelectedBuildingId(null); setProgressOpen(true); }}
             onUpgrade={(buildingId) => void economy.upgrade(buildingId)}
             serverNow={economy.serverNow}
+          />
+          <KingdomProgressSheet
+            dictionary={t}
+            goals={economy.state?.kingdomGoals ?? null}
+            onClose={() => setProgressOpen(false)}
+            open={progressOpen}
+            progression={economy.state?.progression ?? null}
           />
           <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'COLLECT'

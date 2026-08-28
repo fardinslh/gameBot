@@ -15,6 +15,10 @@ const buildings = [
   { id: 'lumberMill', folder: 'lumber-mill', layoutScale: .96, renderWidths: [150, 168, 180, 190, 198] },
   { id: 'mine', folder: 'mine', layoutScale: 1, renderWidths: [158, 178, 190, 198, 206] },
   { id: 'grandMarket', folder: 'grand-market', layoutScale: 1.03, renderWidths: [156, 176, 194, 204, 212] },
+  { id: 'academy', folder: 'academy', layoutScale: .96, renderWidths: [184, 190, 196, 202, 208] },
+  { id: 'blacksmith', folder: 'blacksmith', layoutScale: .92, renderWidths: [174, 181, 188, 195, 202] },
+  { id: 'watchtower', folder: 'watchtower', layoutScale: .9, renderWidths: [137, 143, 149, 155, 161] },
+  { id: 'workshop', folder: 'workshop', layoutScale: .92, renderWidths: [174, 181, 188, 195, 202] },
 ];
 
 const rows = [];
@@ -69,7 +73,7 @@ const report = {
   rows,
   summary: {
     totalBytes,
-    initialFiveTier1Bytes: initialTierBytes,
+    initialNineTier1Bytes: initialTierBytes,
     largest: { file: largest.file, bytes: largest.bytes },
     smallestOpaqueContent: { file: smallestOpaque.file, bounds: smallestOpaque.opaqueBounds },
     resolutionRiskFilesAt390Dpr2Zoom2: risks.map((row) => row.file),

@@ -2,7 +2,7 @@ import { Container, Ellipse, Graphics, Sprite, Text } from 'pixi.js';
 import type { Texture } from 'pixi.js';
 import type { BuildingId } from '../domain/kingdom-types';
 import { BUILDING_VISUALS, type BuildingVisualId, type PlacementEllipse } from './building-visuals';
-import type { BuildingVisualState, CoreEvolutionBuildingId } from './building-visual-progression';
+import type { BuildingVisualState, EvolutionBuildingId } from './building-visual-progression';
 
 export interface BuildingArtwork {
   construction: Container;
@@ -116,7 +116,7 @@ export function createSpriteBuildingArtwork(
     transformation,
     wavingParts: [],
   };
-  if (visualState) applyBuildingVisualState(artwork, id as CoreEvolutionBuildingId, visualState, upgrading);
+  if (visualState) applyBuildingVisualState(artwork, id as EvolutionBuildingId, visualState, upgrading);
   return artwork;
 }
 
@@ -132,7 +132,7 @@ export function createBuildingArtwork(
 
 export function applyBuildingVisualState(
   artwork: BuildingArtwork,
-  id: CoreEvolutionBuildingId,
+  id: EvolutionBuildingId,
   state: BuildingVisualState,
   upgrading: boolean,
 ): void {
@@ -153,7 +153,7 @@ function replaceChildren(container: Container, next: Container | null): void {
   if (next) container.addChild(next);
 }
 
-function createEvolutionDetails(id: CoreEvolutionBuildingId, state: BuildingVisualState): Container {
+function createEvolutionDetails(id: EvolutionBuildingId, state: BuildingVisualState): Container {
   const container = new Container();
   container.eventMode = 'none';
   const count = state.detailIds.length - (state.capstone ? 1 : 0);
@@ -164,7 +164,7 @@ function createEvolutionDetails(id: CoreEvolutionBuildingId, state: BuildingVisu
   return container;
 }
 
-function createPrimaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics {
+function createPrimaryProp(id: EvolutionBuildingId, tier: number): Graphics {
   const color = id === 'mine' ? 0x76706a : id === 'grandMarket' ? 0xb24632 : 0x9a6a33;
   const prop = new Graphics();
   if (id === 'castle') {
@@ -177,6 +177,17 @@ function createPrimaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics 
   } else if (id === 'mine') {
     prop.roundRect(-62, -11, 19, 10, 2).fill({ color: 0x453c34, alpha: .98 }).stroke({ color: 0x8c765c, width: 1 });
     prop.circle(-58, 0, 2.5).fill({ color: 0x1e2325 }).circle(-47, 0, 2.5).fill({ color: 0x1e2325 });
+  } else if (id === 'academy') {
+    prop.circle(-62, -8, 7 + tier * .4).stroke({ color: 0xd8ae45, width: 1.4 });
+    prop.moveTo(-69, -8).lineTo(-55, -8).moveTo(-62, -15).lineTo(-62, -1).stroke({ color: 0x315f91, width: 1 });
+  } else if (id === 'blacksmith') {
+    prop.roundRect(-65, -12, 18, 8, 2).fill({ color: 0x433c38 }).stroke({ color: 0xb5aaa0, width: 1 });
+    prop.circle(-56, -15, 4 + tier * .2).fill({ color: 0xff7a2f, alpha: .5 });
+  } else if (id === 'watchtower') {
+    prop.circle(-48, -12, 3).fill({ color: 0xffb34d, alpha: .95 }).circle(-48, -12, 7 + tier * .3).stroke({ color: 0xe59a32, alpha: .24, width: 1 });
+  } else if (id === 'workshop') {
+    prop.circle(-60, -8, 7 + tier * .25).stroke({ color: 0x87613a, width: 2 });
+    prop.circle(-60, -8, 2).fill({ color: 0xb18a54 });
   } else {
     prop.roundRect(-64, -10, 15, 9, 2).fill({ color, alpha: .96 }).stroke({ color: 0xd4a45c, width: .8 });
     prop.roundRect(-47, -8, 10, 7, 1.5).fill({ color: 0x7c5431, alpha: .96 });
@@ -184,7 +195,7 @@ function createPrimaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics 
   return prop;
 }
 
-function createSecondaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics {
+function createSecondaryProp(id: EvolutionBuildingId, tier: number): Graphics {
   const bannerColor = id === 'grandMarket' ? 0x9c3328 : 0x21476d;
   const prop = new Graphics();
   if (id === 'farm') {
@@ -194,6 +205,17 @@ function createSecondaryProp(id: CoreEvolutionBuildingId, tier: number): Graphic
     prop.circle(57, -8, 7).stroke({ color: 0x92693b, width: 1.8 }).moveTo(57, -15).lineTo(57, -1).moveTo(50, -8).lineTo(64, -8).stroke({ color: 0x6f4c29, width: 1.2 });
   } else if (id === 'mine') {
     prop.circle(55, -12, 2.5).fill({ color: 0xffb94b, alpha: .9 }).circle(55, -12, 5 + tier * .35).stroke({ color: 0xd38934, alpha: .22, width: 1 });
+  } else if (id === 'academy') {
+    prop.moveTo(61, -9).lineTo(61, -42).stroke({ color: 0x80602c, width: 1.8 });
+    prop.moveTo(62, -41).lineTo(75, -36).lineTo(62, -29).closePath().fill({ color: 0x245b91 }).stroke({ color: 0xd5aa4e, width: .8 });
+  } else if (id === 'blacksmith') {
+    prop.moveTo(49, -3).lineTo(49, -20).moveTo(57, -3).lineTo(57, -24).moveTo(65, -3).lineTo(65, -18).stroke({ color: 0xaaa29a, width: 2 });
+  } else if (id === 'watchtower') {
+    prop.moveTo(42, -5).lineTo(42, -38).stroke({ color: 0x76542d, width: 1.6 });
+    prop.moveTo(43, -37).lineTo(55, -33).lineTo(43, -26).closePath().fill({ color: 0x21476d }).stroke({ color: 0xd5aa4e, width: .8 });
+  } else if (id === 'workshop') {
+    prop.moveTo(45, -2).lineTo(62, -18).lineTo(68, -5).stroke({ color: 0x79522e, width: 2 });
+    prop.circle(63, -18, 4 + tier * .2).stroke({ color: 0xa69a84, width: 1.2 });
   } else {
     prop.moveTo(61, -11).lineTo(61, -40).stroke({ color: 0x7e5a2a, width: 1.8 });
     prop.moveTo(62, -39).lineTo(74, -35).lineTo(62, -28).closePath().fill({ color: bannerColor, alpha: .96 }).stroke({ color: 0xd5aa4e, width: .8 });
@@ -201,7 +223,7 @@ function createSecondaryProp(id: CoreEvolutionBuildingId, tier: number): Graphic
   return prop;
 }
 
-function createTertiaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics {
+function createTertiaryProp(id: EvolutionBuildingId, tier: number): Graphics {
   const prop = new Graphics();
   const gold = 0xe0b64e;
   if (id === 'castle') {
@@ -214,23 +236,41 @@ function createTertiaryProp(id: CoreEvolutionBuildingId, tier: number): Graphics
     prop.circle(68, -18, 3 + tier * .25).stroke({ color: 0xaaa29a, width: 1.2 });
   } else if (id === 'mine') {
     for (let index = 0; index < 4; index += 1) prop.circle(-9 + index * 6, -2 - (index % 2) * 3, 3).fill({ color: index === 3 ? gold : 0x6c665f, alpha: .95 });
+  } else if (id === 'academy') {
+    prop.circle(0, -118, 4).fill({ color: 0x79b9ff, alpha: .55 }).circle(0, -118, 8 + tier * .3).stroke({ color: 0x559de8, alpha: .3, width: 1 });
+  } else if (id === 'blacksmith') {
+    prop.circle(58, -18, 4).fill({ color: 0xff7430, alpha: .65 }).circle(58, -18, 8 + tier * .25).stroke({ color: 0xf0a145, alpha: .24, width: 1 });
+  } else if (id === 'watchtower') {
+    for (const x of [-36, 36]) prop.circle(x, -93, 2.5).fill({ color: 0xffbd55 }).circle(x, -93, 5).stroke({ color: gold, alpha: .2, width: 1 });
+  } else if (id === 'workshop') {
+    for (let index = 0; index < 3; index += 1) prop.roundRect(-10 + index * 9, -7 - (index % 2) * 3, 7, 7, 1).fill({ color: 0x76502d, alpha: .95 });
   } else {
     for (const x of [-58, 58]) prop.circle(x, -10, 2.5).fill({ color: 0xffbd55 }).circle(x, -10, 5).stroke({ color: gold, alpha: .2, width: 1 });
   }
   return prop;
 }
 
-function createCapstoneProp(id: CoreEvolutionBuildingId): Graphics {
+function createCapstoneProp(id: EvolutionBuildingId): Graphics {
   const prop = new Graphics();
-  const y = id === 'castle' ? -194 : id === 'mine' ? -160 : -150;
+  const y = id === 'castle' ? -194
+    : id === 'watchtower' ? -184
+      : id === 'academy' ? -175
+        : id === 'mine' ? -160
+          : id === 'blacksmith' || id === 'workshop' ? -142
+            : -150;
   prop.circle(0, y, 8).fill({ color: 0xf5c95d, alpha: .1 }).stroke({ color: 0xffdc76, alpha: .58, width: 1 });
   prop.moveTo(-4, y + 2).lineTo(-5, y - 4).lineTo(-2, y - 1).lineTo(0, y - 6).lineTo(2, y - 1).lineTo(5, y - 4).lineTo(4, y + 2).closePath().fill({ color: 0xf2c758, alpha: .95 });
   return prop;
 }
 
-function createConstructionDetails(id: CoreEvolutionBuildingId): Container {
+function createConstructionDetails(id: EvolutionBuildingId): Container {
   const container = new Container();
-  const top = id === 'castle' ? -105 : id === 'mine' ? -74 : -66;
+  const top = id === 'castle' ? -105
+    : id === 'watchtower' ? -118
+      : id === 'academy' ? -96
+        : id === 'mine' ? -74
+          : id === 'blacksmith' || id === 'workshop' ? -72
+            : -66;
   const scaffold = new Graphics()
     .moveTo(36, 0).lineTo(36, top).moveTo(72, 0).lineTo(72, top + 13)
     .moveTo(32, top + 14).lineTo(76, top + 26).moveTo(34, top + 40).lineTo(74, top + 49)

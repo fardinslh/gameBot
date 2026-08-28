@@ -20,12 +20,12 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 
 | Command | Coverage at verified baseline |
 | --- | --- |
-| `npm test` | 39 unit tests in 12 files: economy/Hero/battle/progression, analytics, system-opponent config, shield, bounded passes, ranking and top-five selection |
+| `npm test` | API unit suite for economy/Hero/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
 | `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
-| `npm run validate:building-evolution` | 22 client tests covering DEFAULT registration, all 20 visual levels, theme identity/path namespace, adjacent differences, transitions, construction, stable selection/hit areas, screen-space status dimensions/position/pixel snapping, and exact shared-X/fixed-gap 320/375/390 stacks for nine active buildings and five status states, plus 25 WebP integrity/budget checks |
-| `npm run audit:building-textures` | Sharp metadata and alpha scan for all 25 DEFAULT textures, including opaque bounds and DPR-2 source/display ratios at 320/375/390 and 100/150/200% |
+| `npm run validate:building-evolution` | 30 client tests covering DEFAULT registration, all 20 visual levels across nine active buildings, theme paths, adjacent differences, transitions, construction, stable selection/hit areas, and collision-proof status stacks, plus 45 WebP integrity/budget checks |
+| `npm run audit:building-textures` | Sharp metadata and alpha scan for all 45 DEFAULT textures, including opaque bounds and DPR-2 source/display ratios at 320/375/390 and 100/150/200% |
 | `npm run test:rtl --workspace @crown-and-coin/game-client` | 4 unit/render tests for locale-direction mapping, semantic game-root attributes, `<bdi>` isolation, and punctuation outside placeholders |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
@@ -42,7 +42,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:raid` | New-player shield/system offer, Match Offer, victory and defeat, Pixi playback, snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
-| `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, expansion areas, camera bounds, Mine point, effects, screenshots |
+| `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |
 | `npm run validate:player-experience` | Fresh Persian authoritative Collect/Upgrade/Raid/Battle/Result flows at 320/375/390, CTA/advisor non-overlap, refresh and skip persistence, eight Guide sections, technical audio triggers/settings, and RTL/LTR |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
@@ -68,7 +68,7 @@ For localization changes, also open `/dev/rtl` in development. Verify the Persia
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
-For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify Lv. 1/8/12/20 references in the 320/375/390 viewport-equivalent panels. In the exact-production status fixture, inspect Castle, Farm, Lumber Mill, Mine, Grand Market, Academy, Blacksmith, Watchtower, and Workshop in normal, upgrade, active, and selected-plus-upgrade states; `data-status-overlap` must remain `false` and `data-status-stack-aligned` must remain `true` whenever the indicator is visible. Owner judgment—not passing automation—approves art quality.
+For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for all nine active buildings, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify Lv. 1/8/12/20 references in the 320/375/390 viewport-equivalent panels. Inspect Castle Kingdom Progress at Castle 1 and 5. In the exact-production status fixture, inspect every active building in normal, upgrade, active, and selected-plus-upgrade states; `data-status-overlap` must remain `false` and `data-status-stack-aligned` must remain `true` whenever an indicator is visible. Owner judgment—not passing automation—approves art quality.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 

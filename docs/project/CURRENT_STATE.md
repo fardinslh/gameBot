@@ -15,7 +15,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
-| Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level; all 25 assets pass effective-resolution audit through moderate 200% inspection |
+| Active building visual evolution | Implemented | All nine active buildings derive five major raster tiers plus a visible minor step at every level; all 45 assets pass effective-resolution audit through moderate 200% inspection |
 | World building status stack | Implemented | One DPR-aware screen-space Pixi stack keeps the compact upgrade/active indicator centered above the level badge with a fixed gap while following pan, resize, tier changes, and unlock scale |
 | Theme-ready building evolution architecture | Implemented | Visual requests resolve Building Type + Building Level + Kingdom Theme through one catalog; `DEFAULT` is the only implemented theme |
 | Selectable Kingdom Themes | Not implemented | No selection UI, persistence, ownership, or API exists |
@@ -23,14 +23,15 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Theme ownership | Not implemented | No Prisma field, inventory, entitlement, or account state exists |
 | Theme Shop integration | Not implemented | Retention 05 Shop and Gems remains future work |
 | Theme Season integration | Not implemented | Season remains future work; no reward or pass system exists |
-| Advanced building visual evolution | Not implemented | Academy, Blacksmith, Watchtower, and Workshop remain Retention 01B |
+| Advanced building visual evolution | Implemented | Academy, Blacksmith, Watchtower, and Workshop use optimized local tier assets at levels 1/5/9/13/17 with cumulative minor steps and level-20 capstones |
+| Kingdom Progress goals | Implemented | Castle detail opens a bilingual server-authored summary of Kingdom Level/XP, Castle milestones, next real district unlock, and current/next advanced effects |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
 | Permanent Game Guide | Implemented | Aren identity plus eight bilingual sections available from the compact Player HUD |
 | Audio engine | Implemented | Scheduled dual-source equal-power loop overlap, shared music bus, explicit decoded loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
 | Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
-| Appearance progression | Implemented for core | Levels 1–20 deterministically select Early, Developed, Advanced, Fortified, or Prestige art; advanced buildings retain legacy fallback |
+| Appearance progression | Implemented for all active buildings | Levels 1–20 deterministically select Early, Developed, Advanced, Fortified, or Prestige art across all nine active buildings |
 | Missions / Achievements / Daily Return | Not implemented | Retention 02 only |
 | PvE Campaign | Not implemented | Retention 04 only |
 | Hero Expansion | Not implemented | Retention 03 only; the three current Heroes remain unchanged |
@@ -84,7 +85,7 @@ Runtime bootstrap grants all three Heroes and fills Raid Team slots 1 through 3 
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, and participant-only battle replay. Raid overview/search also expose authoritative `newPlayerProtection`; offers identify `REAL` or `SYSTEM` for internal client state. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, and participant-only battle replay. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. Raid overview/search also expose authoritative `newPlayerProtection`; offers identify `REAL` or `SYSTEM` for internal client state. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
@@ -105,7 +106,7 @@ Twelve ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A engineering, its DEFAULT theme-ready architecture, and the final pre-retention corrective pass are complete. The building status pair now uses one collision-proof semantic stack, Aren's full authoritative Collect-to-Result flow passes at 320/375/390, and the Castle focal point is corrected from world Y 690 to 665. Owner approval of building labels/art, the Aren portrait, Persian device copy, and the real-device audio mix remains pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started.
+Retention 01A and 01B engineering are complete. All nine active buildings share the DEFAULT five-tier evolution resolver, Castle detail exposes authoritative Kingdom goals, and the collision-proof status stack, Castle Y 665 composition, and 54px navigation remain unchanged. Owner approval of advanced building art, all building labels/art, the Aren portrait, Persian device copy, and the real-device audio mix remains pending. Retention 02 is next. Theme Foundation remains after Shop/Gem Economy. Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 

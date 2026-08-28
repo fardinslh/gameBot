@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Assets } from 'pixi.js';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { DEFAULT_KINGDOM_THEME } from '@/features/kingdom/domain/kingdom-theme';
-import type { CoreEvolutionBuildingId } from '@/features/kingdom/rendering/building-visual-progression';
-import { getBuildingVisualState, isCoreEvolutionBuilding } from '@/features/kingdom/rendering/building-visual-progression';
+import type { EvolutionBuildingId } from '@/features/kingdom/rendering/building-visual-progression';
+import { getBuildingVisualState, isEvolutionBuilding } from '@/features/kingdom/rendering/building-visual-progression';
 import type { BuildingId } from '@/features/kingdom/domain/kingdom-types';
 import { createBuildingArtwork } from '@/features/kingdom/rendering/building-art';
 import {
@@ -16,27 +16,27 @@ import {
 import { BUILDING_VISUALS, resolveBuildingTexture } from '@/features/kingdom/rendering/building-visuals';
 import styles from './building-evolution-lab.module.css';
 
-const BUILDINGS: readonly { id: CoreEvolutionBuildingId; label: string }[] = [
+const BUILDINGS: readonly { id: EvolutionBuildingId; label: string }[] = [
   { id: 'castle', label: 'Castle' },
   { id: 'farm', label: 'Farm' },
   { id: 'lumberMill', label: 'Lumber Mill' },
   { id: 'mine', label: 'Mine' },
   { id: 'grandMarket', label: 'Grand Market' },
+  { id: 'academy', label: 'Academy' },
+  { id: 'blacksmith', label: 'Blacksmith' },
+  { id: 'watchtower', label: 'Watchtower' },
+  { id: 'workshop', label: 'Workshop' },
 ];
 const QUICK_LEVELS = [1, 5, 9, 13, 17, 20] as const;
 const BADGE_LEVELS = [1, 8, 12, 20] as const;
 const INSPECTION_ZOOMS = [1, 1.5, 2] as const;
 const STATUS_BUILDINGS: readonly { id: BuildingId; label: string }[] = [
   ...BUILDINGS,
-  { id: 'academy', label: 'Academy' },
-  { id: 'blacksmith', label: 'Blacksmith' },
-  { id: 'watchtower', label: 'Watchtower' },
-  { id: 'workshop', label: 'Workshop' },
 ];
 type StatusLabState = 'normal' | 'upgrade' | 'active' | 'selected';
 
 export function BuildingEvolutionLab() {
-  const [buildingId, setBuildingId] = useState<CoreEvolutionBuildingId>('castle');
+  const [buildingId, setBuildingId] = useState<EvolutionBuildingId>('castle');
   const [level, setLevel] = useState(1);
   const [mode, setMode] = useState<'single' | 'adjacent' | 'extremes'>('single');
   const [construction, setConstruction] = useState(false);
@@ -68,7 +68,7 @@ export function BuildingEvolutionLab() {
       <section className={styles.controls} aria-label="Building evolution controls">
         <label>
           Building
-          <select value={buildingId} onChange={(event) => setBuildingId(event.target.value as CoreEvolutionBuildingId)}>
+          <select value={buildingId} onChange={(event) => setBuildingId(event.target.value as EvolutionBuildingId)}>
             {BUILDINGS.map((building) => <option key={building.id} value={building.id}>{building.label}</option>)}
           </select>
         </label>
@@ -101,7 +101,7 @@ export function BuildingEvolutionLab() {
         </div>
       </section>
 
-      <section className={comparisons.length === 1 ? styles.stageSingle : styles.stageCompare}>
+      <section className={comparisons.length === 1 ? styles.stageSingle : styles.stageCompare} data-evolution-stage>
         {comparisons.map((comparisonLevel, index) => (
           <BuildingPreview
             buildingId={buildingId}
@@ -203,7 +203,7 @@ function StatusOverlayPreview({ buildingId, level, state }: { buildingId: Buildi
       const render = async () => {
         const version = ++renderVersion;
         const current = propsRef.current;
-        const visualState = isCoreEvolutionBuilding(current.buildingId)
+        const visualState = isEvolutionBuilding(current.buildingId)
           ? getBuildingVisualState({ buildingId: current.buildingId, level: current.level, theme: DEFAULT_KINGDOM_THEME })
           : undefined;
         const texture = await Assets.load(visualState?.asset ?? resolveBuildingTexture(current.buildingId));
@@ -261,7 +261,7 @@ function BuildingPreview({
   inspectionZoom,
   level,
 }: {
-  buildingId: CoreEvolutionBuildingId;
+  buildingId: EvolutionBuildingId;
   construction: boolean;
   inspectionZoom: number;
   level: number;

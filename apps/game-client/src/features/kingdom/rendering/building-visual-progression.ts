@@ -5,16 +5,26 @@ import {
   type KingdomThemeId,
 } from '../domain/kingdom-theme';
 
-export const CORE_EVOLUTION_BUILDINGS = ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket'] as const;
+export const EVOLUTION_BUILDINGS = [
+  'castle',
+  'farm',
+  'lumberMill',
+  'mine',
+  'grandMarket',
+  'academy',
+  'blacksmith',
+  'watchtower',
+  'workshop',
+] as const;
 
-export type CoreEvolutionBuildingId = (typeof CORE_EVOLUTION_BUILDINGS)[number];
+export type EvolutionBuildingId = (typeof EVOLUTION_BUILDINGS)[number];
 export type BuildingVisualTier = 'EARLY' | 'DEVELOPED' | 'ADVANCED' | 'FORTIFIED' | 'PRESTIGE';
 export type BuildingVisualTierNumber = 1 | 2 | 3 | 4 | 5;
 export type BuildingVisualMinorStep = 0 | 1 | 2 | 3;
 
 export interface BuildingVisualState {
   asset: string;
-  buildingId: CoreEvolutionBuildingId;
+  buildingId: EvolutionBuildingId;
   capstone: boolean;
   detailIds: readonly string[];
   level: number;
@@ -26,7 +36,7 @@ export interface BuildingVisualState {
 }
 
 export interface BuildingVisualRequest {
-  buildingId: CoreEvolutionBuildingId;
+  buildingId: EvolutionBuildingId;
   level: number;
   theme?: KingdomThemeId;
 }
@@ -51,7 +61,7 @@ const createTierAssets = (theme: KingdomThemeId, folder: string): TierAssets => 
 };
 
 export const BUILDING_VISUAL_CATALOG: Readonly<
-  Record<KingdomThemeId, Readonly<Record<CoreEvolutionBuildingId, BuildingThemeVisuals>>>
+  Record<KingdomThemeId, Readonly<Record<EvolutionBuildingId, BuildingThemeVisuals>>>
 > = {
   DEFAULT: {
     castle: { assets: createTierAssets('DEFAULT', 'castle'), renderWidths: [158, 186, 202, 214, 224] },
@@ -59,11 +69,15 @@ export const BUILDING_VISUAL_CATALOG: Readonly<
     lumberMill: { assets: createTierAssets('DEFAULT', 'lumber-mill'), renderWidths: [150, 168, 180, 190, 198] },
     mine: { assets: createTierAssets('DEFAULT', 'mine'), renderWidths: [158, 178, 190, 198, 206] },
     grandMarket: { assets: createTierAssets('DEFAULT', 'grand-market'), renderWidths: [156, 176, 194, 204, 212] },
+    academy: { assets: createTierAssets('DEFAULT', 'academy'), renderWidths: [184, 190, 196, 202, 208] },
+    blacksmith: { assets: createTierAssets('DEFAULT', 'blacksmith'), renderWidths: [174, 181, 188, 195, 202] },
+    watchtower: { assets: createTierAssets('DEFAULT', 'watchtower'), renderWidths: [137, 143, 149, 155, 161] },
+    workshop: { assets: createTierAssets('DEFAULT', 'workshop'), renderWidths: [174, 181, 188, 195, 202] },
   },
 };
 
-export function isCoreEvolutionBuilding(id: BuildingId): id is CoreEvolutionBuildingId {
-  return (CORE_EVOLUTION_BUILDINGS as readonly BuildingId[]).includes(id);
+export function isEvolutionBuilding(id: BuildingId): id is EvolutionBuildingId {
+  return (EVOLUTION_BUILDINGS as readonly BuildingId[]).includes(id);
 }
 
 export function getBuildingVisualState({

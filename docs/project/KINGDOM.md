@@ -62,17 +62,11 @@ During a live stage increase, the environment fades in while a local mist clears
 
 `building-visuals.ts` defines each sprite path, rendered dimensions, normalized ground anchor, visual offset, footprint, contact shadow, hit area, one semantic status-stack anchor, and lock anchor. `building-art.ts` converts those definitions into Pixi containers.
 
-For Castle, Farm, Lumber Mill, Mine, and Grand Market, `building-visual-progression.ts` resolves explicit `{ buildingId, level, theme }` requests through the centralized Theme → Building → Tier catalog. `DEFAULT` is the only implemented theme. Authoritative levels derive tiers 1–4 Early, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Minor steps 0–3 add local building-specific details, and level 20 adds a compact capstone. No gameplay coordinate changes.
+For all nine active buildings, `building-visual-progression.ts` resolves explicit `{ buildingId, level, theme }` requests through the centralized Theme → Building → Tier catalog. `DEFAULT` is the only implemented theme. Authoritative levels derive tiers 1–4 Early, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Minor steps 0–3 add local building-specific details, and level 20 adds a compact capstone. No gameplay coordinate changes.
 
 Production currently passes `DEFAULT` explicitly. Theme is presentation-only and has no database, ownership, selection, economy, effect, Hero, Raid, Battle, or PvP authority. Assets resolve under `/assets/kingdom/evolution/default/<building>/tier-X.webp`.
 
-For advanced buildings, the legacy `appearanceVariantStage` maps:
-
-- `WOOD` to visual stage 1
-- `STONE` to visual stage 2
-- `FORTIFIED` to visual stage 3
-
-Advanced-building stage 2 and 3 files do not yet exist, so `resolveBuildingTexture` falls back to stage 1 for those Retention 01B targets.
+Legacy `appearanceVariantStage` remains available for unused/future art compatibility, but it no longer selects Academy, Blacksmith, Watchtower, or Workshop production bodies.
 
 An active upgrade adds restrained scaffolding/materials. When a reconciled server level increases, Pixi keeps the stable building container and swaps only the required texture/details. Minor transitions last 620 ms; major boundaries 4→5, 8→9, 12→13, and 16→17 last 980 ms. Reduced-motion clients receive the final state immediately.
 
@@ -84,7 +78,7 @@ Do not replace this anchor with a generic bottom-center anchor. Move the Mine th
 
 ## Interaction and indicators
 
-Each mounted building receives an elliptical hit area larger than its opaque pixels. A tap selects the gameplay ID and opens `BuildingDetailSheet`. The sheet reads server production, costs, unlock requirements, timer, appearance, and effects.
+Each mounted building receives an elliptical hit area larger than its opaque pixels. A tap selects the gameplay ID and opens `BuildingDetailSheet`. The sheet reads server production, costs, unlock requirements, timer, appearance, and effects. Castle detail also opens `KingdomProgressSheet`, which reads the authoritative `kingdomGoals` snapshot: Kingdom XP, real Castle-2-through-5 district milestones, next unlock or all-current-districts-unlocked state, and current/next advanced effects.
 
 Pixi renders a compact green upgrade arrow, a gold active-timer symbol, a `Lv.N` badge, and a pulsing selection ellipse. React also renders an accessible off-screen button for each unlocked building. Locked server buildings create none of these targets.
 

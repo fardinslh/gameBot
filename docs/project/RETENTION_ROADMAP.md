@@ -9,7 +9,7 @@ contentType: Reference
 Bale integration is intentionally delayed until Crown & Coin has enough visible progression and repeat-play content. Each item below is a separate bounded task; completing one never authorizes starting the next.
 
 1. **Retention 01A — Building Evolution, Core**: Castle, Farm, Lumber Mill, Mine, and Grand Market. Implemented.
-2. **Retention 01B — Advanced Building Evolution and Goals**: Academy, Blacksmith, Watchtower, Workshop, and Kingdom progression goals. Not implemented.
+2. **Retention 01B — Advanced Building Evolution and Goals**: Academy, Blacksmith, Watchtower, Workshop, and Kingdom progression goals. Implemented; owner approval of advanced art remains pending.
 3. **Retention 02 — Missions, Achievements, Daily Return**. Not implemented.
 4. **Retention 03 — Hero Expansion**. Not implemented.
 5. **Retention 04 — PvE Campaign / Adventure**. Not implemented.

@@ -39,13 +39,15 @@ features/audio
   manager | provider | Battle event mapping
 features/rtl-lab
   development-only semantic mixed-content fixture
+features/building-lab
+  development-only nine-building tier, comparison, construction, fidelity, and status fixture
 ```
 
 `GameShell` imports feature pages but does not contain their server logic.
 
 ## State hooks
 
-`useKingdomState` loads Kingdom state, tracks server/client clock offset, refreshes on tab visibility, updates once per second for timers, collects production, starts upgrades, and calls the completion endpoint after `finishAt`.
+`useKingdomState` loads Kingdom state including authoritative `kingdomGoals`, tracks server/client clock offset, refreshes on tab visibility, updates once per second for timers, collects production, starts upgrades, and calls the completion endpoint after `finishAt`. Castle detail opens a compact React-owned Kingdom Progress sheet; it renders server-authored XP, milestones, next unlock, and effect progression without creating client-side progression state.
 
 `useHeroState` loads roster/team state, maintains an ordered local draft, persists the team, upgrades Heroes, and updates balances from responses.
 
@@ -61,7 +63,7 @@ The production authentication boundary remains absent. Browser API clients do no
 
 ## Pixi boundaries
 
-Kingdom Pixi receives building lock, level, appearance, indicator, and expansion stage state. It sends selected visual IDs to React. Battle Pixi receives a complete replay and emits only visual completion.
+Kingdom Pixi receives building lock, level, appearance, indicator, and expansion stage state. It resolves the current DEFAULT raster tier for every active building and sends selected visual IDs to React. Battle Pixi receives a complete replay and emits only visual completion.
 
 Kingdom level chips live in a non-interactive screen-space Pixi overlay, separate from building containers. Their position derives from existing per-building anchors plus building/world/camera transforms and snaps to renderer resolution. This preserves constant 42 by 22 CSS-pixel presentation during pan, resize, tier replacement, and unlock animation without changing world coordinates or tap areas.
 

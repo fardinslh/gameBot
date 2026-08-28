@@ -32,6 +32,8 @@ Economy mutations, Hero upgrade, Raid start, and Revenge start require `Idempote
 
 The client submits a persistent Building UUID in `buildingId`, not a building type or Pixi visual ID.
 
+`KingdomStateResponse.kingdomGoals` is authoritative presentation data. It contains Castle level, real Castle-2-through-5 building milestones, the next real district unlock or `null`, `allDistrictsUnlocked`, and current/next effect basis points for Watchtower, Academy, Workshop, and Blacksmith. Reserved `ADVANCED_PVP` configuration is not exposed. `progression` remains the authoritative Kingdom Level/XP state. These fields create no mission, reward, claim, or client-authoritative unlock endpoint.
+
 ## Heroes
 
 | Method | Path | Purpose | Requirements and response |

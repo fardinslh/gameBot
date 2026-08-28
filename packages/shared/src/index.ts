@@ -104,6 +104,23 @@ export interface KingdomUnlockState {
   unlocked: boolean;
 }
 
+export interface KingdomEffectProgressState {
+  buildingType: KingdomBuildingType;
+  buildingLevel: number;
+  effectType: KingdomEffectType;
+  unlocked: boolean;
+  valueBps: number;
+  nextLevelValueBps: number | null;
+}
+
+export interface KingdomProgressGoalsState {
+  castleLevel: number;
+  milestones: KingdomUnlockState[];
+  nextUnlock: KingdomUnlockState | null;
+  allDistrictsUnlocked: boolean;
+  effects: KingdomEffectProgressState[];
+}
+
 export type UpgradeAvailability =
   | 'CAN_UPGRADE'
   | 'BUILDING_LOCKED'
@@ -164,6 +181,7 @@ export interface KingdomStateResponse {
     lastCollectedAt: string;
   };
   progression: KingdomProgressionState;
+  kingdomGoals: KingdomProgressGoalsState;
   kingdomExpansionStage: KingdomExpansionStage;
   unlocks: KingdomUnlockState[];
   balances: ResourceAmounts;

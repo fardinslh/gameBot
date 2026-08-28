@@ -8,7 +8,7 @@ import {
 } from '../domain/kingdom-theme';
 import {
   BUILDING_VISUAL_CATALOG,
-  CORE_EVOLUTION_BUILDINGS,
+  EVOLUTION_BUILDINGS,
   getBuildingVisualState,
   getUpgradeTransition,
 } from './building-visual-progression';
@@ -22,7 +22,7 @@ describe('building visual progression', () => {
     expect(PLANNED_KINGDOM_THEME_IDS).not.toContain('DEFAULT');
   });
 
-  it.each(CORE_EVOLUTION_BUILDINGS)('maps all required tier boundaries for %s', (buildingId) => {
+  it.each(EVOLUTION_BUILDINGS)('maps all required tier boundaries for %s', (buildingId) => {
     const resolve = (level: number) => getBuildingVisualState({ buildingId, level, theme: 'DEFAULT' });
     expect(resolve(1).tier).toBe('EARLY');
     expect(resolve(4)).toMatchObject({ tier: 'EARLY', minorStep: 3 });
@@ -33,7 +33,7 @@ describe('building visual progression', () => {
     expect(resolve(20)).toMatchObject({ tier: 'PRESTIGE', minorStep: 3, capstone: true });
   });
 
-  it.each(CORE_EVOLUTION_BUILDINGS)('produces a valid and distinct state at every level for %s', (buildingId) => {
+  it.each(EVOLUTION_BUILDINGS)('produces a valid and distinct state at every level for %s', (buildingId) => {
     const states = Array.from({ length: 20 }, (_, index) => getBuildingVisualState({
       buildingId,
       level: index + 1,

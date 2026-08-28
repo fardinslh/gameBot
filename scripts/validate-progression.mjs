@@ -27,7 +27,8 @@ const artifacts = new URL('artifacts/', root);
 mkdirSync(artifacts, { recursive: true });
 const identity = `phase-072-${Date.now()}`;
 await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
-const requestedBuildingAssets = [];
+await fetch('http://localhost:3001/onboarding/advisor-tips/CASTLE_PROGRESSION', { method: 'POST', headers: { 'x-dev-player-id': identity } });
+const requestedEvolutionAssets = [];
 const consoleErrors = [];
 
 async function setCastleLevel(level) {
@@ -121,7 +122,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': identity } }));
   page.on('request', (request) => {
-    if (request.url().includes('/assets/kingdom/buildings/')) requestedBuildingAssets.push(request.url());
+    if (request.url().includes('/assets/kingdom/evolution/')) requestedEvolutionAssets.push(request.url());
   });
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
@@ -129,16 +130,27 @@ try {
   await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   await refreshKingdom(page, 5, 1);
+  const stageOneContract = await page.evaluate(async () => (await fetch('http://localhost:3001/kingdom')).json());
+  if (stageOneContract.kingdomGoals?.nextUnlock?.key !== 'WATCHTOWER') throw new Error('Castle 1 next goal is not Watchtower');
+  if (stageOneContract.unlocks.some((unlock) => unlock.key === 'ADVANCED_PVP')) throw new Error('Hidden ADVANCED_PVP metadata leaked to client');
   const stageOneMetadata = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({ ...element.dataset }));
   if (stageOneMetadata.mineGround !== '145,365') throw new Error(`Mine registration is ${stageOneMetadata.mineGround ?? 'missing'}`);
   if (stageOneMetadata.expansionAreaCount !== '0') throw new Error('Locked expansion terrain affected Stage 1');
   const lockedAssetNames = ['academy', 'blacksmith', 'watchtower', 'workshop'];
-  if (requestedBuildingAssets.some((url) => lockedAssetNames.some((name) => url.includes(`/${name}-stage-`)))) {
-    throw new Error(`A locked building asset was loaded at Castle 1: ${requestedBuildingAssets.join(', ')}`);
+  if (requestedEvolutionAssets.some((url) => lockedAssetNames.some((name) => url.includes(`/default/${name}/`)))) {
+    throw new Error(`A locked evolution asset was loaded at Castle 1: ${requestedEvolutionAssets.join(', ')}`);
   }
   await clickWorldPoint(page, 410, 420);
   if (await page.locator('.building-sheet').getAttribute('aria-hidden') !== 'true') throw new Error('A locked building created a ghost click target');
   await validateMobileStage(page, 1, 5);
+  await page.locator('[data-world-building-id="castle"]').evaluate((element) => element.click());
+  await page.waitForSelector('[data-building-sheet="castle"] .kingdom-progress-open');
+  await page.locator('.kingdom-progress-open').click();
+  await page.waitForSelector('.kingdom-progress-sheet--open');
+  await page.waitForTimeout(320);
+  if (await page.locator('.kingdom-milestones article').count() !== 4) throw new Error('Kingdom Progress milestone count changed');
+  await page.screenshot({ path: new URL('retention-01b-kingdom-progress-next-unlock-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.kingdom-progress-sheet .icon-button').click();
   await page.screenshot({ path: new URL('phase-07-2-stage-1-castle-lv1-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(180);
@@ -171,6 +183,10 @@ try {
   await setCastleLevel(5);
   await refreshKingdom(page, 9, 5);
   await refreshKingdom(page, 9, 5);
+  const stageFiveContract = await page.evaluate(async () => (await fetch('http://localhost:3001/kingdom')).json());
+  if (!stageFiveContract.kingdomGoals?.allDistrictsUnlocked || stageFiveContract.kingdomGoals?.nextUnlock !== null) {
+    throw new Error('Castle 5 goal state did not report all current districts unlocked');
+  }
   await validateMobileStage(page, 5, 9);
   const kingdomId = await setCastleLevel(5);
   await prisma.building.updateMany({
@@ -194,6 +210,15 @@ try {
     await page.locator('.building-sheet .icon-button').click();
   }
 
+  await page.locator('[data-world-building-id="castle"]').evaluate((element) => element.click());
+  await page.waitForSelector('[data-building-sheet="castle"] .kingdom-progress-open');
+  await page.locator('.kingdom-progress-open').click();
+  await page.waitForSelector('.kingdom-progress-sheet--open');
+  await page.waitForTimeout(320);
+  if (await page.locator('.kingdom-effect-goals article').count() !== 4) throw new Error('Kingdom Progress effect count changed');
+  await page.screenshot({ path: new URL('retention-01b-kingdom-progress-all-unlocked-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.kingdom-progress-sheet .icon-button').click();
+
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(220);
   await moveWorldTo(page, 330, 360);
@@ -207,7 +232,7 @@ try {
   console.log('PASS progressive expansion stages 1-5 with exact Pixi counts 5/6/7/8/9');
   console.log('PASS locked assets/areas/accessibility/interaction excluded from Stage 1 camera composition');
   console.log('PASS runtime reveal mount is duplicate-safe and all four effect details remain interactive');
-  console.log('PASS Phase 07.2 at 320x568, 375x812, and 390x844 with new screenshots');
+  console.log('PASS Retention 01B goals + lazy advanced evolution at 320x568, 375x812, and 390x844');
 } finally {
   await browser.close();
   await prisma.$disconnect();

@@ -25,6 +25,7 @@ import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import { KingdomLevelService } from '../kingdom/kingdom-level.service';
 import { KingdomExpansionService } from '../kingdom/kingdom-expansion.service';
+import { KingdomProgressGoalsService } from '../kingdom/kingdom-progress-goals.service';
 import { buildingEffect, kingdomEffectBps } from '../kingdom/kingdom-effects.config';
 import { calculateProduction, capProductionToStorage } from './economy.calculator';
 import { isBuildingUnlocked, presentUnlocks, unlockCastleLevel } from './building-unlocks.config';
@@ -73,6 +74,7 @@ export class EconomyService {
     private readonly onboarding: OnboardingService = new OnboardingService(prisma, analytics),
     private readonly kingdomLevels: KingdomLevelService = new KingdomLevelService(),
     private readonly kingdomExpansion: KingdomExpansionService = new KingdomExpansionService(),
+    private readonly kingdomProgressGoals: KingdomProgressGoalsService = new KingdomProgressGoalsService(),
   ) {}
 
   getKingdom(context: DevelopmentPlayerContext): Promise<KingdomStateResponse> {
@@ -460,8 +462,12 @@ export class EconomyService {
       player: { id: graph.player.id, displayName: graph.player.displayName ?? 'Warden of Dawnkeep', level: castle?.level ?? graph.level },
       kingdom: { id: graph.id, name: graph.name, level: progression.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
       progression,
+      kingdomGoals: this.kingdomProgressGoals.calculate(graph.buildings.map((building) => ({
+        type: building.type as KingdomBuildingType,
+        level: building.level,
+      }))),
       kingdomExpansionStage: this.kingdomExpansion.fromCastleLevel(castleLevel),
-      unlocks: presentUnlocks(castleLevel),
+      unlocks: presentUnlocks(castleLevel).filter((unlock) => unlock.kind === 'BUILDING'),
       balances: this.presentBalances(graph),
       storageCapacities: this.presentStorageCapacities(graph),
       buildings: this.presentBuildings(graph, now),

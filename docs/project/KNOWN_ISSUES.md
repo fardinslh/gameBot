@@ -22,9 +22,9 @@ The product owner approved all 24 licensed production choices. Production now us
 
 The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry and the authoritative Collect → Upgrade → Raid → Battle → Result browser flow pass at 320x568, 375x812, and 390x844. Final owner review of the portrait and Persian copy remains required; the former Upgrade-target overlap is closed.
 
-### Core evolution fidelity needs owner approval
+### Building evolution fidelity needs owner approval
 
-Retention 01A contains five generated/curated raster tiers for each core building and passes metadata, effective-resolution, Lab, 200% inspection, and mobile capture gates. Castle tiers and Grand Market Prestige received higher-detail restoration; level badges now remain screen-sized. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20, N/N+1, and 100/150/200%. Advanced building evolution remains deferred to Retention 01B.
+Retention 01A and 01B contain five generated/curated raster tiers for all nine active buildings and pass metadata, effective-resolution, Lab, 200% inspection, and mobile capture gates. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20, N/N+1, and 100/150/200%. **ADVANCED BUILDING ART: OWNER APPROVAL PENDING.**
 
 ### Kingdom Themes are architecture-only
 
@@ -49,10 +49,6 @@ The API stores notification records and uses them for inbox unread state. No not
 ### BullMQ has no gameplay work
 
 The API creates a `game-jobs` queue handle when Redis is enabled. No producer or worker uses it. Upgrade completion happens during reads and explicit completion collection.
-
-### Advanced-building appearance variants use fallback art
-
-Academy, Blacksmith, Watchtower, and Workshop return `STONE` and `FORTIFIED` compatibility variants, but missing later files keep their Stage 1 art. Core buildings use the new five-tier Retention 01A system.
 
 ### Some local building assets are unused
 

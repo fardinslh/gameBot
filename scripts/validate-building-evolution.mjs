@@ -4,7 +4,7 @@ import { join } from 'node:path';
 const root = process.cwd();
 const assetRoot = join(root, 'apps', 'game-client', 'public', 'assets', 'kingdom', 'evolution');
 const implementedThemes = [{ id: 'DEFAULT', namespace: 'default' }];
-const buildingFolders = ['castle', 'farm', 'lumber-mill', 'mine', 'grand-market'];
+const buildingFolders = ['castle', 'farm', 'lumber-mill', 'mine', 'grand-market', 'academy', 'blacksmith', 'watchtower', 'workshop'];
 const failures = [];
 let totalBytes = 0;
 
@@ -50,5 +50,5 @@ if (failures.length) {
   console.error(`Building evolution validation failed:\n- ${failures.join('\n- ')}`);
   process.exitCode = 1;
 } else {
-  console.log(`Building evolution validation passed: ${implementedThemes.length} implemented theme, 20 levels tested by Vitest, 25 DEFAULT WebP assets inspected, ${(totalBytes / 1024).toFixed(1)} KiB total.`);
+  console.log(`Building evolution validation passed: ${implementedThemes.length} implemented theme, 20 levels tested by Vitest across 9 buildings, 45 DEFAULT WebP assets inspected, ${(totalBytes / 1024).toFixed(1)} KiB total.`);
 }
