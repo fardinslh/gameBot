@@ -16,7 +16,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level; all 25 assets pass effective-resolution audit through moderate 200% inspection |
-| World building level badges | Implemented | A DPR-aware screen-space Pixi overlay keeps 11px level text and 22px badges legible while following world pan, resize, and unlock scale |
+| World building status stack | Implemented | One DPR-aware screen-space Pixi stack keeps the compact upgrade/active indicator centered above the level badge with a fixed gap while following pan, resize, tier changes, and unlock scale |
 | Theme-ready building evolution architecture | Implemented | Visual requests resolve Building Type + Building Level + Kingdom Theme through one catalog; `DEFAULT` is the only implemented theme |
 | Selectable Kingdom Themes | Not implemented | No selection UI, persistence, ownership, or API exists |
 | Historical Theme assets | Not implemented | Planned historically-inspired eras have no generated or registered production catalogs |
@@ -105,7 +105,7 @@ Twelve ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A engineering, its DEFAULT theme-ready architecture, and the building-fidelity corrective pass are complete; owner approval of building labels and art remains pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
+Retention 01A engineering, its DEFAULT theme-ready architecture, and the final pre-retention corrective pass are complete. The building status pair now uses one collision-proof semantic stack, Aren's full authoritative Collect-to-Result flow passes at 320/375/390, and the Castle focal point is corrected from world Y 690 to 665. Owner approval of building labels/art, the Aren portrait, Persian device copy, and the real-device audio mix remains pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 

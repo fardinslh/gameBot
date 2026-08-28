@@ -39,7 +39,7 @@ export interface BuildingSceneState {
 }
 
 const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
-const CASTLE_FOCUS_Y = 690;
+const KINGDOM_COMPOSITION_FOCUS_Y = 690;
 
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void): Promise<KingdomSceneRuntime> {
   const runtime = await createPixiRuntime(host);
@@ -239,8 +239,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       const indicator = indicatorArtwork.get(id);
       if (!indicator) continue;
       const layout = calculateBuildingStatusLayout({
-        levelBadgeAnchor: BUILDING_VISUALS[id].levelBadgeAnchor,
-        upgradeIndicatorAnchor: BUILDING_VISUALS[id].upgradeIndicatorAnchor,
+        statusStackAnchor: BUILDING_VISUALS[id].statusStackAnchor,
         buildingPosition: item.container.position,
         buildingScale: item.container.scale.x,
         resolution: app.renderer.resolution,
@@ -289,7 +288,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     host.dataset.activeBoundsTop = String(Math.round(topmostBuildingY));
     host.dataset.activeBoundsBottom = String(Math.round(buildingsLayer.getLocalBounds().bottom));
     cameraMaxY = Math.max(0, hudSafeBottom - topmostBuildingY * worldScale);
-    const castleFocusCameraY = height * .49 - CASTLE_FOCUS_Y * worldScale;
+    const castleFocusCameraY = height * .49 - KINGDOM_COMPOSITION_FOCUS_Y * worldScale;
     const topBuildingSafeCameraY = hudSafeBottom - topmostBuildingY * worldScale;
     cameraY = laidOut
       ? clampCamera(cameraMaxY + (cameraMinY - cameraMaxY) * previousProgress)

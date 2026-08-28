@@ -6,7 +6,7 @@ contentType: Troubleshooting
 
 # Check known limitations and issues
 
-The current theme-ready evolution correction and Persian RTL corrective pass have targeted automated coverage. The RTL pass uses semantic `lang`/`dir`, isolated dynamic values, and live browser screenshots; broader browser flows still reproduce the separately documented Aren target-overlap defect below. The list separates accepted limitations from confirmed defects.
+The current theme-ready evolution correction, unified building status stack, Castle composition correction, and Persian RTL corrective pass have targeted automated coverage. The list separates accepted limitations from confirmed defects.
 
 ## Known limitations
 
@@ -18,13 +18,9 @@ Automated semantic and visual checks now pass for Kingdom HUD, Building Detail, 
 
 The product owner approved all 24 licensed production choices. Production now uses scheduled overlapping sources with 128-sample equal-power curves: Kingdom overlaps for 3.5 seconds and Battle for 2.5 seconds. Scheduler and three-transition decoded-PCM checks pass, but the new overlap remains **not audibly verified**. The owner must use **Test Kingdom Loop** on `/dev/audio` for at least three transitions, then review the complete mix on headphones, desktop speakers, a real phone, and later Bale WebView.
 
-### Aren art and browser screenshots need owner/manual review
+### Aren art needs owner/manual review
 
-The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry unit tests pass at 320x568, 375x812, and 390x844. Browser automation is now available, but the full flow does not complete because of the Upgrade-target regression below; required Aren screenshots and real tap flow remain unverified.
-
-### Existing onboarding browser regression remains outside audio scope
-
-After the music scheduler change, `validate:player-experience` repeatedly failed because Aren overlapped the expanded Upgrade target; one retry later timed out waiting for the active Raid tab. `validate:raid` timed out waiting for its match-search response in the same browser flow. Audio work did not change advisor positioning, onboarding text, Raid, or Battle, and this task explicitly forbids those fixes. API unit and integration suites still pass, including Raid/Battle settlement. Repair the browser-flow blocker in a separate scoped task, then rerun both validators.
+The older Aren portrait is a current generated candidate, not final owner-approved art. Target geometry and the authoritative Collect → Upgrade → Raid → Battle → Result browser flow pass at 320x568, 375x812, and 390x844. Final owner review of the portrait and Persian copy remains required; the former Upgrade-target overlap is closed.
 
 ### Core evolution fidelity needs owner approval
 

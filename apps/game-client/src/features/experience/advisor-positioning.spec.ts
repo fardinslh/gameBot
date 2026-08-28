@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateAdvisorPlacement, expandRect, rectsOverlap, type Rect } from './advisor-positioning';
+import { ADVISOR_REFLOW_BUFFER, ADVISOR_TARGET_GAP, calculateAdvisorPlacement, expandRect, rectsOverlap, type Rect } from './advisor-positioning';
 
 const coach = { width: 300, height: 98 };
 function target(left: number, top: number, width = 120, height = 44): Rect { return { left, top, right: left + width, bottom: top + height, width, height }; }
@@ -18,5 +18,5 @@ describe.each([{ width: 320, height: 568 }, { width: 375, height: 812 }, { width
 
 it('places the owner-reported bottom-sheet upgrade case above its full CTA', () => {
   const upgrade = target(20, 494, 280, 46); const result = calculateAdvisorPlacement(upgrade, coach, { width: 320, height: 568 });
-  expect(result.side).toBe('above'); expect(result.top + coach.height).toBeLessThanOrEqual(upgrade.top - 12);
+  expect(result.side).toBe('above'); expect(result.top + coach.height).toBeLessThanOrEqual(upgrade.top - ADVISOR_TARGET_GAP - ADVISOR_REFLOW_BUFFER);
 });

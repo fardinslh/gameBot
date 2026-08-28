@@ -1,4 +1,5 @@
 export const ADVISOR_TARGET_GAP = 12;
+export const ADVISOR_REFLOW_BUFFER = 8;
 export const MOBILE_NAV_HEIGHT = 54;
 
 export interface Rect { left: number; top: number; right: number; bottom: number; width: number; height: number; }
@@ -24,10 +25,10 @@ export function calculateAdvisorPlacement(target: Rect, coach: { width: number; 
   const clampX = (value: number) => Math.max(leftBound, Math.min(value, rightBound - coach.width));
   const clampY = (value: number) => Math.max(topBound, Math.min(value, bottomBound - coach.height));
   const candidates: AdvisorPlacement[] = [
-    { side: 'above', left: clampX(target.left + (target.width - coach.width) / 2), top: target.top - ADVISOR_TARGET_GAP - coach.height },
-    { side: 'below', left: clampX(target.left + (target.width - coach.width) / 2), top: target.bottom + ADVISOR_TARGET_GAP },
-    { side: 'left', left: target.left - ADVISOR_TARGET_GAP - coach.width, top: clampY(target.top + (target.height - coach.height) / 2) },
-    { side: 'right', left: target.right + ADVISOR_TARGET_GAP, top: clampY(target.top + (target.height - coach.height) / 2) },
+    { side: 'above', left: clampX(target.left + (target.width - coach.width) / 2), top: target.top - ADVISOR_TARGET_GAP - ADVISOR_REFLOW_BUFFER - coach.height },
+    { side: 'below', left: clampX(target.left + (target.width - coach.width) / 2), top: target.bottom + ADVISOR_TARGET_GAP + ADVISOR_REFLOW_BUFFER },
+    { side: 'left', left: target.left - ADVISOR_TARGET_GAP - ADVISOR_REFLOW_BUFFER - coach.width, top: clampY(target.top + (target.height - coach.height) / 2) },
+    { side: 'right', left: target.right + ADVISOR_TARGET_GAP + ADVISOR_REFLOW_BUFFER, top: clampY(target.top + (target.height - coach.height) / 2) },
   ];
   for (const candidate of candidates) {
     const placed = { left: candidate.left, top: candidate.top, right: candidate.left + coach.width, bottom: candidate.top + coach.height, width: coach.width, height: coach.height };

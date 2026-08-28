@@ -74,7 +74,7 @@ try {
   await main.screenshot({ path: new URL('phase-building-art-after-fa-320.png', artifacts).pathname.slice(1) });
   await main.screenshot({ path: new URL('phase-06-6-simplified-fa-320.png', artifacts).pathname.slice(1) });
   await main.screenshot({ path: new URL('phase-clean-base-final-320.png', artifacts).pathname.slice(1) });
-  await clickBuilding(main, 320, 690);
+  await clickBuilding(main, 320, 665);
   await main.waitForSelector('[data-building-sheet="castle"]');
   await main.locator('.building-sheet .icon-button').click();
   await main.close();

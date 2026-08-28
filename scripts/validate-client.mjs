@@ -86,7 +86,7 @@ try {
     await page.waitForTimeout(120);
   };
   const buildingPoints = [
-    { id: 'castle', x: 320, y: 690 },
+    { id: 'castle', x: 320, y: 665 },
     { id: 'mine', x: 145, y: 365 },
     { id: 'farm', x: 88, y: 958 },
     { id: 'lumberMill', x: 552, y: 958 },

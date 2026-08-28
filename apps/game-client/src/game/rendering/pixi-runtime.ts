@@ -22,6 +22,9 @@ export async function createPixiRuntime(container: HTMLDivElement): Promise<Pixi
 
   return {
     app,
-    destroy: () => app.destroy(true, { children: true }),
+    destroy: () => {
+      app.stop();
+      app.destroy(true, { children: true });
+    },
   };
 }

@@ -35,13 +35,13 @@ Core-building production now uses 25 files under `kingdom/evolution/default`: fi
 
 - `building-layout.ts`: gameplay building to world coordinate and scale
 - `kingdom-expansion-stages.ts`: Stage 2 through 5 placement and environment presentation
-- `building-visuals.ts`: texture stages, dimensions, ground anchors, offsets, footprint, shadow, hit area, and separate level/upgrade status anchors
+- `building-visuals.ts`: texture stages, dimensions, ground anchors, offsets, footprint, shadow, hit area, and one semantic status-stack anchor per building
 - `building-art.ts`: Pixi sprite container construction
 - `kingdom-theme.ts`: implemented `DEFAULT` identity and separately listed planned theme IDs
 - `building-visual-progression.ts`: Theme → Building → Tier catalog plus authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
-- `building-status-badge.ts`: constant-size screen-space level/upgrade presentation, device-pixel-snapped world-anchor conversion, and collision-safe layout
+- `building-status-badge.ts`: constant-size screen-space level/upgrade presentation, device-pixel-snapped world-anchor conversion, and a structurally aligned indicator-above-badge stack
 
 File names do not decide gameplay. Shared building type and server state select a visual ID, then the mapping resolves its texture.
 

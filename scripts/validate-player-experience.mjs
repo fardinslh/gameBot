@@ -11,7 +11,13 @@ const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? c
 const nextCli = new URL('node_modules/next/dist/bin/next', root).pathname.slice(1);
 const artifacts = new URL('artifacts/player-experience/', root);
 const prisma = new PrismaClient();
-const playerIds = [`experience-fa-${Date.now()}`, `experience-en-${Date.now()}`];
+const runId = Date.now();
+const playerIds = [
+  `experience-fa-${runId}`,
+  `experience-en-${runId}`,
+  `experience-fa-375-${runId}`,
+  `experience-fa-390-${runId}`,
+];
 
 function startClient() {
   return spawn(process.execPath, [nextCli, 'start', '--port', '3000'], {
@@ -71,6 +77,40 @@ async function assertCoachClear(page, targetSelector) {
   await page.locator(targetSelector).click({ trial: true });
 }
 
+async function completeMobileOnboarding(browser, externalUserId, viewport) {
+  const page = await browser.newPage({ viewport });
+  await routePlayer(page, externalUserId);
+  await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('[data-onboarding-step="WELCOME"]');
+  await page.locator('.experience-primary').click();
+  await page.waitForSelector('.advisor-coach');
+  await assertCoachClear(page, '[data-guide-target="collect"]');
+  await page.locator('[data-guide-target="collect"]').click();
+  await page.waitForFunction(() => document.querySelector('.advisor-coach'));
+  await clickWorldBuilding(page, 88, 958);
+  await page.waitForSelector('[data-building-sheet="farm"]');
+  await assertCoachClear(page, '[data-guide-target="upgrade"]');
+  await page.screenshot({ path: new URL(`upgrade-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+  await page.locator('[data-guide-target="upgrade"]').click();
+  await page.waitForSelector('[data-guide-target="raid-tab"][data-guide-active="true"]');
+  await assertCoachClear(page, '[data-guide-target="raid-tab"]');
+  await page.locator('[data-guide-target="raid-tab"]').click();
+  await page.waitForSelector('[data-raid-state="overview"]');
+  await assertCoachClear(page, '[data-guide-target="find-enemy"]');
+  await page.locator('[data-guide-target="find-enemy"]').click();
+  await page.waitForSelector('[data-raid-state="offer"]');
+  await assertCoachClear(page, '[data-guide-target="attack"]');
+  await page.locator('[data-guide-target="attack"]').click();
+  await page.waitForSelector('[data-raid-state="result"]', { timeout: 25_000 });
+  await assertCoachClear(page, '[data-guide-target="result-return"]');
+  await page.screenshot({ path: new URL(`result-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+  await page.locator('[data-guide-target="result-return"]').click();
+  await page.waitForSelector('[data-onboarding-step="COMPLETE"]');
+  const status = await page.evaluate(async () => (await (await fetch('http://localhost:3001/onboarding')).json()));
+  if (status.status !== 'COMPLETED' || status.currentStep !== 'COMPLETE') throw new Error(`Onboarding did not complete at ${viewport.width}x${viewport.height}`);
+  await page.close();
+}
+
 async function cleanupPlayers(externalUserIds) {
   const accounts = await prisma.platformAccount.findMany({
     where: { platform: 'WEB', externalUserId: externalUserIds ? { in: externalUserIds } : { startsWith: 'experience-' } },
@@ -111,7 +151,7 @@ try {
     HTMLMediaElement.prototype.pause = function pause() {};
   });
   await routePlayer(page, playerIds[0]);
-  page.on('request', (request) => { if (request.url().includes('/approved/music/loop-ready/')) musicRequests.push(request.url()); });
+  page.on('request', (request) => { if (request.url().includes('/approved/music/')) musicRequests.push(request.url()); });
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
@@ -160,7 +200,7 @@ try {
   for (const required of ['collect.mp3', 'upgrade-start.mp3', 'find-enemy.mp3', 'attack-start.mp3']) {
     if (!audioCalls.some((source) => source.includes(required))) throw new Error(`SFX route was not technically triggered: ${required}`);
   }
-  for (const required of ['kingdom-loop.mp3', 'battle-loop.mp3']) if (!musicRequests.some((source) => source.includes(required))) throw new Error(`Buffered music was not requested: ${required}`);
+  for (const required of ['kingdom.mp3', 'battle.mp3']) if (!musicRequests.some((source) => source.includes(required))) throw new Error(`Buffered music was not requested: ${required}`);
 
   await page.locator('[data-nav-id="heroes"]').click();
   await page.waitForSelector('[data-heroes-status="ready"]');
@@ -185,6 +225,9 @@ try {
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
   if (await page.evaluate(() => localStorage.getItem('crown-coin-audio-v1')) !== saved) throw new Error('Audio settings did not persist after refresh');
+
+  await completeMobileOnboarding(browser, playerIds[2], { width: 375, height: 812 });
+  await completeMobileOnboarding(browser, playerIds[3], { width: 390, height: 844 });
 
   for (const viewport of [{ width: 375, height: 812 }, { width: 390, height: 844 }]) {
     await assertViewport(page, viewport.width, viewport.height, 'rtl');
@@ -217,7 +260,7 @@ try {
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS authoritative Collect -> Upgrade -> protected SYSTEM Raid -> Battle -> Result -> Kingdom onboarding');
   console.log('PASS refresh recovery, durable skip, permanent 8-section Guide, and FA/RTL + EN/LTR');
-  console.log('PASS 320x568, 375x812, 390x844 layout with no horizontal overflow');
+  console.log('PASS real onboarding actions and no horizontal overflow at 320x568, 375x812, 390x844');
   console.log('PASS technical music/SFX routing and persisted Master/Music/SFX settings');
   console.log('NOTE audio calls were technically observed; audio was NOT AUDIBLY VERIFIED');
 } finally {

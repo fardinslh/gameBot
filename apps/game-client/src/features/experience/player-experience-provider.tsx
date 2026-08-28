@@ -148,6 +148,8 @@ export function AdvisorCoach({ title, body, target, durationMs }: { title: strin
     let targetElement: HTMLElement | null = null;
     let observedTarget: HTMLElement | null = null;
     let frame = 0;
+    let motionFrame = 0;
+    let motionUntil = 0;
     let scrolled = false;
     const update = (): void => {
       cancelAnimationFrame(frame);
@@ -173,12 +175,26 @@ export function AdvisorCoach({ title, body, target, durationMs }: { title: strin
         setPlacement(calculateAdvisorPlacement(toRect(targetRect), { width: coachRect.width, height: coachRect.height }, { width, height, offsetLeft: viewport?.offsetLeft, offsetTop: viewport?.offsetTop, safeTop: safeInsets.top, safeBottom: safeInsets.bottom, reservedTop: hudBottom ? hudBottom + 8 : undefined }));
       });
     };
+    const followMotion = (): void => {
+      motionUntil = performance.now() + 360;
+      if (motionFrame) return;
+      const tick = (): void => {
+        update();
+        if (performance.now() < motionUntil) motionFrame = requestAnimationFrame(tick);
+        else motionFrame = 0;
+      };
+      tick();
+    };
     const observer = new ResizeObserver(update); observer.observe(coach);
-    const mutations = new MutationObserver(update); mutations.observe(document.body, { childList: true, subtree: true });
+    const mutations = new MutationObserver(followMotion); mutations.observe(document.body, { childList: true, subtree: true });
+    document.addEventListener('transitionrun', followMotion, true);
+    document.addEventListener('animationstart', followMotion, true);
     window.addEventListener('resize', update); window.addEventListener('scroll', update, true);
-    window.visualViewport?.addEventListener('resize', update); window.visualViewport?.addEventListener('scroll', update); update();
+    window.visualViewport?.addEventListener('resize', update); window.visualViewport?.addEventListener('scroll', update); followMotion();
     return () => {
-      cancelAnimationFrame(frame); observer.disconnect(); mutations.disconnect(); observedTarget?.removeAttribute('data-guide-active');
+      cancelAnimationFrame(frame); cancelAnimationFrame(motionFrame); observer.disconnect(); mutations.disconnect(); observedTarget?.removeAttribute('data-guide-active');
+      document.removeEventListener('transitionrun', followMotion, true);
+      document.removeEventListener('animationstart', followMotion, true);
       window.removeEventListener('resize', update); window.removeEventListener('scroll', update, true);
       window.visualViewport?.removeEventListener('resize', update); window.visualViewport?.removeEventListener('scroll', update);
     };

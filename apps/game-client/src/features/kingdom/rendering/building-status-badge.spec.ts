@@ -68,8 +68,7 @@ describe('building status badge', () => {
       if (!building) continue;
       for (const state of states) {
         const layout = calculateBuildingStatusLayout({
-          levelBadgeAnchor: BUILDING_VISUALS[buildingId].levelBadgeAnchor,
-          upgradeIndicatorAnchor: BUILDING_VISUALS[buildingId].upgradeIndicatorAnchor,
+          statusStackAnchor: BUILDING_VISUALS[buildingId].statusStackAnchor,
           buildingPosition: { x: building.groundX, y: building.groundY },
           buildingScale: building.scale * state.unlockScale,
           resolution: 2,
@@ -78,8 +77,10 @@ describe('building status badge', () => {
         });
         if (state.indicator) {
           expect(statusElementsOverlap(layout.levelBadge, layout.upgradeIndicator), `${buildingId}:${state.name}`).toBe(false);
+          expect(layout.upgradeIndicator.x, `${buildingId}:${state.name}`).toBe(layout.levelBadge.x);
+          expect(layout.upgradeIndicator.y, `${buildingId}:${state.name}`).toBeLessThan(layout.levelBadge.y);
           expect(layout.levelBadge.y - layout.upgradeIndicator.y, `${buildingId}:${state.name}`).toBeGreaterThanOrEqual(
-            (BUILDING_STATUS_BADGE.height + BUILDING_UPGRADE_INDICATOR.height) / 2,
+            (BUILDING_STATUS_BADGE.height + BUILDING_UPGRADE_INDICATOR.height) / 2 + BUILDING_UPGRADE_INDICATOR.gap,
           );
         }
       }

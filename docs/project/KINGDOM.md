@@ -22,7 +22,7 @@ The Kingdom combines a PixiJS world with React controls. Server state decides wh
 - Height: `1536`
 - Terrain source X offset: `-192`
 - Active terrain: `/assets/kingdom/terrain/kingdom-base-v3.webp`
-- Castle focus Y: `690`
+- Camera composition focus Y: `690`
 
 The renderer scales the world to the host width. It calculates camera bounds from mounted buildings and the full world height. The upper bound keeps the top active building below Resource HUD, inbox, and Collect controls with 12 pixels of clearance. A pointer movement above 7 pixels changes the gesture from tap to pan.
 
@@ -32,7 +32,7 @@ Locked buildings never enter `buildingsLayer`, so they do not affect `getLocalBo
 
 | Building | Type | Ground X | Ground Y | Scale |
 | --- | --- | ---: | ---: | ---: |
-| Castle | `CASTLE` | 320 | 690 | 1.48 |
+| Castle | `CASTLE` | 320 | 665 | 1.48 |
 | Mine | `MINE` | 145 | 365 | 1.00 |
 | Farm | `FARM` | 88 | 958 | 0.97 |
 | Lumber Mill | `LUMBER_MILL` | 552 | 958 | 0.96 |
@@ -42,7 +42,7 @@ Locked buildings never enter `buildingsLayer`, so they do not affect `getLocalBo
 | Workshop | `WORKSHOP` | 335 | 170 | 0.78 |
 | Blacksmith | `BLACKSMITH` | 88 | 165 | 0.84 |
 
-`KINGDOM_BUILDING_LAYOUT` remains the placement source. `KINGDOM_EXPANSION_STAGES` supplies coordinates for Watchtower, Academy, Workshop, and Blacksmith.
+`KINGDOM_BUILDING_LAYOUT` remains the placement source. The Castle moved from Y `690` to `665` in the final pre-retention corrective pass so its mass sits closer to the visual center of the courtyard. The camera composition focus remains Y `690`, making the 25-world-pixel correction visible instead of cancelling it through recentering. `KINGDOM_EXPANSION_STAGES` supplies coordinates for Watchtower, Academy, Workshop, and Blacksmith.
 
 ## Expansion stages
 
@@ -60,7 +60,7 @@ During a live stage increase, the environment fades in while a local mist clears
 
 ## Building visuals
 
-`building-visuals.ts` defines each sprite path, rendered dimensions, normalized ground anchor, visual offset, footprint, contact shadow, hit area, level/upgrade indicator anchor, and lock anchor. `building-art.ts` converts those definitions into Pixi containers.
+`building-visuals.ts` defines each sprite path, rendered dimensions, normalized ground anchor, visual offset, footprint, contact shadow, hit area, one semantic status-stack anchor, and lock anchor. `building-art.ts` converts those definitions into Pixi containers.
 
 For Castle, Farm, Lumber Mill, Mine, and Grand Market, `building-visual-progression.ts` resolves explicit `{ buildingId, level, theme }` requests through the centralized Theme → Building → Tier catalog. `DEFAULT` is the only implemented theme. Authoritative levels derive tiers 1–4 Early, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Minor steps 0–3 add local building-specific details, and level 20 adds a compact capstone. No gameplay coordinate changes.
 

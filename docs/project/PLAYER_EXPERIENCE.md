@@ -39,7 +39,7 @@ The browser cannot submit an arbitrary step. Refresh and API restart reload the 
 
 The React experience provider fetches state without blocking the game. Aren appears in welcome, completion, action coaching, contextual tips, and the permanent Guide. Every actionable step uses a typed `data-guide-target` rather than text queries.
 
-`AdvisorCoach` measures the complete portrait-and-bubble unit and target with `getBoundingClientRect`. It uses the visual viewport, safe-area insets, live HUD bottom, 54-pixel navigation reserve, and a 12-pixel expanded target exclusion rectangle. It chooses above, below, left, or right space and reacts through `ResizeObserver`, `MutationObserver`, viewport resize/scroll, and layout scroll without polling. Targets receive a nonblocking visual outline; the coach has no pointer events. Offscreen DOM targets use restrained `scrollIntoView`. The bottom-sheet Upgrade CTA is explicitly covered by unit and browser acceptance logic: the full CTA remains visible and trial-clickable.
+`AdvisorCoach` measures the complete portrait-and-bubble unit and target with `getBoundingClientRect`. It uses the visual viewport, safe-area insets, live HUD bottom, 54-pixel navigation reserve, a 12-pixel expanded target exclusion rectangle, and an additional 8-pixel reflow buffer. It chooses above, below, left, or right space and reacts through `ResizeObserver`, `MutationObserver`, viewport resize/scroll, layout scroll, and a bounded 360ms transition-follow window. Targets receive a nonblocking visual outline; the coach has no pointer events. Contextual Aren cards pass pointer input through decorative content while their explicit dismiss button remains actionable. Offscreen DOM targets use restrained `scrollIntoView`. During the onboarding Upgrade step, the bottom sheet snaps to its final transform before target measurement. Unit and browser acceptance verify the full CTA remains visible and trial-clickable.
 
 English and Persian copy lives in the shared localization dictionaries. The same component tree supports LTR and RTL; Pixi coordinates are unchanged.
 
@@ -71,5 +71,5 @@ The panel header now identifies Aren and carries his reminder while preserving t
 - Copy still needs final Persian real-user review, and the Aren portrait remains a current candidate pending owner approval.
 - The initial pass has one short mandatory path and no branching tutorial variants.
 - All 24 explicit owner audio choices are mapped. The development-only Audio Lab records the completed selection gate; full-game real-device mix review remains open.
-- The target-aware mobile browser screenshot run could not execute when no browser binding was available; unit geometry covers 320x568, 375x812, and 390x844, but manual screenshots remain required.
+- Target-aware browser screenshots and the real authoritative onboarding path pass at 320x568, 375x812, and 390x844; final portrait/copy judgment still requires owner review.
 - Bale launch/reconnect behavior is not implemented or device-tested yet.

@@ -31,8 +31,7 @@ interface BuildingStatusPositionInput {
 }
 
 interface BuildingStatusLayoutInput extends Omit<BuildingStatusPositionInput, 'anchor'> {
-  levelBadgeAnchor: PointLike;
-  upgradeIndicatorAnchor: PointLike;
+  statusStackAnchor: PointLike;
 }
 
 export interface BuildingStatusLayout {
@@ -113,23 +112,19 @@ export function calculateBuildingStatusPosition({
 }
 
 export function calculateBuildingStatusLayout({
-  levelBadgeAnchor,
-  upgradeIndicatorAnchor,
+  statusStackAnchor,
   ...transform
 }: BuildingStatusLayoutInput): BuildingStatusLayout {
-  const levelBadge = calculateBuildingStatusPosition({ anchor: levelBadgeAnchor, ...transform });
-  const preferredIndicator = calculateBuildingStatusPosition({ anchor: upgradeIndicatorAnchor, ...transform });
-  const indicator = statusElementsOverlap(levelBadge, preferredIndicator, BUILDING_UPGRADE_INDICATOR.gap)
-    ? {
-        x: snapToResolution(levelBadge.x, transform.resolution),
-        y: snapToResolution(
-          levelBadge.y - BUILDING_STATUS_BADGE.height / 2
-            - BUILDING_UPGRADE_INDICATOR.gap
-            - BUILDING_UPGRADE_INDICATOR.height / 2,
-          transform.resolution,
-        ),
-      }
-    : preferredIndicator;
+  const levelBadge = calculateBuildingStatusPosition({ anchor: statusStackAnchor, ...transform });
+  const indicator = {
+    x: levelBadge.x,
+    y: snapToResolution(
+      levelBadge.y - BUILDING_STATUS_BADGE.height / 2
+        - BUILDING_UPGRADE_INDICATOR.gap
+        - BUILDING_UPGRADE_INDICATOR.height / 2,
+      transform.resolution,
+    ),
+  };
   return { levelBadge, upgradeIndicator: indicator };
 }
 

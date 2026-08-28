@@ -1,11 +1,19 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { Assets } from 'pixi.js';
+import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { DEFAULT_KINGDOM_THEME } from '@/features/kingdom/domain/kingdom-theme';
 import type { CoreEvolutionBuildingId } from '@/features/kingdom/rendering/building-visual-progression';
 import { getBuildingVisualState, isCoreEvolutionBuilding } from '@/features/kingdom/rendering/building-visual-progression';
 import type { BuildingId } from '@/features/kingdom/domain/kingdom-types';
-import type { BuildingStatusIndicator } from '@/features/kingdom/rendering/building-status-badge';
+import { createBuildingArtwork } from '@/features/kingdom/rendering/building-art';
+import {
+  calculateBuildingStatusLayout,
+  statusElementsOverlap,
+  type BuildingStatusIndicator,
+} from '@/features/kingdom/rendering/building-status-badge';
+import { BUILDING_VISUALS, resolveBuildingTexture } from '@/features/kingdom/rendering/building-visuals';
 import styles from './building-evolution-lab.module.css';
 
 const BUILDINGS: readonly { id: CoreEvolutionBuildingId; label: string }[] = [
@@ -108,7 +116,7 @@ export function BuildingEvolutionLab() {
       <section className={styles.badgeLab} aria-label="Production building badge checks">
         <header>
           <div><p>Exact production renderer</p><h2>Building badge fidelity</h2></div>
-          <span>Lv. 1 / 8 / 12 / 20 · 320px and 390px viewport equivalents</span>
+          <span>Lv. 1 / 8 / 12 / 20 · 320px, 375px, and 390px viewport equivalents</span>
         </header>
         <div className={styles.badgeViewports}>
           <BadgeViewportPreview viewportWidth={320} />
@@ -141,79 +149,110 @@ export function BuildingEvolutionLab() {
 
 function StatusOverlayPreview({ buildingId, level, state }: { buildingId: BuildingId; level: number; state: StatusLabState }) {
   const hostRef = useRef<HTMLDivElement>(null);
+  const badgeRef = useRef<HTMLSpanElement>(null);
+  const indicatorRef = useRef<HTMLSpanElement>(null);
+  const renderRef = useRef<(() => void) | null>(null);
+  const propsRef = useRef({ buildingId, level, state });
+  propsRef.current = { buildingId, level, state };
 
   useEffect(() => {
     const host = hostRef.current;
     let disposed = false;
     let observer: ResizeObserver | null = null;
-    let runtime: Awaited<ReturnType<typeof import('@/game/rendering/pixi-runtime').createPixiRuntime>> | null = null;
+    let runtime: Awaited<ReturnType<typeof createPixiRuntime>> | null = null;
+    let artwork: ReturnType<typeof createBuildingArtwork> | null = null;
+    let renderVersion = 0;
     if (!host) return;
-    const indicatorState: BuildingStatusIndicator = state === 'upgrade' || state === 'active' ? state : null;
-    void Promise.all([
-      import('@/game/rendering/pixi-runtime'),
-      import('@/features/kingdom/rendering/building-art'),
-      import('@/features/kingdom/rendering/building-status-badge'),
-      import('@/features/kingdom/rendering/building-visuals'),
-      import('pixi.js'),
-    ]).then(async ([
-      { createPixiRuntime },
-      { createBuildingArtwork },
-      { calculateBuildingStatusLayout, createBuildingStatusBadge, createBuildingUpgradeIndicator, statusElementsOverlap },
-      { BUILDING_VISUALS, resolveBuildingTexture },
-      { Assets },
-    ]) => {
+    void (async () => {
       const localRuntime = await createPixiRuntime(host);
       runtime = localRuntime;
-      const visualState = isCoreEvolutionBuilding(buildingId)
-        ? getBuildingVisualState({ buildingId, level, theme: DEFAULT_KINGDOM_THEME })
-        : undefined;
-      const texture = await Assets.load(visualState?.asset ?? resolveBuildingTexture(buildingId));
       if (disposed) {
-        localRuntime.destroy();
-        runtime = null;
+        if (runtime === localRuntime) {
+          localRuntime.destroy();
+          runtime = null;
+        }
         return;
       }
-      const artwork = createBuildingArtwork(buildingId, texture, false, visualState, state === 'active');
-      artwork.selection.visible = state === 'selected';
-      artwork.selection.alpha = state === 'selected' ? 1 : 0;
-      const badge = createBuildingStatusBadge(level, localRuntime.app.renderer.resolution);
-      const indicator = createBuildingUpgradeIndicator(indicatorState);
       const resize = () => {
+        if (!artwork) return;
+        const badge = badgeRef.current;
+        const indicator = indicatorRef.current;
+        if (!badge || !indicator) return;
+        const current = propsRef.current;
         const width = Math.max(host.clientWidth, 1);
         const height = Math.max(host.clientHeight, 1);
         localRuntime.app.renderer.resize(width, height);
         const fit = Math.min(1.25, width / 280, height / 250);
         artwork.container.scale.set(fit);
-        artwork.container.position.set(width / 2, height * .84);
+        artwork.container.position.set(width / 2, height * .7);
         const layout = calculateBuildingStatusLayout({
-          levelBadgeAnchor: BUILDING_VISUALS[buildingId].levelBadgeAnchor,
-          upgradeIndicatorAnchor: BUILDING_VISUALS[buildingId].upgradeIndicatorAnchor,
+          statusStackAnchor: BUILDING_VISUALS[current.buildingId].statusStackAnchor,
           buildingPosition: artwork.container.position,
           buildingScale: fit,
           resolution: localRuntime.app.renderer.resolution,
           worldPosition: { x: 0, y: 0 },
           worldScale: 1,
         });
-        badge.position.set(layout.levelBadge.x, layout.levelBadge.y);
-        indicator.position.set(layout.upgradeIndicator.x, layout.upgradeIndicator.y);
+        badge.style.left = `${layout.levelBadge.x}px`;
+        badge.style.top = `${layout.levelBadge.y}px`;
+        indicator.style.left = `${layout.upgradeIndicator.x}px`;
+        indicator.style.top = `${layout.upgradeIndicator.y}px`;
         host.dataset.statusOverlap = String(statusElementsOverlap(layout.levelBadge, layout.upgradeIndicator));
+        host.dataset.statusStackAligned = String(Math.abs(layout.levelBadge.x - layout.upgradeIndicator.x) <= .5);
       };
-      localRuntime.app.stage.addChild(artwork.container, indicator, badge);
+      const render = async () => {
+        const version = ++renderVersion;
+        const current = propsRef.current;
+        const visualState = isCoreEvolutionBuilding(current.buildingId)
+          ? getBuildingVisualState({ buildingId: current.buildingId, level: current.level, theme: DEFAULT_KINGDOM_THEME })
+          : undefined;
+        const texture = await Assets.load(visualState?.asset ?? resolveBuildingTexture(current.buildingId));
+        if (disposed || version !== renderVersion) return;
+        if (artwork) {
+          artwork.container.visible = false;
+        }
+        artwork = createBuildingArtwork(current.buildingId, texture, false, visualState, current.state === 'active');
+        artwork.selection.visible = current.state === 'selected';
+        artwork.selection.alpha = current.state === 'selected' ? 1 : 0;
+        const badge = badgeRef.current;
+        const indicator = indicatorRef.current;
+        if (!badge || !indicator) return;
+        badge.textContent = `Lv. ${current.level}`;
+        const indicatorState: BuildingStatusIndicator = current.state === 'active'
+          ? 'active'
+          : current.state === 'upgrade' || current.state === 'selected' ? 'upgrade' : null;
+        indicator.hidden = indicatorState === null;
+        indicator.textContent = indicatorState === 'active' ? '◷' : '↑';
+        indicator.dataset.indicatorState = indicatorState ?? 'none';
+        localRuntime.app.stage.addChildAt(artwork.container, 0);
+        resize();
+        host.dataset.statusBuilding = current.buildingId;
+        host.dataset.statusState = current.state;
+      };
+      renderRef.current = () => { void render(); };
       observer = new ResizeObserver(resize);
       observer.observe(host);
-      resize();
-      host.dataset.statusBuilding = buildingId;
-      host.dataset.statusState = state;
-    });
+      await render();
+    })();
     return () => {
       disposed = true;
+      renderRef.current = null;
       observer?.disconnect();
       runtime?.destroy();
       runtime = null;
     };
+  }, []);
+
+  useEffect(() => {
+    renderRef.current?.();
   }, [buildingId, level, state]);
 
-  return <div className={styles.statusCanvas} ref={hostRef} />;
+  return (
+    <div className={styles.statusCanvas} ref={hostRef}>
+      <span className={styles.statusIndicator} ref={indicatorRef} />
+      <span className={styles.statusBadge} ref={badgeRef} />
+    </div>
+  );
 }
 
 function BuildingPreview({
@@ -234,21 +273,9 @@ function BuildingPreview({
     const host = hostRef.current;
     let disposed = false;
     let observer: ResizeObserver | null = null;
-    let runtime: Awaited<ReturnType<typeof import('@/game/rendering/pixi-runtime').createPixiRuntime>> | null = null;
+    let runtime: Awaited<ReturnType<typeof createPixiRuntime>> | null = null;
     if (!host) return;
-    void Promise.all([
-      import('@/game/rendering/pixi-runtime'),
-      import('@/features/kingdom/rendering/building-art'),
-      import('@/features/kingdom/rendering/building-status-badge'),
-      import('@/features/kingdom/rendering/building-visuals'),
-      import('pixi.js'),
-    ]).then(async ([
-      { createPixiRuntime },
-      { createBuildingArtwork },
-      { calculateBuildingStatusLayout, createBuildingStatusBadge },
-      { BUILDING_VISUALS },
-      { Assets },
-    ]) => {
+    void (async () => {
       const localRuntime = await createPixiRuntime(host);
       runtime = localRuntime;
       const texture = await Assets.load(state.asset);
@@ -260,7 +287,6 @@ function BuildingPreview({
         return;
       }
       const artwork = createBuildingArtwork(buildingId, texture, false, state, construction);
-      const badge = createBuildingStatusBadge(level, localRuntime.app.renderer.resolution);
       const resize = () => {
         const width = Math.max(host.clientWidth, 1);
         const height = Math.max(host.clientHeight, 1);
@@ -268,25 +294,15 @@ function BuildingPreview({
         const fit = Math.min(1.75, width / 270, height / 300) * inspectionZoom;
         artwork.container.scale.set(fit);
         artwork.container.position.set(width / 2, height * .84);
-        const badgePosition = calculateBuildingStatusLayout({
-          levelBadgeAnchor: BUILDING_VISUALS[buildingId].levelBadgeAnchor,
-          upgradeIndicatorAnchor: BUILDING_VISUALS[buildingId].upgradeIndicatorAnchor,
-          buildingPosition: artwork.container.position,
-          buildingScale: fit,
-          resolution: localRuntime.app.renderer.resolution,
-          worldPosition: { x: 0, y: 0 },
-          worldScale: 1,
-        });
-        badge.position.set(badgePosition.levelBadge.x, badgePosition.levelBadge.y);
       };
-      localRuntime.app.stage.addChild(artwork.container, badge);
+      localRuntime.app.stage.addChild(artwork.container);
       observer = new ResizeObserver(resize);
       observer.observe(host);
       resize();
       host.dataset.buildingId = buildingId;
       host.dataset.buildingLevel = String(level);
       host.dataset.visualState = `${state.tier}:${state.minorStep}:${state.capstone ? 'capstone' : 'standard'}`;
-    });
+    })();
     return () => {
       disposed = true;
       observer?.disconnect();
@@ -304,47 +320,17 @@ function BuildingPreview({
 }
 
 function BadgeViewportPreview({ viewportWidth }: { viewportWidth: 320 | 375 | 390 }) {
-  const hostRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const host = hostRef.current;
-    let disposed = false;
-    let runtime: Awaited<ReturnType<typeof import('@/game/rendering/pixi-runtime').createPixiRuntime>> | null = null;
-    if (!host) return;
-    void Promise.all([
-      import('@/game/rendering/pixi-runtime'),
-      import('@/features/kingdom/rendering/building-status-badge'),
-    ]).then(async ([{ createPixiRuntime }, { createBuildingStatusBadge }]) => {
-      const localRuntime = await createPixiRuntime(host);
-      runtime = localRuntime;
-      if (disposed) {
-        localRuntime.destroy();
-        runtime = null;
-        return;
-      }
-      const width = Math.max(host.clientWidth, 1);
-      const height = Math.max(host.clientHeight, 1);
-      localRuntime.app.renderer.resize(width, height);
-      BADGE_LEVELS.forEach((badgeLevel, index) => {
-        const badge = createBuildingStatusBadge(badgeLevel, localRuntime.app.renderer.resolution);
-        badge.position.set((index + .5) * width / BADGE_LEVELS.length, height / 2);
-        localRuntime.app.stage.addChild(badge);
-      });
-      localRuntime.app.render();
-      host.dataset.badgeLevels = BADGE_LEVELS.join(',');
-      host.dataset.viewportEquivalent = String(viewportWidth);
-    });
-    return () => {
-      disposed = true;
-      runtime?.destroy();
-      runtime = null;
-    };
-  }, [viewportWidth]);
-
   return (
-    <article className={styles.badgeViewport} style={{ width: `${viewportWidth}px` }}>
+    <article
+      className={styles.badgeViewport}
+      data-badge-levels={BADGE_LEVELS.join(',')}
+      data-viewport-equivalent={viewportWidth}
+      style={{ width: `${viewportWidth}px` }}
+    >
       <header><b>{viewportWidth}px</b><span>DPR-aware · screen-space</span></header>
-      <div className={styles.badgeCanvas} ref={hostRef} />
+      <div className={styles.badgeSamples}>
+        {BADGE_LEVELS.map((badgeLevel) => <span key={badgeLevel}>Lv. {badgeLevel}</span>)}
+      </div>
     </article>
   );
 }

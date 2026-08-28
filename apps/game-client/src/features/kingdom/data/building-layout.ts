@@ -5,7 +5,7 @@ import { EXPANSION_PRESENTATION_BY_BUILDING } from './kingdom-expansion-stages';
 export const KINGDOM_WORLD = { width: 640, height: 1536, sourceOffsetX: -192 } as const;
 
 export const KINGDOM_BUILDING_LAYOUT: readonly BuildingLayout[] = [
-  { id: 'castle', type: 'CASTLE', groundX: 320, groundY: 690, scale: 1.48 },
+  { id: 'castle', type: 'CASTLE', groundX: 320, groundY: 665, scale: 1.48 },
   { id: 'mine', type: 'MINE', groundX: 145, groundY: 365, scale: 1 },
   { id: 'farm', type: 'FARM', groundX: 88, groundY: 958, scale: 0.97 },
   { id: 'lumberMill', type: 'LUMBER_MILL', groundX: 552, groundY: 958, scale: 0.96 },
