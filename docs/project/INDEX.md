@@ -61,6 +61,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Revenge and notifications](REVENGE_AND_NOTIFICATIONS.md)
 - [Building and Kingdom progression](PROGRESSION.md)
 - [Visible building evolution](BUILDING_EVOLUTION.md)
+- [Missions, achievements, and Daily Return](RETENTION_SYSTEMS.md)
 - [Retention-first roadmap](RETENTION_ROADMAP.md)
 - [Prisma data model and migrations](DATA_MODEL.md)
 - [HTTP API inventory](API_REFERENCE.md)
@@ -80,9 +81,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A theme-ready core visual evolution, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 01B — Advanced Building Evolution and Kingdom Progression Goals, only when explicitly scoped
+- **Next**: Retention 03 — Hero Expansion, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay

@@ -10,7 +10,7 @@ Current integrity controls protect local authoritative game state. Production au
 
 ## Server authority
 
-The API decides balances, time, production, costs, storage, unlocks, levels, Hero stats, Match Offers, battle outcomes, loot, Trophies, Revenge eligibility, and rewards. Clients send action intent and persistent IDs.
+The API decides balances, time, production, costs, storage, unlocks, levels, Hero stats, Match Offers, battle outcomes, loot, Trophies, Retention progress/periods/eligibility, and rewards. Clients send action intent and persistent IDs.
 
 Do not accept client-computed amounts, durations, target players, combat stats, event streams, or outcomes in future endpoints.
 
@@ -18,7 +18,7 @@ Do not accept client-computed amounts, durations, target players, combat stats, 
 
 `EconomyRequest` stores mutation responses by player, key, and action. Collect, building upgrade start/completion, Hero upgrade, Raid start, and Revenge start validate keys between 8 and 100 characters.
 
-A retry with the same tuple returns the stored response. Unique constraints prevent two stored responses for one action key.
+A retry with the same tuple returns the stored response. Unique constraints prevent two stored responses for one action key. Mission, Daily bonus, Achievement, and Daily Return claims use dedicated `EconomyAction` values, the same key validation, and database uniqueness on their semantic claim identity.
 
 ## Transaction locking
 
@@ -51,6 +51,10 @@ Unique `sourceKey` values make `PLAYER_RAIDED`, `REVENGE_AVAILABLE`, and `UPGRAD
 ## Analytics integrity and privacy
 
 Clients cannot choose player identity or emit progression events. Ingestion enforces batch, UUID, taxonomy, length, 2 KB property, and process-local rate bounds. Stable dedupe keys prevent replay inflation. System opponents are excluded from human milestones. Raw URLs, launch/auth payloads, credentials, and security/reward authority are not analytics properties.
+
+## Retention integrity
+
+The client cannot post progress, completion, UTC period, day index, reward amount, balance, or claim timestamp. Progress is reconstructed from immutable economy requests/transactions, upgrades, battles, buildings, and Trophy history. Claim endpoints accept no body, acquire the Player advisory lock, re-evaluate eligibility in the write transaction, and settle balance, ledger, claim row, idempotent response, and analytics together. Current-period checks reject stale or foreign mission IDs; tier ordering rejects skipped Achievement claims.
 
 ## Current security gaps
 

@@ -14,6 +14,15 @@ export const SERVER_ANALYTICS_EVENTS = [
   'revenge_started',
   'revenge_finished',
   'onboarding_completed',
+  'daily_return_available',
+  'daily_return_claimed',
+  'daily_mission_completed',
+  'daily_mission_claimed',
+  'daily_all_completed',
+  'weekly_mission_completed',
+  'weekly_mission_claimed',
+  'achievement_completed',
+  'achievement_claimed',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [
@@ -22,6 +31,7 @@ export const CLIENT_ANALYTICS_EVENTS = [
   'screen_opened',
   'onboarding_started',
   'onboarding_step_seen',
+  'retention_screen_opened',
 ] as const;
 export const RESERVED_ANALYTICS_EVENTS: readonly string[] = [];
 

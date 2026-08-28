@@ -20,6 +20,9 @@ import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { KingdomProgressSheet } from './kingdom-progress-sheet';
+import { useRetentionState } from '@/features/retention/hooks/use-retention-state';
+import { RetentionEntry } from '@/features/retention/components/retention-entry';
+import { RetentionSheet } from '@/features/retention/components/retention-sheet';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -36,6 +39,10 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const [selectedBuildingId, setSelectedBuildingId] = useState<WorldBuildingId | null>(null);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
+  const [retentionOpen, setRetentionOpen] = useState(false);
+  const retentionEnabled = experience.onboarding?.status === 'COMPLETED' || experience.onboarding?.status === 'SKIPPED';
+  const refreshKingdom = useCallback(async () => { await economy.refresh(); }, [economy.refresh]);
+  const retention = useRetentionState(retentionEnabled, refreshKingdom);
   const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
   const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
@@ -99,6 +106,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             <span>{t.inboxUi.title}</span>
             {inboxCount > 0 ? <b><BidiValue direction="ltr">{inboxCount > 99 ? '99+' : inboxCount}</BidiValue></b> : null}
           </button>
+          {retentionEnabled ? <RetentionEntry dictionary={t} state={retention.state} onOpen={() => { audio.playSfx('panel_open'); setRetentionOpen(true); void retention.refresh(); }} /> : null}
           {economy.state ? (
             <CollectControl
               buildings={economy.buildings}
@@ -127,6 +135,19 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             open={progressOpen}
             progression={economy.state?.progression ?? null}
           />
+          {retentionOpen ? <RetentionSheet
+            action={retention.action}
+            dictionary={t}
+            errorCode={retention.errorCode}
+            onClaimAchievement={(key, tier) => void retention.claimAchievement(key, tier)}
+            onClaimDailyBonus={() => void retention.claimDailyBonus()}
+            onClaimDailyReturn={() => void retention.claimDailyReturn()}
+            onClaimMission={(id) => void retention.claimMission(id)}
+            onClose={() => setRetentionOpen(false)}
+            onRetry={() => void retention.refresh()}
+            serverNow={retention.serverNow}
+            state={retention.state}
+          /> : null}
           <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'COLLECT'
             ? <AdvisorCoach title={t.experience.collectTitle} body={t.experience.advisor.collect} target="collect" /> : null}

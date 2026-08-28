@@ -26,6 +26,10 @@ Player
   1--1 OnboardingProgress
   1--* AdvisorTipProgress
   1--* AnalyticsEvent
+  1--* RetentionMissionInstance
+  1--* RetentionDailyBonusClaim
+  1--* RetentionAchievementClaim
+  1--* DailyReturnClaim
 
 RaidMatchOffer 1--0..1 Battle
 Battle 1--6 BattleHeroSnapshot
@@ -47,6 +51,12 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 `Building` enforces one row per Kingdom and type. It stores level and production remainder. `BuildingUpgrade` stores one-level transitions and lifecycle timestamps.
 
 `EconomyTransaction` records immutable balance movement details. `EconomyRequest` stores JSON responses and enforces one `(playerId, idempotencyKey, action)` tuple.
+
+## Retention models
+
+`RetentionMissionInstance` stores one deterministic assignment snapshot per Player, cadence, UTC period, and definition key. It persists target/rewards and optional claim time; progress remains derived from gameplay facts. `RetentionDailyBonusClaim` permits one all-Daily reward per Player and UTC day. `RetentionAchievementClaim` permits one claim per Player, family key, and tier. `DailyReturnClaim` permits one claim per Player and UTC day and records the claimed day index from 1 through 7.
+
+Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyRequest`. New transaction reasons distinguish Daily/Weekly missions, Achievements, Daily Return, and Daily completion. Database uniqueness plus the existing advisory-lock boundary prevents duplicate grants under concurrent requests.
 
 ## Hero models
 
@@ -104,5 +114,6 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 | `20260826100000_first_party_analytics` | Append-only canonical event storage, dedupe, cohort and acquisition indexes |
 | `20260826110000_pre_bale_player_experience` | Persistent one-to-one onboarding state, steps, and lifecycle timestamps |
 | `20260827090000_advisor_tip_progress` | Durable one-time Aren contextual-tip acknowledgements |
+| `20260829080000_retention_02` | Mission assignments, Daily completion claims, Achievement claims, Daily Return claims, reward ledger/action enums, constraints, and indexes |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

@@ -78,6 +78,30 @@ export const fa: Dictionary = {
   comingLater: 'به‌زودی',
   comingSoonMessage: 'بخش {section} به‌زودی آماده می‌شود.',
   retry: 'تلاش دوباره',
+  retention: {
+    entry: 'اهداف', entryLabel: 'باز کردن اهداف', title: 'اهداف سلطنتی', subtitle: 'وظایف روزانه و افتخار ماندگار',
+    daily: 'روزانه', weekly: 'هفتگی', achievements: 'دستاوردها', dailyReward: 'پاداش بازگشت',
+    claim: 'دریافت', claiming: 'در حال دریافت…', claimed: 'دریافت شد', completed: 'کامل', progress: 'پیشرفت', reward: 'پاداش',
+    dailyGoals: 'اهداف روزانه', allDailyComplete: 'همه اهداف روزانه کامل شد', allDailyHint: 'پیش از بازنشانی UTC پاداش تکمیل را دریافت کنید.',
+    resetsIn: 'بازنشانی تا {time}', nextReward: 'پاداش بعدی', day: 'روز {day}', tier: 'مرحله {tier}', dayShort: 'روز', hourShort: 'ساعت', minuteShort: 'دقیقه', unavailable: 'اهداف در دسترس نیستند.', retry: 'تلاش دوباره',
+    missionNames: {
+      DAILY_COLLECTOR: 'خزانه‌دار سلطنتی', DAILY_BUILDER: 'برپایی بنا', DAILY_KINGDOM_GROWTH: 'رشد پادشاهی', DAILY_HERO_TRAINING: 'آموزش پیشتازان', DAILY_RAIDER: 'یورش مرزی', DAILY_VICTORY: 'پیروزی',
+      WEEKLY_COLLECTOR: 'انبارهای سلطنتی', WEEKLY_BUILDER: 'معمار بزرگ', WEEKLY_HERO_TRAINING: 'آموزش کهنه‌کاران', WEEKLY_RAIDER: 'نبردهای مرزی', WEEKLY_VICTORIES: 'هفته پیروزی',
+    },
+    missionDescriptions: {
+      DAILY_COLLECTOR: '۲ بار منابع جمع‌آوری کنید', DAILY_BUILDER: '۱ ارتقای ساختمان آغاز کنید', DAILY_KINGDOM_GROWTH: '۱ ارتقای ساختمان کامل کنید', DAILY_HERO_TRAINING: '۱ بار قهرمان ارتقا دهید', DAILY_RAIDER: '۲ یورش کامل کنید', DAILY_VICTORY: '۱ یورش را ببرید',
+      WEEKLY_COLLECTOR: '۱۰ بار منابع جمع‌آوری کنید', WEEKLY_BUILDER: '۵ ارتقای ساختمان آغاز کنید', WEEKLY_HERO_TRAINING: '۳ بار قهرمان ارتقا دهید', WEEKLY_RAIDER: '۱۰ یورش کامل کنید', WEEKLY_VICTORIES: '۵ یورش را ببرید',
+    },
+    achievementNames: {
+      KINGDOM_RULER: 'فرمانروای پادشاهی', MASTER_BUILDER: 'معمار بزرگ', DEDICATED_BUILDER: 'سازنده خستگی‌ناپذیر', ROYAL_TREASURY: 'خزانه سلطنتی', HERO_TRAINER: 'مربی قهرمانان', RAIDER: 'یورشگر', CONQUEROR: 'فاتح', REVENGER: 'انتقام‌جو', TROPHY_CLIMBER: 'صعود افتخار',
+    },
+    achievementDescriptions: {
+      KINGDOM_RULER: 'سطح قلعه را افزایش دهید', MASTER_BUILDER: 'مجموع سطح ساختمان‌ها را افزایش دهید', DEDICATED_BUILDER: 'ارتقای ساختمان‌ها را کامل کنید', ROYAL_TREASURY: 'منابع جمع‌آوری کنید', HERO_TRAINER: 'قهرمانان را ارتقا دهید', RAIDER: 'یورش‌ها را کامل کنید', CONQUEROR: 'یورش‌ها را ببرید', REVENGER: 'نبردهای انتقام را کامل کنید', TROPHY_CLIMBER: 'به رکورد جام برسید',
+    },
+    errors: {
+      MISSION_INCOMPLETE: 'ماموریت هنوز کامل نشده است.', MISSION_ALREADY_CLAIMED: 'این پاداش دریافت شده است.', MISSION_EXPIRED: 'زمان ماموریت پایان یافته است.', DAILY_BONUS_INCOMPLETE: 'ابتدا همه ماموریت‌های روزانه را کامل کنید.', DAILY_BONUS_ALREADY_CLAIMED: 'پاداش تکمیل روزانه دریافت شده است.', ACHIEVEMENT_INCOMPLETE: 'این مرحله دستاورد کامل نشده است.', ACHIEVEMENT_TIER_OUT_OF_ORDER: 'ابتدا مرحله پیشین را دریافت کنید.', ACHIEVEMENT_ALREADY_CLAIMED: 'پاداش دستاورد دریافت شده است.', DAILY_RETURN_ALREADY_CLAIMED: 'پاداش امروز دریافت شده است.', SERVER_ERROR: 'اهداف در دسترس نیستند.',
+    },
+  },
   experience: {
     advisor: {
       name: 'آرِن', role: 'مشاور پادشاهی', guideRole: 'کارگزار سلطنتی / مشاور پادشاهی',

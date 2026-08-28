@@ -76,6 +76,30 @@ export const en = {
   comingLater: 'Coming soon',
   comingSoonMessage: '{section} is coming soon.',
   retry: 'Retry',
+  retention: {
+    entry: 'Objectives', entryLabel: 'Open objectives', title: 'Royal Objectives', subtitle: 'Daily duties and lasting glory',
+    daily: 'Daily', weekly: 'Weekly', achievements: 'Achievements', dailyReward: 'Daily Return',
+    claim: 'Claim', claiming: 'Claiming…', claimed: 'Claimed', completed: 'Complete', progress: 'Progress', reward: 'Reward',
+    dailyGoals: 'Daily Goals', allDailyComplete: 'All Daily Goals Complete', allDailyHint: 'Claim the completion reward before the UTC reset.',
+    resetsIn: 'Resets in {time}', nextReward: 'Next reward', day: 'Day {day}', tier: 'Tier {tier}', dayShort: 'd', hourShort: 'h', minuteShort: 'm', unavailable: 'Objectives are unavailable.', retry: 'Retry',
+    missionNames: {
+      DAILY_COLLECTOR: 'Royal Collector', DAILY_BUILDER: 'Raise the Timbers', DAILY_KINGDOM_GROWTH: 'Kingdom Growth', DAILY_HERO_TRAINING: 'Train the Vanguard', DAILY_RAIDER: 'Border Raids', DAILY_VICTORY: 'Claim Victory',
+      WEEKLY_COLLECTOR: 'Royal Stores', WEEKLY_BUILDER: 'Master Builder', WEEKLY_HERO_TRAINING: 'Veteran Training', WEEKLY_RAIDER: 'Frontier Campaign', WEEKLY_VICTORIES: 'Week of Triumph',
+    },
+    missionDescriptions: {
+      DAILY_COLLECTOR: 'Collect resources 2 times', DAILY_BUILDER: 'Start 1 Building upgrade', DAILY_KINGDOM_GROWTH: 'Complete 1 Building upgrade', DAILY_HERO_TRAINING: 'Upgrade a Hero 1 time', DAILY_RAIDER: 'Complete 2 Raids', DAILY_VICTORY: 'Win 1 Raid',
+      WEEKLY_COLLECTOR: 'Collect resources 10 times', WEEKLY_BUILDER: 'Start 5 Building upgrades', WEEKLY_HERO_TRAINING: 'Upgrade Heroes 3 times', WEEKLY_RAIDER: 'Complete 10 Raids', WEEKLY_VICTORIES: 'Win 5 Raids',
+    },
+    achievementNames: {
+      KINGDOM_RULER: 'Kingdom Ruler', MASTER_BUILDER: 'Master Builder', DEDICATED_BUILDER: 'Dedicated Builder', ROYAL_TREASURY: 'Royal Treasury', HERO_TRAINER: 'Hero Trainer', RAIDER: 'Raider', CONQUEROR: 'Conqueror', REVENGER: 'Avenger', TROPHY_CLIMBER: 'Trophy Climber',
+    },
+    achievementDescriptions: {
+      KINGDOM_RULER: 'Raise Castle level', MASTER_BUILDER: 'Grow total Building levels', DEDICATED_BUILDER: 'Complete Building upgrades', ROYAL_TREASURY: 'Collect resources', HERO_TRAINER: 'Upgrade Heroes', RAIDER: 'Complete Raids', CONQUEROR: 'Win Raids', REVENGER: 'Complete Revenge battles', TROPHY_CLIMBER: 'Reach a Trophy record',
+    },
+    errors: {
+      MISSION_INCOMPLETE: 'Mission is not complete.', MISSION_ALREADY_CLAIMED: 'Reward already claimed.', MISSION_EXPIRED: 'Mission period ended.', DAILY_BONUS_INCOMPLETE: 'Complete all Daily Missions first.', DAILY_BONUS_ALREADY_CLAIMED: 'Daily completion reward already claimed.', ACHIEVEMENT_INCOMPLETE: 'Achievement tier is not complete.', ACHIEVEMENT_TIER_OUT_OF_ORDER: 'Claim the earlier tier first.', ACHIEVEMENT_ALREADY_CLAIMED: 'Achievement reward already claimed.', DAILY_RETURN_ALREADY_CLAIMED: 'Daily reward already claimed today.', SERVER_ERROR: 'Objectives are unavailable.',
+    },
+  },
   experience: {
     advisor: {
       name: 'Aren', role: 'Royal Steward', guideRole: 'Royal Steward / Kingdom Advisor',

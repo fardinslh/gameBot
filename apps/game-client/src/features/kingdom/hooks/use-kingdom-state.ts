@@ -96,6 +96,7 @@ export function useKingdomState() {
       setErrorCode(null);
       audio.playSfx('collect');
       await experience.refreshOnboarding();
+      window.dispatchEvent(new Event('crown:retention-refresh'));
       window.setTimeout(() => setLastGains(null), 2_400);
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
@@ -119,6 +120,7 @@ export function useKingdomState() {
       setErrorCode(null);
       audio.playSfx('upgrade_start');
       await experience.refreshOnboarding();
+      window.dispatchEvent(new Event('crown:retention-refresh'));
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {

@@ -1,10 +1,10 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, and device-persisted audio controls. All 24 licensed audio groups have explicit owner approval and are mapped into gameplay; the development-only Audio Lab now records that selection is complete. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, device-persisted audio controls, and server-owned Daily/Weekly missions, Achievements, and Daily Return rewards. All 24 licensed audio groups have explicit owner approval and are mapped into gameplay; the development-only Audio Lab now records that selection is complete. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
-Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), [audio](docs/project/AUDIO.md), and the [audio audition guide](docs/project/AUDIO_AUDITION.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
+Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [retention systems](docs/project/RETENTION_SYSTEMS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), [audio](docs/project/AUDIO.md), and the [audio audition guide](docs/project/AUDIO_AUDITION.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
 
 Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
 
@@ -280,6 +280,12 @@ Castle, Farm, Lumber Mill, Mine, and Grand Market now derive their exact visual 
 
 Production loads only the current required tier through a centralized Theme → Building → Tier catalog. Upgrade-in-progress buildings show restrained construction cues, reconciled upgrades use short minor/major Pixi transformations, reduced-motion is respected, and the stable coordinates, hit areas, selection, indicators, camera, RTL/LTR behavior, and 54px navigation are unchanged. Open `/dev/buildings` in development for exact `DEFAULT` production previews, N/N+1 comparison, and level 1 versus 20. Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for deterministic and visual checks. Theme selection, ownership, historical art, Shop, and Season integration are not implemented.
 
+## Retention 02 missions, achievements, and Daily Return
+
+`GET /retention` returns three deterministic Daily missions, three Weekly missions, nine tiered Achievement families, the Daily completion bonus, and the seven-claim Daily Return cycle using server UTC time. Progress is derived from existing authoritative economy requests/transactions, building upgrades, battles, building levels, and Trophy history; refresh, retry, or client input cannot advance it.
+
+All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
+
 This starts the retention-first roadmap and intentionally delays Bale. Retention 01B advanced buildings and goals, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale are separate unimplemented tasks.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
@@ -302,6 +308,7 @@ npm run validate:visual  # expanded world/pan/locked/detail/RTL/mobile screensho
 npm run validate:progression # Stage 1–5 mounts/areas/camera/effects and Phase 07.2 screenshots
 npm run validate:building-evolution # 20-level derivation + 25 core WebP assets
 npm run capture:building-evolution  # dev Lab sheets + 320/375/390 Kingdom screenshots
+npm run validate:retention # missions/achievements/Daily Return + RTL/LTR mobile screenshots
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.

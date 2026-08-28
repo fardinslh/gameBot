@@ -29,7 +29,7 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 
 ## Current and next
 
-The **Player Experience repair, Retention 01A, and Retention 01B are complete in engineering**. Owner visual approval of the building stages, Aren approval, audible loop review, and real-device mix remain human checks. Bale Mini App Integration is intentionally delayed until the bounded retention roadmap is complete.
+The **Player Experience repair and Retention 01A, 01B, and 02 are complete in engineering**. Owner visual approval of the building stages, Aren approval, audible loop review, and real-device mix remain human checks. Bale Mini App Integration is intentionally delayed until the bounded retention roadmap is complete.
 
 The approved launch sequence is:
 
@@ -40,7 +40,7 @@ First-Party Analytics (complete)
   -> Player Experience repair (engineering complete; human checks open)
   -> Retention 01A Visible Kingdom Growth (implemented; owner art approval pending)
   -> Retention 01B Advanced Building Evolution + Goals (implemented; owner art approval pending)
-  -> Retention 02 Missions / Achievements / Daily Return
+  -> Retention 02 Missions / Achievements / Daily Return (implemented)
   -> Retention 03 Hero Expansion
   -> Retention 04 PvE Campaign
   -> Retention 05 Shop + Gems
@@ -57,7 +57,7 @@ First-Party Analytics (complete)
 
 Do not infer that Bale is implemented from platform placeholders. It requires its own scoped integration and device validation.
 
-All nine active buildings and authoritative Kingdom progression goals are implemented. Retention 02 Missions / Achievements / Daily Return is next; do not start it automatically. See [retention roadmap](RETENTION_ROADMAP.md).
+All nine active buildings, authoritative Kingdom progression goals, and Retention 02 return loops are implemented. Retention 03 Hero Expansion is next; do not start it automatically. See [retention roadmap](RETENTION_ROADMAP.md) and [retention systems](RETENTION_SYSTEMS.md).
 
 Retention 05B is a future bounded milestone after Shop/Gem architecture and before Guild. It may add theme selection, ownership, and one complete historically-inspired cosmetic pack. This architecture correction does not implement that milestone.
 

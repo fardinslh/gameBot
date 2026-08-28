@@ -35,6 +35,8 @@ features/raid
   analytics | api | components | hooks
 features/experience
   onboarding API | provider | coach, welcome, Guide, and settings UI
+features/retention
+  API | authoritative state hook | compact entry | Daily/Weekly/Achievement sheet
 features/audio
   manager | provider | Battle event mapping
 features/rtl-lab
@@ -52,6 +54,8 @@ features/building-lab
 `useHeroState` loads roster/team state, maintains an ordered local draft, persists the team, upgrades Heroes, and updates balances from responses.
 
 `useRaidState` coordinates overview, Match Offer, battle playback, inbox, Revenge preview, replay detail, and post-battle refresh. The experience provider refreshes persistent onboarding around successful actions; its UI remains non-blocking on API failure.
+
+`useRetentionState` loads the complete authoritative Retention payload only while its Kingdom sheet is open, tracks server clock offset for UTC reset labels, sends bodyless idempotent claim requests, and refreshes Kingdom balances after rewards. Kingdom Collect and building-upgrade success dispatch a lightweight refresh signal; Hero and Raid history are re-derived when the feature is next opened. No progress counter lives in React.
 
 `AudioProvider` owns a single session manager. Stable callbacks avoid restarting music when settings change. The manager waits for a user gesture, crossfades between Kingdom and Battle contexts, suspends with page visibility, and catches media failures.
 
@@ -79,7 +83,7 @@ Kingdom world coordinates, Battle Pixi layout, ordered team/loot grids, image as
 
 ## Mobile layout
 
-Kingdom, Heroes, and Raid shells use a maximum width of 520 pixels and maximum height of 920 pixels. Desktop centers the mobile viewport. The client uses `100svh`, safe-area insets, fixed HUD layers, and scrollable content only where a feature requires it.
+Kingdom, Heroes, and Raid shells use a maximum width of 520 pixels and maximum height of 920 pixels. Desktop centers the mobile viewport. The client uses `100svh`, safe-area insets, fixed HUD layers, and scrollable content only where a feature requires it. The Retention sheet is a React-owned scroll surface above Kingdom and stops before the unchanged 54px navigation.
 
 Browser validations cover:
 

@@ -8,6 +8,7 @@ export const CLIENT_ANALYTICS_EVENT_NAMES = [
   'screen_opened',
   'onboarding_started',
   'onboarding_step_seen',
+  'retention_screen_opened',
 ] as const;
 export type ClientAnalyticsEventName = (typeof CLIENT_ANALYTICS_EVENT_NAMES)[number];
 
@@ -130,6 +131,108 @@ export type UpgradeAvailability =
   | 'MAX_LEVEL';
 
 export type ResourceAmounts = Record<ResourceType, string>;
+
+export const RETENTION_METRICS = [
+  'COLLECT_COUNT',
+  'COLLECT_RESOURCE_TOTAL',
+  'BUILDING_UPGRADE_STARTED',
+  'BUILDING_UPGRADE_COMPLETED',
+  'CASTLE_LEVEL_REACHED',
+  'BUILDING_LEVEL_TOTAL',
+  'HERO_UPGRADE_COUNT',
+  'RAID_STARTED',
+  'RAID_COMPLETED',
+  'RAID_WON',
+  'REVENGE_COMPLETED',
+  'TROPHY_REACHED',
+] as const;
+export type RetentionMetric = (typeof RETENTION_METRICS)[number];
+export type RetentionCadence = 'DAILY' | 'WEEKLY';
+export interface RetentionRewardItem { resource: ResourceType; amount: string; }
+export interface RetentionMissionState {
+  id: string;
+  key: string;
+  cadence: RetentionCadence;
+  metric: RetentionMetric;
+  target: string;
+  progress: string;
+  completed: boolean;
+  claimed: boolean;
+  rewards: RetentionRewardItem[];
+}
+export interface RetentionCompletionBonusState {
+  completedCount: number;
+  requiredCount: number;
+  eligible: boolean;
+  claimed: boolean;
+  rewards: RetentionRewardItem[];
+}
+export interface RetentionAchievementTierState {
+  tier: number;
+  target: string;
+  completed: boolean;
+  claimed: boolean;
+  claimable: boolean;
+  rewards: RetentionRewardItem[];
+}
+export interface RetentionAchievementFamilyState {
+  key: string;
+  metric: RetentionMetric;
+  progress: string;
+  tiers: RetentionAchievementTierState[];
+  currentTier: RetentionAchievementTierState | null;
+}
+export interface DailyReturnDayState {
+  dayIndex: number;
+  rewards: RetentionRewardItem[];
+  status: 'CLAIMED' | 'TODAY' | 'UPCOMING';
+}
+export interface DailyReturnState {
+  currentDay: number;
+  canClaimToday: boolean;
+  lastClaimAt: string | null;
+  nextClaimAt: string;
+  cycle: DailyReturnDayState[];
+}
+export interface RetentionStateResponse {
+  serverTime: string;
+  dailyResetAt: string;
+  weeklyResetAt: string;
+  dailyReturn: DailyReturnState;
+  daily: {
+    periodKey: string;
+    missions: RetentionMissionState[];
+    completedCount: number;
+    completionBonus: RetentionCompletionBonusState;
+  };
+  weekly: {
+    periodKey: string;
+    missions: RetentionMissionState[];
+    completedCount: number;
+  };
+  achievements: { families: RetentionAchievementFamilyState[]; };
+}
+export interface RetentionClaimResponse {
+  granted: RetentionRewardItem[];
+  balances: ResourceAmounts;
+  retention: RetentionStateResponse;
+}
+export type RetentionErrorCode =
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'MISSION_NOT_FOUND'
+  | 'MISSION_NOT_OWNER'
+  | 'MISSION_EXPIRED'
+  | 'MISSION_INCOMPLETE'
+  | 'MISSION_ALREADY_CLAIMED'
+  | 'DAILY_BONUS_INCOMPLETE'
+  | 'DAILY_BONUS_ALREADY_CLAIMED'
+  | 'ACHIEVEMENT_NOT_FOUND'
+  | 'ACHIEVEMENT_INCOMPLETE'
+  | 'ACHIEVEMENT_TIER_OUT_OF_ORDER'
+  | 'ACHIEVEMENT_ALREADY_CLAIMED'
+  | 'DAILY_RETURN_ALREADY_CLAIMED'
+  | 'RETENTION_CONFLICT';
+export interface RetentionErrorResponse { statusCode: number; code: RetentionErrorCode; message: string; }
 
 export interface UpgradeCostItem {
   resource: ResourceType;

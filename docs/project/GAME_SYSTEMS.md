@@ -71,6 +71,8 @@ Each mutation validates ownership and server state. `EconomyRequest` stores repl
 
 Collection, building upgrade start, Hero upgrade completion, Raid search/battle/result, Revenge battle/result, and first milestones emit server-owned analytics. Event writes share gameplay transactions where practical. Analytics is observational only.
 
+Retention progress is a read model over those durable authoritative facts. Daily and Weekly assignments snapshot a deterministic server-selected definition for the UTC period; Achievement milestones backfill from history. Explicit claims reuse Player locks, balances, the economy ledger, and idempotent request storage. Retention never changes the underlying Collect, building, Hero, Raid, or Revenge outcome.
+
 Onboarding advances inside successful authoritative Collect, building-upgrade, and standard-Raid transactions. The client may report `onboarding_started` and `onboarding_step_seen`; only the server emits `onboarding_completed`. Skipping and system-opponent identities do not create completion or activation events. Activation remains `first_raid_completed`. Kingdom goals are read-only server derivation: no client claim, reward, mission, or unlock write path exists.
 
 ## Presentation-only systems

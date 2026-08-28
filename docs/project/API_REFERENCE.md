@@ -12,7 +12,7 @@ The NestJS API listens on port `3001` by default. Responses use shared types fro
 
 `X-Dev-Player-Id` selects an isolated Web development identity. Without the header, `DEV_PLAYER_ID` or `local-crown-player` supplies the identity. This mechanism is development scaffolding, not authentication.
 
-Economy mutations, Hero upgrade, Raid start, and Revenge start require `Idempotency-Key` with 8 through 100 characters. Team save, search, and inbox read do not require one because they do not grant or charge a replayable reward.
+Economy mutations, Hero upgrade, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team save, search, and inbox read do not require one because they do not grant or charge a replayable reward.
 
 ## Health
 
@@ -66,6 +66,18 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 | `GET` | `/raid/revenge/:revengeTargetId` | Validate target and return current-team/current-loot preview | `RevengePreviewResponse` |
 | `POST` | `/raid/revenge/start` | Consume one target and settle a Revenge battle | `{ revengeTargetId }`, idempotency key; `BattleReplayResponse` |
 
+## Retention
+
+| Method | Path | Purpose | Requirements and response |
+| --- | --- | --- | --- |
+| `GET` | `/retention` | Return server-time Daily/Weekly assignments, derived progress, Daily bonus, Achievement tiers, and Daily Return cycle | `RetentionStateResponse` |
+| `POST` | `/retention/missions/:missionId/claim` | Claim one completed, current-period mission | Idempotency key; `RetentionClaimResponse` |
+| `POST` | `/retention/daily/bonus/claim` | Claim the bonus after all three Daily missions complete | Idempotency key; `RetentionClaimResponse` |
+| `POST` | `/retention/achievements/:achievementKey/:tier/claim` | Claim the next completed tier in one Achievement family | Idempotency key; `RetentionClaimResponse` |
+| `POST` | `/retention/daily-return/claim` | Claim today's next reward in the seven-claim cycle | Idempotency key; `RetentionClaimResponse` |
+
+Retention claim routes accept no request body. Progress, UTC period, eligibility, sequence, amounts, balance results, and claim time are server-derived. Claims use the same Player advisory lock, economy request replay protection, PostgreSQL transaction, and immutable ledger boundary as existing economy rewards.
+
 ## Internal-only modules
 
 `NotificationService` has no controller. Redis and BullMQ expose no HTTP route. Platform adapters expose no authentication, notification, or payment controller.
@@ -86,8 +98,8 @@ The client cannot post a step or completion. Successful Collect, building Upgrad
 
 ## `POST /analytics/events`
 
-Accepts 1-20 `app_open`, `app_resume`, `screen_opened`, `onboarding_started`, or `onboarding_step_seen` events with UUID event/session IDs. Player/platform are server-resolved. Optional locale, app version, sanitized acquisition source, client timestamp, and properties up to 2 KB are supported. Returns `accepted`, `duplicates`, and `rejected`; server-only names such as `onboarding_completed` fail validation.
+Accepts 1-20 `app_open`, `app_resume`, `screen_opened`, `retention_screen_opened`, `onboarding_started`, or `onboarding_step_seen` events with UUID event/session IDs. Player/platform are server-resolved. Optional locale, app version, sanitized acquisition source, client timestamp, and properties up to 2 KB are supported. Returns `accepted`, `duplicates`, and `rejected`; server-only names such as `onboarding_completed` fail validation.
 
 ## Error families
 
-Shared contracts define `EconomyErrorCode`, `HeroErrorCode`, and `RaidErrorCode`. Services use domain errors for ownership, state, expiry, funds, team validity, idempotency, rate limits, and transaction conflicts. NestJS global validation strips unknown DTO fields and transforms validated input.
+Shared contracts define `EconomyErrorCode`, `HeroErrorCode`, `RaidErrorCode`, and `RetentionErrorCode`. Services use domain errors for ownership, state, expiry, funds, completion, claim order, idempotency, rate limits, and transaction conflicts. NestJS global validation strips unknown DTO fields and transforms validated input.

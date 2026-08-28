@@ -65,6 +65,11 @@ enum EconomyTransactionReason {
   QUEST_REWARD
   PURCHASE
   SYSTEM_OPPONENT_REPLENISH
+  MISSION_REWARD
+  WEEKLY_MISSION_REWARD
+  ACHIEVEMENT_REWARD
+  DAILY_RETURN_REWARD
+  DAILY_COMPLETION_REWARD
 }
 
 enum EconomyAction {
@@ -74,6 +79,15 @@ enum EconomyAction {
   HERO_UPGRADE
   RAID_START
   REVENGE_START
+  MISSION_CLAIM
+  DAILY_BONUS_CLAIM
+  ACHIEVEMENT_CLAIM
+  DAILY_RETURN_CLAIM
+}
+
+enum RetentionCadence {
+  DAILY
+  WEEKLY
 }
 
 enum BattleType {
@@ -168,6 +182,10 @@ model Player {
   analyticsEvents       AnalyticsEvent[]
   onboarding            OnboardingProgress?
   advisorTips           AdvisorTipProgress[]
+  retentionMissions     RetentionMissionInstance[]
+  dailyBonusClaims      RetentionDailyBonusClaim[]
+  achievementClaims     RetentionAchievementClaim[]
+  dailyReturnClaims     DailyReturnClaim[]
 }
 
 model OnboardingProgress {
@@ -305,6 +323,61 @@ model EconomyRequest {
 
   @@unique([playerId, idempotencyKey, action])
   @@index([createdAt])
+}
+
+model RetentionMissionInstance {
+  id            String           @id @default(uuid())
+  playerId      String
+  cadence       RetentionCadence
+  periodKey     String
+  definitionKey String
+  target        BigInt
+  rewards       Json
+  claimedAt     DateTime?
+  createdAt     DateTime         @default(now())
+  player        Player           @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, cadence, periodKey, definitionKey])
+  @@index([playerId, cadence, periodKey])
+}
+
+model RetentionDailyBonusClaim {
+  id        String   @id @default(uuid())
+  playerId  String
+  periodKey String
+  rewards   Json
+  claimedAt DateTime @default(now())
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, periodKey])
+  @@index([claimedAt])
+}
+
+model RetentionAchievementClaim {
+  id             String   @id @default(uuid())
+  playerId       String
+  achievementKey String
+  tier           Int
+  target         BigInt
+  rewards        Json
+  claimedAt      DateTime @default(now())
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, achievementKey, tier])
+  @@index([playerId, achievementKey])
+}
+
+model DailyReturnClaim {
+  id        String   @id @default(uuid())
+  playerId  String
+  periodKey String
+  dayIndex  Int
+  rewards   Json
+  claimedAt DateTime @default(now())
+  player    Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, periodKey])
+  @@index([playerId, claimedAt])
 }
 
 model BuildingUpgrade {

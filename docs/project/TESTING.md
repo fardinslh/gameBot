@@ -21,7 +21,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | Command | Coverage at verified baseline |
 | --- | --- |
 | `npm test` | API unit suite for economy/Hero/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
-| `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
+| `npm run test:integration` | 55 tests in 6 files: economy, Heroes, Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
 | `npm run validate:building-evolution` | 30 client tests covering DEFAULT registration, all 20 visual levels across nine active buildings, theme paths, adjacent differences, transitions, construction, stable selection/hit areas, and collision-proof status stacks, plus 45 WebP integrity/budget checks |
@@ -44,6 +44,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |
 | `npm run validate:player-experience` | Fresh Persian authoritative Collect/Upgrade/Raid/Battle/Result flows at 320/375/390, CTA/advisor non-overlap, refresh and skip persistence, eight Guide sections, technical audio triggers/settings, and RTL/LTR |
+| `npm run validate:retention` | Daily Return, three Daily missions, nine Achievement families, Persian RTL, English LTR, exact 54px navigation, no overflow, and clean console at 320/375/390 |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
 | `npm run validate:audio-loops` | Decodes both approved music sources and checks 19 format/timing/equal-power rules across three overlapping transitions per track |
@@ -54,7 +55,7 @@ Browser scripts locate installed Edge or Chrome through known Windows paths and 
 
 ## Mobile matrix
 
-Visual, Hero, Raid, Revenge, and progression scripts use:
+Visual, Hero, Raid, Revenge, progression, and Retention scripts use:
 
 - 320 by 568
 - 375 by 812
