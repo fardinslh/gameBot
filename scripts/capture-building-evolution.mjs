@@ -38,9 +38,16 @@ const representativeStates = [
   ['mine', 13],
   ['grandMarket', 20],
 ];
+const fidelityStates = [
+  ['castle', 20],
+  ['farm', 20],
+  ['lumberMill', 20],
+  ['mine', 20],
+  ['grandMarket', 20],
+];
 
 try {
-  const lab = await browser.newPage({ viewport: { width: 900, height: 760 }, deviceScaleFactor: 1 });
+  let lab = await browser.newPage({ viewport: { width: 900, height: 760 }, deviceScaleFactor: 1 });
   lab.on('console', (message) => { if (message.type() === 'error') errors.push(`lab console: ${message.text()}`); });
   lab.on('pageerror', (error) => errors.push(`lab page: ${error.stack ?? error.message}`));
   await lab.goto('http://localhost:3000/dev/buildings', { waitUntil: 'domcontentloaded' });
@@ -74,15 +81,58 @@ try {
         path: new URL(`${snapshotSet}-${buildingId}-level-${level}.png`, artifacts).pathname.slice(1),
       });
     }
+    await lab.getByRole('button', { name: '150%' }).click();
+    await lab.locator('select').selectOption('castle');
+    await lab.locator('input[type="range"]').fill('20');
+    await lab.waitForFunction(() => [...document.querySelectorAll('[data-building-id]')].some((element) => (
+      element.getAttribute('data-building-id') === 'castle'
+      && element.getAttribute('data-building-level') === '20'
+    )));
+    await lab.waitForTimeout(140);
+    await lab.locator('article').first().screenshot({
+      path: new URL(`${snapshotSet}-castle-level-20-150.png`, artifacts).pathname.slice(1),
+    });
+    await lab.getByRole('button', { name: '200%' }).click();
+    for (const [buildingId, level] of fidelityStates) {
+      await lab.locator('select').selectOption(String(buildingId));
+      await lab.locator('input[type="range"]').fill(String(level));
+      await lab.waitForFunction(
+        ({ buildingId, level }) => [...document.querySelectorAll('[data-building-id]')].some((element) => (
+          element.getAttribute('data-building-id') === buildingId
+          && element.getAttribute('data-building-level') === String(level)
+        )),
+        { buildingId, level },
+      );
+      await lab.waitForTimeout(140);
+      await lab.locator('article').first().screenshot({
+        path: new URL(`${snapshotSet}-${buildingId}-level-${level}-200.png`, artifacts).pathname.slice(1),
+      });
+    }
+    await lab.waitForFunction(() => document.querySelectorAll('[data-badge-levels="1,8,12,20"]').length === 2);
+    await lab.getByLabel('Production building badge checks').screenshot({
+      path: new URL(`${snapshotSet}-badge-viewport-matrix.png`, artifacts).pathname.slice(1),
+    });
   }
-  await lab.getByRole('button', { name: '1 vs 20' }).click();
-  for (const [buildingId] of buildings) {
-    await lab.locator('select').selectOption(buildingId);
-    await lab.waitForSelector('[data-visual-state="EARLY:0:standard"]');
-    await lab.waitForSelector('[data-visual-state="PRESTIGE:3:capstone"]');
-    await lab.locator('section').filter({ has: lab.locator('article') }).last().screenshot({ path: new URL(`${buildingId}-comparison-1-vs-20.png`, artifacts).pathname.slice(1) });
-  }
+  // Release the many sequential Pixi inspection runtimes before rendering the
+  // side-by-side matrix. Large fidelity textures otherwise make this transition
+  // timing-dependent in headless Chromium.
   await lab.close();
+  for (const [buildingId] of buildings) {
+    lab = await browser.newPage({ viewport: { width: 900, height: 760 }, deviceScaleFactor: 1 });
+    lab.on('console', (message) => { if (message.type() === 'error') errors.push(`lab comparison console: ${message.text()}`); });
+    lab.on('pageerror', (error) => errors.push(`lab comparison page: ${error.stack ?? error.message}`));
+    await lab.goto('http://localhost:3000/dev/buildings', { waitUntil: 'domcontentloaded' });
+    await lab.waitForSelector('[data-visual-state]');
+    await lab.locator('select').selectOption(buildingId);
+    await lab.getByRole('button', { name: '1 vs 20' }).click();
+    await lab.waitForFunction(({ expectedBuildingId }) => {
+      const previews = [...document.querySelectorAll(`[data-building-id="${expectedBuildingId}"]`)];
+      const levels = previews.map((element) => element.getAttribute('data-building-level'));
+      return levels.includes('1') && levels.includes('20');
+    }, { expectedBuildingId: buildingId });
+    await lab.locator('section').filter({ has: lab.locator('article') }).last().screenshot({ path: new URL(`${buildingId}-comparison-1-vs-20.png`, artifacts).pathname.slice(1) });
+    await lab.close();
+  }
 
   const identity = `retention-01a-${Date.now()}`;
   await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });

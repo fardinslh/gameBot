@@ -32,6 +32,7 @@
     "validate:audio-lab": "node scripts/validate-audio-lab.mjs",
     "validate:audio-loops": "node scripts/validate-audio-loops.mjs",
     "validate:building-evolution": "npm run test:building-evolution --workspace @crown-and-coin/game-client && node scripts/validate-building-evolution.mjs",
+    "audit:building-textures": "node scripts/audit-building-textures.mjs",
     "capture:building-evolution": "node scripts/capture-building-evolution.mjs",
     "test:client-analytics": "npm run test:analytics --workspace @crown-and-coin/game-client",
     "test:client-experience": "npm run test:experience --workspace @crown-and-coin/game-client",

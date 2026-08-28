@@ -10,7 +10,7 @@ The client loads local WebP art. Runtime mappings separate gameplay IDs, placeme
 
 ## Active Kingdom assets
 
-Core-building production now uses 25 files under `kingdom/evolution/default`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Individual files are about 42–92 KB; total core evolution art is about 1.76 MiB. The old core files are retained as rollback/reference inputs and as Developed-tier files, but production resolution uses the theme-namespaced evolution paths.
+Core-building production now uses 25 files under `kingdom/evolution/default`: five optimized local WebPs each for Castle, Farm, Lumber Mill, Mine, and Grand Market. Files are about 50–240 KiB and total about 2.62 MiB. All five Castle tiers and Grand Market Prestige use inspected 1024px-class restored sources; other tiers remain 512px-class because their measured opaque bounds already satisfy the DPR-2 moderate-zoom gate. Production uses the theme-namespaced paths and loads only the current visible tier.
 
 | Asset | Role | Approximate size |
 | --- | --- | ---: |
@@ -41,6 +41,7 @@ Core-building production now uses 25 files under `kingdom/evolution/default`: fi
 - `building-visual-progression.ts`: Theme → Building → Tier catalog plus authoritative-level-to-tier/minor-detail derivation for the five 01A buildings
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
+- `building-status-badge.ts`: constant-size screen-space level presentation and device-pixel-snapped world-anchor conversion
 
 File names do not decide gameplay. Shared building type and server state select a visual ID, then the mapping resolves its texture.
 
@@ -71,6 +72,10 @@ All audio remains local under `apps/game-client/public/assets/audio`. All 24 exp
 ## Validation and debug views
 
 `npm run validate:building-evolution` tests every level for all five core buildings under `DEFAULT`, rejects legacy non-theme paths, and inspects all 25 namespaced WebPs. `/dev/buildings` is development-only and renders the exact theme-aware production visual state for single, adjacent, and level 1 versus 20 review. `npm run capture:building-evolution` captures the required Lab and mobile Kingdom artifacts.
+
+`npm run audit:building-textures` uses Sharp to report dimensions, bytes, alpha, effective opaque bounds, production display size, and DPR-2 ratios at 100/150/200%. Never improve quality by resizing a low-detail raster upward. Use a genuine higher-detail source or inspected restoration, compare WebP settings in the real renderer, keep each tier below 250 KiB, and preserve current-stage lazy loading.
+
+Installed Pixi 8.20 defaults these textures to linear minification/magnification, not nearest-neighbor. Automatic mipmaps remain disabled: real mobile captures showed no useful gain for the current render sizes, while mip chains would increase GPU memory. The renderer keeps its DPR cap of 2.
 
 `npm run validate:visual` continues to check pan, interaction, mobile layout, console errors, and terrain budgets. `npm run validate:progression` checks active-only expansion mounting and locked asset exclusion.
 

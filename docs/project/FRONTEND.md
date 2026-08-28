@@ -63,6 +63,8 @@ The production authentication boundary remains absent. Browser API clients do no
 
 Kingdom Pixi receives building lock, level, appearance, indicator, and expansion stage state. It sends selected visual IDs to React. Battle Pixi receives a complete replay and emits only visual completion.
 
+Kingdom level chips live in a non-interactive screen-space Pixi overlay, separate from building containers. Their position derives from existing per-building anchors plus building/world/camera transforms and snaps to renderer resolution. This preserves constant 42 by 22 CSS-pixel presentation during pan, resize, tier replacement, and unlock animation without changing world coordinates or tap areas.
+
 Avoid per-frame React state for Pixi motion. Use the Pixi ticker, browser timers for event playback, and React state for durable UI transitions.
 
 ## Localization and direction

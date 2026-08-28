@@ -26,9 +26,9 @@ The older Aren portrait is a current generated candidate, not final owner-approv
 
 After the music scheduler change, `validate:player-experience` repeatedly failed because Aren overlapped the expanded Upgrade target; one retry later timed out waiting for the active Raid tab. `validate:raid` timed out waiting for its match-search response in the same browser flow. Audio work did not change advisor positioning, onboarding text, Raid, or Battle, and this task explicitly forbids those fixes. API unit and integration suites still pass, including Raid/Battle settlement. Repair the browser-flow blocker in a separate scoped task, then rerun both validators.
 
-### Core evolution art needs owner approval
+### Core evolution fidelity needs owner approval
 
-Retention 01A contains five generated/curated raster tiers for each core building and passes automated Lab/mobile capture. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20 and N/N+1. Advanced building evolution remains deferred to Retention 01B.
+Retention 01A contains five generated/curated raster tiers for each core building and passes metadata, effective-resolution, Lab, 200% inspection, and mobile capture gates. Castle tiers and Grand Market Prestige received higher-detail restoration; level badges now remain screen-sized. These are production-integrated candidates, not owner-approved final art. Review `/dev/buildings` at levels 1/5/9/13/17/20, N/N+1, and 100/150/200%. Advanced building evolution remains deferred to Retention 01B.
 
 ### Kingdom Themes are architecture-only
 

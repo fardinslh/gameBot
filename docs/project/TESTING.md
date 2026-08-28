@@ -24,7 +24,8 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | `npm run test:integration` | 48 tests in 5 files: economy, Heroes, Raid/Revenge, onboarding and advisor-tip persistence, analytics, transactions and concurrency |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
-| `npm run validate:building-evolution` | 16 client tests covering DEFAULT registration, all 20 visual levels, theme identity/path namespace, adjacent differences, transitions, construction, stable selection/hit areas, plus 25 WebP integrity/budget checks |
+| `npm run validate:building-evolution` | 19 client tests covering DEFAULT registration, all 20 visual levels, theme identity/path namespace, adjacent differences, transitions, construction, stable selection/hit areas, screen-space badge dimensions/position/pixel snapping, plus 25 WebP integrity/budget checks |
+| `npm run audit:building-textures` | Sharp metadata and alpha scan for all 25 DEFAULT textures, including opaque bounds and DPR-2 source/display ratios at 320/375/390 and 100/150/200% |
 | `npm run test:rtl --workspace @crown-and-coin/game-client` | 4 unit/render tests for locale-direction mapping, semantic game-root attributes, `<bdi>` isolation, and punctuation outside placeholders |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
@@ -47,7 +48,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
 | `npm run validate:audio-loops` | Decodes both approved music sources and checks 19 format/timing/equal-power rules across three overlapping transitions per track |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
-| `npm run capture:building-evolution` | Development Lab levels 1/5/9/13/17/20 for all five core buildings, 1-vs-20 sheets, and 320/375/390 Persian Kingdom captures |
+| `npm run capture:building-evolution` | Development Lab levels 1/5/9/13/17/20, isolated 1-vs-20 sheets, optional 200% fidelity/badge captures, and 320/375/390 Persian Kingdom captures |
 
 Browser scripts locate installed Edge or Chrome through known Windows paths and use Playwright Core. They fail on browser console errors and horizontal overflow.
 
@@ -67,7 +68,7 @@ For localization changes, also open `/dev/rtl` in development. Verify the Persia
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
-For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction. Owner judgment—not passing automation—approves art quality. For theme-architecture refactors, compare Castle 1/20, Farm 7, Mine 13, and Grand Market 20 before/after; expected pixels remain unchanged.
+For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for each core building, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify exact Lv. 1/8/12/20 badges in both viewport-equivalent panels. Owner judgment—not passing automation—approves art quality. Compare matched Castle 1/20, Farm, Mine, Grand Market, and Kingdom crops before/after whenever fidelity changes.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 

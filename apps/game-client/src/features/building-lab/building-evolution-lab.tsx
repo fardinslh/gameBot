@@ -14,12 +14,15 @@ const BUILDINGS: readonly { id: CoreEvolutionBuildingId; label: string }[] = [
   { id: 'grandMarket', label: 'Grand Market' },
 ];
 const QUICK_LEVELS = [1, 5, 9, 13, 17, 20] as const;
+const BADGE_LEVELS = [1, 8, 12, 20] as const;
+const INSPECTION_ZOOMS = [1, 1.5, 2] as const;
 
 export function BuildingEvolutionLab() {
   const [buildingId, setBuildingId] = useState<CoreEvolutionBuildingId>('castle');
   const [level, setLevel] = useState(1);
   const [mode, setMode] = useState<'single' | 'adjacent' | 'extremes'>('single');
   const [construction, setConstruction] = useState(false);
+  const [inspectionZoom, setInspectionZoom] = useState<(typeof INSPECTION_ZOOMS)[number]>(1);
   const state = getBuildingVisualState({ buildingId, level, theme: DEFAULT_KINGDOM_THEME });
   const comparisons = mode === 'single'
     ? [level]
@@ -68,6 +71,14 @@ export function BuildingEvolutionLab() {
           <button aria-pressed={mode === 'extremes'} onClick={() => setMode('extremes')} type="button">1 vs 20</button>
           <button aria-pressed={construction} onClick={() => setConstruction((current) => !current)} type="button">Construction</button>
         </div>
+        <div className={styles.inspection}>
+          <span>Inspection</span>
+          {INSPECTION_ZOOMS.map((zoom) => (
+            <button aria-pressed={inspectionZoom === zoom} key={zoom} onClick={() => setInspectionZoom(zoom)} type="button">
+              {Math.round(zoom * 100)}%
+            </button>
+          ))}
+        </div>
       </section>
 
       <section className={comparisons.length === 1 ? styles.stageSingle : styles.stageCompare}>
@@ -77,8 +88,20 @@ export function BuildingEvolutionLab() {
             construction={construction}
             key={`${buildingId}-${comparisonLevel}-${index}`}
             level={comparisonLevel}
+            inspectionZoom={inspectionZoom}
           />
         ))}
+      </section>
+
+      <section className={styles.badgeLab} aria-label="Production building badge checks">
+        <header>
+          <div><p>Exact production renderer</p><h2>Building badge fidelity</h2></div>
+          <span>Lv. 1 / 8 / 12 / 20 · 320px and 390px viewport equivalents</span>
+        </header>
+        <div className={styles.badgeViewports}>
+          <BadgeViewportPreview viewportWidth={320} />
+          <BadgeViewportPreview viewportWidth={390} />
+        </div>
       </section>
 
       <footer className={styles.footer}>
@@ -89,7 +112,17 @@ export function BuildingEvolutionLab() {
   );
 }
 
-function BuildingPreview({ buildingId, construction, level }: { buildingId: CoreEvolutionBuildingId; construction: boolean; level: number }) {
+function BuildingPreview({
+  buildingId,
+  construction,
+  inspectionZoom,
+  level,
+}: {
+  buildingId: CoreEvolutionBuildingId;
+  construction: boolean;
+  inspectionZoom: number;
+  level: number;
+}) {
   const hostRef = useRef<HTMLDivElement>(null);
   const state = getBuildingVisualState({ buildingId, level, theme: DEFAULT_KINGDOM_THEME });
 
@@ -102,8 +135,16 @@ function BuildingPreview({ buildingId, construction, level }: { buildingId: Core
     void Promise.all([
       import('@/game/rendering/pixi-runtime'),
       import('@/features/kingdom/rendering/building-art'),
+      import('@/features/kingdom/rendering/building-status-badge'),
+      import('@/features/kingdom/rendering/building-visuals'),
       import('pixi.js'),
-    ]).then(async ([{ createPixiRuntime }, { createBuildingArtwork }, { Assets }]) => {
+    ]).then(async ([
+      { createPixiRuntime },
+      { createBuildingArtwork },
+      { calculateBuildingStatusPosition, createBuildingStatusBadge },
+      { BUILDING_VISUALS },
+      { Assets },
+    ]) => {
       const localRuntime = await createPixiRuntime(host);
       runtime = localRuntime;
       const texture = await Assets.load(state.asset);
@@ -115,18 +156,30 @@ function BuildingPreview({ buildingId, construction, level }: { buildingId: Core
         return;
       }
       const artwork = createBuildingArtwork(buildingId, texture, false, state, construction);
+      const badge = createBuildingStatusBadge(level, localRuntime.app.renderer.resolution);
       const resize = () => {
         const width = Math.max(host.clientWidth, 1);
         const height = Math.max(host.clientHeight, 1);
         localRuntime.app.renderer.resize(width, height);
-        const fit = Math.min(1.75, width / 270, height / 300);
+        const fit = Math.min(1.75, width / 270, height / 300) * inspectionZoom;
         artwork.container.scale.set(fit);
         artwork.container.position.set(width / 2, height * .84);
+        const badgePosition = calculateBuildingStatusPosition({
+          anchor: BUILDING_VISUALS[buildingId].lockAnchor,
+          buildingPosition: artwork.container.position,
+          buildingScale: fit,
+          resolution: localRuntime.app.renderer.resolution,
+          worldPosition: { x: 0, y: 0 },
+          worldScale: 1,
+        });
+        badge.position.set(badgePosition.x, badgePosition.y);
       };
-      localRuntime.app.stage.addChild(artwork.container);
+      localRuntime.app.stage.addChild(artwork.container, badge);
       observer = new ResizeObserver(resize);
       observer.observe(host);
       resize();
+      host.dataset.buildingId = buildingId;
+      host.dataset.buildingLevel = String(level);
       host.dataset.visualState = `${state.tier}:${state.minorStep}:${state.capstone ? 'capstone' : 'standard'}`;
     });
     return () => {
@@ -135,12 +188,58 @@ function BuildingPreview({ buildingId, construction, level }: { buildingId: Core
       runtime?.destroy();
       runtime = null;
     };
-  }, [buildingId, construction, state.asset, state.capstone, state.minorStep, state.tier]);
+  }, [buildingId, construction, inspectionZoom, level, state.asset, state.capstone, state.minorStep, state.tier]);
 
   return (
     <article className={styles.preview}>
       <header><span>Level {level}</span><b>{state.tier}</b><small>step {state.minorStep}{state.capstone ? ' · MAX' : ''}</small></header>
       <div className={styles.canvas} ref={hostRef} />
+    </article>
+  );
+}
+
+function BadgeViewportPreview({ viewportWidth }: { viewportWidth: 320 | 390 }) {
+  const hostRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const host = hostRef.current;
+    let disposed = false;
+    let runtime: Awaited<ReturnType<typeof import('@/game/rendering/pixi-runtime').createPixiRuntime>> | null = null;
+    if (!host) return;
+    void Promise.all([
+      import('@/game/rendering/pixi-runtime'),
+      import('@/features/kingdom/rendering/building-status-badge'),
+    ]).then(async ([{ createPixiRuntime }, { createBuildingStatusBadge }]) => {
+      const localRuntime = await createPixiRuntime(host);
+      runtime = localRuntime;
+      if (disposed) {
+        localRuntime.destroy();
+        runtime = null;
+        return;
+      }
+      const width = Math.max(host.clientWidth, 1);
+      const height = Math.max(host.clientHeight, 1);
+      localRuntime.app.renderer.resize(width, height);
+      BADGE_LEVELS.forEach((badgeLevel, index) => {
+        const badge = createBuildingStatusBadge(badgeLevel, localRuntime.app.renderer.resolution);
+        badge.position.set((index + .5) * width / BADGE_LEVELS.length, height / 2);
+        localRuntime.app.stage.addChild(badge);
+      });
+      localRuntime.app.render();
+      host.dataset.badgeLevels = BADGE_LEVELS.join(',');
+      host.dataset.viewportEquivalent = String(viewportWidth);
+    });
+    return () => {
+      disposed = true;
+      runtime?.destroy();
+      runtime = null;
+    };
+  }, [viewportWidth]);
+
+  return (
+    <article className={styles.badgeViewport} style={{ width: `${viewportWidth}px` }}>
+      <header><b>{viewportWidth}px</b><span>DPR-aware · screen-space</span></header>
+      <div className={styles.badgeCanvas} ref={hostRef} />
     </article>
   );
 }

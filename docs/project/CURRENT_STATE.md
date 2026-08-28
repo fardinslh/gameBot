@@ -15,7 +15,8 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
 | Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
-| Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level |
+| Core building visual evolution | Implemented | Castle, Farm, Lumber Mill, Mine, and Grand Market derive five major tiers plus a visible minor step at every level; all 25 assets pass effective-resolution audit through moderate 200% inspection |
+| World building level badges | Implemented | A DPR-aware screen-space Pixi overlay keeps 11px level text and 22px badges legible while following world pan, resize, and unlock scale |
 | Theme-ready building evolution architecture | Implemented | Visual requests resolve Building Type + Building Level + Kingdom Theme through one catalog; `DEFAULT` is the only implemented theme |
 | Selectable Kingdom Themes | Not implemented | No selection UI, persistence, ownership, or API exists |
 | Historical Theme assets | Not implemented | Planned historically-inspired eras have no generated or registered production catalogs |
@@ -104,7 +105,7 @@ Twelve ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A engineering and its DEFAULT theme-ready architecture are complete; owner visual approval is pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
+Retention 01A engineering, its DEFAULT theme-ready architecture, and the building-fidelity corrective pass are complete; owner approval of building labels and art remains pending. Retention 01B is next. Theme Foundation is planned only after Shop/Gem Economy. Selectable themes, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale have not started. Existing Aren and real-device audio quality gates remain open.
 
 ## Persian RTL and bidirectional text
 
@@ -114,4 +115,4 @@ The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Lo
 
 ## Validation entry points
 
-Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for core visual progression, plus the normal test, type, lint, build, Kingdom, player-experience, Raid, and Revenge regressions. See [testing](TESTING.md).
+Run `npm run validate:building-evolution`, `npm run audit:building-textures`, and `npm run capture:building-evolution` for core visual progression and fidelity, plus the normal test, type, lint, build, Kingdom, player-experience, Raid, and Revenge regressions. See [testing](TESTING.md).

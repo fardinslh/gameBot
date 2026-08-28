@@ -1,4 +1,4 @@
-import { Assets, Container, Graphics, Sprite, Text } from 'pixi.js';
+import { Assets, Container, Graphics, Sprite } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
 import type { BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-and-coin/shared';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
@@ -15,6 +15,11 @@ import {
 } from './building-visual-progression';
 import { KINGDOM_EXPANSION_PRESENTATIONS, EXPANSION_PRESENTATION_BY_BUILDING } from '../data/kingdom-expansion-stages';
 import { createExpansionAreaArtwork, type ExpansionAreaArtwork } from './expansion-area-art';
+import {
+  calculateBuildingStatusPosition,
+  createBuildingStatusBadge,
+  drawBuildingStatusBadge,
+} from './building-status-badge';
 
 interface KingdomSceneRuntime {
   destroy(): void;
@@ -47,6 +52,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   app.stage.addChild(backdrop);
   const world = new Container();
   app.stage.addChild(world);
+  const statusLayer = new Container();
+  statusLayer.eventMode = 'none';
 
   const background = new Sprite(texture);
   background.position.set(KINGDOM_WORLD.sourceOffsetX, 0);
@@ -58,6 +65,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const buildingsLayer = new Container();
   buildingsLayer.sortableChildren = true;
   world.addChild(buildingsLayer);
+  app.stage.addChild(statusLayer);
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
   const statusArtwork = new Map<BuildingId, Container>();
@@ -140,7 +148,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     if (selectedBuildingId === id) selectedBuildingId = null;
     artwork.delete(id);
     indicatorArtwork.delete(id);
+    const status = statusArtwork.get(id);
     statusArtwork.delete(id);
+    status?.destroy({ children: true });
     texturePathById.delete(id);
     levelById.delete(id);
     transformationAnimation.delete(id);
@@ -174,12 +184,11 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       currentState.indicator === 'active',
     );
     const indicator = createIndicator();
-    const status = new Container();
+    const status = createBuildingStatusBadge(currentState.level, app.renderer.resolution);
     const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
     indicator.position.copyFrom(indicatorAnchor);
-    status.position.copyFrom(BUILDING_VISUALS[building.id].lockAnchor);
     buildingArt.container.addChild(indicator);
-    buildingArt.container.addChild(status);
+    statusLayer.addChild(status);
     buildingArt.container.visible = debugKingdomLayers !== 'terrain'
       && (debugKingdomLayers !== 'castle' || building.id === 'castle');
     indicatorArtwork.set(building.id, indicator);
@@ -188,7 +197,6 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     levelById.set(building.id, currentState.level);
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
     drawIndicator(indicator, currentState.indicator);
-    drawBuildingStatus(status, currentState.level);
     if (reveal && !reducedMotion) {
       buildingArt.container.alpha = 0;
       buildingArt.container.scale.set(building.scale * .9);
@@ -223,6 +231,23 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   let worldScale = 1;
   let laidOut = false;
   const clampCamera = (value: number): number => Math.max(cameraMinY, Math.min(cameraMaxY, value));
+  const syncStatusPositions = (): void => {
+    for (const [id, status] of statusArtwork) {
+      const item = artwork.get(id);
+      if (!item) continue;
+      const position = calculateBuildingStatusPosition({
+        anchor: BUILDING_VISUALS[id].lockAnchor,
+        buildingPosition: item.container.position,
+        buildingScale: item.container.scale.x,
+        resolution: app.renderer.resolution,
+        worldPosition: { x: world.x, y: cameraY },
+        worldScale,
+      });
+      status.position.set(position.x, position.y);
+      status.visible = item.container.visible;
+      status.alpha = item.container.alpha;
+    }
+  };
   const syncCamera = (): void => {
     world.y = cameraY;
     backdrop.visible = cameraY > 0;
@@ -230,6 +255,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     host.dataset.cameraY = String(Math.round(cameraY));
     host.dataset.cameraMinY = String(Math.round(cameraMinY));
     host.dataset.cameraMaxY = String(Math.round(cameraMaxY));
+    syncStatusPositions();
   };
   const layout = (): void => {
     const width = Math.max(host.clientWidth, 1);
@@ -379,6 +405,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         area.mist.alpha = 0;
       } else expansionAnimation.set(id, next);
     }
+    syncStatusPositions();
   };
   if (!reducedMotion) app.ticker.add(animate);
 
@@ -434,7 +461,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
           startTransformation(id, previousLevel, state.level);
         }
         const status = statusArtwork.get(id);
-        if (status) drawBuildingStatus(status, state.level);
+        if (status) drawBuildingStatusBadge(status, state.level, app.renderer.resolution);
       }
     },
     destroy: () => {
@@ -454,23 +481,6 @@ function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualSta
   return isCoreEvolutionBuilding(id)
     ? getBuildingVisualState({ buildingId: id, level, theme: DEFAULT_KINGDOM_THEME })
     : undefined;
-}
-
-function drawBuildingStatus(status: Container, level: number): void {
-  status.removeChildren().forEach((child) => child.destroy());
-  const color = 0xe2b447;
-  const width = 30;
-  const background = new Graphics()
-    .roundRect(-width / 2, -10, width, 20, 7)
-    .fill({ color: 0x17140f, alpha: .94 })
-    .stroke({ color, alpha: .9, width: 1.5 });
-  status.addChild(background);
-  const text = new Text({
-    text: `Lv.${level}`,
-    style: { fill: 0xffe7a1, fontFamily: 'Arial', fontSize: 8, fontWeight: '700' },
-  });
-  text.anchor.set(.5);
-  status.addChild(text);
 }
 
 function createIndicator(): Graphics {
