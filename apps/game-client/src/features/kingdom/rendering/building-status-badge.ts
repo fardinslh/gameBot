@@ -7,6 +7,15 @@ export const BUILDING_STATUS_BADGE = Object.freeze({
   fontSize: 11,
 });
 
+export const BUILDING_UPGRADE_INDICATOR = Object.freeze({
+  height: 20,
+  width: 20,
+  radius: 7,
+  gap: 6,
+});
+
+export type BuildingStatusIndicator = 'upgrade' | 'active' | null;
+
 interface PointLike {
   x: number;
   y: number;
@@ -19,6 +28,16 @@ interface BuildingStatusPositionInput {
   resolution: number;
   worldPosition: PointLike;
   worldScale: number;
+}
+
+interface BuildingStatusLayoutInput extends Omit<BuildingStatusPositionInput, 'anchor'> {
+  levelBadgeAnchor: PointLike;
+  upgradeIndicatorAnchor: PointLike;
+}
+
+export interface BuildingStatusLayout {
+  levelBadge: PointLike;
+  upgradeIndicator: PointLike;
 }
 
 export function createBuildingStatusBadge(level: number, resolution = 1): Container {
@@ -51,6 +70,32 @@ export function drawBuildingStatusBadge(badge: Container, level: number, resolut
   badge.addChild(background, text);
 }
 
+export function createBuildingUpgradeIndicator(state: BuildingStatusIndicator): Graphics {
+  const indicator = new Graphics();
+  indicator.eventMode = 'none';
+  indicator.label = 'building-upgrade-indicator';
+  drawBuildingUpgradeIndicator(indicator, state);
+  return indicator;
+}
+
+export function drawBuildingUpgradeIndicator(indicator: Graphics, state: BuildingStatusIndicator): void {
+  indicator.clear();
+  indicator.visible = state !== null;
+  if (!state) return;
+  const { height, width, radius } = BUILDING_UPGRADE_INDICATOR;
+  const color = state === 'active' ? 0xe2b447 : 0x8ecb68;
+  indicator
+    .roundRect(-width / 2, -height / 2, width, height, radius)
+    .fill({ color: 0x17140f, alpha: .94 })
+    .stroke({ color, width: 1.5 });
+  if (state === 'upgrade') {
+    indicator.moveTo(0, 6).lineTo(0, -4).moveTo(-4, 0).lineTo(0, -5).lineTo(4, 0).stroke({ color, width: 2.5 });
+  } else {
+    indicator.circle(0, 0, 6).stroke({ color, width: 1.5 });
+    indicator.moveTo(0, 0).lineTo(0, -3.5).moveTo(0, 0).lineTo(3.5, 2).stroke({ color, width: 1.5 });
+  }
+}
+
 export function calculateBuildingStatusPosition({
   anchor,
   buildingPosition,
@@ -65,4 +110,37 @@ export function calculateBuildingStatusPosition({
     x: snap(worldPosition.x + (buildingPosition.x + anchor.x * buildingScale) * worldScale),
     y: snap(worldPosition.y + (buildingPosition.y + anchor.y * buildingScale) * worldScale),
   };
+}
+
+export function calculateBuildingStatusLayout({
+  levelBadgeAnchor,
+  upgradeIndicatorAnchor,
+  ...transform
+}: BuildingStatusLayoutInput): BuildingStatusLayout {
+  const levelBadge = calculateBuildingStatusPosition({ anchor: levelBadgeAnchor, ...transform });
+  const preferredIndicator = calculateBuildingStatusPosition({ anchor: upgradeIndicatorAnchor, ...transform });
+  const indicator = statusElementsOverlap(levelBadge, preferredIndicator, BUILDING_UPGRADE_INDICATOR.gap)
+    ? {
+        x: snapToResolution(levelBadge.x, transform.resolution),
+        y: snapToResolution(
+          levelBadge.y - BUILDING_STATUS_BADGE.height / 2
+            - BUILDING_UPGRADE_INDICATOR.gap
+            - BUILDING_UPGRADE_INDICATOR.height / 2,
+          transform.resolution,
+        ),
+      }
+    : preferredIndicator;
+  return { levelBadge, upgradeIndicator: indicator };
+}
+
+export function statusElementsOverlap(levelBadge: PointLike, indicator: PointLike, gap = 0): boolean {
+  return Math.abs(levelBadge.x - indicator.x)
+      < (BUILDING_STATUS_BADGE.width + BUILDING_UPGRADE_INDICATOR.width) / 2 + gap
+    && Math.abs(levelBadge.y - indicator.y)
+      < (BUILDING_STATUS_BADGE.height + BUILDING_UPGRADE_INDICATOR.height) / 2 + gap;
+}
+
+function snapToResolution(value: number, resolution: number): number {
+  const safeResolution = Math.max(1, resolution);
+  return Math.round(value * safeResolution) / safeResolution;
 }

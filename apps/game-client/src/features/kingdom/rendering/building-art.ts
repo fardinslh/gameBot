@@ -37,10 +37,10 @@ function createDebugOverlay(id: BuildingVisualId, sprite: Sprite): Container {
     .fill({ color: 0xff3b30, alpha: .95 })
     .circle(visuals.visualOffset.x, visuals.visualOffset.y, 8)
     .stroke({ color: 0x47e56f, alpha: 1, width: 3 })
-    .moveTo(visuals.indicatorAnchor.x - 5, visuals.indicatorAnchor.y)
-    .lineTo(visuals.indicatorAnchor.x + 5, visuals.indicatorAnchor.y)
-    .moveTo(visuals.indicatorAnchor.x, visuals.indicatorAnchor.y - 5)
-    .lineTo(visuals.indicatorAnchor.x, visuals.indicatorAnchor.y + 5)
+    .moveTo(visuals.upgradeIndicatorAnchor.x - 5, visuals.upgradeIndicatorAnchor.y)
+    .lineTo(visuals.upgradeIndicatorAnchor.x + 5, visuals.upgradeIndicatorAnchor.y)
+    .moveTo(visuals.upgradeIndicatorAnchor.x, visuals.upgradeIndicatorAnchor.y - 5)
+    .lineTo(visuals.upgradeIndicatorAnchor.x, visuals.upgradeIndicatorAnchor.y + 5)
     .stroke({ color: 0xd66bff, alpha: 1, width: 2 });
   if (id === 'mine') {
     // Alpha analysis shows no meaningful transparent padding, so the cyan

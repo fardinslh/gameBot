@@ -16,9 +16,12 @@ import {
 import { KINGDOM_EXPANSION_PRESENTATIONS, EXPANSION_PRESENTATION_BY_BUILDING } from '../data/kingdom-expansion-stages';
 import { createExpansionAreaArtwork, type ExpansionAreaArtwork } from './expansion-area-art';
 import {
-  calculateBuildingStatusPosition,
+  calculateBuildingStatusLayout,
   createBuildingStatusBadge,
+  createBuildingUpgradeIndicator,
   drawBuildingStatusBadge,
+  drawBuildingUpgradeIndicator,
+  type BuildingStatusIndicator,
 } from './building-status-badge';
 
 interface KingdomSceneRuntime {
@@ -27,7 +30,7 @@ interface KingdomSceneRuntime {
   setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>, expansionStage: KingdomExpansionStage): void;
 }
 
-export type BuildingIndicator = 'upgrade' | 'active' | null;
+export type BuildingIndicator = BuildingStatusIndicator;
 export interface BuildingSceneState {
   indicator: BuildingIndicator;
   level: number;
@@ -147,7 +150,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     if (!item) return;
     if (selectedBuildingId === id) selectedBuildingId = null;
     artwork.delete(id);
+    const indicator = indicatorArtwork.get(id);
     indicatorArtwork.delete(id);
+    indicator?.destroy();
     const status = statusArtwork.get(id);
     statusArtwork.delete(id);
     status?.destroy({ children: true });
@@ -183,12 +188,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       visualState,
       currentState.indicator === 'active',
     );
-    const indicator = createIndicator();
+    const indicator = createBuildingUpgradeIndicator(currentState.indicator);
     const status = createBuildingStatusBadge(currentState.level, app.renderer.resolution);
-    const indicatorAnchor = BUILDING_VISUALS[building.id].indicatorAnchor;
-    indicator.position.copyFrom(indicatorAnchor);
-    buildingArt.container.addChild(indicator);
-    statusLayer.addChild(status);
+    statusLayer.addChild(indicator, status);
     buildingArt.container.visible = debugKingdomLayers !== 'terrain'
       && (debugKingdomLayers !== 'castle' || building.id === 'castle');
     indicatorArtwork.set(building.id, indicator);
@@ -196,7 +198,6 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     texturePathById.set(building.id, desiredTexturePath);
     levelById.set(building.id, currentState.level);
     registerBuilding(building.id, building.groundX, building.groundY, building.scale, buildingArt);
-    drawIndicator(indicator, currentState.indicator);
     if (reveal && !reducedMotion) {
       buildingArt.container.alpha = 0;
       buildingArt.container.scale.set(building.scale * .9);
@@ -235,17 +236,23 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     for (const [id, status] of statusArtwork) {
       const item = artwork.get(id);
       if (!item) continue;
-      const position = calculateBuildingStatusPosition({
-        anchor: BUILDING_VISUALS[id].lockAnchor,
+      const indicator = indicatorArtwork.get(id);
+      if (!indicator) continue;
+      const layout = calculateBuildingStatusLayout({
+        levelBadgeAnchor: BUILDING_VISUALS[id].levelBadgeAnchor,
+        upgradeIndicatorAnchor: BUILDING_VISUALS[id].upgradeIndicatorAnchor,
         buildingPosition: item.container.position,
         buildingScale: item.container.scale.x,
         resolution: app.renderer.resolution,
         worldPosition: { x: world.x, y: cameraY },
         worldScale,
       });
-      status.position.set(position.x, position.y);
+      status.position.set(layout.levelBadge.x, layout.levelBadge.y);
+      indicator.position.set(layout.upgradeIndicator.x, layout.upgradeIndicator.y);
       status.visible = item.container.visible;
       status.alpha = item.container.alpha;
+      indicator.renderable = item.container.visible;
+      indicator.alpha = item.container.alpha;
     }
   };
   const syncCamera = (): void => {
@@ -441,7 +448,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
           void mountBuilding(building, state, previouslyUnlocked === false);
           continue;
         }
-        drawIndicator(indicator, state.indicator);
+        drawBuildingUpgradeIndicator(indicator, state.indicator);
         const item = artwork.get(id);
         const previousLevel = levelById.get(id) ?? state.level;
         const visualState = resolveEvolutionState(id, state.level);
@@ -481,26 +488,6 @@ function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualSta
   return isCoreEvolutionBuilding(id)
     ? getBuildingVisualState({ buildingId: id, level, theme: DEFAULT_KINGDOM_THEME })
     : undefined;
-}
-
-function createIndicator(): Graphics {
-  const indicator = new Graphics();
-  indicator.visible = false;
-  return indicator;
-}
-
-function drawIndicator(indicator: Graphics, state: BuildingIndicator): void {
-  indicator.clear();
-  indicator.visible = state !== null;
-  if (!state) return;
-  const color = state === 'active' ? 0xe2b447 : 0x8ecb68;
-  indicator.roundRect(-12, -11, 24, 22, 8).fill({ color: 0x17140f, alpha: .94 }).stroke({ color, width: 2 });
-  if (state === 'upgrade') {
-    indicator.moveTo(0, 7).lineTo(0, -5).moveTo(-5, 0).lineTo(0, -6).lineTo(5, 0).stroke({ color, width: 3 });
-  } else {
-    indicator.circle(0, 0, 7).stroke({ color, width: 1.5 });
-    indicator.moveTo(0, 0).lineTo(0, -4).moveTo(0, 0).lineTo(4, 2).stroke({ color, width: 1.5 });
-  }
 }
 
 function artOffset(id: WorldBuildingId): number {

@@ -65,6 +65,14 @@
 .badgeViewport b { color: var(--gold); }
 .badgeCanvas { position: relative; height: 58px; overflow: hidden; }
 .badgeCanvas canvas { display: block; }
+.statusControls { display: flex; align-items: end; gap: 12px; margin-top: 14px; }
+.statusControls label { display: grid; min-width: 180px; gap: 5px; color: var(--muted); font-size: 10px; font-weight: 700; }
+.statusControls select, .statusControls button { min-height: 40px; padding-inline: 10px; color: var(--ink); background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); border-radius: 9px; }
+.statusControls select option { color: #17150f; }
+.statusControls > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.statusControls button[aria-pressed="true"] { color: #22180b; background: linear-gradient(145deg, #efd278, #bd8035); border-color: transparent; }
+.statusCanvas { position: relative; width: min(390px, 100%); height: 300px; margin-top: 10px; overflow: hidden; background: radial-gradient(ellipse at 50% 75%, rgba(72,102,59,.38), transparent 55%), #11150f; border: 1px solid rgba(255,255,255,.07); border-radius: 11px; }
+.statusCanvas canvas { display: block; }
 
 @media (max-width: 760px) {
   .header { align-items: start; }
@@ -77,6 +85,7 @@
   .preview { min-height: 380px; }
   .footer { display: grid; }
   .badgeLab > header { display: grid; }
+  .statusControls { align-items: stretch; flex-direction: column; }
 }
 
 @media (max-width: 520px) {

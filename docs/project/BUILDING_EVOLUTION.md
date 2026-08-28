@@ -36,9 +36,9 @@ Future complete Theme Packs may replace Castle, Farm, Lumber Mill, Mine, Grand M
 
 Theme is cosmetic only. It cannot change production, storage, building effects, Hero stats, Raid power, Battle rules, loot, Trophies, upgrade cost/duration, PvP strength, or resource generation.
 
-`building-visual-progression.ts` owns derivation. `building-art.ts` owns raster sizing, minor props, construction details, and transformation graphics. `create-kingdom-scene.ts` owns asynchronous texture replacement and short transition timing while preserving the existing container, selection, hit area, coordinate, and indicator anchors.
+`building-visual-progression.ts` owns derivation. `building-art.ts` owns raster sizing, minor props, construction details, and transformation graphics. `create-kingdom-scene.ts` owns asynchronous texture replacement and short transition timing while preserving the existing container, selection, hit area, coordinate, and semantic status anchors.
 
-Building levels render through a separate screen-space Pixi layer. The layer converts each building's existing local status anchor through building scale, world scale, and camera position, then snaps to the renderer's device-pixel grid. Badge dimensions remain 42 by 22 CSS pixels with 11px production UI text; labels follow pan, resize, tier changes, and unlock scale without intercepting taps or inheriting tiny world scale.
+Building levels and compact upgrade/active indicators render together through a separate screen-space Pixi layer. The layer converts each building's `levelBadgeAnchor` and `upgradeIndicatorAnchor` through building scale, world scale, and camera position, then snaps to the renderer's device-pixel grid. A deterministic collision guard stacks the 20px indicator above the 42 by 22px level badge with a 6px gap when preferred anchor rectangles approach one another. Both elements follow pan, resize, tier changes, and unlock scale without intercepting taps or inheriting tiny world scale.
 
 Core raster quality is governed by effective opaque pixels, not canvas dimensions alone. `npm run audit:building-textures` measures all 25 DEFAULT files against production render width, layout scale, supported viewports, DPR 2, and 100/150/200% inspection. Never satisfy this gate through naive raster enlargement; use a genuine higher-detail source or inspected restoration, then encode the smallest WebP that survives real renderer review. Production continues to load only the current visible tier.
 
@@ -60,7 +60,7 @@ An active authoritative upgrade adds restrained scaffolding and material piles w
 
 In development, open `/dev/buildings`. The Lab displays `Theme DEFAULT` and uses the same theme-aware production resolver and `building-art` renderer. It supports all five buildings, levels 1–20, quick levels 1/5/9/13/17/20, previous/next, construction state, adjacent N/N+1 comparison, and level 1 versus 20. It does not offer fake historical selections.
 
-The Lab also supports 100/150/200% fidelity inspection and renders the exact production Lv. 1/8/12/20 badge at 320px and 390px viewport equivalents.
+The Lab also supports 100/150/200% fidelity inspection and renders the exact production Lv. 1/8/12/20 badge at 320px, 375px, and 390px viewport equivalents. Its status-overlay fixture exposes all nine active progression buildings and normal, can-upgrade, active-upgrade, and selected states using the production badge, indicator, anchors, and collision guard.
 
 ## Future historical art direction and distribution
 

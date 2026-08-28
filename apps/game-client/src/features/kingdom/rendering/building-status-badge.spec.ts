@@ -1,9 +1,30 @@
 import { describe, expect, it } from 'vitest';
-import { BUILDING_STATUS_BADGE, calculateBuildingStatusPosition } from './building-status-badge';
+import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
+import { BUILDING_VISUALS } from './building-visuals';
+import {
+  BUILDING_STATUS_BADGE,
+  BUILDING_UPGRADE_INDICATOR,
+  calculateBuildingStatusLayout,
+  calculateBuildingStatusPosition,
+  statusElementsOverlap,
+} from './building-status-badge';
+
+const STATUS_BUILDINGS = [
+  'castle',
+  'farm',
+  'lumberMill',
+  'mine',
+  'grandMarket',
+  'academy',
+  'blacksmith',
+  'watchtower',
+  'workshop',
+] as const;
 
 describe('building status badge', () => {
   it('uses a compact readable screen-space presentation', () => {
     expect(BUILDING_STATUS_BADGE).toMatchObject({ height: 22, width: 42, fontSize: 11 });
+    expect(BUILDING_UPGRADE_INDICATOR).toMatchObject({ height: 20, width: 20, gap: 6 });
   });
 
   it('tracks world, building, and unlock scale without scaling its own UI', () => {
@@ -26,5 +47,42 @@ describe('building status badge', () => {
       worldPosition: { x: 0, y: 0 },
       worldScale: 1,
     })).toEqual({ x: 10, y: 20.5 });
+  });
+
+  it.each([
+    { width: 320, height: 568 },
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+  ])('keeps level and upgrade status separate at $width×$height', ({ width, height }) => {
+    const worldScale = width / KINGDOM_WORLD.width;
+    const states = [
+      { name: 'normal', indicator: null, unlockScale: 1 },
+      { name: 'can-upgrade', indicator: 'upgrade', unlockScale: 1 },
+      { name: 'upgrade-active', indicator: 'active', unlockScale: 1 },
+      { name: 'selected-and-upgradeable', indicator: 'upgrade', unlockScale: 1 },
+      { name: 'unlock-animation', indicator: 'upgrade', unlockScale: .9 },
+    ] as const;
+    for (const buildingId of STATUS_BUILDINGS) {
+      const building = KINGDOM_BUILDING_LAYOUT.find(({ id }) => id === buildingId);
+      expect(building).toBeDefined();
+      if (!building) continue;
+      for (const state of states) {
+        const layout = calculateBuildingStatusLayout({
+          levelBadgeAnchor: BUILDING_VISUALS[buildingId].levelBadgeAnchor,
+          upgradeIndicatorAnchor: BUILDING_VISUALS[buildingId].upgradeIndicatorAnchor,
+          buildingPosition: { x: building.groundX, y: building.groundY },
+          buildingScale: building.scale * state.unlockScale,
+          resolution: 2,
+          worldPosition: { x: 0, y: -height * .22 },
+          worldScale,
+        });
+        if (state.indicator) {
+          expect(statusElementsOverlap(layout.levelBadge, layout.upgradeIndicator), `${buildingId}:${state.name}`).toBe(false);
+          expect(layout.levelBadge.y - layout.upgradeIndicator.y, `${buildingId}:${state.name}`).toBeGreaterThanOrEqual(
+            (BUILDING_STATUS_BADGE.height + BUILDING_UPGRADE_INDICATOR.height) / 2,
+          );
+        }
+      }
+    }
   });
 });

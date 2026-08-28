@@ -43,7 +43,8 @@ describe('building evolution artwork', () => {
     for (const buildingId of ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket'] as const) {
       expect(BUILDING_VISUALS[buildingId].hitArea.width).toBeGreaterThan(100);
       expect(BUILDING_VISUALS[buildingId].hitArea.height).toBeGreaterThan(100);
-      expect(Number.isFinite(BUILDING_VISUALS[buildingId].indicatorAnchor.x)).toBe(true);
+      expect(Number.isFinite(BUILDING_VISUALS[buildingId].upgradeIndicatorAnchor.x)).toBe(true);
+      expect(Number.isFinite(BUILDING_VISUALS[buildingId].levelBadgeAnchor.x)).toBe(true);
       expect(getBuildingVisualState({ buildingId, level: 1 }).asset)
         .not.toBe(getBuildingVisualState({ buildingId, level: 20 }).asset);
     }
