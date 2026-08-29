@@ -30,6 +30,7 @@ const projectDocs = [
   "DECISIONS.md",
   "ROADMAP.md",
   "KNOWN_ISSUES.md",
+  "PLANNER_HANDOFF.md",
   "AI_HANDOFF.md",
 ];
 
@@ -85,6 +86,7 @@ if (!index.includes("Last verified against commit") || !index.includes(baselineC
 
 const requiredLinks = new Map([
   ["README.md", ["docs/project/INDEX.md"]],
+  ["docs/project/INDEX.md", ["PLANNER_HANDOFF.md", "AI_HANDOFF.md"]],
   ["AGENTS.md", ["docs/project/INDEX.md", "docs/project/AI_HANDOFF.md"]],
   ["CLAUDE.md", ["docs/project/INDEX.md", "docs/project/AI_HANDOFF.md"]],
   ["GEMINI.md", ["docs/project/INDEX.md", "docs/project/AI_HANDOFF.md"]],

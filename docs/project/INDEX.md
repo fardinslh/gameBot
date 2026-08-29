@@ -77,6 +77,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Architecture decisions](DECISIONS.md)
 - [Roadmap and deferred scope](ROADMAP.md)
 - [Known limitations](KNOWN_ISSUES.md)
+- [AI product and planning partner handoff](PLANNER_HANDOFF.md)
 - [AI coding agent handoff](AI_HANDOFF.md)
 
 ## Current development status
@@ -101,6 +102,15 @@ The client renders server responses. It never calculates balances, upgrade compl
 - Reuse the deterministic battle engine for Raid and Revenge
 
 ## Reading order
+
+### AI product / planning partner
+
+1. [Planner handoff](PLANNER_HANDOFF.md)
+2. [Current state](CURRENT_STATE.md)
+3. [Product definition](PRODUCT.md)
+4. [Architecture decisions](DECISIONS.md)
+5. [Retention roadmap](RETENTION_ROADMAP.md) and [roadmap](ROADMAP.md)
+6. The relevant system document from the reference list above
 
 ### AI coding agent
 

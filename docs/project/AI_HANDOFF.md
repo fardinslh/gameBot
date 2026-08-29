@@ -8,6 +8,8 @@ contentType: How-to
 
 Use this sequence before a major change. Code and migrations remain authoritative when the documentation baseline is older than `HEAD`.
 
+This guide is primarily for the coding and implementation agent. A product, game-design, or technical planning partner should read [Planner Handoff](PLANNER_HANDOFF.md) first, then use this guide when preparing or verifying implementation work.
+
 ## Read these files in this order
 
 1. [Project context index](INDEX.md)

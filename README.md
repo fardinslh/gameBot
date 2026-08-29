@@ -6,7 +6,7 @@ Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Ki
 
 Launch-readiness analytics uses the existing API and PostgreSQL only. See [analytics](docs/project/ANALYTICS.md), [retention systems](docs/project/RETENTION_SYSTEMS.md), [player experience](docs/project/PLAYER_EXPERIENCE.md), [audio](docs/project/AUDIO.md), and the [audio audition guide](docs/project/AUDIO_AUDITION.md). Run `npm run analytics:report -- --json` or `npm run analytics:check`.
 
-Start with the canonical [project context index](docs/project/INDEX.md). It links the product, architecture, game-system, operations, testing, and AI handoff references maintained with this repository.
+Start with the canonical [project context index](docs/project/INDEX.md). Product and technical planning partners should begin with the [planner handoff](docs/project/PLANNER_HANDOFF.md); coding agents should use the [coding handoff](docs/project/AI_HANDOFF.md).
 
 ## Architecture
 
