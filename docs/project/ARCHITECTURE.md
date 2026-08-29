@@ -21,7 +21,7 @@ Next.js 16 + React 19
         | JSON over HTTP
         v
 NestJS 11 Game API
-  Kingdom/Economy | Heroes | Raid/Revenge | Notifications
+  Kingdom/Economy | Heroes/Commanders | Army | Raid/Revenge | Notifications
         |
         +---------------------+
         |                     |
@@ -54,11 +54,11 @@ React owns navigation, HUD, sheets, API synchronization, language direction, and
 
 Controllers accept IDs and idempotency keys, then delegate to services. Clients cannot submit resource balances, levels, Hero stats, battle damage, winners, loot, Trophy deltas, or timer completion.
 
-`apps/game-api/src/economy/economy.service.ts` bootstraps Web development players and serializes player mutations with PostgreSQL advisory transaction locks. `HeroService` uses the same player lock. `RaidService` locks both participants in sorted order before settlement.
+`apps/game-api/src/economy/economy.service.ts` bootstraps Web development players and serializes player mutations with PostgreSQL advisory transaction locks. `HeroService` and `ArmyService` use the same player lock. Army training settles from server timestamps through lazy reconciliation, and formation writes validate owned existing `PlayerHero` rows as Commanders. `RaidService` locks both participants in sorted order before settlement.
 
 ## Shared contracts
 
-`packages/shared/src/index.ts` defines the API surface for resources, buildings, Heroes, Raid, battle playback, inbox, Revenge, and errors. Update this package with both API and client consumers when a response changes.
+`packages/shared/src/index.ts` defines the API surface for resources, buildings, Heroes, Army/Commanders, Raid, battle playback, inbox, Revenge, and errors. Update this package with both API and client consumers when a response changes.
 
 `packages/platform/src/index.ts` defines platform interfaces. `apps/game-api/src/platform/placeholder.adapters.ts` rejects authentication, user lookup, notifications, and payments for every current adapter. `openAppContext` reports an unconfigured platform.
 

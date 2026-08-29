@@ -402,6 +402,100 @@ export interface HeroErrorResponse {
   message: string;
 }
 
+export const TROOP_TYPES = ['INFANTRY', 'ARCHER', 'CAVALRY'] as const;
+export type TroopType = (typeof TROOP_TYPES)[number];
+
+export interface ArmyTroopState {
+  type: TroopType;
+  readyCount: number;
+  trainingCostPerUnit: Partial<Record<ResourceType, string>>;
+  trainingSecondsPerUnit: number;
+}
+
+export interface ArmyCapacityState {
+  maximum: number;
+  ready: number;
+  training: number;
+  available: number;
+}
+
+export interface ArmyTrainingState {
+  id: string;
+  troopType: TroopType;
+  quantity: number;
+  startedAt: string;
+  completesAt: string;
+  remainingSeconds: number;
+}
+
+export interface ArmyCommanderState {
+  playerHeroId: string;
+  key: HeroKey;
+  level: number;
+  power: number;
+  portraitAsset: string;
+}
+
+export interface ArmyFormationSlotState {
+  slot: 1 | 2 | 3;
+  troopType: TroopType;
+  unitCount: number;
+  commander: ArmyCommanderState;
+}
+
+export interface ArmyFormationState {
+  slots: ArmyFormationSlotState[];
+}
+
+export interface ArmyResponse {
+  serverTime: string;
+  capacity: ArmyCapacityState;
+  troops: ArmyTroopState[];
+  training: ArmyTrainingState | null;
+  formation: ArmyFormationState;
+  commanders: ArmyCommanderState[];
+}
+
+export interface ArmyTrainRequest {
+  troopType: TroopType;
+  quantity: number;
+}
+
+export interface ArmyFormationSlotInput {
+  slot: 1 | 2 | 3;
+  troopType: TroopType;
+  unitCount: number;
+  commanderPlayerHeroId: string;
+}
+
+export interface ArmyFormationSaveRequest {
+  slots: ArmyFormationSlotInput[];
+}
+
+export interface ArmyTrainResponse extends ArmyResponse {
+  balances: ResourceAmounts;
+}
+
+export type ArmyErrorCode =
+  | 'INVALID_TROOP_TYPE'
+  | 'INVALID_TRAINING_QUANTITY'
+  | 'TRAINING_ALREADY_ACTIVE'
+  | 'ARMY_CAPACITY_EXCEEDED'
+  | 'INSUFFICIENT_RESOURCES'
+  | 'FORMATION_INVALID'
+  | 'FORMATION_TROOP_COUNT_EXCEEDED'
+  | 'FORMATION_COMMANDER_DUPLICATE'
+  | 'COMMANDER_NOT_OWNED'
+  | 'COMMANDER_DISABLED'
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'ARMY_CONFLICT';
+
+export interface ArmyErrorResponse {
+  statusCode: number;
+  code: ArmyErrorCode;
+  message: string;
+}
+
 export type RaidResourceType = Exclude<ResourceType, 'GEMS'>;
 export type RaidLootAmounts = Record<RaidResourceType, string>;
 export type BattleSide = 'ATTACKER' | 'DEFENDER';

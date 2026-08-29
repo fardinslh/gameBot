@@ -12,7 +12,7 @@ The NestJS API listens on port `3001` by default. Responses use shared types fro
 
 `X-Dev-Player-Id` selects an isolated Web development identity. Without the header, `DEV_PLAYER_ID` or `local-crown-player` supplies the identity. This mechanism is development scaffolding, not authentication.
 
-Economy mutations, Hero upgrade, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team save, search, and inbox read do not require one because they do not grant or charge a replayable reward.
+Economy mutations, Hero upgrade, troop training, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team/formation save, search, and inbox read do not require one because they do not grant or charge a replayable reward.
 
 ## Health
 
@@ -42,6 +42,16 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 | `GET` | `/heroes/team` | Return ordered Raid Team | `RaidTeamResponse` |
 | `PUT` | `/heroes/team` | Save exactly three unique owned Hero IDs | `{ heroIds: string[3] }`; `RaidTeamResponse` |
 | `POST` | `/heroes/:playerHeroId/upgrade` | Charge discounted Gold and increment level | Idempotency key; `HeroUpgradeResponse` |
+
+## Army and Commanders
+
+| Method | Path | Purpose | Requirements and response |
+| --- | --- | --- | --- |
+| `GET` | `/army` | Reconcile due training and return capacity, troops, formation, and Commanders | `ArmyResponse` |
+| `POST` | `/army/train` | Validate and charge one 1–25 unit training order | `{ troopType, quantity }`, idempotency key; `ArmyTrainResponse` |
+| `PUT` | `/army/formation` | Save exactly three validated Commander-led squads | `{ slots: ArmyFormationSlotInput[3] }`; `ArmyResponse` |
+
+Army mutations accept no cost, duration, completion timestamp, capacity, Commander stats, combat power, or resulting count. Castle level temporarily controls capacity. Current Raid endpoints do not read these models.
 
 ## Raid and battle
 
@@ -102,4 +112,4 @@ Accepts 1-20 `app_open`, `app_resume`, `screen_opened`, `retention_screen_opened
 
 ## Error families
 
-Shared contracts define `EconomyErrorCode`, `HeroErrorCode`, `RaidErrorCode`, and `RetentionErrorCode`. Services use domain errors for ownership, state, expiry, funds, completion, claim order, idempotency, rate limits, and transaction conflicts. NestJS global validation strips unknown DTO fields and transforms validated input.
+Shared contracts define `EconomyErrorCode`, `HeroErrorCode`, `ArmyErrorCode`, `RaidErrorCode`, and `RetentionErrorCode`. Services use domain errors for ownership, state, expiry, funds, completion, capacity, formation validity, claim order, idempotency, rate limits, and transaction conflicts. NestJS global validation strips unknown DTO fields and transforms validated input.

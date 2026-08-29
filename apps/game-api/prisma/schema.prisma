@@ -70,6 +70,7 @@ enum EconomyTransactionReason {
   ACHIEVEMENT_REWARD
   DAILY_RETURN_REWARD
   DAILY_COMPLETION_REWARD
+  TROOP_TRAINING
 }
 
 enum EconomyAction {
@@ -83,6 +84,18 @@ enum EconomyAction {
   DAILY_BONUS_CLAIM
   ACHIEVEMENT_CLAIM
   DAILY_RETURN_CLAIM
+  TROOP_TRAINING
+}
+
+enum TroopType {
+  INFANTRY
+  ARCHER
+  CAVALRY
+}
+
+enum TroopTrainingStatus {
+  IN_PROGRESS
+  COMPLETED
 }
 
 enum RetentionCadence {
@@ -159,25 +172,25 @@ enum UpgradeStatus {
 }
 
 model Player {
-  id                    String               @id @default(uuid())
+  id                    String                      @id @default(uuid())
   displayName           String?
-  createdAt             DateTime             @default(now())
-  updatedAt             DateTime             @updatedAt
-  trophies              Int                  @default(1000)
-  isSystemOpponent      Boolean              @default(false)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  trophies              Int                         @default(1000)
+  isSystemOpponent      Boolean                     @default(false)
   platformAccounts      PlatformAccount[]
   kingdom               Kingdom?
   economyTransactions   EconomyTransaction[]
   economyRequests       EconomyRequest[]
   heroes                PlayerHero[]
   raidTeam              RaidTeam?
-  raidOffersCreated     RaidMatchOffer[]     @relation("RaidOfferAttacker")
-  raidOffersReceived    RaidMatchOffer[]     @relation("RaidOfferDefender")
-  battlesAttacked       Battle[]             @relation("BattleAttacker")
-  battlesDefended       Battle[]             @relation("BattleDefender")
-  battlesWon            Battle[]             @relation("BattleWinner")
-  revengeTargetsOwned   RevengeTarget[]      @relation("RevengeOwner")
-  revengeTargetsAgainst RevengeTarget[]      @relation("RevengeTargetPlayer")
+  raidOffersCreated     RaidMatchOffer[]            @relation("RaidOfferAttacker")
+  raidOffersReceived    RaidMatchOffer[]            @relation("RaidOfferDefender")
+  battlesAttacked       Battle[]                    @relation("BattleAttacker")
+  battlesDefended       Battle[]                    @relation("BattleDefender")
+  battlesWon            Battle[]                    @relation("BattleWinner")
+  revengeTargetsOwned   RevengeTarget[]             @relation("RevengeOwner")
+  revengeTargetsAgainst RevengeTarget[]             @relation("RevengeTargetPlayer")
   notifications         Notification[]
   analyticsEvents       AnalyticsEvent[]
   onboarding            OnboardingProgress?
@@ -186,6 +199,9 @@ model Player {
   dailyBonusClaims      RetentionDailyBonusClaim[]
   achievementClaims     RetentionAchievementClaim[]
   dailyReturnClaims     DailyReturnClaim[]
+  troops                PlayerTroop[]
+  troopTrainingOrders   TroopTrainingOrder[]
+  armyFormation         ArmyFormation?
 }
 
 model OnboardingProgress {
@@ -417,19 +433,74 @@ model HeroDefinition {
 }
 
 model PlayerHero {
-  id               String         @id @default(uuid())
-  playerId         String
-  heroDefinitionId String
-  level            Int            @default(1)
-  xp               Int            @default(0)
-  createdAt        DateTime       @default(now())
-  updatedAt        DateTime       @updatedAt
-  player           Player         @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  heroDefinition   HeroDefinition @relation(fields: [heroDefinitionId], references: [id], onDelete: Restrict)
-  raidTeamSlots    RaidTeamSlot[]
+  id                 String              @id @default(uuid())
+  playerId           String
+  heroDefinitionId   String
+  level              Int                 @default(1)
+  xp                 Int                 @default(0)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  player             Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  heroDefinition     HeroDefinition      @relation(fields: [heroDefinitionId], references: [id], onDelete: Restrict)
+  raidTeamSlots      RaidTeamSlot[]
+  armyFormationSlots ArmyFormationSlot[]
 
   @@unique([playerId, heroDefinitionId])
   @@index([playerId])
+}
+
+model PlayerTroop {
+  id         String    @id @default(uuid())
+  playerId   String
+  troopType  TroopType
+  readyCount Int       @default(0)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  player     Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, troopType])
+  @@index([playerId])
+}
+
+model TroopTrainingOrder {
+  id           String              @id @default(uuid())
+  playerId     String
+  troopType    TroopType
+  quantity     Int
+  status       TroopTrainingStatus @default(IN_PROGRESS)
+  costSnapshot Json
+  startedAt    DateTime
+  completesAt  DateTime
+  completedAt  DateTime?
+  createdAt    DateTime            @default(now())
+  player       Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, status])
+  @@index([status, completesAt])
+}
+
+model ArmyFormation {
+  id        String              @id @default(uuid())
+  playerId  String              @unique
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+  player    Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  slots     ArmyFormationSlot[]
+}
+
+model ArmyFormationSlot {
+  id                    String        @id @default(uuid())
+  armyFormationId       String
+  slot                  Int
+  troopType             TroopType
+  unitCount             Int
+  commanderPlayerHeroId String
+  armyFormation         ArmyFormation @relation(fields: [armyFormationId], references: [id], onDelete: Cascade)
+  commander             PlayerHero    @relation(fields: [commanderPlayerHeroId], references: [id], onDelete: Cascade)
+
+  @@unique([armyFormationId, slot])
+  @@unique([armyFormationId, commanderPlayerHeroId])
+  @@index([commanderPlayerHeroId])
 }
 
 model RaidTeam {

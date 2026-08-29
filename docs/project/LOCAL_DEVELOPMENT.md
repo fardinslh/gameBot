@@ -37,6 +37,8 @@ Open these URLs:
 - Persian client: `http://localhost:3000/?lang=fa`
 - Heroes: `http://localhost:3000/?lang=en&section=heroes`
 - Raid: `http://localhost:3000/?lang=en&section=raid`
+- Army API: `http://localhost:3001/army`
+- Army Lab: `http://localhost:3000/dev/army` (development only)
 
 `npm run dev` builds shared packages, then starts Next.js and NestJS watchers. `npm start` runs built application servers and requires a prior build.
 
@@ -89,3 +91,5 @@ The API accepts `X-Dev-Player-Id` and otherwise uses `DEV_PLAYER_ID`. Browser va
 ## Timer testing
 
 Set `ECONOMY_TIMER_MULTIPLIER=0.1` before starting the API to reduce new upgrade durations. The setting does not alter a timer already stored in `BuildingUpgrade.completesAt`.
+
+Troop training uses its own fixed server configuration: Infantry 2 seconds per unit, Archer 3 seconds, and Cavalry 5 seconds. Open `/dev/army` to exercise the real one-queue flow and three-slot Commander formation; it is intentionally unavailable in production.

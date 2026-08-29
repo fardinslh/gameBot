@@ -43,6 +43,8 @@ features/rtl-lab
   development-only semantic mixed-content fixture
 features/building-lab
   development-only nine-building tier, comparison, construction, fidelity, and status fixture
+features/army-lab
+  development-only real-API troop, queue, capacity, Commander, and formation inspector
 ```
 
 `GameShell` imports feature pages but does not contain their server logic.
@@ -64,6 +66,8 @@ features/building-lab
 Feature API clients read `NEXT_PUBLIC_API_URL`, defaulting to `http://localhost:3001`. They disable fetch caching, translate domain error bodies, and generate browser UUID idempotency keys for protected mutations.
 
 The production authentication boundary remains absent. Browser API clients do not attach a real platform credential.
+
+`/dev/army` exists only in development and returns 404 in production. It calls the real Army API and is not linked from production navigation. No production Army screen or current Pixi coordinates changed in Retention 03A.
 
 ## Pixi boundaries
 

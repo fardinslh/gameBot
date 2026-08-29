@@ -43,6 +43,7 @@ import {
 import { EconomyError } from './economy.errors';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
+import { ensureArmySystemForPlayer } from '../army/army.bootstrap';
 
 const kingdomGraph = Prisma.validator<Prisma.KingdomDefaultArgs>()({
   include: {
@@ -353,6 +354,7 @@ export class EconomyService {
     if (account.player.kingdom) {
       await this.ensureKingdomShape(tx, account.playerId, account.player.kingdom.id);
       await ensureHeroSystemForPlayer(tx, account.playerId);
+      await this.ensureArmyShape(tx, account.playerId);
       return { playerId: account.playerId, kingdomId: account.player.kingdom.id };
     }
 
@@ -381,8 +383,20 @@ export class EconomyService {
       })),
     });
     await ensureHeroSystemForPlayer(tx, account.playerId);
+    await this.ensureArmyShape(tx, account.playerId);
     this.logger.log(`bootstrap player=${account.playerId} kingdom=${kingdom.id}`);
     return { playerId: account.playerId, kingdomId: kingdom.id };
+  }
+
+  private async ensureArmyShape(tx: TransactionClient, playerId: string): Promise<void> {
+    const bootstrapped = await ensureArmySystemForPlayer(tx, playerId);
+    if (!bootstrapped) return;
+    await this.analytics.recordServer(tx, {
+      playerId,
+      eventName: 'army_bootstrapped',
+      dedupeKey: `army_bootstrapped:${playerId}`,
+      properties: { infantry: 20, archer: 15, cavalry: 10 },
+    });
   }
 
   private async ensureKingdomShape(tx: TransactionClient, playerId: string, kingdomId: string): Promise<void> {

@@ -10,25 +10,27 @@ Current integrity controls protect local authoritative game state. Production au
 
 ## Server authority
 
-The API decides balances, time, production, costs, storage, unlocks, levels, Hero stats, Match Offers, battle outcomes, loot, Trophies, Retention progress/periods/eligibility, and rewards. Clients send action intent and persistent IDs.
+The API decides balances, time, production, costs, storage, unlocks, levels, Hero stats, troop counts, training time/completion, Army capacity, formation validity, Match Offers, battle outcomes, loot, Trophies, Retention progress/periods/eligibility, and rewards. Clients send action intent and persistent IDs.
 
 Do not accept client-computed amounts, durations, target players, combat stats, event streams, or outcomes in future endpoints.
 
 ## Idempotency
 
-`EconomyRequest` stores mutation responses by player, key, and action. Collect, building upgrade start/completion, Hero upgrade, Raid start, and Revenge start validate keys between 8 and 100 characters.
+`EconomyRequest` stores mutation responses by player, key, and action. Collect, building upgrade start/completion, Hero upgrade, troop training, Raid start, and Revenge start validate keys between 8 and 100 characters.
 
 A retry with the same tuple returns the stored response. Unique constraints prevent two stored responses for one action key. Mission, Daily bonus, Achievement, and Daily Return claims use dedicated `EconomyAction` values, the same key validation, and database uniqueness on their semantic claim identity.
 
 ## Transaction locking
 
-Economy and Hero mutations acquire `pg_advisory_xact_lock(hashtext(platform:externalUserId))`. Raid and Revenge resolve both participant identities, sort by player ID, then acquire both locks in that order. Stable ordering prevents two concurrent battles from deadlocking by reversing participants.
+Economy, Hero, and Army mutations acquire `pg_advisory_xact_lock(hashtext(platform:externalUserId))`. Army reads reconcile a due training order under the same lock; its conditional status transition grants trained troops exactly once. Raid and Revenge resolve both participant identities, sort by player ID, then acquire both locks in that order. Stable ordering prevents two concurrent battles from deadlocking by reversing participants.
 
 Revenge start also locks its target row with `FOR UPDATE`. System-opponent replenishment uses the same stable platform-identity advisory lock before it re-reads or changes balances, preventing concurrent searches from double-granting resources. Services retry serialization conflicts where applicable.
 
 ## Resource ledger
 
 Every authoritative balance mutation records before, delta, after, reason, and reference in `EconomyTransaction`. Raid transfers write paired loss and reward records with one Battle ID. Conditional decrements prevent negative charged or looted balances.
+
+Troop training computes cost and duration from server configuration, conditionally debits resources, records `TROOP_TRAINING` ledger rows, creates one active order, and stores the idempotent response in the same transaction. The client cannot submit prices, duration, ready counts, capacity, or completion.
 
 ## Battle integrity
 

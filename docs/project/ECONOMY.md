@@ -99,6 +99,6 @@ Reads and mutation paths reconcile due upgrades. Reconciliation claims a due row
 
 ## Transaction ledger and idempotency
 
-`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, and Raid transfers use the ledger.
+`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, troop training, and Raid transfers use the ledger. Troop-training charges use the `TROOP_TRAINING` reason and reference their `TroopTrainingOrder`.
 
 `EconomyRequest` enforces uniqueness across player, idempotency key, and action. Keys must contain 8 through 100 characters. Economy transactions retry Prisma serialization conflict `P2034` up to three attempts before returning `ECONOMY_CONFLICT`.

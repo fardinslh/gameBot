@@ -8,6 +8,8 @@ contentType: Reference
 
 Raid uses server-owned Match Offers, immutable Hero snapshots, a seeded deterministic engine, and one transactional settlement. The client never calculates the winner.
 
+Retention 03A adds persistent troops and an Army formation, but this document's production `rulesVersion: 1` flow is intentionally unchanged. Raid still snapshots and simulates the existing three-Hero Raid Team. Troop/formation battle input belongs to Retention 03B.
+
 ## Request flow
 
 ```text

@@ -23,6 +23,10 @@ export const SERVER_ANALYTICS_EVENTS = [
   'weekly_mission_claimed',
   'achievement_completed',
   'achievement_claimed',
+  'army_bootstrapped',
+  'troop_training_started',
+  'troop_training_completed',
+  'army_formation_saved',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [

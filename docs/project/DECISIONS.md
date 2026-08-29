@@ -112,3 +112,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: Fantasy progression tiers and production structures require coherent artistic interpretation where exact archaeological references may not exist
 - **Consequences**: Future packs need consistent period cues and respectful review without claiming exact reconstruction. Distribution may include gameplay unlocks, direct cosmetic purchase, Season/Pass rewards, or collection rewards; no Theme grants gameplay power
 - **Status**: Planned content direction only; no historical assets or commerce implemented
+
+## ADR-016: Make long-term combat Army-first with Heroes as Commanders
+
+- **Decision**: Crown & Coin's long-term combat fantasy is Army-first Kingdom strategy. Infantry, Archers, and Cavalry form three squads led by existing Player Heroes as Commanders.
+- **Reason**: The Player is a Kingdom ruler. Military forces should visibly and mechanically represent Kingdom power instead of turning the product into a three-character Hero-collection RPG.
+- **Consequences**: Army is a first-class authoritative domain; Knight, Ranger, and Mage persistence remains intact; `RaidTeam` and Hero Battle rules version 1 remain current and historically compatible during 03A; Army Battle starts only in rules version 2 during 03B; Barracks activation remains separately scoped; the first Army Battle version causes no permanent troop-roster loss.
+- **Status**: Active. Retention 03A foundation implemented; Retention 03B combat not implemented.

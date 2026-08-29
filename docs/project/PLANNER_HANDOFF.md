@@ -104,8 +104,8 @@ Never claim that a feature is implemented because a prompt requested it, an enum
 Crown & Coin is a portrait-mobile medieval strategy game for a Persian-first audience. Its core identity is:
 
 - a visually dominant, persistent Kingdom;
-- server-authoritative economy, progression, Heroes, Raid, battle, Revenge, and rewards;
-- a three-Hero team and short competitive auto battles;
+- server-authoritative economy, progression, Army, Commanders, Raid, battle, Revenge, and rewards;
+- a standing medieval Army led by persistent Heroes as Commanders;
 - visible growth, fair losses, recovery, and reasons to return;
 - one shared bilingual interface with Persian RTL and English LTR;
 - Bale-first distribution later, followed by Telegram and broader Web only after validation;
@@ -117,10 +117,11 @@ The durable core loop is:
 KINGDOM
 -> COLLECT
 -> UPGRADE
--> HEROES
--> RAID TEAM
+-> TRAIN TROOPS
+-> DEVELOP / ASSIGN COMMANDERS
+-> CREATE FORMATION
 -> FIND OPPONENT
--> AUTO BATTLE
+-> ARMY BATTLE
 -> LOOT / TROPHY
 -> REVENGE / RETURN
 -> UPGRADE AGAIN
@@ -162,15 +163,15 @@ Do not mark a visual or audio task complete solely because assets load or a vali
 
 Each roadmap item is a separate authorization boundary. Completing or discussing one phase does not authorize starting the next.
 
-At this document's creation:
+At this document's latest roadmap update:
 
-- **Last completed**: Retention 02 — Missions, Achievements & Daily Return
-- **Next**: Retention 03 — Hero Expansion, not started
+- **Last completed**: Retention 03A — Army & Commander Foundation
+- **Next**: Retention 03B — Army Battle v2, not started
 - **Bale**: not started
 
 If current code or newer canonical documents disagree with that snapshot, current repository evidence overrides this sentence. Update continuity documents when the phase state legitimately changes.
 
-The intended sequence is Retention 03 Hero Expansion, Retention 04 PvE Campaign, Retention 05 Shop and Gem Economy, Retention 05B Theme Foundation, Retention 06 Guild MVP, Retention 07 Guild Cooperation, Retention 08 competitive meta and leaderboards, Retention 09 content/balance/retention QA, Bale staging, production readiness, a 30–50 player closed test, fixes, and soft launch. Use [the retention roadmap](RETENTION_ROADMAP.md) for the canonical wording and status.
+The intended sequence is Retention 03B Army Battle v2, Retention 04 PvE Campaign, Retention 05 Shop and Gem Economy, Retention 05B Theme Foundation, Retention 06 Guild MVP, Retention 07 Guild Cooperation, Retention 08 competitive meta and leaderboards, Retention 09 content/balance/retention QA, Bale staging, production readiness, a 30–50 player closed test, fixes, and soft launch. Use [the retention roadmap](RETENTION_ROADMAP.md) for the canonical wording and status.
 
 Before moving forward, ask:
 

@@ -11,8 +11,10 @@ Bale integration is intentionally delayed until Crown & Coin has enough visible 
 1. **Retention 01A — Building Evolution, Core**: Castle, Farm, Lumber Mill, Mine, and Grand Market. Implemented.
 2. **Retention 01B — Advanced Building Evolution and Goals**: Academy, Blacksmith, Watchtower, Workshop, and Kingdom progression goals. Implemented; owner approval of advanced art remains pending.
 3. **Retention 02 — Missions, Achievements, Daily Return**. Implemented with authoritative UTC periods, derived progress, transactional claims, and bilingual mobile UI.
-4. **Retention 03 — Hero Expansion**. Not implemented.
-5. **Retention 04 — PvE Campaign / Adventure**. Not implemented.
+4. **Retention 03 — Army & Commander Expansion**.
+   - **Retention 03A — Army & Commander Foundation**. Implemented: three troop types, persistent training, Castle-derived capacity, three-squad formation, and existing Heroes as Commanders. Current Raid remains rules version 1.
+   - **Retention 03B — Army Battle v2**. Next and not implemented. It owns new Army combat, versioned snapshots/events, balance, playback, and the Raid/Revenge cutover while preserving rules version 1 history.
+5. **Retention 04 — PvE Campaign / Adventure**. Not implemented; remains after Retention 03B.
 6. **Retention 05 — Shop MVP and Gem Economy**. Not implemented.
 7. **Retention 05B — Kingdom Themes Foundation and First Historical Theme**. Not implemented. Requires Shop/Gem architecture first; themes remain cosmetic only.
 8. **Retention 06 — Guild MVP**. Not implemented.

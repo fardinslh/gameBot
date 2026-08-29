@@ -14,6 +14,7 @@ import { RaidModule } from './raid/raid.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { RetentionModule } from './retention/retention.module';
+import { ArmyModule } from './army/army.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { RetentionModule } from './retention/retention.module';
     AnalyticsModule,
     OnboardingModule,
     RetentionModule,
+    ArmyModule,
   ],
 })
 export class AppModule {}

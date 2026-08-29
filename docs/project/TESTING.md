@@ -20,8 +20,9 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 
 | Command | Coverage at verified baseline |
 | --- | --- |
-| `npm test` | API unit suite for economy/Hero/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
-| `npm run test:integration` | 55 tests in 6 files: economy, Heroes, Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
+| `npm test` | API unit suite for economy/Hero/Army config/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
+| `npm run test:integration` | 63 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
+| `npm run validate:army` | Exact troop config/capacity plus focused PostgreSQL bootstrap, system-player repair, economy, idempotency, concurrency, completion, ownership, and formation coverage |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
 | `npm run validate:building-evolution` | 30 client tests covering DEFAULT registration, all 20 visual levels across nine active buildings, theme paths, adjacent differences, transitions, construction, stable selection/hit areas, and collision-proof status stacks, plus 45 WebP integrity/budget checks |
@@ -70,6 +71,8 @@ For localization changes, also open `/dev/rtl` in development. Verify the Persia
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
 
 For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for all nine active buildings, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify Lv. 1/8/12/20 references in the 320/375/390 viewport-equivalent panels. Inspect Castle Kingdom Progress at Castle 1 and 5. In the exact-production status fixture, inspect every active building in normal, upgrade, active, and selected-plus-upgrade states; `data-status-overlap` must remain `false` and `data-status-stack-aligned` must remain `true` whenever an indicator is visible. Owner judgment—not passing automation—approves art quality.
+
+For Army foundation, open `/dev/army` in development. Confirm starter counts 20/15/10, capacity 60/45/0/15 at Castle 1, the Knight/Ranger/Mage default formation, and per-unit costs/time. Start five Infantry through the API, confirm a 10-second authoritative order and one Food/Gold charge, refresh before and after completion, then save and reload a valid formation. Complete a normal Raid and Revenge regression afterward; both must remain Hero-based rules version 1.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 

@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop includes persistent first-session onboarding, a bilingual permanent Game Guide, device-persisted audio controls, and server-owned Daily/Weekly missions, Achievements, and Daily Return rewards. All 24 licensed audio groups have explicit owner approval and are mapped into gameplay; the development-only Audio Lab now records that selection is complete. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop now includes the Retention 03A Army and Commander foundation: persistent troops, one server-timed training queue, capacity, and a three-slot formation whose Commanders are existing owned Heroes. Army Battle integration is deliberately deferred to Retention 03B. Persistent onboarding, the bilingual Game Guide, approved audio, missions, Achievements, and Daily Return remain intact. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
@@ -73,6 +73,8 @@ URLs:
 - Kingdom: http://localhost:3001/kingdom
 - Heroes: http://localhost:3001/heroes
 - Raid: http://localhost:3001/raid
+- Army: http://localhost:3001/army
+- Army Lab (development only): http://localhost:3000/dev/army
 
 The health endpoint checks PostgreSQL and, in the normal Docker flow, Redis. If Docker is unavailable, `npx prisma dev -d -n crown-coin` can provide a local PostgreSQL TCP URL. Put that URL in `.env`; because Phase 03 correctness does not use BullMQ, `SKIP_REDIS_FOR_DEVELOPMENT="true"` may be used only for this fallback. Never enable that flag in a normal/production environment.
 
@@ -126,6 +128,9 @@ Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems.
 | `GET` | `/heroes/team` | Return the persisted ordered three-slot Raid Team |
 | `PUT` | `/heroes/team` | Validate and persist exactly three unique owned Hero IDs |
 | `POST` | `/heroes/:playerHeroId/upgrade` | Idempotently charge Gold, log the economy transaction, and increase Hero level |
+| `GET` | `/army` | Bootstrap/reconcile and return troops, capacity, training, formation, and eligible Commanders |
+| `POST` | `/army/train` | Authoritatively validate, charge, and start the single troop-training queue |
+| `PUT` | `/army/formation` | Validate and persist exactly three troop/Commander formation slots |
 | `GET` | `/raid` | Return Trophy rating, current authoritative team, power, and balances |
 | `POST` | `/raid/search` | Match by Trophy/team power and issue one short-lived server Match Offer |
 | `POST` | `/raid/start` | Validate one Match Offer, simulate, persist, and settle the Raid exactly once |
@@ -286,7 +291,7 @@ Production loads only the current required tier through a centralized Theme → 
 
 All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
 
-Retention 01A, Retention 01B, and Retention 02 are implemented. Retention 03 Hero Expansion is next and has not started; Hero expansion, PvE, Shop, Kingdom Theme content, Guild, Leaderboards, and Bale remain unimplemented.
+Retention 01A, Retention 01B, Retention 02, and Retention 03A Army & Commander Foundation are implemented. Retention 03B Army Battle Integration is next and has not started. Current `rulesVersion: 1` Raid still uses the unchanged three-Hero combat team; troops and Army formations do not affect battle yet. PvE, Shop, Kingdom Theme content, Guild, Leaderboards, Bale, troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 
@@ -309,6 +314,7 @@ npm run validate:progression # Stage 1–5 mounts/areas/camera/effects and Phase
 npm run validate:building-evolution # 20-level derivation + 25 core WebP assets
 npm run capture:building-evolution  # dev Lab sheets + 320/375/390 Kingdom screenshots
 npm run validate:retention # missions/achievements/Daily Return + RTL/LTR mobile screenshots
+npm run validate:army      # Army configuration + real PostgreSQL authority/concurrency tests
 ```
 
 Tests preserve all Phase 03/04 coverage and add deterministic Battle replay, HP/timing bounds, all three skills, Shield Wall reduction, defeated-Hero behavior, loot protection/caps, Trophy bounds, Match Offer ownership/expiry/single use, idempotent settlement, replay authorization, same-offer concurrency, shared-defender concurrency, non-negative balances, and paired ledger reconciliation.

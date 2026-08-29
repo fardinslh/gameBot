@@ -1,0 +1,36 @@
+.lab {
+  min-height: 100svh;
+  padding: clamp(14px, 4vw, 32px);
+  color: #efe7d3;
+  background: radial-gradient(circle at 50% 0, #302719 0, #11130f 48%);
+  font-family: Inter, system-ui, sans-serif;
+}
+
+.header, .capacity, .grid, .panel, .error { width: min(900px, 100%); margin-inline: auto; }
+.header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.header p { margin: 0 0 5px; color: #d8ae52; font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+.header h1 { margin: 0; font: 700 clamp(26px, 5vw, 42px)/1 Georgia, serif; }
+.header button, .card button { min-height: 44px; padding: 0 16px; color: #21170b; background: linear-gradient(145deg, #efd278, #bd8035); border: 0; border-radius: 10px; font-weight: 800; cursor: pointer; }
+.header button:disabled, .card button:disabled { opacity: .4; cursor: not-allowed; }
+.error { box-sizing: border-box; padding: 10px 12px; color: #ffd8cf; background: #59261f; border: 1px solid #a64e40; border-radius: 10px; }
+.capacity { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+.capacity article { display: grid; gap: 3px; padding: 12px; background: #1b1d17; border: 1px solid #4d412b; border-radius: 12px; }
+.capacity span, .card small, .formation small { color: #a69b85; font-size: 10px; }
+.capacity strong { color: #e6be62; font-size: 22px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.card { display: grid; gap: 8px; padding: 15px; background: linear-gradient(150deg, #22231c, #171813); border: 1px solid #51452e; border-radius: 14px; }
+.card > span { color: #d8ae52; font: 700 17px Georgia, serif; }
+.card > strong { font-size: 34px; }
+.card button { margin-top: 6px; }
+.panel { box-sizing: border-box; margin-top: 12px; padding: 15px; background: #181a15; border: 1px solid #403725; border-radius: 14px; }
+.panel h2 { margin: 0 0 10px; color: #d8ae52; font: 700 18px Georgia, serif; }
+.panel p { margin: 0; color: #c9bea8; }
+.formation { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.formation article { display: grid; gap: 5px; padding: 10px; background: #11130f; border-radius: 9px; }
+.formation span { color: #8f846f; font-size: 10px; text-transform: uppercase; }
+
+@media (max-width: 560px) {
+  .header { align-items: start; }
+  .capacity { grid-template-columns: repeat(2, 1fr); }
+  .grid, .formation { grid-template-columns: 1fr; }
+}

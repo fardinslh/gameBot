@@ -76,7 +76,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 
 Unused assets, Prisma enum values, transaction reasons, or adapter interfaces do not make a feature implemented. Confirm a schema path, service, controller, shared contract, client flow, and validation before describing a system as complete.
 
-Retention work is split into explicit bounded tasks. After Retention 02, do not automatically start Retention 03 Hero expansion, PvE, Shop, Guild, Leaderboards, Bale, Telegram, equipment, or new building gameplay.
+Retention work is split into explicit bounded tasks. Retention 03A is complete; do not automatically start Retention 03B Army Battle v2, PvE, Shop, Guild, Leaderboards, Bale, Telegram, Barracks activation, equipment, or new building gameplay.
 
 ## Documentation maintenance
 
@@ -113,7 +113,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A, 01B, and 02 are implemented. All nine active buildings share the DEFAULT five-tier resolver and `/dev/buildings` inspection matrix. Castle detail opens authoritative Kingdom Progress goals; unused Castle-7 feature metadata is not exposed. Missions, Achievements, and Daily Return derive progress from authoritative history and use transactional ledgered claims. Level badges and compact upgrade/active indicators retain the semantic screen-space stack, Castle remains at world Y 665, camera focus remains 690, and Persian RTL remains intact. Advanced building art, Aren portrait/copy, and real-device audio still require owner review. Retention 03 is next but must not start without an explicit request. Retention 05B Theme Foundation follows future Shop/Gem architecture and remains unimplemented. Bale has not started.
+Retention 01A, 01B, 02, and 03A are implemented. Army persistence, one-order training, Castle-derived capacity, and three Commander-led formation slots coexist with the unchanged three-Hero Raid Team. Production Raid/Revenge and historical replay remain rules version 1; Army Battle v2 is Retention 03B and is next but not started. Barracks remains inactive. All nine active buildings, Retention 02, Pixi coordinates, Castle composition, 54px navigation, and Persian RTL remain intact. Advanced building art, Aren portrait/copy, and real-device audio still require owner review. PvE, Shop, Theme content, Guild, Bale, and Army Battle have not started.
 
 ## Git completion rules
 

@@ -6,17 +6,17 @@ contentType: Landing
 
 # Crown & Coin
 
-Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent building and Hero progression, deterministic Raid battles, and a Revenge return loop.
+Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent Army and Commander progression, deterministic Hero Raid battles, and a Revenge return loop.
 
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `2a272e294dd652c1e789cde64c89bbcbc6aad202`
-- **Baseline commit message**: `feat: add missions achievements and daily rewards`
+- **Last verified against commit**: `af63957e9e5d74afb7b10d7adeb9538b548c2565`
+- **Baseline commit message**: `docs: add planner handoff guide`
 - **Verification date**: 2026-08-29
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-This baseline includes completed Retention 01A, Retention 01B, and Retention 02 work. Retention 03 Hero Expansion is next and has not started.
+This is the verified starting baseline for the Retention 03A change. The current tracked state adds the Army and Commander foundation; current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative.
 
 ## Platform direction
 
@@ -39,8 +39,9 @@ Kingdom
   -> collect server-timed production
   -> upgrade Castle and buildings
   -> upgrade Heroes and arrange a three-Hero Raid Team
+  -> train troops and arrange the future three-squad Army Formation
   -> request a server Match Offer
-  -> start an authoritative deterministic Raid
+  -> start an authoritative Hero-based rules-version-1 Raid
   -> receive loot and Trophy settlement
   -> inspect defense history and use an eligible Revenge
   -> return to Kingdom
@@ -57,6 +58,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Kingdom world and Pixi rendering](KINGDOM.md)
 - [Economy and upgrades](ECONOMY.md)
 - [Heroes and Raid Team](HEROES.md)
+- [Army and Commanders](ARMY_AND_COMMANDERS.md)
 - [Raid and deterministic battle](RAID_AND_BATTLE.md)
 - [Revenge and notifications](REVENGE_AND_NOTIFICATIONS.md)
 - [Building and Kingdom progression](PROGRESSION.md)
@@ -82,9 +84,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, authoritative Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, Retention 03A Army/Commander foundation, authoritative Hero Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 03 — Hero Expansion, only when explicitly scoped
+- **Next**: Retention 03B — Army Battle v2, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay

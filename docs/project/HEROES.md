@@ -8,6 +8,8 @@ contentType: Reference
 
 The Hero system stores content definitions separately from player ownership. The API derives stats, power, upgrade costs, and team power from server config.
 
+Retention 03A also lets these same persistent `PlayerHero` rows serve as Commanders in `ArmyFormationSlot`. It creates no separate Commander ownership, renames no Hero tables, and imposes no permanent troop-class lock. Knight, Ranger, and Mage still form the current rules-version-1 `RaidTeam`; Commander assignments are parallel preparation for Army Battle v2.
+
 ## Current roster
 
 `apps/game-api/src/heroes/hero.config.ts` defines three enabled starters:
@@ -63,5 +65,7 @@ Battle start loads the current team, derives stats again, and stores immutable s
 `useHeroState` owns roster loading, a three-ID draft order, save state, errors, and upgrades. `HeroesPage` composes Player HUD, Resource HUD, `RaidTeamPanel`, `HeroCard`, and `HeroDetailSheet`. English and Persian share the component tree.
 
 ## Planned Hero concepts
+
+The previous standalone Hero Expansion roadmap is superseded by [Army and Commander Expansion](ARMY_AND_COMMANDERS.md). Future Hero depth should strengthen Commander identity inside the Kingdom/Army loop rather than turn combat into a Hero-only collection RPG.
 
 No additional Hero, equipment, crafting, rarity, recruitment, or XP-spending system exists. `PlayerHero.xp` persists and defaults to zero, but no current endpoint grants or consumes Hero XP.

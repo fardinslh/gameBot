@@ -6,7 +6,7 @@ contentType: Reference
 
 # Understand the PostgreSQL data model
 
-Prisma defines identity, Kingdom economy, Heroes, battle history, Revenge, notifications, analytics, and onboarding. SQL migrations add constraints and backfills that remain part of the authoritative schema.
+Prisma defines identity, Kingdom economy, Heroes, Army and Commanders, battle history, Revenge, notifications, analytics, and onboarding. SQL migrations add constraints and backfills that remain part of the authoritative schema.
 
 ## Relationship map
 
@@ -64,6 +64,12 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 
 `RaidTeam` enforces one active team per Player. `RaidTeamSlot` enforces unique slot and unique Hero within that team. SQL constrains slots to 1 through 3.
 
+## Army and Commander models
+
+`PlayerTroop` enforces one row per Player and `TroopType`, with a non-negative ready count. `TroopTrainingOrder` stores positive quantity, cost snapshot, timestamps, and `IN_PROGRESS` or `COMPLETED` status. A partial unique index permits only one active order per Player.
+
+`ArmyFormation` enforces one formation per Player. `ArmyFormationSlot` enforces slots 1 through 3, positive unit count, one slot number per formation, and one use of each Commander per formation. Its Commander foreign key references the existing `PlayerHero` row. Deleting a Hero ownership row removes the dependent formation slot so runtime bootstrap can repair the formation; Player deletion remains cascade-safe.
+
 ## Raid and battle models
 
 `RaidMatchOffer` stores one proposed pairing and its expiry/use state. SQL forbids a self-offer and requires positive team power.
@@ -85,6 +91,10 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 - Upgrade levels from 1 through 20 with a one-level step
 - Hero level from 1 through 20 and non-negative XP
 - Three valid Raid Team slot numbers
+- Non-negative troop ready counts and positive training quantities
+- One active troop training order per Player
+- One Army Formation per Player with unique slots and Commanders
+- Army Formation slots 1 through 3 with positive unit counts
 - No self Raid Match Offer
 - No self Battle participant pair
 - No self Revenge target
@@ -115,5 +125,7 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260826110000_pre_bale_player_experience` | Persistent one-to-one onboarding state, steps, and lifecycle timestamps |
 | `20260827090000_advisor_tip_progress` | Durable one-time Aren contextual-tip acknowledgements |
 | `20260829080000_retention_02` | Mission assignments, Daily completion claims, Achievement claims, Daily Return claims, reward ledger/action enums, constraints, and indexes |
+| `20260829090000_army_commander_foundation` | Troop ownership/training, Army Formation/slots, training ledger/action enums, constraints, and existing-player/system-opponent backfill |
+| `20260829090100_army_commander_slot_cascade` | Cascade-safe Commander slots for Player/Hero cleanup and runtime repair |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

@@ -11,6 +11,7 @@ const projectDocs = [
   "KINGDOM.md",
   "ECONOMY.md",
   "HEROES.md",
+  "ARMY_AND_COMMANDERS.md",
   "RAID_AND_BATTLE.md",
   "REVENGE_AND_NOTIFICATIONS.md",
   "PROGRESSION.md",
@@ -79,7 +80,7 @@ for (const fileName of projectDocs) {
 }
 
 const index = readRequiredFile("docs/project/INDEX.md");
-const baselineCommit = "2a272e294dd652c1e789cde64c89bbcbc6aad202";
+const baselineCommit = "af63957e9e5d74afb7b10d7adeb9538b548c2565";
 if (!index.includes("Last verified against commit") || !index.includes(baselineCommit)) {
   failures.push("docs/project/INDEX.md does not identify the verified gameplay baseline");
 }
