@@ -286,7 +286,7 @@ Production loads only the current required tier through a centralized Theme → 
 
 All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
 
-This starts the retention-first roadmap and intentionally delays Bale. Retention 01B advanced buildings and goals, Missions, Hero expansion, PvE, Shop, Guild, Leaderboards, and Bale are separate unimplemented tasks.
+Retention 01A, Retention 01B, and Retention 02 are implemented. Retention 03 Hero Expansion is next and has not started; Hero expansion, PvE, Shop, Kingdom Theme content, Guild, Leaderboards, and Bale remain unimplemented.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 

@@ -11,12 +11,12 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `d40afc3384a4112f1e378ae83a68af80f997c3a1`
-- **Baseline commit message**: `feat: add progressive building evolution`
-- **Verification date**: 2026-08-27
+- **Last verified against commit**: `2a272e294dd652c1e789cde64c89bbcbc6aad202`
+- **Baseline commit message**: `feat: add missions achievements and daily rewards`
+- **Verification date**: 2026-08-29
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-The containing architecture-fix commit makes Retention 01A theme-ready without changing authoritative gameplay behavior or adding selectable themes.
+This baseline includes completed Retention 01A, Retention 01B, and Retention 02 work. Retention 03 Hero Expansion is next and has not started.
 
 ## Platform direction
 
