@@ -32,6 +32,7 @@
     "validate:analytics": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node scripts/validate-analytics.mjs",
     "validate:player-experience": "dotenv -e .env -- node scripts/validate-player-experience.mjs",
     "validate:rtl": "npm run test:rtl --workspace @crown-and-coin/game-client && node scripts/validate-rtl.mjs",
+    "validate:typography": "npm run validate:rtl",
     "validate:audio-lab": "node scripts/validate-audio-lab.mjs",
     "validate:audio-loops": "node scripts/validate-audio-loops.mjs",
     "validate:building-evolution": "npm run test:building-evolution --workspace @crown-and-coin/game-client && node scripts/validate-building-evolution.mjs",

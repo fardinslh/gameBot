@@ -71,6 +71,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Keep system-opponent classification server-owned, replenishment locked and ledgered, Trophy stable, and human social/Revenge state excluded
 - Preserve Revenge ownership, expiry, source validation, row lock, single use, and loop prevention
 - Preserve current Army targeting and roles: basic attacks use same lane then nearest living enemy slot with lower-slot tie break; Knight/Shield Wall protects its own squad, Ranger/Power Shot hits one enemy squad, Mage/Arcane Blast hits all living enemy squads; Infantry counters Cavalry, Cavalry counters Archer, and Archer counters Infantry
+- Preserve the typography boundary: Persian uses locally bundled `Vazirmatn Variable`, English uses the system sans stack, visible production gameplay text stays at least 10px, and Georgia/Times display styling must never leak into Persian. Keep Persian numerals and bidi isolation intact; fix constrained layouts instead of reintroducing 5–9px gameplay text.
 - Never expose development identity as production authentication
 
 ## Scope rules

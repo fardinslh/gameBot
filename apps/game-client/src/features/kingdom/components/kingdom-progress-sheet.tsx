@@ -70,7 +70,7 @@ export function KingdomProgressSheet({ dictionary: t, goals, onClose, open, prog
         <div>
           {goals?.effects.map((effect) => (
             <article data-unlocked={effect.unlocked} key={effect.effectType}>
-              <header><strong>{buildingName(effect.buildingType, t)}</strong><small>Lv. <BidiValue direction="ltr">{effect.buildingLevel}</BidiValue></small></header>
+              <header><strong>{buildingName(effect.buildingType, t)}</strong><small>{t.heroUi.level} <BidiValue direction="ltr">{effect.buildingLevel}</BidiValue></small></header>
               <p><span>{t.kingdomProgress.current}</span><b><BidiTemplate template={t.effectLabels[effect.effectType]} values={{ value: { direction: 'ltr', value: formatEffectValue(effect.effectType, effect.valueBps) } }} /></b></p>
               <p><span>{t.kingdomProgress.next}</span><b>{effect.nextLevelValueBps === null ? t.kingdomProgress.maximum : <BidiTemplate template={t.effectLabels[effect.effectType]} values={{ value: { direction: 'ltr', value: formatEffectValue(effect.effectType, effect.nextLevelValueBps) } }} />}</b></p>
             </article>

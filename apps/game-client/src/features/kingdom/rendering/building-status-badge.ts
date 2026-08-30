@@ -1,6 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
-import type { Locale } from '@/i18n/config';
-import { localizeDigits } from '@/i18n/numbers';
+import type { Locale } from '../../../i18n/config';
+import { localizeDigits } from '../../../i18n/numbers';
 
 export const BUILDING_STATUS_BADGE = Object.freeze({
   height: 22,
@@ -17,6 +17,10 @@ export const BUILDING_UPGRADE_INDICATOR = Object.freeze({
 });
 
 export type BuildingStatusIndicator = 'upgrade' | 'active' | null;
+
+export function formatBuildingLevelLabel(level: number, locale: Locale): string {
+  return locale === 'fa' ? `سطح ${localizeDigits(level, locale)}` : `Lv. ${level}`;
+}
 
 interface PointLike {
   x: number;
@@ -57,11 +61,13 @@ export function drawBuildingStatusBadge(badge: Container, level: number, resolut
     .fill({ color: 0x17140f, alpha: .96 })
     .stroke({ color: 0xe2b447, alpha: .96, width: 1 });
   const text = new Text({
-    text: `Lv. ${localizeDigits(level, locale)}`,
+    text: formatBuildingLevelLabel(level, locale),
     resolution: Math.max(1, resolution),
     style: {
       fill: 0xffe7a1,
-      fontFamily: 'Inter, "Segoe UI", Tahoma, Arial, sans-serif',
+      fontFamily: locale === 'fa'
+        ? '"Vazirmatn Variable", Tahoma, Arial, sans-serif'
+        : '"Segoe UI Variable", "Segoe UI", Inter, Arial, sans-serif',
       fontSize,
       fontWeight: '800',
       letterSpacing: -.15,

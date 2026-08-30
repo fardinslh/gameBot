@@ -49,7 +49,11 @@ export function KingdomScene({
 
   useEffect(() => {
     localeRef.current = locale;
-    sceneRef.current?.setLocale(locale);
+    let cancelled = false;
+    void ensureSceneFont(locale).then(() => {
+      if (!cancelled) sceneRef.current?.setLocale(locale);
+    });
+    return () => { cancelled = true; };
   }, [locale]);
 
   useEffect(() => {
@@ -64,7 +68,8 @@ export function KingdomScene({
 
     if (!container) return;
 
-    void import('../rendering/create-kingdom-scene')
+    void ensureSceneFont(localeRef.current)
+      .then(() => import('../rendering/create-kingdom-scene'))
       .then(({ createKingdomScene }) => createKingdomScene(container, (id) => onSelectRef.current(id), localeRef.current))
       .then((scene) => {
         if (disposed) {
@@ -109,6 +114,12 @@ export function KingdomScene({
       </div>
     </section>
   );
+}
+
+async function ensureSceneFont(locale: Locale): Promise<void> {
+  if (locale === 'fa' && 'fonts' in document) {
+    await document.fonts.load('800 11px "Vazirmatn Variable"', 'سطح ۱۲');
+  }
 }
 
 function toSceneStates(buildings: KingdomBuildingView[]) {

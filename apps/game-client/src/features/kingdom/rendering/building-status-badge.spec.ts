@@ -6,6 +6,7 @@ import {
   BUILDING_UPGRADE_INDICATOR,
   calculateBuildingStatusLayout,
   calculateBuildingStatusPosition,
+  formatBuildingLevelLabel,
   statusElementsOverlap,
 } from './building-status-badge';
 
@@ -25,6 +26,11 @@ describe('building status badge', () => {
   it('uses a compact readable screen-space presentation', () => {
     expect(BUILDING_STATUS_BADGE).toMatchObject({ height: 22, width: 42, fontSize: 11 });
     expect(BUILDING_UPGRADE_INDICATOR).toMatchObject({ height: 20, width: 20, gap: 6 });
+  });
+
+  it('uses a natural localized level label in each locale', () => {
+    expect(formatBuildingLevelLabel(12, 'fa')).toBe('سطح ۱۲');
+    expect(formatBuildingLevelLabel(12, 'en')).toBe('Lv. 12');
   });
 
   it('tracks world, building, and unlock scale without scaling its own UI', () => {

@@ -69,6 +69,7 @@ The panel header identifies Aren and carries his reminder while preserving nine 
 
 ## Known limitations
 
+- Vazirmatn, the centralized mobile scale, and automated 320/375/390 readability checks are implemented, but **OWNER TYPOGRAPHY REVIEW PENDING** remains the final subjective gate on a real phone.
 - Copy still needs final Persian real-user review, and the Aren portrait remains a current candidate pending owner approval.
 - The initial pass has one short mandatory path and no branching tutorial variants.
 - All 24 explicit owner audio choices are mapped. The development-only Audio Lab records the completed selection gate; full-game real-device mix review remains open.

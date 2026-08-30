@@ -27,7 +27,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
 | `npm run validate:building-evolution` | 30 client tests covering DEFAULT registration, all 20 visual levels across nine active buildings, theme paths, adjacent differences, transitions, construction, stable selection/hit areas, and collision-proof status stacks, plus 45 WebP integrity/budget checks |
 | `npm run audit:building-textures` | Sharp metadata and alpha scan for all 45 DEFAULT textures, including opaque bounds and DPR-2 source/display ratios at 320/375/390 and 100/150/200% |
-| `npm run test:rtl --workspace @crown-and-coin/game-client` | 4 unit/render tests for locale-direction mapping, semantic game-root attributes, `<bdi>` isolation, and punctuation outside placeholders |
+| `npm run test:rtl --workspace @crown-and-coin/game-client` | 7 unit/render tests for locale-direction mapping, semantic game-root attributes, Persian/English numeral formatting and parsing, `<bdi>` isolation, and punctuation outside placeholders |
 
 Integration tests need the configured PostgreSQL database. They create isolated development players and write test rows.
 
@@ -48,6 +48,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:campaign` | Campaign config and integration authority plus Persian/English 320/375/390 map, lock, detail, Battle, result, stars, milestone, overflow, console, and screenshot validation |
 | `npm run validate:retention` | Daily Return, three Daily missions, nine Achievement families, Persian RTL, English LTR, exact 54px navigation, no overflow, and clean console at 320/375/390 |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
+| `npm run validate:typography` | Runs the RTL suite plus computed Vazirmatn/system-font separation, a 10px visible production text floor, control-clipping checks, 54px navigation, and Persian/English Kingdom, Building, Army, Commander, Raid, Battle, Campaign map/detail screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
 | `npm run validate:audio-loops` | Decodes both approved music sources and checks 19 format/timing/equal-power rules across three overlapping transitions per track |
 | `node scripts/validate-building-art.mjs` | Detailed building placement, source registration, layers, mobile screenshots, and asset checks |
@@ -66,6 +67,8 @@ Visual, Hero, Raid, Revenge, progression, and Retention scripts use:
 They cover English left-to-right and Persian right-to-left where relevant. Keep bottom navigation height at 54 pixels unless a scoped product change approves another value.
 
 For localization changes, also open `/dev/rtl` in development. Verify the Persian paragraph, final punctuation, mixed player names, `12,500`, `+18`, `-12`, `12:05`, parentheses, and the English comparison. Source-string matching is not an RTL validator; acceptance requires semantic DOM plus computed browser direction.
+
+For typography changes, run `npm run validate:typography`. Inspect the generated files under `artifacts/typography-audit/`, especially Persian 320x568. Automation can prove font resolution, size floors, clipping, overflow, navigation height, and console cleanliness; it cannot approve visual taste. Keep **OWNER TYPOGRAPHY REVIEW PENDING** until the owner reviews screenshots or a real device.
 
 ## Manual acceptance paths
 

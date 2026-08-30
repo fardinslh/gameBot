@@ -21,13 +21,16 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, prog
   const xpProgress = progression?.xpRequiredForNextLevel
     ? Math.min(100, Math.round((progression.xpIntoLevel / progression.xpRequiredForNextLevel) * 100))
     : 100;
+  const displayedPlayerName = locale === 'fa' && playerName === 'Warden of Dawnkeep'
+    ? t.playerTitle
+    : playerName || t.playerTitle;
   return (
     <header className="player-hud">
       <div className="player-profile">
         <span className="player-avatar"><Crown aria-hidden="true" size={20} /></span>
         <span className="player-copy">
           <h1>{t.appName}</h1>
-          <small><BidiValue>{playerName || t.playerTitle}</BidiValue></small>
+          <small><BidiValue>{displayedPlayerName}</BidiValue></small>
         </span>
         <span className="player-level" aria-label={`${t.playerLevel} ${displayedLevel}`} title={progression ? `${progression.xp} XP` : undefined}>
           <small>{t.playerLevel}</small><strong><BidiValue direction="ltr">{displayedLevel}</BidiValue></strong>

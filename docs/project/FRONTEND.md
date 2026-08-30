@@ -85,6 +85,14 @@ Avoid per-frame React state for Pixi motion. Use the Pixi ticker, browser timers
 
 Kingdom world coordinates, Battle Pixi layout, ordered team/loot grids, image assets, and numeric scene geometry stay left-to-right internally. CSS logical properties handle semantic UI mirroring. Explicit `direction: ltr` is permitted only for spatial or ordered game content that must not mirror.
 
+### Typography and readability
+
+The root layout imports the locally installed `@fontsource-variable/vazirmatn` variable WOFF2 package. It is SIL Open Font License 1.1 software from the Vazirmatn project and is bundled at build time; the client makes no runtime font request to Google Fonts or another CDN. Persian resolves to `Vazirmatn Variable`; English resolves to the existing modern system sans stack. Decorative Georgia/Times headings remain an English-only display choice through `--font-display` and never render Persian headings.
+
+Production gameplay typography uses the shared CSS scale: `--text-micro` 9px, `--text-caption` 10px, `--text-small` 11px, `--text-body` 12px, `--text-body-strong` 13px, `--text-section-compact` 14px, `--text-section` 15px, `--text-title-compact` 17px, `--text-title` 18px, and `--text-display` 24px. Persian caption/body tokens receive a restrained 0.5px compensation. Visible production gameplay text has a 10px floor; the 9px token is reserved for genuinely tertiary future metadata and is not used by current production surfaces. Labels use a 1.25 line height, body copy 1.5, and headings 1.2, with Persian label/copy values raised to 1.3/1.55. Prefer wrapping, scrolling, or layout adjustment over shrinking gameplay text below the floor.
+
+Localized numeric runs keep `BidiValue`, Persian digits, tabular numeric behavior, and left-to-right isolation. The Kingdom scene waits for the local Persian face before its initial Pixi text draw and before a runtime switch to Persian. Pixi level badges select the matching locale font and label without changing their screen-space anchoring, DPR rendering, status-stack geometry, world coordinates, or hit areas.
+
 ## Mobile layout
 
 Kingdom, Army, and Raid shells use a maximum width of 520 pixels and maximum height of 920 pixels. Desktop centers the mobile viewport. The client uses `100svh`, safe-area insets, fixed HUD layers, and scrollable content only where a feature requires it. The Retention sheet is a React-owned scroll surface above Kingdom and stops before the unchanged 54px navigation.

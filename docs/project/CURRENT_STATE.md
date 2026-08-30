@@ -27,7 +27,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Kingdom Progress goals | Implemented | Castle detail opens a bilingual server-authored summary of Kingdom Level/XP, Castle milestones, next real district unlock, and current/next advanced effects |
 | Progressive expansion | Implemented | Five visual stages derived from Castle level; locked content does not mount |
 | First-session onboarding | Implemented | Aren-led, target-aware Welcome through first Raid/Result, server-persisted completion/skip, and five durable contextual tips |
-| Permanent Game Guide | Implemented | Aren identity plus eight bilingual sections available from the compact Player HUD |
+| Permanent Game Guide | Implemented | Aren identity plus nine bilingual sections available from the compact Player HUD |
 | Audio engine | Implemented | Scheduled dual-source equal-power loop overlap, shared music bus, explicit decoded loop points, 600 ms context crossfade, safe HTMLAudio fallback, 22 SFX triggers, and visibility handling |
 | Production audio selection | Approved | All 24 explicit owner choices are mapped; the development-only Audio Lab records the completed gate |
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
@@ -127,6 +127,8 @@ Retention 01A, 01B, 02, 03A, 03B, and 04 engineering are complete. New Raid, Rev
 The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Log, sheets, onboarding, Guide, errors, and overlays. It sets semantic `lang`/`dir` attributes and synchronizes the document root when `?lang=fa` or `?lang=en` changes. Player names use automatic Unicode isolation; numeric amounts, levels, timers, signed Trophy deltas, and percentages use explicit left-to-right isolation. Pixi Kingdom and Battle coordinates remain left-to-right internally and are not mirrored.
 
 `/dev/rtl` is a development-only mixed-content fixture. `npm run validate:rtl` checks semantic DOM and computed direction in a real browser, no horizontal overflow, English regression, and the supported 320x568, 375x812, and 390x844 viewports.
+
+Persian production UI uses the locally packaged `Vazirmatn Variable` family at weights 100 through 900. English keeps the system sans stack, while Latin serif display styling is replaced by Vazirmatn at the Persian locale boundary. Shared CSS typography tokens establish a 10px production floor for visible gameplay text, slightly compensate Persian caption/body sizes by 0.5px, and provide separate label, copy, and heading line heights. Persian numerals and explicit bidi isolation remain unchanged. Pixi building badges use Vazirmatn with `سطح` in Persian and the English sans stack with `Lv.` in English. Automated typography checks pass; **OWNER TYPOGRAPHY REVIEW PENDING** remains a subjective mobile gate.
 
 ## Validation entry points
 
