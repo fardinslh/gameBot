@@ -70,6 +70,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Preserve the 24-hour `Player.createdAt` shield, bounded real matchmaking passes, recent-eight memory, and six-hour standard-Raid anti-farm rule
 - Keep system-opponent classification server-owned, replenishment locked and ledgered, Trophy stable, and human social/Revenge state excluded
 - Preserve Revenge ownership, expiry, source validation, row lock, single use, and loop prevention
+- Preserve current Army targeting and roles: basic attacks use same lane then nearest living enemy slot with lower-slot tie break; Knight/Shield Wall protects its own squad, Ranger/Power Shot hits one enemy squad, Mage/Arcane Blast hits all living enemy squads; Infantry counters Cavalry, Cavalry counters Archer, and Archer counters Infantry
 - Never expose development identity as production authentication
 
 ## Scope rules

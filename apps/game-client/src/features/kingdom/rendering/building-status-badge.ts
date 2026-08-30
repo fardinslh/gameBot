@@ -1,4 +1,6 @@
 import { Container, Graphics, Text } from 'pixi.js';
+import type { Locale } from '@/i18n/config';
+import { localizeDigits } from '@/i18n/numbers';
 
 export const BUILDING_STATUS_BADGE = Object.freeze({
   height: 22,
@@ -39,15 +41,15 @@ export interface BuildingStatusLayout {
   upgradeIndicator: PointLike;
 }
 
-export function createBuildingStatusBadge(level: number, resolution = 1): Container {
+export function createBuildingStatusBadge(level: number, resolution = 1, locale: Locale = 'en'): Container {
   const badge = new Container();
   badge.eventMode = 'none';
   badge.label = 'building-level-badge';
-  drawBuildingStatusBadge(badge, level, resolution);
+  drawBuildingStatusBadge(badge, level, resolution, locale);
   return badge;
 }
 
-export function drawBuildingStatusBadge(badge: Container, level: number, resolution = 1): void {
+export function drawBuildingStatusBadge(badge: Container, level: number, resolution = 1, locale: Locale = 'en'): void {
   badge.removeChildren().forEach((child) => child.destroy());
   const { height, width, radius, fontSize } = BUILDING_STATUS_BADGE;
   const background = new Graphics()
@@ -55,7 +57,7 @@ export function drawBuildingStatusBadge(badge: Container, level: number, resolut
     .fill({ color: 0x17140f, alpha: .96 })
     .stroke({ color: 0xe2b447, alpha: .96, width: 1 });
   const text = new Text({
-    text: `Lv. ${level}`,
+    text: `Lv. ${localizeDigits(level, locale)}`,
     resolution: Math.max(1, resolution),
     style: {
       fill: 0xffe7a1,

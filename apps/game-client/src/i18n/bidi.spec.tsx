@@ -1,13 +1,29 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { BidiTemplate, BidiValue, LocalizedGameRoot } from './bidi';
+import { BidiTemplate, BidiValue, LocalizedGameRoot, NumberLocaleProvider } from './bidi';
 import { getLocaleDirection } from './config';
 import { fa } from './messages/fa';
+import { parseLocalizedInteger } from './numbers';
 
 describe('locale direction', () => {
   it('maps Persian to RTL and English to LTR', () => {
     expect(getLocaleDirection('fa')).toBe('rtl');
     expect(getLocaleDirection('en')).toBe('ltr');
+  });
+
+  it('renders Persian numerals while preserving isolated left-to-right numeric runs', () => {
+    const html = renderToStaticMarkup(
+      <NumberLocaleProvider locale="fa"><BidiValue direction="ltr">+12,500 · 03:07 · 18%</BidiValue></NumberLocaleProvider>,
+    );
+    expect(html).toContain('+۱۲,۵۰۰ · ۰۳:۰۷ · ۱۸%');
+    expect(html).toContain('dir="ltr"');
+  });
+
+  it('parses Persian and Arabic-Indic quantity input without changing authority', () => {
+    expect(parseLocalizedInteger('۲۵')).toBe(25);
+    expect(parseLocalizedInteger('١٢')).toBe(12);
+    expect(parseLocalizedInteger('12')).toBe(12);
+    expect(parseLocalizedInteger('12x')).toBeNull();
   });
 
   it('places semantic language and direction on the game root', () => {

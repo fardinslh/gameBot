@@ -4,7 +4,7 @@ import { fa } from '../../i18n/messages/fa';
 
 describe('localized player experience content', () => {
   it('keeps the permanent Guide complete in English and Persian', () => {
-    const expected = ['kingdom', 'resources', 'buildings', 'heroes', 'raid', 'trophies', 'shield', 'defense'];
+    const expected = ['kingdom', 'resources', 'buildings', 'heroes', 'raid', 'trophies', 'shield', 'defense', 'campaign'];
     expect(Object.keys(en.experience.sections)).toEqual(expected);
     expect(Object.keys(fa.experience.sections)).toEqual(expected);
     expect(Object.values(fa.experience.sections).every((section) => section.title.length > 0 && section.body.length > 20)).toBe(true);
@@ -18,7 +18,7 @@ describe('localized player experience content', () => {
   });
 
   it('localizes Aren and every mandatory or contextual counsel line', () => {
-    const expected = ['name', 'role', 'guideRole', 'welcome', 'collect', 'upgrade', 'raid', 'findEnemy', 'attack', 'battle', 'result', 'complete', 'heroes', 'castle', 'shield', 'defense', 'revenge', 'reminder', 'gotIt'];
+    const expected = ['name', 'role', 'guideRole', 'welcome', 'collect', 'upgrade', 'raid', 'findEnemy', 'attack', 'battle', 'result', 'complete', 'heroes', 'castle', 'shield', 'defense', 'revenge', 'campaign', 'reminder', 'gotIt'];
     expect(Object.keys(en.experience.advisor)).toEqual(expected);
     expect(Object.keys(fa.experience.advisor)).toEqual(expected);
     expect(fa.experience.advisor.name).toBe('آرِن');

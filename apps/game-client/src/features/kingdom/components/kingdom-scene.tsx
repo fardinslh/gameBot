@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { KingdomExpansionStage } from '@crown-and-coin/shared';
+import type { Locale } from '@/i18n/config';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 
@@ -11,6 +12,7 @@ interface KingdomSceneProps {
   expansionStage: KingdomExpansionStage;
   errorLabel: string;
   loadingLabel: string;
+  locale: Locale;
   onSelect(buildingId: WorldBuildingId): void;
   panLabel: string;
   selectedBuildingId: WorldBuildingId | null;
@@ -24,6 +26,7 @@ export function KingdomScene({
   expansionStage,
   errorLabel,
   loadingLabel,
+  locale,
   onSelect,
   panLabel,
   selectedBuildingId,
@@ -32,6 +35,7 @@ export function KingdomScene({
   const onSelectRef = useRef(onSelect);
   const buildingsRef = useRef(buildings);
   const expansionStageRef = useRef(expansionStage);
+  const localeRef = useRef(locale);
   const sceneRef = useRef<Awaited<ReturnType<typeof import('../rendering/create-kingdom-scene').createKingdomScene>> | null>(null);
   const [status, setStatus] = useState<SceneStatus>('loading');
 
@@ -42,6 +46,11 @@ export function KingdomScene({
   useEffect(() => {
     sceneRef.current?.select(selectedBuildingId);
   }, [selectedBuildingId]);
+
+  useEffect(() => {
+    localeRef.current = locale;
+    sceneRef.current?.setLocale(locale);
+  }, [locale]);
 
   useEffect(() => {
     buildingsRef.current = buildings;
@@ -56,7 +65,7 @@ export function KingdomScene({
     if (!container) return;
 
     void import('../rendering/create-kingdom-scene')
-      .then(({ createKingdomScene }) => createKingdomScene(container, (id) => onSelectRef.current(id)))
+      .then(({ createKingdomScene }) => createKingdomScene(container, (id) => onSelectRef.current(id), localeRef.current))
       .then((scene) => {
         if (disposed) {
           scene.destroy();

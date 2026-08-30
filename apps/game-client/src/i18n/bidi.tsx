@@ -1,7 +1,10 @@
 'use client';
 
-import { Fragment, type HTMLAttributes, type ReactNode, useEffect } from 'react';
+import { Children, createContext, Fragment, type HTMLAttributes, type ReactNode, useContext, useEffect } from 'react';
 import { getLocaleDirection, type Locale, type LocaleDirection } from './config';
+import { localizeDigits } from './numbers';
+
+const NumberLocaleContext = createContext<Locale>('en');
 
 interface LocalizedGameRootProps extends HTMLAttributes<HTMLDivElement> {
   children: ReactNode;
@@ -24,10 +27,20 @@ export function LocalizedGameRoot({ children, className, locale, ...props }: Loc
   }, [direction, locale]);
 
   return (
-    <div {...props} className={className} dir={direction} lang={locale}>
-      {children}
-    </div>
+    <NumberLocaleContext.Provider value={locale}>
+      <div {...props} className={className} dir={direction} lang={locale}>
+        {children}
+      </div>
+    </NumberLocaleContext.Provider>
   );
+}
+
+export function NumberLocaleProvider({ children, locale }: { children: ReactNode; locale: Locale }) {
+  return <NumberLocaleContext.Provider value={locale}>{children}</NumberLocaleContext.Provider>;
+}
+
+export function useNumberLocale(): Locale {
+  return useContext(NumberLocaleContext);
 }
 
 interface BidiValueProps {
@@ -37,8 +50,9 @@ interface BidiValueProps {
 }
 
 export function BidiValue({ children, className, direction = 'auto' }: BidiValueProps) {
+  const locale = useNumberLocale();
   const classes = ['bidi-value', direction === 'ltr' ? 'bidi-value--ltr' : '', className ?? ''].filter(Boolean).join(' ');
-  return <bdi className={classes} dir={direction}>{children}</bdi>;
+  return <bdi className={classes} dir={direction}>{localizeNumericChildren(children, locale)}</bdi>;
 }
 
 export interface BidiToken {
@@ -64,4 +78,10 @@ export function BidiTemplate({ template, values }: BidiTemplateProps) {
 
 function isBidiToken(value: BidiToken | ReactNode): value is BidiToken {
   return typeof value === 'object' && value !== null && !Array.isArray(value) && 'value' in value;
+}
+
+function localizeNumericChildren(children: ReactNode, locale: Locale): ReactNode {
+  return Children.map(children, (child) => typeof child === 'string' || typeof child === 'number'
+    ? localizeDigits(child, locale)
+    : child);
 }

@@ -151,7 +151,7 @@ export const fa: Dictionary = {
     title: 'ارتش سلطنتی', subtitle: 'نیرو آموزش بده و سه جوخه را فرماندهی کن', armyPower: 'قدرت ارتش', power: 'قدرت', capacity: 'ظرفیت',
     availableCount: '{count} جای خالی', activeFormation: 'آرایش فعال', threeSquads: 'سه مسیر نبرد', squadNumber: 'جوخه {count}',
     troopType: 'نوع نیرو', units: 'تعداد', commander: 'فرمانده', saveFormation: 'ذخیره آرایش', saving: 'در حال ذخیره…',
-    trainTroops: 'آموزش نیرو', serverAuthoritative: 'زمان‌بندی سرور', training: 'آموزش در حال انجام', ready: 'آماده', quantity: 'تعداد', train: 'آموزش',
+    trainTroops: 'آموزش نیرو', serverAuthoritative: 'زمان‌بندی سرور', training: 'آموزش در حال انجام', ready: 'آماده', quantity: 'تعداد', decreaseQuantity: 'کاهش تعداد', increaseQuantity: 'افزایش تعداد', train: 'آموزش',
     commanders: 'فرماندهان', commanderHint: 'قهرمانان، جوخه‌ها را رهبری می‌کنند', loading: 'در حال بررسی ارتش سلطنتی…',
     troopNames: { INFANTRY: 'پیاده‌نظام', ARCHER: 'کمانداران', CAVALRY: 'سواره‌نظام' },
     skillNames: { SHIELD_WALL: 'دیوار سپر', POWER_SHOT: 'تیر قدرتمند', ARCANE_BLAST: 'انفجار جادویی' },

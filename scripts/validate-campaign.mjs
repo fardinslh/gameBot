@@ -59,15 +59,22 @@ async function assertLayout(width, height, direction) {
   if (layout.navigationHeight !== 54) throw new Error(`Expected 54px navigation, got ${layout.navigationHeight}px`);
   if (layout.stages !== 9 || layout.tabs !== 2) throw new Error('Campaign map or Raid/Campaign selector is incomplete');
 }
+async function assertPersianNumerals(selector) {
+  const text = await page.locator(selector).textContent() ?? '';
+  if (/[0-9]/u.test(text)) throw new Error(`ASCII digits remain in Persian Campaign ${selector}: ${text}`);
+  if (!/[۰-۹]/u.test(text)) throw new Error(`No Persian numerals found in Campaign ${selector}`);
+}
 
 try {
   await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': identity } });
   await openCampaign('fa');
   await assertLayout(320, 568, 'rtl');
+  await assertPersianNumerals('.campaign-map');
   await screenshot('01-campaign-map-fa-320x568.png');
 
   await page.locator('[data-stage-key="FRONTIER_01"]').click();
   await page.locator('[data-campaign-stage-detail="FRONTIER_01"]').waitFor();
+  await assertPersianNumerals('.campaign-stage-sheet');
   await screenshot('02-stage-detail-fa-320x568.png');
   await page.locator('.campaign-stage-sheet > header > button').click();
   await page.locator('[data-stage-key="FRONTIER_04"]').click();
@@ -101,6 +108,7 @@ try {
     });
   }
   await openCampaign('fa');
+  await assertPersianNumerals('.campaign-map');
   await screenshot('05-claimable-nine-star-milestone-fa-320x568.png');
 
   await prisma.building.update({ where: { kingdomId_type: { kingdomId: account.player.kingdom.id, type: 'CASTLE' } }, data: { level: 3 } });

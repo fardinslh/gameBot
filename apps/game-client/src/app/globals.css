@@ -656,9 +656,11 @@ button { color: inherit; }
 .hero-sheet--open { pointer-events: auto; visibility: visible; opacity: 1; transform: translateY(0); }
 .hero-sheet__scroll { max-height: inherit; overflow-y: auto; padding: 10px; }
 .hero-sheet__close { position: absolute; z-index: 4; inset-block-start: 9px; inset-inline-end: 9px; display: grid; width: 38px; height: 38px; place-items: center; color: var(--cream); background: rgba(12,13,15,.72); border: 0; border-radius: 11px; cursor: pointer; }
-.hero-sheet__portrait { position: relative; height: 176px; overflow: hidden; border-radius: 16px; }
-.hero-sheet__portrait img { object-fit: cover; }
-.hero-sheet__portrait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #17191d 0, transparent 70%); }
+.hero-sheet__portrait { position: relative; width: 100%; height: auto; aspect-ratio: 16 / 9; overflow: hidden; background: #11140f; border-radius: 16px; box-shadow: 0 0 0 1px rgba(255,255,255,.09), 0 10px 24px rgba(0,0,0,.34); }
+.hero-sheet__portrait img { object-fit: cover; object-position: 50% 24%; outline: 1px solid rgba(255,255,255,.1); outline-offset: -1px; }
+.hero-sheet__portrait--ranger img { object-position: 50% 27%; }
+.hero-sheet__portrait--mage img { object-position: 50% 25%; }
+.hero-sheet__portrait::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, #17191d 0, rgba(23,25,29,.72) 17%, transparent 58%), linear-gradient(90deg, rgba(0,0,0,.2), transparent 32%, transparent 72%, rgba(0,0,0,.1)); }
 .hero-sheet__portrait > div { position: absolute; z-index: 2; inset-inline: 12px; inset-block-end: 9px; }
 .hero-sheet__portrait small { display: flex; align-items: center; gap: 4px; color: var(--cream-muted); font-size: 8px; }
 .hero-sheet__portrait h2 { margin: 2px 0; font-family: Georgia, "Times New Roman", serif; font-size: 24px; line-height: 1; }
@@ -710,10 +712,17 @@ button { color: inherit; }
 .army-squad-card__art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0,0,0,.7)); }
 .army-squad-card__art b { position: absolute; inset-inline-start: 4px; inset-block-start: 4px; padding: 3px 5px; color: #1f180c; background: var(--gold-bright); border-radius: 5px; font-size: 6px; }
 .army-squad-card__controls { display: grid; min-width: 0; align-content: center; gap: 4px; padding: 6px 4px; }
-.army-squad-card select, .army-squad-card input { min-width: 0; height: 27px; color: var(--cream); background: #202522; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; font-size: 7px; }
-.army-squad-card__controls > select { width: 100%; padding-inline: 5px; }
+.army-squad-card select { min-width: 0; width: 100%; height: 29px; appearance: none; padding-inline: 6px 25px; color: var(--cream); background: #202522; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; font-size: 7px; }
+.army-select { position: relative; display: block; min-width: 0; }
+.army-select > svg { position: absolute; inset-inline-end: 7px; inset-block-start: 50%; color: #d7c99f; pointer-events: none; transform: translateY(-50%); }
 .army-squad-card__controls label { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 4px; color: #999184; font-size: 6px; }
-.army-squad-card__controls input { width: 100%; padding-inline: 5px; }
+.army-quantity-stepper { direction: ltr; display: grid; min-width: 0; height: 29px; grid-template-columns: 29px minmax(28px,1fr) 29px; overflow: hidden; background: #202522; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
+.army-quantity-stepper button { display: grid; min-width: 0; height: 29px; place-items: center; padding: 0; color: #eadcae; background: rgba(255,255,255,.035); border: 0; cursor: pointer; }
+.army-quantity-stepper button:first-child { border-inline-end: 1px solid rgba(255,255,255,.07); }
+.army-quantity-stepper button:last-child { border-inline-start: 1px solid rgba(255,255,255,.07); }
+.army-quantity-stepper button:active:not(:disabled) { transform: scale(.96); }
+.army-quantity-stepper button:disabled { color: #5f615d; cursor: default; }
+.army-quantity-stepper input { min-width: 0; width: 100%; height: 100%; padding: 0 2px; color: var(--cream); text-align: center; background: transparent; border: 0; outline: 0; font-size: 8px; font-variant-numeric: tabular-nums; }
 .army-commander-medallion { display: grid; min-width: 0; place-items: center; align-content: center; gap: 3px; padding: 3px; color: var(--cream); background: transparent; border: 0; cursor: pointer; font-size: 6px; }
 .army-commander-medallion img { width: 39px; height: 39px; object-fit: cover; border: 2px solid #b99043; border-radius: 50%; box-shadow: 0 3px 9px #000; }
 .army-commander-medallion span { width: 48px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -727,7 +736,8 @@ button { color: inherit; }
 .army-training__types small { color: #9c9589; font-size: 6px; }
 .army-training__order { display: grid; grid-template-columns: 57px 1fr 64px; align-items: end; gap: 6px; margin-top: 7px; }
 .army-training__order label { display: grid; gap: 3px; color: #999184; font-size: 6px; }
-.army-training__order input { width: 100%; height: 33px; padding-inline: 6px; color: var(--cream); background: #171b19; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; }
+.army-training__order .army-quantity-stepper { height: 34px; grid-template-columns: 30px minmax(24px,1fr) 30px; background: #171b19; border-radius: 8px; }
+.army-training__order .army-quantity-stepper button { height: 34px; }
 .army-training__order > div { display: flex; flex-wrap: wrap; gap: 3px; }
 .army-training__order > div span { padding: 3px 5px; color: #c7bca7; background: rgba(255,255,255,.045); border-radius: 5px; font-size: 6px; }
 .army-training__order > button { min-height: 34px; color: #251b0c; background: var(--gold-bright); border: 0; border-radius: 8px; font-size: 8px; font-weight: 900; }
@@ -856,7 +866,7 @@ button { color: inherit; }
   .raid-team-slot { height: 78px; }
   .raid-team-actions { min-height: 38px; }
   .hero-card, .hero-card__main, .hero-card__portrait-wrap { min-height: 116px; }
-  .hero-sheet__portrait { height: 142px; }
+  .hero-sheet__portrait { height: auto; }
   .revenge-preview { padding: 8px; }
   .revenge-preview > header { min-height: 42px; margin-bottom: 4px; }
   .revenge-preview > header button { flex-basis: 38px; height: 38px; }

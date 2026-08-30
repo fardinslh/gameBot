@@ -23,10 +23,12 @@ import {
   drawBuildingUpgradeIndicator,
   type BuildingStatusIndicator,
 } from './building-status-badge';
+import type { Locale } from '@/i18n/config';
 
 interface KingdomSceneRuntime {
   destroy(): void;
   select(buildingId: WorldBuildingId | null): void;
+  setLocale(locale: Locale): void;
   setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>, expansionStage: KingdomExpansionStage): void;
 }
 
@@ -41,7 +43,7 @@ export interface BuildingSceneState {
 const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
 const KINGDOM_COMPOSITION_FOCUS_Y = 690;
 
-export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void): Promise<KingdomSceneRuntime> {
+export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void, initialLocale: Locale = 'en'): Promise<KingdomSceneRuntime> {
   const runtime = await createPixiRuntime(host);
   const { app } = runtime;
   const searchParams = new URLSearchParams(window.location.search);
@@ -75,6 +77,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const knownUnlockState = new Map<BuildingId, boolean>();
   const texturePathById = new Map<BuildingId, string>();
   const levelById = new Map<BuildingId, number>();
+  let locale = initialLocale;
   const transformationAnimation = new Map<BuildingId, { durationMs: number; elapsedMs: number; major: boolean }>();
   const unlockAnimation = new Map<BuildingId, number>();
   const expansionArtwork = new Map<BuildingId, ExpansionAreaArtwork>();
@@ -189,7 +192,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       currentState.indicator === 'active',
     );
     const indicator = createBuildingUpgradeIndicator(currentState.indicator);
-    const status = createBuildingStatusBadge(currentState.level, app.renderer.resolution);
+    const status = createBuildingStatusBadge(currentState.level, app.renderer.resolution, locale);
     statusLayer.addChild(indicator, status);
     buildingArt.container.visible = debugKingdomLayers !== 'terrain'
       && (debugKingdomLayers !== 'castle' || building.id === 'castle');
@@ -425,6 +428,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 
   return {
     select: (buildingId) => { selectedBuildingId = buildingId; syncSelection(); },
+    setLocale: (nextLocale) => {
+      locale = nextLocale;
+      for (const [id, status] of statusArtwork) drawBuildingStatusBadge(status, levelById.get(id) ?? 1, app.renderer.resolution, locale);
+    },
     setBuildingStates: (states, expansionStage) => {
       desiredStates = states;
       syncExpansionAreas(states, expansionStage);
@@ -467,7 +474,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
           startTransformation(id, previousLevel, state.level);
         }
         const status = statusArtwork.get(id);
-        if (status) drawBuildingStatusBadge(status, state.level, app.renderer.resolution);
+        if (status) drawBuildingStatusBadge(status, state.level, app.renderer.resolution, locale);
       }
     },
     destroy: () => {

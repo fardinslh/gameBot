@@ -50,6 +50,15 @@ async function assertSemanticRoot(page, locale, direction) {
   if (semantics.overflow) throw new Error('Horizontal overflow detected');
 }
 
+async function assertPersianNumerals(page, selector) {
+  const audit = await page.locator(selector).evaluate((element) => {
+    const text = element.textContent ?? '';
+    return { ascii: text.match(/[0-9]/gu) ?? [], persian: text.match(/[۰-۹]/gu) ?? [], text };
+  });
+  if (audit.ascii.length) throw new Error(`ASCII digits remain in Persian UI ${selector}: ${audit.text}`);
+  if (!audit.persian.length) throw new Error(`No Persian numerals found in ${selector}`);
+}
+
 async function dismissAdvisorTips(page) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const tip = page.locator('.advisor-context-tip');
@@ -81,10 +90,12 @@ try {
       enDirection: getComputedStyle(document.querySelector('[data-audit-locale="en"]')).direction,
       isolatedCount: document.querySelectorAll('[data-audit-locale="fa"] bdi').length,
       numericDirections: [...document.querySelectorAll('[data-audit-locale="fa"] bdi[dir="ltr"]')].map((node) => getComputedStyle(node).direction),
+      numericTexts: [...document.querySelectorAll('[data-audit-locale="fa"] bdi[dir="ltr"]')].map((node) => node.textContent ?? ''),
       overflow: document.documentElement.scrollWidth > document.documentElement.clientWidth,
     }));
     if (fixtureAudit.faDirection !== 'rtl' || fixtureAudit.enDirection !== 'ltr' || fixtureAudit.isolatedCount < 9) throw new Error(`Semantic fixture failed: ${JSON.stringify(fixtureAudit)}`);
     if (fixtureAudit.numericDirections.some((direction) => direction !== 'ltr') || fixtureAudit.overflow) throw new Error(`Bidi fixture layout failed: ${JSON.stringify(fixtureAudit)}`);
+    if (fixtureAudit.numericTexts.some((value) => /[0-9]/u.test(value)) || !fixtureAudit.numericTexts.some((value) => /[۰-۹]/u.test(value))) throw new Error(`Persian numeral fixture failed: ${JSON.stringify(fixtureAudit)}`);
     await fixture.screenshot({ path: new URL(`mixed-content-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1), fullPage: true });
     await fixture.close();
   }
@@ -100,17 +111,33 @@ try {
   await page.evaluate(async () => { await fetch('http://localhost:3001/onboarding/skip', { method: 'POST' }); });
   await page.reload({ waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
+  await assertPersianNumerals(page, '.game-viewport');
   await page.screenshot({ path: new URL('kingdom-hud-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('[data-world-building-id="farm"]').evaluate((button) => button.click());
   await page.waitForSelector('[data-building-sheet="farm"]');
+  await assertPersianNumerals(page, '.building-sheet');
   await page.screenshot({ path: new URL('building-detail-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('[data-nav-id="heroes"]').click();
   await page.waitForSelector('[data-army-status="ready"]');
   await dismissAdvisorTips(page);
+  await assertPersianNumerals(page, '.heroes-scroll');
   await page.screenshot({ path: new URL('army-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.army-commanders button').first().click();
   await page.waitForSelector('[data-hero-sheet]');
   await page.waitForTimeout(350);
+  await assertPersianNumerals(page, '.hero-sheet');
+  const commanderUi = await page.evaluate(() => {
+    const portrait = document.querySelector('.hero-sheet__portrait');
+    const image = document.querySelector('.hero-sheet__portrait img');
+    const icon = document.querySelector('.army-quantity-stepper svg');
+    const stepper = document.querySelector('.army-quantity-stepper');
+    if (!portrait || !image || !icon || !stepper) return null;
+    const portraitRect = portrait.getBoundingClientRect();
+    const iconRect = icon.getBoundingClientRect();
+    const stepperRect = stepper.getBoundingClientRect();
+    return { aspect: portraitRect.width / portraitRect.height, iconWidth: iconRect.width, iconHeight: iconRect.height, stepperHeight: stepperRect.height, objectPosition: getComputedStyle(image).objectPosition };
+  });
+  if (!commanderUi || Math.abs(commanderUi.aspect - 16 / 9) > .04 || commanderUi.iconWidth > 14 || commanderUi.iconHeight > 14 || commanderUi.stepperHeight > 35) throw new Error(`Commander UI proportions failed: ${JSON.stringify(commanderUi)}`);
   await page.screenshot({ path: new URL('hero-detail-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.hero-sheet__close').click();
   await page.locator('[data-nav-id="raid"]').click();
@@ -119,18 +146,21 @@ try {
   await page.locator('[data-guide-target="find-enemy"]').click();
   await page.waitForSelector('[data-raid-state="offer"]');
   await dismissAdvisorTips(page);
+  await assertPersianNumerals(page, '.raid-content');
   await page.screenshot({ path: new URL('raid-opponent-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('[data-guide-target="attack"]').click();
   await page.waitForSelector('[data-raid-state="battle"]');
   await page.waitForTimeout(700);
   await page.screenshot({ path: new URL('army-battle-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.waitForSelector('[data-raid-state="result"]', { timeout: 20_000 });
+  await assertPersianNumerals(page, '.raid-result');
   await page.screenshot({ path: new URL('army-result-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.raid-result .raid-secondary').click();
   await page.locator('.raid-titlebar__log').click();
   await page.waitForSelector('[data-raid-state="inbox"]');
   await page.waitForFunction(() => !document.querySelector('.battle-log__empty > span'));
   await dismissAdvisorTips(page);
+  await assertPersianNumerals(page, '.battle-log');
   await page.screenshot({ path: new URL('battle-log-fa-320x568.png', artifacts).pathname.slice(1) });
 
   for (const viewport of [{ width: 375, height: 812 }, { width: 390, height: 844 }]) {
@@ -139,12 +169,16 @@ try {
     await page.waitForSelector('[data-scene-status="ready"]');
     await assertSemanticRoot(page, 'fa', 'rtl');
     await page.screenshot({ path: new URL(`kingdom-hud-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
-    if (viewport.width === 390) {
-      await page.locator('[data-nav-id="heroes"]').click();
-      await page.waitForSelector('[data-army-status="ready"]');
-      await dismissAdvisorTips(page);
-      await page.screenshot({ path: new URL('army-fa-390x844.png', artifacts).pathname.slice(1) });
-    }
+    await page.locator('[data-nav-id="heroes"]').click();
+    await page.waitForSelector('[data-army-status="ready"]');
+    await dismissAdvisorTips(page);
+    await assertPersianNumerals(page, '.heroes-scroll');
+    await page.screenshot({ path: new URL(`army-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+    await page.locator('.army-commanders button').first().click();
+    await page.waitForSelector('[data-hero-sheet]');
+    await page.waitForTimeout(350);
+    await assertPersianNumerals(page, '.hero-sheet');
+    await page.screenshot({ path: new URL(`hero-detail-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
   }
 
   await page.setViewportSize({ width: 320, height: 568 });

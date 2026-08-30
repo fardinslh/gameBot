@@ -83,6 +83,16 @@ The same troop type may occupy multiple squads when its combined assigned count 
 
 Knight, Ranger, and Mage remain `PlayerHero` records and still support Hero levels and upgrades. Army slots reference those rows directly; no duplicate Commander entity or destructive Hero migration exists. A Commander's troop assignment is flexible. Each level above 1 adds one percent to its squad's HP and ATK, capped at level 20. Knight casts Shield Wall, Ranger casts Power Shot, and Mage casts Arcane Blast.
 
+### Current Commander roles and targeting
+
+- **Knight** is the tank/frontline-sustain Commander. Shield Wall targets and protects the Knight's own squad.
+- **Ranger** is the single-target damage Commander. Power Shot targets one living enemy squad.
+- **Mage** is the area/burst Commander. Arcane Blast damages every living enemy squad.
+- A basic attack targets the living enemy in the same lane first. If that lane is empty, it selects the nearest living enemy slot; an equal-distance tie uses the lower slot number.
+- Troop counters are `Infantry > Cavalry`, `Cavalry > Archer`, and `Archer > Infantry`. Commander identity does not change that troop counter triangle.
+
+These are descriptions of the current authoritative Army Battle v2 engine, not client targeting choices. This corrective pass changes presentation and documentation only; combat formulas, targeting, multipliers, and balance remain unchanged.
+
 ## API
 
 | Method | Path | Authority |
@@ -122,6 +132,6 @@ The route returns 404 in production and is not linked from production navigation
 
 New Raid and Revenge starts load both validated formations under the existing sorted participant locks. Six immutable `BattleArmySquadSnapshot` rows store troop type/count, Commander identity/level/skill, per-unit stats, aggregate HP, and squad power. The server uses a cryptographic seed and deterministic rules version 2; the client receives only persisted outcomes and events.
 
-Squads attack the same lane first, then the nearest living lane with a lower-slot tie break. Attack output falls with casualties. `SQUAD_DEFEATED` and `remainingUnits` make losses explicit in replay and results. The Pixi scene renders three fixed portrait lanes per side without mirroring world coordinates for RTL.
+Squads attack the same lane first, then the nearest living lane with a lower-slot tie break. Shield Wall affects its own squad, Power Shot hits one selected enemy squad, and Arcane Blast hits all living enemy squads. Attack output falls with casualties. `SQUAD_DEFEATED` and `remainingUnits` make losses explicit in replay and results. The Pixi scene renders three fixed portrait lanes per side without mirroring world coordinates for RTL.
 
 Stored rules-version-1 battles continue to reconstruct from `BattleHeroSnapshot`; new rules-version-2 battles reconstruct from Army snapshots. No permanent PvP troop casualties, Barracks activation, Army missions, Army Achievements, PvE, Shop, or platform integration were added.

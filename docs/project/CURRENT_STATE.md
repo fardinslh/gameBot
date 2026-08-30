@@ -35,6 +35,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Missions / Achievements / Daily Return | Implemented | Three deterministic Daily and Weekly assignments, nine permanent tiered Achievement families, a seven-claim Daily Return cycle, explicit transactional claims, and bilingual mobile UI |
 | Army Foundation | Implemented | Infantry, Archer, Cavalry ownership; one training order; Castle-derived capacity; three-squad formation; existing Heroes as Commanders |
 | Army Battle | Implemented | New Raid/Revenge use deterministic rules version 2 with six immutable Army squad snapshots, lane targeting, counters, Commander skills, and battle-state-only casualties |
+| Commander combat roles | Implemented | Knight sustains and shields its own squad; Ranger uses single-target Power Shot; Mage uses all-living-enemy Arcane Blast; basic attacks use same-lane then nearest-slot targeting; Infantry > Cavalry > Archer > Infantry |
 | PvE Campaign | Implemented | Broken Frontier has nine server-gated stages, durable NPC Armies, persistent best stars, first-clear rewards, 9/18/27 milestone claims, Battle v2 playback, and bilingual mobile UI |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Commanders | Implemented for formation | Existing Knight, Ranger, and Mage can each command one Army Formation squad; no duplicate Commander rows or class locks |

@@ -149,7 +149,7 @@ export const en = {
     title: 'Royal Army', subtitle: 'Train troops. Command three squads.', armyPower: 'Army Power', power: 'Power', capacity: 'Capacity',
     availableCount: '{count} spaces available', activeFormation: 'Active Formation', threeSquads: 'Three battle lanes', squadNumber: 'Squad {count}',
     troopType: 'Troop type', units: 'Units', commander: 'Commander', saveFormation: 'Save Formation', saving: 'Saving…',
-    trainTroops: 'Train Troops', serverAuthoritative: 'Server-timed', training: 'Training in progress', ready: 'Ready', quantity: 'Quantity', train: 'Train',
+    trainTroops: 'Train Troops', serverAuthoritative: 'Server-timed', training: 'Training in progress', ready: 'Ready', quantity: 'Quantity', decreaseQuantity: 'Decrease quantity', increaseQuantity: 'Increase quantity', train: 'Train',
     commanders: 'Commanders', commanderHint: 'Heroes lead squads', loading: 'Reviewing the royal Army…',
     troopNames: { INFANTRY: 'Infantry', ARCHER: 'Archers', CAVALRY: 'Cavalry' },
     skillNames: { SHIELD_WALL: 'Shield Wall', POWER_SHOT: 'Power Shot', ARCANE_BLAST: 'Arcane Blast' },

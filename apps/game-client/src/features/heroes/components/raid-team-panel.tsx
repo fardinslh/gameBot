@@ -39,7 +39,7 @@ export function RaidTeamPanel({
       <div className="raid-team-slots">
         {[0, 1, 2].map((slotIndex) => {
           const hero = heroes.find((item) => item.id === heroIds[slotIndex]);
-          const name = hero ? t.heroNames[hero.key] : `${t.heroUi.slot} ${slotIndex + 1}`;
+          const name = hero ? t.heroNames[hero.key] : t.heroUi.slot;
           return (
             <button
               aria-label={`${t.heroUi.slot} ${slotIndex + 1}: ${name}`}

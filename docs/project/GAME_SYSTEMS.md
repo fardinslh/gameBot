@@ -12,6 +12,8 @@ The current systems share authoritative building, Hero, Army, resource, and batt
 
 The Army domain is the production Raid/Revenge combat input. Economy bootstrap creates missing starter troops and one formation after Hero bootstrap. `ArmyService` owns capacity, one training order, resource settlement, lazy completion, formation validation, Commander assignments, and authoritative battle snapshots under the Player advisory lock. Existing `PlayerHero` rows are referenced directly; `RaidTeam` remains only for rules-version-1 history compatibility.
 
+Army Battle v2 keeps fixed Commander roles: Knight is tank/frontline sustain and shields its own squad; Ranger is single-target damage and Power Shot hits one enemy squad; Mage is area/burst and Arcane Blast hits all living enemy squads. Basic attacks prefer the same lane, then the nearest living enemy slot with a lower-slot tie break. The troop counter triangle is Infantry over Cavalry, Cavalry over Archer, and Archer over Infantry.
+
 The PvE Campaign reuses Army Battle rules version 2 through a separate authoritative entry point. Broken Frontier contains nine configured stages with durable Campaign-only NPCs, Castle/prior-clear gates, persistent best stars, one-time first-clear rewards, and 9/18/27-star milestone claims. It creates no PvP loot, Trophy, Revenge, notification, shield, anti-farm, or permanent troop-casualty state.
 
 ```text

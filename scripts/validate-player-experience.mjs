@@ -211,7 +211,7 @@ try {
 
   await page.locator('.experience-controls button').first().click();
   await page.waitForSelector('[data-experience-panel="guide"]');
-  if (await page.locator('.guide-sections article').count() !== 8) throw new Error('Game Guide must contain eight sections');
+  if (await page.locator('.guide-sections article').count() !== 9) throw new Error('Game Guide must contain nine sections');
   await page.screenshot({ path: new URL('07-guide-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.experience-panel > header > button').click();
   await page.locator('.experience-controls button').nth(1).click();
@@ -259,7 +259,7 @@ try {
   }
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS authoritative Collect -> Upgrade -> protected SYSTEM Raid -> Battle -> Result -> Kingdom onboarding');
-  console.log('PASS refresh recovery, durable skip, permanent 8-section Guide, and FA/RTL + EN/LTR');
+console.log('PASS refresh recovery, durable skip, permanent 9-section Guide, and FA/RTL + EN/LTR');
   console.log('PASS real onboarding actions and no horizontal overflow at 320x568, 375x812, 390x844');
   console.log('PASS technical music/SFX routing and persisted Master/Music/SFX settings');
   console.log('NOTE audio calls were technically observed; audio was NOT AUDIBLY VERIFIED');

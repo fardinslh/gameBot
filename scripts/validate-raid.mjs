@@ -128,7 +128,7 @@ async function trainingHudScenario() {
   await page.goto('http://localhost:3000/?lang=en&section=heroes', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-army-status="ready"]');
   const trainResponsePromise = page.waitForResponse((response) => response.url().endsWith('/army/train') && response.request().method() === 'POST');
-  await page.locator('.army-training__order button').click();
+  await page.locator('.army-training__submit').click();
   const trainResponse = await trainResponsePromise;
   if (!trainResponse.ok()) throw new Error(`Training failed with HTTP ${trainResponse.status()}`);
   const trained = await trainResponse.json();
