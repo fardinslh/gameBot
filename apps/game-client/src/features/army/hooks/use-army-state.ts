@@ -66,7 +66,13 @@ export function useArmyState() {
     if (action !== 'idle') return;
     setAction('training');
     try {
-      setArmy(await trainTroops(type, quantity));
+      const response = await trainTroops(type, quantity);
+      setArmy(response);
+      setHeroes((current) => current ? {
+        ...current,
+        balances: response.balances,
+        serverTime: response.serverTime,
+      } : current);
       setErrorCode(null);
     } catch (error) {
       setErrorCode(error instanceof ArmyApiError ? error.code : 'SERVER_ERROR');

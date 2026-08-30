@@ -118,6 +118,70 @@ async function scenario(kind) {
   return battle;
 }
 
+async function trainingHudScenario() {
+  const externalUserId = `army-training-hud-${Date.now()}`;
+  await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': externalUserId } });
+  const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': externalUserId } }));
+  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
+  page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
+  await page.goto('http://localhost:3000/?lang=en&section=heroes', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('[data-army-status="ready"]');
+  const trainResponsePromise = page.waitForResponse((response) => response.url().endsWith('/army/train') && response.request().method() === 'POST');
+  await page.locator('.army-training__order button').click();
+  const trainResponse = await trainResponsePromise;
+  if (!trainResponse.ok()) throw new Error(`Training failed with HTTP ${trainResponse.status()}`);
+  const trained = await trainResponse.json();
+  for (const [resource, value] of Object.entries(trained.balances)) {
+    await page.waitForFunction(
+      ({ selector, expected }) => document.querySelector(selector)?.getAttribute('data-balance') === expected,
+      { selector: `.resource-chip--${resource.toLowerCase()}`, expected: value },
+    );
+  }
+  await page.close();
+}
+
+async function armyCutoverScenario() {
+  const externalUserId = `army-offer-cutover-${Date.now()}`;
+  await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': externalUserId } });
+  const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': externalUserId } }));
+  page.on('console', (message) => {
+    if (message.type() === 'error' && !message.text().includes('409 (Conflict)')) consoleErrors.push(message.text());
+  });
+  page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
+  await page.goto('http://localhost:3000/?lang=en&section=raid', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('.raid-content[data-player-id]');
+  const playerId = await page.locator('.raid-content').getAttribute('data-player-id');
+  if (!playerId) throw new Error('Cutover scenario has no Player ID');
+  await page.locator('.raid-empty .raid-primary').click();
+  await page.waitForSelector('[data-raid-state="offer"]');
+  const slots = await prisma.armyFormationSlot.findMany({
+    where: { armyFormation: { playerId } },
+    orderBy: { slot: 'asc' },
+  });
+  await prisma.$transaction([
+    prisma.armyFormationSlot.update({ where: { id: slots[0].id }, data: { troopType: slots[1].troopType, unitCount: slots[1].unitCount } }),
+    prisma.armyFormationSlot.update({ where: { id: slots[1].id }, data: { troopType: slots[0].troopType, unitCount: slots[0].unitCount } }),
+  ]);
+  const rejectedPromise = page.waitForResponse((response) => response.url().endsWith('/raid/start') && response.request().method() === 'POST');
+  await page.locator('.raid-match-card .raid-primary').click();
+  const rejected = await rejectedPromise;
+  const rejectedBody = await rejected.json();
+  if (rejected.status() !== 409 || rejectedBody.code !== 'MATCH_OFFER_ARMY_CHANGED') {
+    throw new Error(`Changed Army offer was not rejected canonically: HTTP ${rejected.status()} ${JSON.stringify(rejectedBody)}`);
+  }
+  await page.waitForSelector('.hero-error--visible');
+  const freshSearchPromise = page.waitForResponse((response) => response.url().endsWith('/raid/search') && response.request().method() === 'POST');
+  await page.locator('.raid-match-card .raid-secondary').click();
+  await freshSearchPromise;
+  const acceptedPromise = page.waitForResponse((response) => response.url().endsWith('/raid/start') && response.request().method() === 'POST');
+  await page.locator('.raid-match-card .raid-primary').click();
+  const accepted = await acceptedPromise;
+  if (!accepted.ok()) throw new Error(`Fresh Army offer failed with HTTP ${accepted.status()}`);
+  await page.close();
+}
+
 try {
   for (const locale of ['en', 'fa']) {
     for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
@@ -142,11 +206,15 @@ try {
   }
   const victory = await scenario('victory');
   const defeat = await scenario('defeat');
+  await trainingHudScenario();
+  await armyCutoverScenario();
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS compact New Kingdom Shield layout at 320x568, 375x812, 390x844 in English LTR and Persian RTL');
   console.log('PASS fresh players receive system-only Raid offers from authoritative shield state');
   console.log('PASS server match offer + Pixi event playback + Victory/Defeat result screenshots');
   console.log('PASS post-Raid Kingdom HUD refresh + six persisted Army snapshots/events');
+  console.log('PASS troop-training response updates visible HUD balances immediately without refetch');
+  console.log('PASS changed attacker Army rejects the old offer and a fresh browser search starts successfully');
   console.log(`DEBUG battle=${victory.id} seed=${victory.seed} rules=${victory.rulesVersion} result=${victory.result} duration=${victory.durationMs} events=${victory.events.length}`);
   console.log(`DEBUG defeat=${defeat.id} result=${defeat.result}`);
 } finally {

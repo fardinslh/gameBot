@@ -64,6 +64,7 @@ import type { ConfiguredSystemOpponent } from './system-opponent.config';
 import { SystemOpponentService } from './system-opponent.service';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { OnboardingService } from '../onboarding/onboarding.service';
+import { armyFingerprint } from './raid-army-fingerprint';
 
 const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
@@ -95,6 +96,8 @@ interface ResolveBattleInput {
   requestingPlayerId: string;
   matchOfferId?: string;
   revengeTargetId?: string;
+  attackerArmy?: ArmyCombatSquad[];
+  snapshotTime?: Date;
 }
 
 interface MatchCandidate {
@@ -212,6 +215,14 @@ export class RaidService {
           attackerPlayerId: identity.playerId,
           defenderPlayerId: selected.player.id,
           attackerPower: overview.army.power,
+          attackerArmyFingerprint: armyFingerprint(overview.army.squads.map((squad) => ({
+            slot: squad.slot,
+            troopType: squad.troopType,
+            unitCount: squad.unitCount,
+            commanderPlayerHeroId: squad.commander.playerHeroId,
+            commanderKey: squad.commander.key,
+            commanderLevel: squad.commander.level,
+          }))),
           defenderPower: selected.army.power,
           potentialLoot: potentialLoot as unknown as Prisma.InputJsonValue,
           expiresAt,
@@ -252,12 +263,34 @@ export class RaidService {
           if (offer.usedAt) throw new RaidError('MATCH_OFFER_ALREADY_USED', 'This Raid offer has already been used.');
           if (offer.expiresAt.getTime() <= Date.now()) throw new RaidError('MATCH_OFFER_EXPIRED', 'This Raid offer has expired. Find another opponent.');
 
+          const snapshotTime = new Date();
+          let attackerArmy: ArmyCombatSquad[];
+          try {
+            attackerArmy = await this.armyService.loadBattleArmy(tx, offer.attackerPlayerId, 'ATTACKER', snapshotTime);
+          } catch (error) {
+            if (!(error instanceof ArmyError)) throw error;
+            throw new RaidError('MATCH_OFFER_ARMY_CHANGED', 'Your Army changed after finding this opponent. Find another enemy.');
+          }
+          const currentFingerprint = armyFingerprint(attackerArmy.map((squad) => ({
+            slot: squad.slot,
+            troopType: squad.troopType,
+            unitCount: squad.initialUnitCount,
+            commanderPlayerHeroId: squad.commanderPlayerHeroId,
+            commanderKey: squad.commanderKey,
+            commanderLevel: squad.commanderLevel,
+          })));
+          if (!offer.attackerArmyFingerprint || offer.attackerArmyFingerprint !== currentFingerprint) {
+            throw new RaidError('MATCH_OFFER_ARMY_CHANGED', 'Your Army changed after finding this opponent. Find another enemy.');
+          }
+
           const response = await this.resolveBattle(tx, {
             type: PrismaBattleType.RAID,
             attackerPlayerId: offer.attackerPlayerId,
             defenderPlayerId: offer.defenderPlayerId,
             requestingPlayerId: identity.playerId,
             matchOfferId: offer.id,
+            attackerArmy,
+            snapshotTime,
           });
           await tx.raidMatchOffer.update({ where: { id: offer.id }, data: { usedAt: new Date() } });
           await tx.economyRequest.create({
@@ -572,11 +605,11 @@ export class RaidService {
   }
 
   private async resolveBattle(tx: Tx, input: ResolveBattleInput): Promise<BattleReplayResponse> {
-    const snapshotTime = new Date();
+    const snapshotTime = input.snapshotTime ?? new Date();
     let attackerArmy: ArmyCombatSquad[];
     let defenderArmy: ArmyCombatSquad[];
     try {
-      attackerArmy = await this.armyService.loadBattleArmy(tx, input.attackerPlayerId, 'ATTACKER', snapshotTime);
+      attackerArmy = input.attackerArmy ?? await this.armyService.loadBattleArmy(tx, input.attackerPlayerId, 'ATTACKER', snapshotTime);
       defenderArmy = await this.armyService.loadBattleArmy(tx, input.defenderPlayerId, 'DEFENDER', snapshotTime);
     } catch (error) {
       if (!(error instanceof ArmyError)) throw error;

@@ -96,7 +96,7 @@ The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, A
 
 ## Current migrations
 
-Fifteen ordered migrations exist:
+Seventeen ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -113,6 +113,8 @@ Fifteen ordered migrations exist:
 13. `20260829080000_retention_02`
 14. `20260829090000_army_commander_foundation`
 15. `20260829090100_army_commander_slot_cascade`
+16. `20260829180000_army_battle_v2`
+17. `20260830090000_match_offer_army_fingerprint`
 
 ## Active retention gate
 

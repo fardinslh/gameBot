@@ -63,7 +63,7 @@ Army mutations accept no cost, duration, completion timestamp, capacity, Command
 | `GET` | `/raid/history` | Return up to 20 recent participant summaries | `RaidHistoryResponse` |
 | `GET` | `/battles/:battleId` | Return stored replay to attacker or defender | `BattleReplayResponse` |
 
-`POST /raid/start` accepts no defender ID, stats, damage, result, loot, or Trophy values.
+`POST /raid/start` accepts no defender ID, stats, damage, result, loot, or Trophy values. Search binds the attacker's battle-relevant Army fingerprint; start returns `MATCH_OFFER_ARMY_CHANGED` when that Army changed or the offer predates fingerprint storage, before consuming or settling the offer.
 
 `RaidOverviewResponse.newPlayerProtection` contains authoritative `active` and `expiresAt` values. Search offers include internal opponent `kind: REAL | SYSTEM`; this does not grant the client target-selection authority.
 

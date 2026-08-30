@@ -17,12 +17,14 @@ GET /raid
 POST /raid/search
   -> server selects defender
   -> server calculates protected potential loot
+  -> server fingerprints the attacker's ordered battle-relevant Army state
   -> RaidMatchOffer expires in 180s
 
 POST /raid/start + Idempotency-Key
   -> validate offer ownership, expiry, single use, and non-self target
   -> lock both players in sorted order
-  -> validate and snapshot both three-squad Armies
+  -> reconcile and fingerprint the current attacker Army; reject if it changed
+  -> validate the current defender Army and snapshot both three-squad Armies
   -> simulate rules version 2 from a server UUID seed
   -> settle loot and Trophies
   -> persist Battle, snapshots, events, and response
@@ -44,7 +46,7 @@ The server tries these passes in order:
 5. An older recent safe real opponent, then an older recent system opponent
 6. Any system opponent as the absolute cold-start fallback
 
-There is no unlimited real-player fallback. Within each eligible set, the server sorts by `absolute Trophy difference + absolute power difference / 10`, takes the best five, and selects one server-side with cryptographic randomness. The last eight offered defenders are avoided where possible and the immediate previous opponent is only allowed by the absolute system fallback. A Match Offer stores attacker, defender, both power values, potential loot, creation time, expiry, and use time.
+There is no unlimited real-player fallback. Within each eligible set, the server sorts by `absolute Trophy difference + absolute power difference / 10`, takes the best five, and selects one server-side with cryptographic randomness. The last eight offered defenders are avoided where possible and the immediate previous opponent is only allowed by the absolute system fallback. A Match Offer stores attacker, defender, both power values, potential loot, creation time, expiry, use time, and a SHA-256 fingerprint of the attacker's ordered slot, troop type, unit count, Commander ownership ID/key, and Commander level. A null fingerprint marks a pre-cutover offer and cannot start.
 
 ## New Kingdom Shield
 
@@ -79,7 +81,7 @@ Skills use these rules:
 - **Power Shot**: 180 percent damage against the first living enemy, 4,000 ms cooldown
 - **Arcane Blast**: 75 percent damage against every living enemy, 5,500 ms cooldown
 
-Squad damage output scales down as units fall. Shield Wall reduces damage by 35 percent for 2,500 ms; Power Shot deals 180 percent to one target. If both Armies remain alive at 30 logical seconds, total remaining HP ratios decide the winner. A seeded tie-break handles equal ratios.
+Squad damage output scales down as units fall. Shield Wall reduces damage by 35 percent for 2,500 ms; Power Shot deals 180 percent to one target. If both Armies remain alive at 30 logical seconds, each side is scored from Army-wide `sum(current HP) / sum(max HP)`, scaled to an integer millionth. This weights every HP point consistently instead of weighting small and large squads equally. A seeded tie-break handles exact equal scores.
 
 ## Persisted battle record
 
@@ -114,7 +116,7 @@ The calculator derives an expected score from a 400-point rating curve. An attac
 
 ## Transaction and concurrency safety
 
-Raid start requires an 8 through 100 character idempotency key. The service locks both player identities in sorted player-ID order, checks a stored response, validates the Match Offer, resolves and persists the battle, marks the offer used, and stores the response in one PostgreSQL transaction.
+Raid start requires an 8 through 100 character idempotency key. The service locks both player identities in sorted player-ID order and checks a stored response first, preserving same-key retry behavior. It then validates the Match Offer, reconciles and fingerprints the current attacker Army, and rejects `MATCH_OFFER_ARMY_CHANGED` before settlement if the fingerprint differs or is absent. A valid start uses that same loaded attacker snapshot, loads the defender's current Army, resolves and persists the battle, marks the offer used, and stores the response in one PostgreSQL transaction. Defender state intentionally remains current at start.
 
 Attacker victories conditionally decrement each defender balance, increment the attacker balance, and create paired `RAID_LOSS` and `RAID_REWARD` ledger rows with `referenceId = battleId`. Prisma serialization and uniqueness conflicts retry up to three times.
 

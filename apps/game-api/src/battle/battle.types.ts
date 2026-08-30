@@ -28,6 +28,7 @@ export interface ArmyCombatSquad {
   perUnitAtk: number;
   perUnitDef: number;
   aggregateMaxHp: number;
+  commanderPlayerHeroId: string;
   commanderKey: HeroKey;
   commanderLevel: number;
   commanderSkillKey: HeroSkillKey;

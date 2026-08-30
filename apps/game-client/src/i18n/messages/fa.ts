@@ -234,7 +234,7 @@ export const fa: Dictionary = {
   raidErrors: {
     NO_OPPONENT_AVAILABLE: 'در حال حاضر حریف مناسبی پیدا نشد.', MATCH_OFFER_EXPIRED: 'این پیشنهاد منقضی شد؛ دوباره جستجو کن.',
     MATCH_OFFER_ALREADY_USED: 'این نبرد قبلاً انجام شده است.', MATCH_OFFER_NOT_FOUND: 'این پیشنهاد نبرد پیدا نشد.',
-    MATCH_OFFER_NOT_OWNER: 'این پیشنهاد متعلق به فرمانروای دیگری است.', INVALID_RAID_TEAM: 'دقیقاً سه قهرمان برای گروه یورش انتخاب کن.', INVALID_ARMY_FORMATION: 'سه جوخه آماده نبرد برای ارتش بچین.',
+    MATCH_OFFER_NOT_OWNER: 'این پیشنهاد متعلق به فرمانروای دیگری است.', MATCH_OFFER_ARMY_CHANGED: 'ارتش تو پس از یافتن حریف تغییر کرده است؛ دوباره حریف پیدا کن.', INVALID_RAID_TEAM: 'دقیقاً سه قهرمان برای گروه یورش انتخاب کن.', INVALID_ARMY_FORMATION: 'سه جوخه آماده نبرد برای ارتش بچین.',
     OPPONENT_NOT_FOUND: 'پادشاهی رقیب در دسترس نیست.', BATTLE_NOT_FOUND: 'این نبرد پیدا نشد.',
     BATTLE_NOT_PARTICIPANT: 'فقط شرکت‌کنندگان نبرد می‌توانند بازپخش را ببینند.', SELF_ATTACK_FORBIDDEN: 'نمی‌توانی به پادشاهی خودت حمله کنی.',
     INSUFFICIENT_OR_INVALID_STATE: 'منابع پادشاهی تغییر کرده؛ دوباره جستجو کن.', INVALID_IDEMPOTENCY_KEY: 'حمله تأیید نشد؛ دوباره تلاش کن.',

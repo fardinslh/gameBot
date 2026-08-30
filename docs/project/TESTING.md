@@ -21,7 +21,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | Command | Coverage at verified baseline |
 | --- | --- |
 | `npm test` | API unit suite for economy/Hero/Army config/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
-| `npm run test:integration` | 64 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
+| `npm run test:integration` | 67 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge including Army-offer cutover, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
 | `npm run validate:army` | Exact troop config/capacity plus focused PostgreSQL bootstrap, system-player repair, economy, idempotency, concurrency, completion, ownership, and formation coverage |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
@@ -40,7 +40,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:runtime` | Applies migrations, starts/checks API, PostgreSQL and Redis health, client reachability, 320-pixel Persian layout |
 | `npm run validate:client` | Five-building Castle 1 scene, all active taps, Collect, Mine upgrade persistence/completion, RTL, mobile overflow |
 | `npm run validate:heroes` | Three starters, portraits, detail, team reorder/save/reload, Hero upgrade charge, Kingdom return smoke test |
-| `npm run validate:raid` | New-player shield/system offer, Army Match Offer, deterministic victory/defeat, three-lane Pixi playback, six Army snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
+| `npm run validate:raid` | New-player shield/system offer, Army Match Offer and changed-Army rejection/fresh-search recovery, immediate training HUD balances, deterministic victory/defeat, three-lane Pixi playback, six Army snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |

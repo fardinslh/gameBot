@@ -1,5 +1,5 @@
 import { existsSync, mkdirSync } from 'node:fs';
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { chromium } from 'playwright-core';
 import { PrismaClient } from '@prisma/client';
 
@@ -25,6 +25,27 @@ async function api(path, identity, init = {}) {
   const body = await response.json();
   if (!response.ok) throw new Error(`${path} failed: ${JSON.stringify(body)}`);
   return body;
+}
+
+async function armyFingerprint(playerId) {
+  const formation = await prisma.armyFormation.findUniqueOrThrow({
+    where: { playerId },
+    include: {
+      slots: {
+        include: { commander: { include: { heroDefinition: true } } },
+        orderBy: { slot: 'asc' },
+      },
+    },
+  });
+  const canonical = formation.slots.map((slot) => ({
+    slot: slot.slot,
+    troopType: slot.troopType,
+    unitCount: slot.unitCount,
+    commanderPlayerHeroId: slot.commanderPlayerHeroId,
+    commanderKey: slot.commander.heroDefinition.key,
+    commanderLevel: slot.commander.level,
+  }));
+  return createHash('sha256').update(JSON.stringify(canonical)).digest('hex');
 }
 
 await waitForUrl('http://localhost:3001/health');
@@ -70,6 +91,7 @@ try {
       attackerPlayerId: attacker.id,
       defenderPlayerId: defender.id,
       attackerPower: 1,
+      attackerArmyFingerprint: await armyFingerprint(attacker.id),
       defenderPower: 1,
       potentialLoot: { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0' },
       expiresAt: new Date(Date.now() + 180_000),

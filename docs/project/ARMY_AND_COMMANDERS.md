@@ -59,7 +59,7 @@ Each Player may have one `IN_PROGRESS` `TroopTrainingOrder`. A PostgreSQL partia
 7. creates the order and stores the response under Economy action `TROOP_TRAINING`;
 8. commits balances, ledger, order, response, and analytics together.
 
-The response includes the refreshed Army, authoritative balances, and server time. Gems, paid queues, cancellation, acceleration, and instant completion are absent.
+The response includes the refreshed Army, authoritative balances, and server time. The production Army client applies both Army state and those returned balances immediately, preserving the existing Hero roster/player fields and avoiding client subtraction or an extra GET. Gems, paid queues, cancellation, acceleration, and instant completion are absent.
 
 ## Lazy completion
 

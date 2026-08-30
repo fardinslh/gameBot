@@ -36,7 +36,7 @@ Troop training computes cost and duration from server configuration, conditional
 
 The server creates the seed and fixes `rulesVersion`. New battles store six Army squad snapshots and ordered events; historical version-1 battles retain six Hero snapshots. Playback dispatches by stored version and never reads current formation or Hero state.
 
-Match Offers bind attacker and defender, expire after 180 seconds, and become single-use. The start endpoint validates caller ownership and rejects self attacks. Real matchmaking is bounded to ±450 Trophy and ±40% power at its widest; protected or recently farmed real defenders cannot be selected, and the fallback is a server-owned system opponent.
+Match Offers bind attacker and defender, expire after 180 seconds, and become single-use. Search also binds a stable SHA-256 fingerprint of the attacker's ordered formation, troop quantities, Commander ownership/key, and Commander levels. Under the participant locks, start returns a prior idempotent response first, then reconciles and compares the current attacker Army before any settlement side effect. Changed and pre-cutover null-fingerprint offers are rejected; the defender remains current at start. The endpoint also validates caller ownership and rejects self attacks. Real matchmaking is bounded to ±450 Trophy and ±40% power at its widest; protected or recently farmed real defenders cannot be selected, and the fallback is a server-owned system opponent.
 
 ## Launch protection boundaries
 

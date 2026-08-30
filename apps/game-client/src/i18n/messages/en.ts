@@ -233,7 +233,7 @@ export const en = {
   raidErrors: {
     NO_OPPONENT_AVAILABLE: 'No eligible opponent is available yet.', MATCH_OFFER_EXPIRED: 'That opponent moved on. Scout again.',
     MATCH_OFFER_ALREADY_USED: 'This challenge has already been fought.', MATCH_OFFER_NOT_FOUND: 'That challenge could not be found.',
-    MATCH_OFFER_NOT_OWNER: 'That challenge belongs to another Warden.', INVALID_RAID_TEAM: 'Choose exactly three Heroes for your Raid Team.', INVALID_ARMY_FORMATION: 'Prepare three battle-ready Army squads.',
+    MATCH_OFFER_NOT_OWNER: 'That challenge belongs to another Warden.', MATCH_OFFER_ARMY_CHANGED: 'Your Army changed after finding this opponent. Find another enemy.', INVALID_RAID_TEAM: 'Choose exactly three Heroes for your Raid Team.', INVALID_ARMY_FORMATION: 'Prepare three battle-ready Army squads.',
     OPPONENT_NOT_FOUND: 'The rival kingdom is unavailable.', BATTLE_NOT_FOUND: 'That battle could not be found.',
     BATTLE_NOT_PARTICIPANT: 'Only battle participants can view this replay.', SELF_ATTACK_FORBIDDEN: 'You cannot attack your own kingdom.',
     INSUFFICIENT_OR_INVALID_STATE: 'The kingdom resources changed. Please scout again.', INVALID_IDEMPOTENCY_KEY: 'The attack could not be verified. Please retry.',

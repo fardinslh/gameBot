@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import type { ArmyCombatSquad, BattleEngineResult } from './battle.types';
-import { applyArmyShieldReduction, armyBaseDamage, hasCounterAdvantage, livingUnits, selectNearestLivingSlot, simulateArmyBattle, type ArmyCombatState } from './army-battle.engine';
+import { applyArmyShieldReduction, armyBaseDamage, armyRemainingHpPpm, hasCounterAdvantage, livingUnits, selectNearestLivingSlot, simulateArmyBattle, timeoutWinner, type ArmyCombatState } from './army-battle.engine';
 import { ARMY_BATTLE_RULES_VERSION } from './battle.config';
+import { createSeededRandom } from './seeded-random';
 
 function army(side: 'ATTACKER' | 'DEFENDER'): ArmyCombatSquad[] {
   return [
@@ -16,7 +17,7 @@ function squad(
   commanderKey: ArmyCombatSquad['commanderKey'], commanderSkillKey: ArmyCombatSquad['commanderSkillKey'],
   initialUnitCount: number, perUnitHp: number, perUnitAtk: number, perUnitDef: number,
 ): ArmyCombatSquad {
-  return { side, slot, troopType, initialUnitCount, perUnitHp, perUnitAtk, perUnitDef, aggregateMaxHp: initialUnitCount * perUnitHp, commanderKey, commanderLevel: 1, commanderSkillKey, commanderPower: 700, commanderPortraitAsset: '/hero.webp', squadPower: 500 };
+  return { side, slot, troopType, initialUnitCount, perUnitHp, perUnitAtk, perUnitDef, aggregateMaxHp: initialUnitCount * perUnitHp, commanderPlayerHeroId: `${side}-${slot}`, commanderKey, commanderLevel: 1, commanderSkillKey, commanderPower: 700, commanderPortraitAsset: '/hero.webp', squadPower: 500 };
 }
 
 function combatState(value: ArmyCombatSquad, currentHp = value.aggregateMaxHp): ArmyCombatState {
@@ -60,6 +61,26 @@ describe('Army Battle rules v2', () => {
     expect(selectNearestLivingSlot(2, [1, 3])).toBe(1);
     expect(selectNearestLivingSlot(3, [1, 2])).toBe(2);
     expect(selectNearestLivingSlot(1, [])).toBeNull();
+  });
+
+  it('uses Army-wide remaining HP weighting at timeout instead of equal squad weighting', () => {
+    const attacker = [
+      combatState(squad('ATTACKER', 1, 'INFANTRY', 'KNIGHT', 'SHIELD_WALL', 100, 10, 1, 1), 600),
+      combatState(squad('ATTACKER', 2, 'ARCHER', 'RANGER', 'POWER_SHOT', 1, 10, 1, 1), 0),
+      combatState(squad('ATTACKER', 3, 'CAVALRY', 'MAGE', 'ARCANE_BLAST', 1, 10, 1, 1), 0),
+    ];
+    const defender = [
+      combatState(squad('DEFENDER', 1, 'INFANTRY', 'KNIGHT', 'SHIELD_WALL', 34, 10, 1, 1), 102),
+      combatState(squad('DEFENDER', 2, 'ARCHER', 'RANGER', 'POWER_SHOT', 34, 10, 1, 1), 102),
+      combatState(squad('DEFENDER', 3, 'CAVALRY', 'MAGE', 'ARCANE_BLAST', 34, 10, 1, 1), 102),
+    ];
+    const oldEqualSquadScore = (values: ArmyCombatState[]) => values.reduce(
+      (total, value) => total + Math.round((value.currentHp * 1_000_000) / value.aggregateMaxHp),
+      0,
+    );
+    expect(oldEqualSquadScore(attacker)).toBeLessThan(oldEqualSquadScore(defender));
+    expect(armyRemainingHpPpm(attacker, 'ATTACKER')).toBeGreaterThan(armyRemainingHpPpm(defender, 'DEFENDER'));
+    expect(timeoutWinner([...attacker, ...defender], createSeededRandom('weighted-timeout'))).toBe('ATTACKER');
   });
 
   it('keeps skills attached to Commanders and defeated squads silent', () => {

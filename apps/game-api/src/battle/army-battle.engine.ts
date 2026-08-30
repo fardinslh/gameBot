@@ -245,12 +245,16 @@ function resolvedWinner(squads: ArmyCombatState[]): BattleSide | null {
   return null;
 }
 
-function timeoutWinner(squads: ArmyCombatState[], random: SeededRandom): BattleSide {
-  const remainingRatio = (side: BattleSide): number => squads
-    .filter((squad) => squad.side === side)
-    .reduce((total, squad) => total + Math.round((squad.currentHp * 1_000_000) / squad.aggregateMaxHp), 0);
-  const attacker = remainingRatio('ATTACKER');
-  const defender = remainingRatio('DEFENDER');
+export function armyRemainingHpPpm(squads: readonly ArmyCombatState[], side: BattleSide): number {
+  const sideSquads = squads.filter((squad) => squad.side === side);
+  const currentHp = sideSquads.reduce((total, squad) => total + squad.currentHp, 0);
+  const maximumHp = sideSquads.reduce((total, squad) => total + squad.aggregateMaxHp, 0);
+  return maximumHp <= 0 ? 0 : Math.round((currentHp * 1_000_000) / maximumHp);
+}
+
+export function timeoutWinner(squads: ArmyCombatState[], random: SeededRandom): BattleSide {
+  const attacker = armyRemainingHpPpm(squads, 'ATTACKER');
+  const defender = armyRemainingHpPpm(squads, 'DEFENDER');
   if (attacker === defender) return random.next() < 0.5 ? 'ATTACKER' : 'DEFENDER';
   return attacker > defender ? 'ATTACKER' : 'DEFENDER';
 }

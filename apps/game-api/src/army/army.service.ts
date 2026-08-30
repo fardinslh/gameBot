@@ -280,6 +280,7 @@ export class ArmyService {
         perUnitAtk: calculated.perUnitAtk,
         perUnitDef: calculated.perUnitDef,
         aggregateMaxHp: calculated.aggregateMaxHp,
+        commanderPlayerHeroId: slot.commanderPlayerHeroId,
         commanderKey: calculated.commanderKey,
         commanderLevel: calculated.commanderLevel,
         commanderSkillKey: calculated.commanderSkillKey,

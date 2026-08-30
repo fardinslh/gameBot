@@ -527,18 +527,19 @@ model RaidTeamSlot {
 }
 
 model RaidMatchOffer {
-  id               String    @id @default(uuid())
-  attackerPlayerId String
-  defenderPlayerId String
-  attackerPower    Int
-  defenderPower    Int
-  potentialLoot    Json
-  createdAt        DateTime  @default(now())
-  expiresAt        DateTime
-  usedAt           DateTime?
-  attacker         Player    @relation("RaidOfferAttacker", fields: [attackerPlayerId], references: [id], onDelete: Cascade)
-  defender         Player    @relation("RaidOfferDefender", fields: [defenderPlayerId], references: [id], onDelete: Cascade)
-  battle           Battle?
+  id                      String    @id @default(uuid())
+  attackerPlayerId        String
+  defenderPlayerId        String
+  attackerPower           Int
+  attackerArmyFingerprint String?
+  defenderPower           Int
+  potentialLoot           Json
+  createdAt               DateTime  @default(now())
+  expiresAt               DateTime
+  usedAt                  DateTime?
+  attacker                Player    @relation("RaidOfferAttacker", fields: [attackerPlayerId], references: [id], onDelete: Cascade)
+  defender                Player    @relation("RaidOfferDefender", fields: [defenderPlayerId], references: [id], onDelete: Cascade)
+  battle                  Battle?
 
   @@index([attackerPlayerId, createdAt])
   @@index([defenderPlayerId, createdAt])
@@ -546,11 +547,11 @@ model RaidMatchOffer {
 }
 
 model Battle {
-  id                   String               @id @default(uuid())
-  matchOfferId         String?              @unique
-  revengeTargetId      String?              @unique
-  type                 BattleType           @default(RAID)
-  status               BattleStatus         @default(CREATED)
+  id                   String                    @id @default(uuid())
+  matchOfferId         String?                   @unique
+  revengeTargetId      String?                   @unique
+  type                 BattleType                @default(RAID)
+  status               BattleStatus              @default(CREATED)
   attackerPlayerId     String
   defenderPlayerId     String
   winnerPlayerId       String
@@ -565,13 +566,13 @@ model Battle {
   loot                 Json
   startedAt            DateTime
   resolvedAt           DateTime
-  createdAt            DateTime             @default(now())
-  matchOffer           RaidMatchOffer?      @relation(fields: [matchOfferId], references: [id], onDelete: Restrict)
-  revengeTarget        RevengeTarget?       @relation("RevengeBattle", fields: [revengeTargetId], references: [id], onDelete: Restrict)
-  revengeSource        RevengeTarget?       @relation("RevengeSourceBattle")
-  attacker             Player               @relation("BattleAttacker", fields: [attackerPlayerId], references: [id], onDelete: Restrict)
-  defender             Player               @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
-  winner               Player               @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
+  createdAt            DateTime                  @default(now())
+  matchOffer           RaidMatchOffer?           @relation(fields: [matchOfferId], references: [id], onDelete: Restrict)
+  revengeTarget        RevengeTarget?            @relation("RevengeBattle", fields: [revengeTargetId], references: [id], onDelete: Restrict)
+  revengeSource        RevengeTarget?            @relation("RevengeSourceBattle")
+  attacker             Player                    @relation("BattleAttacker", fields: [attackerPlayerId], references: [id], onDelete: Restrict)
+  defender             Player                    @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
+  winner               Player                    @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
   heroSnapshots        BattleHeroSnapshot[]
   armySquadSnapshots   BattleArmySquadSnapshot[]
   events               BattleEvent[]
@@ -635,43 +636,43 @@ model BattleHeroSnapshot {
 }
 
 model BattleArmySquadSnapshot {
-  id                       String     @id @default(uuid())
-  battleId                 String
-  side                     BattleSide
-  slot                     Int
-  troopType                TroopType
-  initialUnitCount         Int
-  perUnitHp                Int
-  perUnitAtk               Int
-  perUnitDef               Int
-  aggregateMaxHp           Int
-  commanderKey             HeroKey
-  commanderLevel           Int
-  commanderSkillKey        String
-  commanderPower           Int
-  commanderPortraitAsset   String
-  squadPower               Int
-  battle                   Battle     @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  id                     String     @id @default(uuid())
+  battleId               String
+  side                   BattleSide
+  slot                   Int
+  troopType              TroopType
+  initialUnitCount       Int
+  perUnitHp              Int
+  perUnitAtk             Int
+  perUnitDef             Int
+  aggregateMaxHp         Int
+  commanderKey           HeroKey
+  commanderLevel         Int
+  commanderSkillKey      String
+  commanderPower         Int
+  commanderPortraitAsset String
+  squadPower             Int
+  battle                 Battle     @relation(fields: [battleId], references: [id], onDelete: Cascade)
 
   @@unique([battleId, side, slot])
   @@index([battleId, side])
 }
 
 model BattleEvent {
-  id          String          @id @default(uuid())
-  battleId    String
-  sequence    Int
-  timeMs      Int
-  type        BattleEventType
-  sourceSide  BattleSide?
-  sourceSlot  Int?
-  targetSide  BattleSide?
-  targetSlot  Int?
-  amount      Int?
-  remainingHp Int?
+  id             String          @id @default(uuid())
+  battleId       String
+  sequence       Int
+  timeMs         Int
+  type           BattleEventType
+  sourceSide     BattleSide?
+  sourceSlot     Int?
+  targetSide     BattleSide?
+  targetSlot     Int?
+  amount         Int?
+  remainingHp    Int?
   remainingUnits Int?
-  skillKey    String?
-  battle      Battle          @relation(fields: [battleId], references: [id], onDelete: Cascade)
+  skillKey       String?
+  battle         Battle          @relation(fields: [battleId], references: [id], onDelete: Cascade)
 
   @@unique([battleId, sequence])
   @@index([battleId, timeMs])

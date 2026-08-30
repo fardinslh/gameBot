@@ -15,6 +15,7 @@ import { NEW_KINGDOM_SHIELD_MS, REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS } from './ra
 import { SYSTEM_OPPONENTS } from './system-opponent.config';
 import { AnalyticsService } from '../analytics/analytics.service';
 import { ArmyService } from '../army/army.service';
+import { armyFingerprint } from './raid-army-fingerprint';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
@@ -37,10 +38,24 @@ async function player(contextValue: DevelopmentPlayerContext) {
   return { id: kingdom.player.id, kingdomId: kingdom.kingdom.id };
 }
 
-async function offer(attackerId: string, defenderId: string, expired = false): Promise<string> {
+async function currentArmyFingerprint(playerId: string): Promise<string> {
+  return prisma.$transaction(async (tx) => armyFingerprint(
+    (await army.loadBattleArmy(tx, playerId, 'ATTACKER', new Date())).map((squad) => ({
+      slot: squad.slot,
+      troopType: squad.troopType,
+      unitCount: squad.initialUnitCount,
+      commanderPlayerHeroId: squad.commanderPlayerHeroId,
+      commanderKey: squad.commanderKey,
+      commanderLevel: squad.commanderLevel,
+    })),
+  ));
+}
+
+async function offer(attackerId: string, defenderId: string, expired = false, fingerprint = true): Promise<string> {
   const row = await prisma.raidMatchOffer.create({
     data: {
       attackerPlayerId: attackerId, defenderPlayerId: defenderId, attackerPower: 1, defenderPower: 1,
+      attackerArmyFingerprint: fingerprint ? await currentArmyFingerprint(attackerId) : null,
       potentialLoot: { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0' },
       expiresAt: new Date(Date.now() + (expired ? -1_000 : 180_000)),
     },
@@ -72,6 +87,7 @@ describe.sequential('authoritative Raid integration', () => {
     expect(first.offer.opponent.id).not.toBe(second.offer.opponent.id);
     const persisted = await prisma.raidMatchOffer.findUniqueOrThrow({ where: { id: first.offer.id } });
     expect(persisted.attackerPlayerId).toBe(first.player.id);
+    expect(persisted.attackerArmyFingerprint).toMatch(/^[0-9a-f]{64}$/);
     expect(persisted.expiresAt.getTime()).toBeGreaterThan(Date.now());
     const opponent = await prisma.player.findUniqueOrThrow({
       where: { id: first.offer.opponent.id },
@@ -247,17 +263,74 @@ describe.sequential('authoritative Raid integration', () => {
     await expect(offer(owner.id, owner.id)).rejects.toBeTruthy();
   });
 
+  it('rejects a stale pre-cutover offer without settlement side effects', async () => {
+    const attackerContext = context('stale-offer-attacker');
+    const defenderContext = context('stale-offer-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    const offerId = await offer(attacker.id, defender.id, false, false);
+    const requestKey = randomUUID();
+    expect(await code(raids.start(attackerContext, offerId, requestKey))).toBe('MATCH_OFFER_ARMY_CHANGED');
+    expect(await prisma.battle.count({ where: { matchOfferId: offerId } })).toBe(0);
+    expect((await prisma.raidMatchOffer.findUniqueOrThrow({ where: { id: offerId } })).usedAt).toBeNull();
+    expect(await prisma.economyRequest.count({ where: { playerId: attacker.id, idempotencyKey: requestKey } })).toBe(0);
+  });
+
+  it('invalidates an offer after formation changes and allows a fresh search to battle', async () => {
+    const attackerContext = context('formation-cutover');
+    const attacker = await player(attackerContext);
+    const first = await raids.search(attackerContext);
+    const defender = await prisma.player.findUniqueOrThrow({ where: { id: first.offer.opponent.id }, include: { kingdom: true } });
+    const formation = await prisma.armyFormation.findUniqueOrThrow({ where: { playerId: attacker.id }, include: { slots: { orderBy: { slot: 'asc' } } } });
+    const participantIds = [attacker.id, defender.id];
+    const kingdomIds = [attacker.kingdomId, defender.kingdom!.id];
+    const before = {
+      trophies: await prisma.player.findMany({ where: { id: { in: participantIds } }, select: { id: true, trophies: true }, orderBy: { id: 'asc' } }),
+      balances: await prisma.resourceBalance.findMany({ where: { kingdomId: { in: kingdomIds } }, orderBy: [{ kingdomId: 'asc' }, { resource: 'asc' }] }),
+      transactions: await prisma.economyTransaction.count({ where: { playerId: { in: participantIds } } }),
+      notifications: await prisma.notification.count({ where: { playerId: { in: participantIds } } }),
+    };
+    await prisma.$transaction([
+      prisma.armyFormationSlot.update({ where: { id: formation.slots[0].id }, data: { troopType: formation.slots[1].troopType, unitCount: formation.slots[1].unitCount } }),
+      prisma.armyFormationSlot.update({ where: { id: formation.slots[1].id }, data: { troopType: formation.slots[0].troopType, unitCount: formation.slots[0].unitCount } }),
+    ]);
+    const requestKey = randomUUID();
+    expect(await code(raids.start(attackerContext, first.offer.id, requestKey))).toBe('MATCH_OFFER_ARMY_CHANGED');
+    expect(await prisma.battle.count({ where: { matchOfferId: first.offer.id } })).toBe(0);
+    expect((await prisma.raidMatchOffer.findUniqueOrThrow({ where: { id: first.offer.id } })).usedAt).toBeNull();
+    expect(await prisma.economyRequest.count({ where: { playerId: attacker.id, idempotencyKey: requestKey } })).toBe(0);
+    expect(await prisma.player.findMany({ where: { id: { in: participantIds } }, select: { id: true, trophies: true }, orderBy: { id: 'asc' } })).toEqual(before.trophies);
+    expect(await prisma.resourceBalance.findMany({ where: { kingdomId: { in: kingdomIds } }, orderBy: [{ kingdomId: 'asc' }, { resource: 'asc' }] })).toEqual(before.balances);
+    expect(await prisma.economyTransaction.count({ where: { playerId: { in: participantIds } } })).toBe(before.transactions);
+    expect(await prisma.notification.count({ where: { playerId: { in: participantIds } } })).toBe(before.notifications);
+    const fresh = await raids.search(attackerContext);
+    expect(await raids.start(attackerContext, fresh.offer.id, randomUUID())).toMatchObject({ rulesVersion: 2 });
+  });
+
+  it('invalidates an offer after a Commander level changes without settlement', async () => {
+    const attackerContext = context('commander-cutover');
+    const attacker = await player(attackerContext);
+    const found = await raids.search(attackerContext);
+    const commander = await prisma.playerHero.findFirstOrThrow({ where: { playerId: attacker.id } });
+    await prisma.playerHero.update({ where: { id: commander.id }, data: { level: { increment: 1 } } });
+    const requestKey = randomUUID();
+    expect(await code(raids.start(attackerContext, found.offer.id, requestKey))).toBe('MATCH_OFFER_ARMY_CHANGED');
+    expect(await prisma.battle.count({ where: { matchOfferId: found.offer.id } })).toBe(0);
+    expect((await prisma.raidMatchOffer.findUniqueOrThrow({ where: { id: found.offer.id } })).usedAt).toBeNull();
+    expect(await prisma.economyRequest.count({ where: { playerId: attacker.id, idempotencyKey: requestKey } })).toBe(0);
+  });
+
   it('rejects an invalid Army Commander and rolls the attempted settlement back', async () => {
     const attackerContext = context('invalid-team');
     const defenderContext = context('valid-defender');
     const attacker = await player(attackerContext);
     const defender = await player(defenderContext);
+    const offerId = await offer(attacker.id, defender.id);
     const formation = await prisma.armyFormation.findUniqueOrThrow({ where: { playerId: attacker.id }, include: { slots: true } });
     const foreignHero = await prisma.playerHero.findFirstOrThrow({ where: { playerId: defender.id } });
     await prisma.armyFormationSlot.update({ where: { id: formation.slots[2].id }, data: { commanderPlayerHeroId: foreignHero.id } });
-    const offerId = await offer(attacker.id, defender.id);
     const trophiesBefore = (await prisma.player.findUniqueOrThrow({ where: { id: attacker.id } })).trophies;
-    expect(await code(raids.start(attackerContext, offerId, randomUUID()))).toBe('INVALID_ARMY_FORMATION');
+    expect(await code(raids.start(attackerContext, offerId, randomUUID()))).toBe('MATCH_OFFER_ARMY_CHANGED');
     expect(await prisma.battle.count({ where: { matchOfferId: offerId } })).toBe(0);
     expect((await prisma.player.findUniqueOrThrow({ where: { id: attacker.id } })).trophies).toBe(trophiesBefore);
   });
@@ -274,6 +347,7 @@ describe.sequential('authoritative Raid integration', () => {
     const offerId = await offer(attacker.id, defender.id);
     const requestKey = randomUUID();
     const first = await raids.start(attackerContext, offerId, requestKey);
+    await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: { increment: 1 } } });
     const replay = await raids.start(attackerContext, offerId, requestKey);
     expect(replay).toEqual(first);
     expect(first.rulesVersion).toBe(2);

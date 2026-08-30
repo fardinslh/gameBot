@@ -73,7 +73,7 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 
 ## Raid and battle models
 
-`RaidMatchOffer` stores one proposed pairing and its expiry/use state. SQL forbids a self-offer and requires positive authoritative power.
+`RaidMatchOffer` stores one proposed pairing, its expiry/use state, and the attacker's ordered Army fingerprint captured by search. SQL forbids a self-offer, requires positive authoritative power, and constrains a present fingerprint to the 64-character SHA-256 representation. Nullable fingerprints preserve migration compatibility but are treated as stale by Raid start.
 
 `Battle` supports `RAID` and `REVENGE`. A standard Raid links one unique Match Offer; a Revenge links one unique Revenge target. The row stores settlement and replay metadata.
 
@@ -129,5 +129,6 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260829090000_army_commander_foundation` | Troop ownership/training, Army Formation/slots, training ledger/action enums, constraints, and existing-player/system-opponent backfill |
 | `20260829090100_army_commander_slot_cascade` | Cascade-safe Commander slots for Player/Hero cleanup and runtime repair |
 | `20260829180000_army_battle_v2` | Versioned Army squad snapshots, squad-defeat events, and remaining-unit replay state |
+| `20260830090000_match_offer_army_fingerprint` | Nullable SHA-256 attacker-Army fingerprint for secure Match Offer cutover; pre-migration offers remain readable but cannot start |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.
