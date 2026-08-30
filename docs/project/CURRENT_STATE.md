@@ -35,7 +35,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Missions / Achievements / Daily Return | Implemented | Three deterministic Daily and Weekly assignments, nine permanent tiered Achievement families, a seven-claim Daily Return cycle, explicit transactional claims, and bilingual mobile UI |
 | Army Foundation | Implemented | Infantry, Archer, Cavalry ownership; one training order; Castle-derived capacity; three-squad formation; existing Heroes as Commanders |
 | Army Battle | Implemented | New Raid/Revenge use deterministic rules version 2 with six immutable Army squad snapshots, lane targeting, counters, Commander skills, and battle-state-only casualties |
-| PvE Campaign | Not implemented | Retention 04 is next; it has not started |
+| PvE Campaign | Implemented | Broken Frontier has nine server-gated stages, durable NPC Armies, persistent best stars, first-clear rewards, 9/18/27 milestone claims, Battle v2 playback, and bilingual mobile UI |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Commanders | Implemented for formation | Existing Knight, Ranger, and Mage can each command one Army Formation squad; no duplicate Commander rows or class locks |
 | Legacy Raid Team | Preserved | Exactly three unique owned Heroes remain persisted for historical rules-version-1 compatibility; new battles use Army Formation |
@@ -92,11 +92,11 @@ The same persistent Heroes also serve as Army Commanders. The default Army Forma
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, and authoritative Retention state/claims. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. Raid overview/search also expose authoritative `newPlayerProtection`; offers identify `REAL` or `SYSTEM` for internal client state. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, and Campaign state/start/milestone claims. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
-Seventeen ordered migrations exist:
+Eighteen ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -115,10 +115,11 @@ Seventeen ordered migrations exist:
 15. `20260829090100_army_commander_slot_cascade`
 16. `20260829180000_army_battle_v2`
 17. `20260830090000_match_offer_army_fingerprint`
+18. `20260830100000_pve_campaign_chapter_one`
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, and 03B engineering are complete. New Raid/Revenge starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Historical rules-version-1 Hero replays remain compatible. Retention 04 PvE Campaign / Adventure is next and not started. Barracks remains inactive. The collision-proof status stack, Castle Y 665 composition, Pixi Kingdom coordinates, 54px navigation, Retention 02, and existing settlement behavior remain intact. Owner troop art, Aren, Persian-device, and real-device audio checks remain open. Shop, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, and 04 engineering are complete. New Raid, Revenge, and Campaign starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Campaign grants no Trophy, loot transfer, social state, or permanent casualty. Historical rules-version-1 Hero replays remain compatible. Retention 05 Shop MVP + Gem Economy is next and not started. Barracks remains inactive. Owner Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 
@@ -128,4 +129,4 @@ The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Lo
 
 ## Validation entry points
 
-Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for Army Battle v2 persistence/playback and forced outcomes. Use the normal test, integration, type, lint, build, Kingdom, Revenge, Retention, and documentation regressions described in [testing](TESTING.md).
+Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for PvP Army Battle v2 persistence/playback and forced outcomes. Run `npm run validate:campaign` for Campaign authority, isolation, mobile flow, and screenshots. Use the remaining regressions described in [testing](TESTING.md).

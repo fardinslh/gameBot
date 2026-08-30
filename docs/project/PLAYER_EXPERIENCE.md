@@ -55,12 +55,13 @@ The compact book control in the top HUD remains available after completion or sk
 6. Trophies
 7. New Kingdom Shield
 8. Defense & Revenge
+9. Campaign
 
-The panel header now identifies Aren and carries his reminder while preserving the same eight implemented-mechanics sections. It documents no nonexistent Guild, Season, Shop, payment, leaderboard, or Bale system.
+The panel header identifies Aren and carries his reminder while preserving nine implemented-mechanics sections. It documents no nonexistent Guild, Season, Shop, payment, leaderboard, or Bale system.
 
 ## One-time contextual counsel
 
-`AdvisorTipProgress` stores one row per `(playerId, tipKey)` for `HEROES_INTRO`, `CASTLE_PROGRESSION`, `NEW_KINGDOM_SHIELD`, `DEFENSE_INBOX`, and `REVENGE`. `GET /onboarding/advisor-tips` returns seen keys; `POST /onboarding/advisor-tips/:tipKey` idempotently marks one seen. Missing rows or a failed tip request never affect resources, matchmaking, shield, battle, loot, Trophies, or Revenge. Optional counsel waits until mandatory onboarding is complete or skipped and never uses analytics as state.
+`AdvisorTipProgress` stores one row per `(playerId, tipKey)` for `HEROES_INTRO`, `CASTLE_PROGRESSION`, `NEW_KINGDOM_SHIELD`, `DEFENSE_INBOX`, `REVENGE`, and `CAMPAIGN_INTRO`. `GET /onboarding/advisor-tips` returns seen keys; `POST /onboarding/advisor-tips/:tipKey` idempotently marks one seen. Missing rows or a failed tip request never affect resources, matchmaking, Campaign, shield, battle, loot, Trophies, or Revenge. Optional counsel waits until mandatory onboarding is complete or skipped and never uses analytics as state.
 
 ## Analytics
 

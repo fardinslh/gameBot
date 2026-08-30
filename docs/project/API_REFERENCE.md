@@ -67,6 +67,16 @@ Army mutations accept no cost, duration, completion timestamp, capacity, Command
 
 `RaidOverviewResponse.newPlayerProtection` contains authoritative `active` and `expiresAt` values. Search offers include internal opponent `kind: REAL | SYSTEM`; this does not grant the client target-selection authority.
 
+## PvE Campaign
+
+| Method | Path | Purpose | Requirements and response |
+| --- | --- | --- | --- |
+| `GET` | `/campaign` | Return Broken Frontier stage state, best stars, locks, rewards, milestones, and server time | `CampaignStateResponse` |
+| `POST` | `/campaign/stages/:stageKey/start` | Validate the authoritative Army and stage gate, resolve one Battle v2 attempt, and settle any first-clear reward | Empty body, idempotency key; `CampaignStartResponse` |
+| `POST` | `/campaign/rewards/:requiredStars/claim` | Claim one reached 9/18/27-star milestone | Empty body, idempotency key; `CampaignRewardClaimResponse` |
+
+Campaign starts accept no NPC, Army, outcome, stars, or reward input. Claims accept no amount. Both mutations use the Player advisory lock and economy request replay boundary. Campaign battles never grant Trophy, PvP loot, Revenge, notifications, shield changes, or permanent troop loss.
+
 ## Defense inbox and Revenge
 
 | Method | Path | Purpose | Requirements and response |
@@ -102,7 +112,7 @@ Retention claim routes accept no request body. Progress, UTC period, eligibility
 | `GET` | `/onboarding/advisor-tips` | Return durable one-time contextual advisor keys already seen |
 | `POST` | `/onboarding/advisor-tips/:tipKey` | Idempotently mark one supported contextual advisor tip seen |
 
-Supported advisor keys are `HEROES_INTRO`, `CASTLE_PROGRESSION`, `NEW_KINGDOM_SHIELD`, `DEFENSE_INBOX`, and `REVENGE`. They are presentation state only and grant no gameplay authority.
+Supported advisor keys are `HEROES_INTRO`, `CASTLE_PROGRESSION`, `NEW_KINGDOM_SHIELD`, `DEFENSE_INBOX`, `REVENGE`, and `CAMPAIGN_INTRO`. They are presentation state only and grant no gameplay authority.
 
 The client cannot post a step or completion. Successful Collect, building Upgrade start, and standard Raid settlement advance the state inside server-owned write paths.
 

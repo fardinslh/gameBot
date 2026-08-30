@@ -50,6 +50,7 @@ export const ADVISOR_TIP_KEYS = [
   'NEW_KINGDOM_SHIELD',
   'DEFENSE_INBOX',
   'REVENGE',
+  'CAMPAIGN_INTRO',
 ] as const;
 export type AdvisorTipKey = (typeof ADVISOR_TIP_KEYS)[number];
 export interface AdvisorTipsResponse { seen: AdvisorTipKey[]; }
@@ -502,7 +503,7 @@ export type RaidResourceType = Exclude<ResourceType, 'GEMS'>;
 export type RaidLootAmounts = Record<RaidResourceType, string>;
 export type BattleSide = 'ATTACKER' | 'DEFENDER';
 export type BattleResult = 'ATTACKER_WIN' | 'DEFENDER_WIN';
-export type BattleType = 'RAID' | 'REVENGE';
+export type BattleType = 'RAID' | 'REVENGE' | 'CAMPAIGN';
 export type BattleEventType =
   | 'BATTLE_START'
   | 'BASIC_ATTACK'
@@ -627,6 +628,80 @@ export interface BattleReplayV2 extends BattleReplayBase {
 }
 
 export type BattleReplayResponse = BattleReplayV1 | BattleReplayV2;
+
+export const CAMPAIGN_CHAPTER_KEYS = ['BROKEN_FRONTIER'] as const;
+export type CampaignChapterKey = (typeof CAMPAIGN_CHAPTER_KEYS)[number];
+export const CAMPAIGN_STAGE_KEYS = [
+  'FRONTIER_01', 'FRONTIER_02', 'FRONTIER_03',
+  'FRONTIER_04', 'FRONTIER_05', 'FRONTIER_06',
+  'FRONTIER_07', 'FRONTIER_08', 'FRONTIER_09',
+] as const;
+export type CampaignStageKey = (typeof CAMPAIGN_STAGE_KEYS)[number];
+export type CampaignStageStatus = 'LOCKED' | 'AVAILABLE' | 'CLEARED';
+export interface CampaignRewardItem { resource: ResourceType; amount: string; }
+export interface CampaignEnemyPreview {
+  displayName: { en: string; fa: string };
+  castleLevel: number;
+  power: number;
+  army: ArmyFormationSlotState[];
+}
+export interface CampaignStageState {
+  key: CampaignStageKey;
+  index: number;
+  title: { en: string; fa: string };
+  status: CampaignStageStatus;
+  requiredCastleLevel: number;
+  lockReason: 'CASTLE' | 'PREVIOUS_STAGE' | null;
+  bestStars: number;
+  attempts: number;
+  firstClearedAt: string | null;
+  isBoss: boolean;
+  enemy: CampaignEnemyPreview;
+  firstClearRewards: CampaignRewardItem[];
+}
+export interface CampaignStarRewardState {
+  stars: 9 | 18 | 27;
+  status: 'LOCKED' | 'CLAIMABLE' | 'CLAIMED';
+  rewards: CampaignRewardItem[];
+  claimedAt: string | null;
+}
+export interface CampaignChapterState {
+  key: CampaignChapterKey;
+  title: { en: string; fa: string };
+  totalStars: number;
+  maximumStars: 27;
+  completed: boolean;
+  stages: CampaignStageState[];
+  starRewards: CampaignStarRewardState[];
+}
+export interface CampaignResponse {
+  serverTime: string;
+  balances: ResourceAmounts;
+  chapter: CampaignChapterState;
+}
+export interface CampaignBattleStartResponse {
+  campaign: CampaignResponse;
+  battle: BattleReplayV2;
+  stageKey: CampaignStageKey;
+  attemptStars: number;
+  bestStars: number;
+  firstClearRewardGranted: boolean;
+  firstClearRewards: CampaignRewardItem[];
+}
+export interface CampaignRewardClaimResponse {
+  campaign: CampaignResponse;
+  granted: CampaignRewardItem[];
+}
+export type CampaignErrorCode =
+  | 'CAMPAIGN_STAGE_NOT_FOUND'
+  | 'CAMPAIGN_STAGE_LOCKED'
+  | 'CAMPAIGN_CASTLE_REQUIRED'
+  | 'CAMPAIGN_INVALID_ARMY'
+  | 'CAMPAIGN_REWARD_LOCKED'
+  | 'CAMPAIGN_REWARD_ALREADY_CLAIMED'
+  | 'CAMPAIGN_CONFLICT'
+  | 'INVALID_IDEMPOTENCY_KEY';
+export interface CampaignErrorResponse { statusCode: number; code: CampaignErrorCode; message: string; }
 
 export interface RaidHistoryItem {
   battleId: string;

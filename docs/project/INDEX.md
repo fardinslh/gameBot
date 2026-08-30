@@ -6,7 +6,7 @@ contentType: Landing
 
 # Crown & Coin
 
-Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent Army and Commander progression, deterministic versioned Army Raid battles, and a Revenge return loop.
+Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent Army and Commander progression, deterministic versioned battles, a Revenge return loop, and the nine-stage Broken Frontier PvE Campaign.
 
 ## Current verified repository state
 
@@ -16,7 +16,7 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 - **Verification date**: 2026-08-30
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-The verified feature baseline includes Retention 03A Army foundations and Retention 03B Army Battle v2 with its Match Offer cutover correction. Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative.
+Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative when a published verification marker trails active work.
 
 ## Platform direction
 
@@ -60,6 +60,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Heroes and Raid Team](HEROES.md)
 - [Army and Commanders](ARMY_AND_COMMANDERS.md)
 - [Raid and deterministic battle](RAID_AND_BATTLE.md)
+- [PvE Campaign and Chapter One](PVE_CAMPAIGN.md)
 - [Revenge and notifications](REVENGE_AND_NOTIFICATIONS.md)
 - [Building and Kingdom progression](PROGRESSION.md)
 - [Visible building evolution](BUILDING_EVOLUTION.md)
@@ -84,9 +85,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, Retention 04 Broken Frontier PvE Campaign, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 04 — PvE Campaign / Adventure, only when explicitly scoped
+- **Next**: Retention 05 — Shop MVP + Gem Economy, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay

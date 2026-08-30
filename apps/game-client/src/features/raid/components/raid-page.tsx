@@ -16,21 +16,27 @@ import { trackScreen } from '@/features/analytics/analytics-client';
 import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
+import { useCampaignState } from '@/features/campaign/hooks/use-campaign-state';
+import { CampaignMap } from '@/features/campaign/components/campaign-map';
+import { CampaignResult } from '@/features/campaign/components/campaign-result';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
 
 export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNavigate }: RaidPageProps) {
   const raid = useRaidState(initialView);
+  const [combatMode, setCombatMode] = useState<'raid' | 'campaign'>('raid');
+  const campaign = useCampaignState(combatMode === 'campaign');
   const experience = usePlayerExperience();
   const { playSfx, setMusicContext } = useGameAudio();
   const [battleFinished, setBattleFinished] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
-  useEffect(() => { if (raid.battle) setBattleFinished(false); }, [raid.battle]);
-  useEffect(() => { setMusicContext(raid.battle && !battleFinished ? 'BATTLE' : 'KINGDOM'); }, [battleFinished, raid.battle, setMusicContext]);
+  const activeBattle = combatMode === 'campaign' ? campaign.result?.battle ?? null : raid.battle;
+  useEffect(() => { if (activeBattle) setBattleFinished(false); }, [activeBattle?.id]);
+  useEffect(() => { setMusicContext(activeBattle && !battleFinished ? 'BATTLE' : 'KINGDOM'); }, [activeBattle, battleFinished, setMusicContext]);
   useEffect(() => {
-    trackScreen(raid.battle ? (battleFinished ? 'RESULT' : 'BATTLE') : raid.view === 'inbox' ? 'DEFENSE_INBOX' : 'RAID');
-  }, [battleFinished, raid.battle, raid.view]);
+    trackScreen(activeBattle ? (battleFinished ? 'RESULT' : 'BATTLE') : raid.view === 'inbox' && combatMode === 'raid' ? 'DEFENSE_INBOX' : 'RAID');
+  }, [activeBattle, battleFinished, combatMode, raid.view]);
   useEffect(() => { if (!comingSoon) return; const timer = window.setTimeout(() => setComingSoon(null), 1800); return () => clearTimeout(timer); }, [comingSoon]);
   const state = raid.overview;
   const shieldHours = state?.newPlayerProtection.active && state.newPlayerProtection.expiresAt
@@ -54,9 +60,22 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
         <div className="raid-backdrop" aria-hidden="true" />
         <div className="game-ui-layer">
           <PlayerHud dictionary={t} locale={locale} playerLevel={state?.player.level ?? 1} playerName={state?.player.displayName ?? t.playerTitle} section="raid" />
-          <ResourceHud balances={raid.battle?.balances ?? state?.balances ?? EMPTY} dictionary={t} />
-          <section className="raid-content" data-player-id={state?.player.id} data-raid-state={raid.battle ? battleFinished ? 'result' : 'battle' : raid.view === 'inbox' ? 'inbox' : raid.offer ? 'offer' : 'overview'}>
-            {raid.battle ? battleFinished ? (
+          <ResourceHud balances={combatMode === 'campaign' ? campaign.state?.balances ?? state?.balances ?? EMPTY : raid.battle?.balances ?? state?.balances ?? EMPTY} dictionary={t} />
+          <section className="raid-content" data-player-id={state?.player.id} data-combat-mode={combatMode} data-raid-state={activeBattle ? battleFinished ? 'result' : 'battle' : combatMode === 'campaign' ? 'campaign' : raid.view === 'inbox' ? 'inbox' : raid.offer ? 'offer' : 'overview'}>
+            {combatMode === 'campaign' ? campaign.result ? battleFinished ? (
+              <CampaignResult
+                dictionary={t}
+                locale={locale}
+                onContinue={campaign.clearResult}
+                onEditArmy={() => onNavigate('heroes')}
+                onRetry={() => { const stageKey = campaign.result?.stageKey; campaign.clearResult(); if (stageKey) void campaign.attack(stageKey); }}
+                result={campaign.result}
+              />
+            ) : (
+              <div className="raid-battle-wrap"><BattleScene battle={campaign.result.battle} onComplete={() => { playSfx(campaign.result?.battle.result === 'ATTACKER_WIN' ? 'victory' : 'defeat'); setBattleFinished(true); }} /><div className="raid-battle-label"><Swords size={16} /> {t.campaign.battleLabel} · {campaign.result.campaign.chapter.stages.find((stage) => stage.key === campaign.result?.stageKey)?.title[locale]}</div></div>
+            ) : (
+              <><CombatModeTabs active={combatMode} dictionary={t} onChange={(mode) => { setCombatMode(mode); if (mode === 'campaign') experience.requestAdvisorTip('CAMPAIGN_INTRO'); }} /><CampaignMap campaign={campaign} dictionary={t} locale={locale} onEditArmy={() => onNavigate('heroes')} /></>
+            ) : raid.battle ? battleFinished ? (
               <div className={`raid-result raid-result--${raid.battle.result === 'ATTACKER_WIN' ? 'victory' : 'defeat'}`}>
                 <span className="raid-result__crest"><Crown size={30} /></span>
                 <small>{t.raidUi.battleComplete}</small>
@@ -80,6 +99,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
               <BattleLog dictionary={t} inbox={raid.inbox} loading={raid.action === 'loading-inbox'} onBack={raid.closeInbox} onRefresh={() => void raid.openInbox()} onRevenge={(id) => void raid.openRevengePreview(id)} onViewBattle={(id) => void raid.openBattleDetail(id)} />
             ) : (
               <>
+                <CombatModeTabs active={combatMode} dictionary={t} onChange={(mode) => { setCombatMode(mode); if (mode === 'campaign') experience.requestAdvisorTip('CAMPAIGN_INTRO'); }} />
                 <header className="raid-titlebar"><span><Swords size={19} /></span><div><h1>{t.raidUi.title}</h1><p>{t.raidUi.subtitle}</p></div><button className="raid-titlebar__log" onClick={() => void raid.openInbox()} type="button"><History size={15} /><span>{t.inboxUi.title}</span></button><b><Trophy size={14} /> <BidiValue direction="ltr">{state?.player.trophies ?? 1000}</BidiValue></b></header>
                 {state?.newPlayerProtection.active ? (
                   <div className="raid-shield-status" role="status">
@@ -113,9 +133,16 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
           {tutorialRaid && !raid.battle && !raid.offer ? <AdvisorCoach title={t.experience.findTitle} body={t.experience.advisor.findEnemy} target="find-enemy" /> : null}
           <BottomNavigation activeSection="raid" dictionary={t} onComingSoon={setComingSoon} onNavigate={onNavigate} />
           <div className={comingSoon ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">{comingSoon ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoon }} /> : ''}</div>
-          <div className={raid.errorCode ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{raid.errorCode ? (t.raidErrors[raid.errorCode as keyof typeof t.raidErrors] ?? t.raidErrors.SERVER_ERROR) : ''}{raid.errorCode ? <button onClick={() => void raid.refresh()} type="button">{t.retry}</button> : null}</div>
+          <div className={(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{combatMode === 'campaign' && campaign.errorCode ? (t.campaign.errors[campaign.errorCode as keyof typeof t.campaign.errors] ?? t.campaign.errors.SERVER_ERROR) : raid.errorCode ? (t.raidErrors[raid.errorCode as keyof typeof t.raidErrors] ?? t.raidErrors.SERVER_ERROR) : ''}{(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? <button onClick={() => void (combatMode === 'campaign' ? campaign.refresh() : raid.refresh())} type="button">{t.retry}</button> : null}</div>
         </div>
       </main>
     </>
   );
+}
+
+function CombatModeTabs({ active, dictionary: t, onChange }: { active: 'raid' | 'campaign'; dictionary: Dictionary; onChange(mode: 'raid' | 'campaign'): void }) {
+  return <div className="combat-mode-tabs" role="tablist" aria-label={t.campaign.modeLabel}>
+    <button aria-selected={active === 'raid'} onClick={() => onChange('raid')} role="tab" type="button">{t.raid}</button>
+    <button aria-selected={active === 'campaign'} onClick={() => onChange('campaign')} role="tab" type="button">{t.campaign.tab}</button>
+  </div>;
 }

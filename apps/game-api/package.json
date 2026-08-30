@@ -13,7 +13,8 @@
     "prisma:deploy": "dotenv -e ../../.env -- prisma migrate deploy",
     "test": "vitest run",
     "test:integration": "dotenv -e ../../.env -- vitest run --config vitest.integration.config.mts",
-    "test:army": "vitest run src/army/army.config.spec.ts && dotenv -e ../../.env -- vitest run --config vitest.integration.config.mts src/army/army.integration-spec.ts"
+    "test:army": "vitest run src/army/army.config.spec.ts && dotenv -e ../../.env -- vitest run --config vitest.integration.config.mts src/army/army.integration-spec.ts",
+    "test:campaign": "vitest run src/campaign/campaign.config.spec.ts && dotenv -e ../../.env -- vitest run --config vitest.integration.config.mts src/campaign/campaign.integration-spec.ts"
   },
   "dependencies": {
     "@crown-and-coin/platform": "*",

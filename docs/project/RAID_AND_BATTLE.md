@@ -6,6 +6,10 @@ contentType: Reference
 
 # Understand Raid and battle settlement
 
+## Campaign isolation
+
+Campaign attempts reuse deterministic Army Battle rules version 2 and stored replay events, but they are not Raid or Revenge. `Battle.type = CAMPAIGN` and `campaignStageKey` identify them. Campaign-only system players carry `SystemOpponentKind.CAMPAIGN`, so Raid search cannot select them. Campaign battles are filtered from Raid history and inbox and create no Match Offer, Trophy, loot transfer, Revenge target, notification, shield mutation, anti-farm record, or permanent troop loss.
+
 Raid uses server-owned Match Offers, immutable versioned snapshots, a seeded deterministic engine, and one transactional settlement. The client never calculates the winner. New Raid and Revenge battles use Army Battle rules version 2; historical Hero battles remain replayable under rules version 1.
 
 ## Request flow

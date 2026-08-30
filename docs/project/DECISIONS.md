@@ -119,3 +119,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: The Player is a Kingdom ruler. Military forces should visibly and mechanically represent Kingdom power instead of turning the product into a three-character Hero-collection RPG.
 - **Consequences**: Army is a first-class authoritative domain; Knight, Ranger, and Mage persistence remains intact; `RaidTeam` and Hero Battle rules version 1 remain historically compatible; new Raid/Revenge use Army Battle rules version 2; Barracks activation remains separately scoped; Army Battle v2 causes no permanent troop-roster loss.
 - **Status**: Active. Retention 03A foundation and Retention 03B combat implemented.
+
+## ADR-017: Reuse Battle v2 for isolated PvE Campaign progression
+
+- **Decision**: Campaign stages use configured durable NPC Armies and the existing deterministic Army Battle rules-version-2 engine. Progress stores permanent best stars, one-time first-clear settlement, and unique chapter milestone claims.
+- **Reason**: A bounded PvE path should deepen the existing Army investment without creating a second combat engine or weakening server authority.
+- **Consequences**: Campaign has its own Battle type, NPC discriminator, state, APIs, analytics, and reward reasons. It creates no Match Offer, PvP loot, Trophy, Revenge, notification, shield, anti-farm, stamina, permanent casualty, or Gem reward. The UI remains inside the existing Raid destination and does not add a sixth navigation item.
+- **Status**: Active. Retention 04 Broken Frontier implemented; owner art-direction review remains pending.

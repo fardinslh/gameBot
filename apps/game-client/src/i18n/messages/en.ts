@@ -117,6 +117,7 @@ export const en = {
       shield: 'New Kingdoms receive 24-hour protection from normal player defenders. You can still attack training rivals.',
       defense: 'This Battle Log records attacks against your Kingdom and their results.',
       revenge: 'An eligible defeat can grant one time-limited Revenge opportunity. Use it before it expires.',
+      campaign: 'The Broken Frontier is a permanent adventure. Clear each stage, improve your stars, and claim milestone chests.',
       reminder: "Need a reminder? Here's what you should know.", gotIt: 'Got it',
     },
     help: 'Game Guide', settings: 'Audio settings', guideTitle: 'Warden\'s Guide', guideSubtitle: 'How your kingdom works',
@@ -141,6 +142,7 @@ export const en = {
       trophies: { title: 'Trophies', body: 'Raid results move your Trophy rating within bounded rules. System opponents keep stable Trophy ratings.' },
       shield: { title: 'New Kingdom Shield', body: 'A new human Kingdom is protected for 24 hours. While protected, normal searches use training system opponents and other players cannot raid you normally.' },
       defense: { title: 'Defense & Revenge', body: 'The Battle Log records incoming real-player attacks. A successful attack can create one owner-bound Revenge opportunity for 24 hours; Revenge never chains.' },
+      campaign: { title: 'Campaign', body: 'Campaign stages use your current Army against fixed server-owned enemies. First-clear and star rewards are permanent, while retries are unlimited and cost no stamina.' },
     },
   },
   armyUi: {
@@ -206,6 +208,17 @@ export const en = {
     INVALID_IDEMPOTENCY_KEY: 'The upgrade could not be verified. Please retry.',
     HERO_CONFLICT: 'The Hero roster is busy. Please retry.',
     SERVER_ERROR: 'The Hero hall is unavailable.',
+  },
+  campaign: {
+    tab: 'Campaign', modeLabel: 'Battle mode', loading: 'Opening the frontier map…', chapterOne: 'Chapter One', starRewards: 'Chapter star rewards',
+    claim: 'Claim', claimed: 'Claimed', locked: 'Locked', stageMap: 'Campaign stage map', available: 'Available', cleared: 'Cleared',
+    bossStage: 'Boss Stage', stageNumber: 'Stage {count}', enemyPower: 'Power {count}', castleGate: 'Castle Lv.{count}', firstClearReward: 'First-clear reward',
+    bestStars: 'Best stars', requiresCastle: 'Requires Castle Lv.{count}', clearPrevious: 'Clear the previous stage first.', marching: 'Marching…', attack: 'Attack Stage', editArmy: 'Edit Army',
+    victory: 'Frontier Victory', defeat: 'Army Repelled', attemptStars: 'Attempt stars', firstClearGranted: 'First-clear reward granted', continueMap: 'Continue on Map', retryStage: 'Retry Stage', battleLabel: 'Campaign Battle',
+    errors: {
+      CAMPAIGN_STAGE_NOT_FOUND: 'That Campaign stage does not exist.', CAMPAIGN_STAGE_LOCKED: 'Clear the previous stage first.', CAMPAIGN_CASTLE_REQUIRED: 'Upgrade your Castle to unlock this stage.', CAMPAIGN_INVALID_ARMY: 'Prepare three battle-ready Army squads.',
+      CAMPAIGN_REWARD_LOCKED: 'Earn more stars before claiming this chest.', CAMPAIGN_REWARD_ALREADY_CLAIMED: 'That star chest was already claimed.', CAMPAIGN_CONFLICT: 'The Campaign is busy. Please retry.', INVALID_IDEMPOTENCY_KEY: 'The march could not be verified.', SERVER_ERROR: 'The Campaign is unavailable.',
+    },
   },
   raidUi: {
     title: 'Raid Frontier', subtitle: 'Challenge a rival kingdom', trophies: 'Trophies', opponent: 'Rival Warden',

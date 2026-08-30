@@ -6,7 +6,7 @@ contentType: Reference
 
 # Understand the PostgreSQL data model
 
-Prisma defines identity, Kingdom economy, Heroes, Army and Commanders, battle history, Revenge, notifications, analytics, and onboarding. SQL migrations add constraints and backfills that remain part of the authoritative schema.
+Prisma defines identity, Kingdom economy, Heroes, Army and Commanders, battle history, PvE Campaign, Revenge, notifications, analytics, and onboarding. SQL migrations add constraints and backfills that remain part of the authoritative schema.
 
 ## Relationship map
 
@@ -130,5 +130,6 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260829090100_army_commander_slot_cascade` | Cascade-safe Commander slots for Player/Hero cleanup and runtime repair |
 | `20260829180000_army_battle_v2` | Versioned Army squad snapshots, squad-defeat events, and remaining-unit replay state |
 | `20260830090000_match_offer_army_fingerprint` | Nullable SHA-256 attacker-Army fingerprint for secure Match Offer cutover; pre-migration offers remain readable but cannot start |
+| `20260830100000_pve_campaign_chapter_one` | Campaign NPC discriminator, Campaign battle metadata, persistent stage stars/attempts/first clear, milestone claims, and Campaign ledger/action enums |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

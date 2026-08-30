@@ -71,6 +71,8 @@ enum EconomyTransactionReason {
   DAILY_RETURN_REWARD
   DAILY_COMPLETION_REWARD
   TROOP_TRAINING
+  CAMPAIGN_REWARD
+  CAMPAIGN_STAR_REWARD
 }
 
 enum EconomyAction {
@@ -85,6 +87,13 @@ enum EconomyAction {
   ACHIEVEMENT_CLAIM
   DAILY_RETURN_CLAIM
   TROOP_TRAINING
+  CAMPAIGN_START
+  CAMPAIGN_STAR_REWARD
+}
+
+enum SystemOpponentKind {
+  RAID
+  CAMPAIGN
 }
 
 enum TroopType {
@@ -106,6 +115,7 @@ enum RetentionCadence {
 enum BattleType {
   RAID
   REVENGE
+  CAMPAIGN
 }
 
 enum RevengeStatus {
@@ -179,6 +189,7 @@ model Player {
   updatedAt             DateTime                    @updatedAt
   trophies              Int                         @default(1000)
   isSystemOpponent      Boolean                     @default(false)
+  systemOpponentKind    SystemOpponentKind?
   platformAccounts      PlatformAccount[]
   kingdom               Kingdom?
   economyTransactions   EconomyTransaction[]
@@ -203,6 +214,8 @@ model Player {
   troops                PlayerTroop[]
   troopTrainingOrders   TroopTrainingOrder[]
   armyFormation         ArmyFormation?
+  campaignStages        PlayerCampaignStage[]
+  campaignRewardClaims  CampaignRewardClaim[]
 }
 
 model OnboardingProgress {
@@ -550,6 +563,7 @@ model Battle {
   id                   String                    @id @default(uuid())
   matchOfferId         String?                   @unique
   revengeTargetId      String?                   @unique
+  campaignStageKey     String?
   type                 BattleType                @default(RAID)
   status               BattleStatus              @default(CREATED)
   attackerPlayerId     String
@@ -581,6 +595,35 @@ model Battle {
   @@index([defenderPlayerId, createdAt])
   @@index([winnerPlayerId, createdAt])
   @@index([type, createdAt])
+  @@index([attackerPlayerId, campaignStageKey, createdAt])
+}
+
+model PlayerCampaignStage {
+  id             String   @id @default(uuid())
+  playerId       String
+  stageKey       String
+  bestStars      Int      @default(0)
+  attempts       Int      @default(0)
+  firstClearedAt DateTime?
+  lastPlayedAt   DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, stageKey])
+  @@index([playerId, lastPlayedAt])
+}
+
+model CampaignRewardClaim {
+  id             String   @id @default(uuid())
+  playerId       String
+  chapterKey     String
+  milestoneStars Int
+  claimedAt      DateTime @default(now())
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, chapterKey, milestoneStars])
+  @@index([playerId, claimedAt])
 }
 
 model RevengeTarget {

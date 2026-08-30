@@ -28,10 +28,11 @@ The roadmap records implemented milestones and bounded deferred areas. It does n
 - **Retention 01B — Advanced Building Evolution and Goals**: Academy, Blacksmith, Watchtower, and Workshop now share five raster tiers/every-level evolution; Castle detail exposes authoritative progression goals
 - **Retention 03A — Army & Commander Foundation**: persistent Infantry/Archer/Cavalry ownership, one authoritative training order, Castle-derived capacity, three-squad formation, and existing Heroes as Commanders
 - **Retention 03B — Army Battle v2**: authoritative Army power and snapshots, deterministic squad combat, versioned replay, Raid/Revenge cutover, system Army tiers, and portrait playback
+- **Retention 04 — PvE Campaign / Adventure**: Broken Frontier chapter, nine gated stages, persistent best stars, first-clear and milestone rewards, durable Campaign NPC Armies, and Battle v2 playback
 
 ## Current and next
 
-The **Player Experience repair and Retention 01A, 01B, 02, 03A, and 03B are complete in engineering**. Retention 04 PvE Campaign / Adventure is next and has not started. Owner visual approval of the building and troop art, Aren approval, audible loop review, and real-device mix remain human checks. Bale Mini App Integration is intentionally delayed until the bounded retention roadmap is complete.
+The **Player Experience repair and Retention 01A, 01B, 02, 03A, 03B, and 04 are complete in engineering**. Retention 05 Shop MVP + Gem Economy is next and has not started. Owner visual approval of Campaign, building, and troop art, Aren approval, audible loop review, and real-device mix remain human checks. Bale Mini App Integration is intentionally delayed until the bounded retention roadmap is complete.
 
 The approved launch sequence is:
 
@@ -45,9 +46,8 @@ First-Party Analytics (complete)
   -> Retention 02 Missions / Achievements / Daily Return (implemented)
   -> Retention 03A Army & Commander Foundation (implemented)
   -> Retention 03B Army Battle v2 (implemented)
-  -> Retention 04 PvE Campaign / Adventure (next)
-  -> Retention 04 PvE Campaign
-  -> Retention 05 Shop + Gems
+  -> Retention 04 PvE Campaign / Adventure (implemented)
+  -> Retention 05 Shop + Gems (next)
   -> Retention 05B Kingdom Themes Foundation + First Historical Theme
   -> Retention 06 Guild MVP
   -> Retention 07 Guild Cooperation
@@ -61,7 +61,7 @@ First-Party Analytics (complete)
 
 Do not infer that Bale is implemented from platform placeholders. It requires its own scoped integration and device validation.
 
-All nine active buildings, authoritative Kingdom progression goals, Retention 02 return loops, and Retention 03 Army/Commander Battle expansion are implemented. Retention 04 PvE Campaign / Adventure is next; do not start it automatically. New Raid and Revenge use Army Battle rules version 2 while stored Hero rules-version-1 replay remains compatible. See [Army and Commanders](ARMY_AND_COMMANDERS.md) and the [retention roadmap](RETENTION_ROADMAP.md).
+All nine active buildings, authoritative Kingdom progression goals, Retention 02 return loops, Retention 03 Army/Commander Battle expansion, and Retention 04 PvE Campaign are implemented. Retention 05 Shop MVP + Gem Economy is next; do not start it automatically. New Raid, Revenge, and Campaign attempts use Army Battle rules version 2 while stored Hero rules-version-1 replay remains compatible. See [Army and Commanders](ARMY_AND_COMMANDERS.md), [PvE Campaign](PVE_CAMPAIGN.md), and the [retention roadmap](RETENTION_ROADMAP.md).
 
 Retention 05B is a future bounded milestone after Shop/Gem architecture and before Guild. It may add theme selection, ownership, and one complete historically-inspired cosmetic pack. This architecture correction does not implement that milestone.
 

@@ -6,7 +6,7 @@ contentType: Reference
 
 # Work with the game client
 
-The client uses one Next.js route and switches game sections inside a client-side shell. Feature hooks synchronize authoritative API state; Pixi renders game-world canvases.
+The client uses one Next.js route and switches game sections inside a client-side shell. Feature hooks synchronize authoritative API state; Pixi renders game-world canvases. Campaign is a compact mode inside the existing Raid destination, so the five-item 54px navigation remains unchanged.
 
 ## Application shell
 

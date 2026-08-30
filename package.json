@@ -25,6 +25,7 @@
     "validate:progression": "dotenv -e .env -- node scripts/validate-progression.mjs",
     "validate:retention": "dotenv -e .env -- node scripts/validate-retention.mjs",
     "validate:army": "npm run test:army --workspace @crown-and-coin/game-api",
+    "validate:campaign": "npm run test:campaign --workspace @crown-and-coin/game-api && dotenv -e .env -- node scripts/validate-campaign.mjs",
     "validate:docs": "node scripts/validate-project-docs.mjs",
     "analytics:report": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js",
     "analytics:check": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js --check",

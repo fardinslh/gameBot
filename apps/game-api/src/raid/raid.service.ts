@@ -96,6 +96,7 @@ interface ResolveBattleInput {
   requestingPlayerId: string;
   matchOfferId?: string;
   revengeTargetId?: string;
+  campaignStageKey?: string;
   attackerArmy?: ArmyCombatSquad[];
   snapshotTime?: Date;
 }
@@ -149,6 +150,7 @@ export class RaidService {
       where: {
         id: { in: [...systemConfigs.keys()], not: identity.playerId },
         isSystemOpponent: true,
+        systemOpponentKind: 'RAID',
         kingdom: { isNot: null }, armyFormation: { isNot: null },
         NOT: { armyFormation: { slots: { none: {} } } },
       },
@@ -317,7 +319,7 @@ export class RaidService {
     });
     const [battles, unreadCount] = await Promise.all([
       this.prisma.battle.findMany({
-        where: { defenderPlayerId: identity.playerId },
+        where: { defenderPlayerId: identity.playerId, type: { in: [PrismaBattleType.RAID, PrismaBattleType.REVENGE] } },
         include: { attacker: true, revengeSource: true },
         orderBy: { createdAt: 'desc' },
         take: RAID_HISTORY_LIMIT,
@@ -462,10 +464,29 @@ export class RaidService {
     return this.prisma.$transaction((tx) => this.presentBattle(tx, battleId, identity.playerId));
   }
 
+  async resolveCampaignBattle(
+    tx: Tx,
+    input: { attackerPlayerId: string; defenderPlayerId: string; stageKey: string; snapshotTime: Date },
+  ): Promise<Extract<BattleReplayResponse, { rulesVersion: 2 }>> {
+    const replay = await this.resolveBattle(tx, {
+      type: PrismaBattleType.CAMPAIGN,
+      attackerPlayerId: input.attackerPlayerId,
+      defenderPlayerId: input.defenderPlayerId,
+      requestingPlayerId: input.attackerPlayerId,
+      campaignStageKey: input.stageKey,
+      snapshotTime: input.snapshotTime,
+    });
+    if (replay.rulesVersion !== 2) throw new Error('Campaign Battle did not use Army rules version 2.');
+    return replay;
+  }
+
   async history(context: DevelopmentPlayerContext): Promise<RaidHistoryResponse> {
     const identity = await this.identity(context);
     const battles = await this.prisma.battle.findMany({
-      where: { OR: [{ attackerPlayerId: identity.playerId }, { defenderPlayerId: identity.playerId }] },
+      where: {
+        type: { in: [PrismaBattleType.RAID, PrismaBattleType.REVENGE] },
+        OR: [{ attackerPlayerId: identity.playerId }, { defenderPlayerId: identity.playerId }],
+      },
       include: { attacker: true, defender: true }, orderBy: { createdAt: 'desc' }, take: RAID_HISTORY_LIMIT,
     });
     return { battles: battles.map((battle) => {
@@ -625,15 +646,16 @@ export class RaidService {
     const defender = players.find((player) => player.id === input.defenderPlayerId);
     if (!attacker?.kingdom || !defender?.kingdom) throw new RaidError('OPPONENT_NOT_FOUND', 'A battle participant is unavailable.');
     const attackerWon = engine.result === 'ATTACKER_WIN';
-    const loot = attackerWon ? calculateRaidLoot(
+    const campaignBattle = input.type === PrismaBattleType.CAMPAIGN;
+    const loot = attackerWon && !campaignBattle ? calculateRaidLoot(
       this.balanceMap(defender.kingdom.resourceBalances),
       this.watchtowerProtectionBps(defender.kingdom.buildings),
     ) : { ...EMPTY_RAID_LOOT };
     const calculatedDeltas = calculateTrophyDeltas(attacker.trophies, defender.trophies, attackerWon);
-    const attackerDelta = attacker.isSystemOpponent ? 0 : Math.max(-attacker.trophies, calculatedDeltas.attacker);
-    const defenderDelta = defender.isSystemOpponent ? 0 : Math.max(-defender.trophies, calculatedDeltas.defender);
+    const attackerDelta = campaignBattle || attacker.isSystemOpponent ? 0 : Math.max(-attacker.trophies, calculatedDeltas.attacker);
+    const defenderDelta = campaignBattle || defender.isSystemOpponent ? 0 : Math.max(-defender.trophies, calculatedDeltas.defender);
     const battleId = randomUUID();
-    if (attackerWon) {
+    if (attackerWon && !campaignBattle) {
       await this.transferLoot(
         tx,
         battleId,
@@ -652,6 +674,7 @@ export class RaidService {
         type: input.type,
         matchOfferId: input.matchOfferId,
         revengeTargetId: input.revengeTargetId,
+        campaignStageKey: input.campaignStageKey,
         status: 'REWARDED',
         attackerPlayerId: attacker.id,
         defenderPlayerId: defender.id,
@@ -745,7 +768,7 @@ export class RaidService {
         dedupeKey: `first_raid_completed:${attacker.id}`, occurredAt: resolvedAt,
       });
       await this.onboarding.completeAfterStandardRaid(tx, attacker.id, battleId, resolvedAt);
-    } else {
+    } else if (input.type === PrismaBattleType.REVENGE) {
       await this.analytics.recordServer(tx, {
         playerId: attacker.id, eventName: 'revenge_started', dedupeKey: `revenge_started:${battleId}`, occurredAt: startedAt,
       });

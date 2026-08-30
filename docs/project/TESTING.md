@@ -20,8 +20,8 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 
 | Command | Coverage at verified baseline |
 | --- | --- |
-| `npm test` | API unit suite for economy/Hero/Army config/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
-| `npm run test:integration` | 67 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge including Army-offer cutover, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
+| `npm test` | 64 tests in 19 files for economy/Hero/Army/Campaign config, battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
+| `npm run test:integration` | 72 tests in 8 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge including Army-offer cutover, Campaign authority/isolation/idempotency, onboarding/advisor tips, analytics, and Retention periods/history/concurrency/ledger behavior |
 | `npm run validate:army` | Exact troop config/capacity plus focused PostgreSQL bootstrap, system-player repair, economy, idempotency, concurrency, completion, ownership, and formation coverage |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
@@ -44,7 +44,8 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |
-| `npm run validate:player-experience` | Fresh Persian authoritative Collect/Upgrade/Raid/Battle/Result flows at 320/375/390, CTA/advisor non-overlap, refresh and skip persistence, eight Guide sections, technical audio triggers/settings, and RTL/LTR |
+| `npm run validate:player-experience` | Fresh Persian authoritative Collect/Upgrade/Raid/Battle/Result flows at 320/375/390, CTA/advisor non-overlap, refresh and skip persistence, nine Guide sections, technical audio triggers/settings, and RTL/LTR |
+| `npm run validate:campaign` | Campaign config and integration authority plus Persian/English 320/375/390 map, lock, detail, Battle, result, stars, milestone, overflow, console, and screenshot validation |
 | `npm run validate:retention` | Daily Return, three Daily missions, nine Achievement families, Persian RTL, English LTR, exact 54px navigation, no overflow, and clean console at 320/375/390 |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |

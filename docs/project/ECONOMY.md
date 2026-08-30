@@ -99,6 +99,8 @@ Reads and mutation paths reconcile due upgrades. Reconciliation claims a due row
 
 ## Transaction ledger and idempotency
 
-`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, troop training, and Raid transfers use the ledger. Troop-training charges use the `TROOP_TRAINING` reason and reference their `TroopTrainingOrder`.
+`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, troop training, Raid transfers, and Campaign rewards use the ledger. Troop-training charges use the `TROOP_TRAINING` reason and reference their `TroopTrainingOrder`.
+
+Campaign first-clear and 9/18/27-star rewards may grant Gold, Food, Wood, and Stone only; Chapter One grants no Gems. Definitions and amounts live in `campaign.config.ts`. The client cannot submit a reward amount, battle result, or star count.
 
 `EconomyRequest` enforces uniqueness across player, idempotency key, and action. Keys must contain 8 through 100 characters. Economy transactions retry Prisma serialization conflict `P2034` up to three attempts before returning `ECONOMY_CONFLICT`.

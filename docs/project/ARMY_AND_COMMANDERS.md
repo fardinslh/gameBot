@@ -8,7 +8,7 @@ contentType: Reference
 
 Retention 03 changes Crown & Coin's combat fantasy from Hero-only expansion to Army-first Kingdom strategy. The Player trains troops, assigns existing Heroes as Commanders, builds a formation, and takes that Army into Raid and Revenge battles.
 
-Retention 03A provides the authoritative Army domain. Retention 03B cuts new Raid and Revenge battles over to Army Battle rules version 2 while preserving stored rules-version-1 Hero replays.
+Retention 03A provides the authoritative Army domain. Retention 03B cuts new Raid and Revenge battles over to Army Battle rules version 2 while preserving stored rules-version-1 Hero replays. Retention 04 reuses the same immutable Army snapshot and simulator for Campaign attempts; casualties remain battle-state only.
 
 ## Troop content
 

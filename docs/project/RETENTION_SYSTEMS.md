@@ -39,6 +39,8 @@ Nine permanent families cover Castle level, total building levels, completed upg
 
 Every claim requires an 8–100 character `Idempotency-Key`, runs under the Player advisory lock, credits balances inside one PostgreSQL transaction, writes an immutable `EconomyTransaction` per resource, stores the response in `EconomyRequest`, and emits server analytics. Reward definitions live only in `retention.config.ts`; claim routes accept no amount, progress, time, or eligibility payload.
 
+Campaign progression is a separate Retention 04 domain. Campaign battles do not count as Raid/Revenge mission progress, and Campaign rewards do not alter Retention 02 claim sequencing. Both systems reuse the transaction, ledger, idempotency, and advisory-lock integrity patterns.
+
 ## Client boundary
 
 After onboarding is complete or skipped, Kingdom shows one compact parchment/gold entry control. It opens a scrollable React sheet with Daily, Weekly, and Achievements tabs plus a seven-day return strip. The overlay preserves the existing Pixi world, coordinates, HUD, RTL/LTR boundary, safe areas, and exact 54px navigation. Successful claims refresh both Retention state and authoritative Kingdom balances.

@@ -29,6 +29,13 @@ export const SERVER_ANALYTICS_EVENTS = [
   'army_formation_saved',
   'army_battle_started',
   'army_battle_finished',
+  'campaign_opened',
+  'campaign_stage_started',
+  'campaign_stage_won',
+  'campaign_stage_lost',
+  'campaign_star_improved',
+  'campaign_star_reward_claimed',
+  'campaign_chapter_completed',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [

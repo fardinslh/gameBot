@@ -49,3 +49,5 @@ Army foundation and battle events (`army_battle_started`, `army_battle_finished`
 ## Tests and fixtures
 
 Unit tests cover taxonomy and retention boundaries. Integration tests cover duplicates, system exclusion, property rejection, and transaction rollback. Fixtures are explicit and cleaned up; normal startup creates no synthetic analytics.
+
+Retention 04 adds server-owned `campaign_opened`, `campaign_stage_started`, `campaign_stage_won`, `campaign_stage_lost`, `campaign_star_improved`, `campaign_star_reward_claimed`, and `campaign_chapter_completed`. Outcomes and rewards are emitted by authoritative Campaign transactions. Campaign NPCs remain excluded from player analytics.

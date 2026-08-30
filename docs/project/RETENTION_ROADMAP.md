@@ -14,8 +14,8 @@ Bale integration is intentionally delayed until Crown & Coin has enough visible 
 4. **Retention 03 — Army & Commander Expansion**.
    - **Retention 03A — Army & Commander Foundation**. Implemented: three troop types, persistent training, Castle-derived capacity, three-squad formation, and existing Heroes as Commanders.
    - **Retention 03B — Army Battle v2**. Implemented: authoritative Army power, immutable squad snapshots, deterministic counters/skills/targeting, Raid/Revenge cutover, system Armies, playback, and rules-version-1 history compatibility.
-5. **Retention 04 — PvE Campaign / Adventure**. Next and not implemented.
-6. **Retention 05 — Shop MVP and Gem Economy**. Not implemented.
+5. **Retention 04 — PvE Campaign / Adventure**. Implemented: Broken Frontier, nine Castle/prior-clear-gated stages, persistent best stars, first-clear rewards, 9/18/27-star claims, durable Campaign NPC Armies, and Battle v2 playback without PvP side effects.
+6. **Retention 05 — Shop MVP and Gem Economy**. Next and not implemented.
 7. **Retention 05B — Kingdom Themes Foundation and First Historical Theme**. Not implemented. Requires Shop/Gem architecture first; themes remain cosmetic only.
 8. **Retention 06 — Guild MVP**. Not implemented.
 9. **Retention 07 — Guild Cooperation**. Not implemented.

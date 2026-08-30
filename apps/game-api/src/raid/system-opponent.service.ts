@@ -128,6 +128,7 @@ export class SystemOpponentService {
           displayName: configured.displayName,
           trophies: configured.trophies,
           isSystemOpponent: true,
+          systemOpponentKind: 'RAID',
         },
       });
       await tx.kingdom.update({

@@ -15,6 +15,7 @@ import { AnalyticsModule } from './analytics/analytics.module';
 import { OnboardingModule } from './onboarding/onboarding.module';
 import { RetentionModule } from './retention/retention.module';
 import { ArmyModule } from './army/army.module';
+import { CampaignModule } from './campaign/campaign.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { ArmyModule } from './army/army.module';
     OnboardingModule,
     RetentionModule,
     ArmyModule,
+    CampaignModule,
   ],
 })
 export class AppModule {}

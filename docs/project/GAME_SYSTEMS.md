@@ -12,6 +12,8 @@ The current systems share authoritative building, Hero, Army, resource, and batt
 
 The Army domain is the production Raid/Revenge combat input. Economy bootstrap creates missing starter troops and one formation after Hero bootstrap. `ArmyService` owns capacity, one training order, resource settlement, lazy completion, formation validation, Commander assignments, and authoritative battle snapshots under the Player advisory lock. Existing `PlayerHero` rows are referenced directly; `RaidTeam` remains only for rules-version-1 history compatibility.
 
+The PvE Campaign reuses Army Battle rules version 2 through a separate authoritative entry point. Broken Frontier contains nine configured stages with durable Campaign-only NPCs, Castle/prior-clear gates, persistent best stars, one-time first-clear rewards, and 9/18/27-star milestone claims. It creates no PvP loot, Trophy, Revenge, notification, shield, anti-farm, or permanent troop-casualty state.
+
 ```text
 Castle level -> Army capacity
 ResourceBalance -> training charge -> EconomyTransaction
@@ -84,7 +86,7 @@ Each mutation validates ownership and server state. `EconomyRequest` stores repl
 
 ## Analytics signals
 
-Collection, building upgrade start, Hero upgrade completion, Raid search/battle/result, Revenge battle/result, and first milestones emit server-owned analytics. Event writes share gameplay transactions where practical. Analytics is observational only.
+Collection, building upgrade start, Hero upgrade completion, Raid search/battle/result, Revenge battle/result, Campaign attempts/rewards, and first milestones emit server-owned analytics. Event writes share gameplay transactions where practical. Analytics is observational only.
 
 Retention progress is a read model over those durable authoritative facts. Daily and Weekly assignments snapshot a deterministic server-selected definition for the UTC period; Achievement milestones backfill from history. Explicit claims reuse Player locks, balances, the economy ledger, and idempotent request storage. Retention never changes the underlying Collect, building, Hero, Raid, or Revenge outcome.
 

@@ -219,7 +219,7 @@ function AdvisorIdentity({ dictionary: t, large = false }: { dictionary: Diction
 }
 
 function ContextualAdvisorTip({ dictionary: t, tip, onDismiss }: { dictionary: Dictionary; tip: AdvisorTipKey; onDismiss(): void }) {
-  const copy: Record<AdvisorTipKey, string> = { HEROES_INTRO: t.experience.advisor.heroes, CASTLE_PROGRESSION: t.experience.advisor.castle, NEW_KINGDOM_SHIELD: t.experience.advisor.shield, DEFENSE_INBOX: t.experience.advisor.defense, REVENGE: t.experience.advisor.revenge };
+  const copy: Record<AdvisorTipKey, string> = { HEROES_INTRO: t.experience.advisor.heroes, CASTLE_PROGRESSION: t.experience.advisor.castle, NEW_KINGDOM_SHIELD: t.experience.advisor.shield, DEFENSE_INBOX: t.experience.advisor.defense, REVENGE: t.experience.advisor.revenge, CAMPAIGN_INTRO: t.experience.advisor.campaign };
   return <aside className="advisor-context-tip" role="dialog" aria-label={t.experience.advisor.name}><AdvisorIdentity dictionary={t} /><p>{copy[tip]}</p><button onClick={onDismiss} type="button">{t.experience.advisor.gotIt}</button></aside>;
 }
 

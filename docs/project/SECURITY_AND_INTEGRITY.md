@@ -58,6 +58,8 @@ Clients cannot choose player identity or emit progression events. Ingestion enfo
 
 The client cannot post progress, completion, UTC period, day index, reward amount, balance, or claim timestamp. Progress is reconstructed from immutable economy requests/transactions, upgrades, battles, buildings, and Trophy history. Claim endpoints accept no body, acquire the Player advisory lock, re-evaluate eligibility in the write transaction, and settle balance, ledger, claim row, idempotent response, and analytics together. Current-period checks reject stale or foreign mission IDs; tier ordering rejects skipped Achievement claims.
 
+Campaign stage gates, NPC Armies, results, stars, and rewards are server-owned. Start and milestone claims accept no authority-bearing body, run under the Player advisory lock, and replay by idempotency key. `SystemOpponentKind` separates Campaign NPCs from Raid matchmaking. Campaign resolution cannot create Trophy, loot-transfer, Revenge, notification, shield, anti-farm, or permanent-casualty state.
+
 ## Current security gaps
 
 - `X-Dev-Player-Id` is caller-controlled and provides no authentication
