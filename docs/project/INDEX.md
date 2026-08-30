@@ -11,12 +11,12 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `80f57c25c4cd06ec1b3b1d43377d119067a11eed`
-- **Baseline commit message**: `feat: add army battle v2`
+- **Last verified against commit**: `f969dce7a5da346cdf3c7306d708a5ce80dd1bfd`
+- **Baseline commit message**: `fix: harden army battle cutover`
 - **Verification date**: 2026-08-30
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-The verified feature baseline includes Retention 03A Army foundations and Retention 03B Army Battle v2. Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative.
+The verified feature baseline includes Retention 03A Army foundations and Retention 03B Army Battle v2 with its Match Offer cutover correction. Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative.
 
 ## Platform direction
 
