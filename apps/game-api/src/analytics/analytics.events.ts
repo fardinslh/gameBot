@@ -27,6 +27,8 @@ export const SERVER_ANALYTICS_EVENTS = [
   'troop_training_started',
   'troop_training_completed',
   'army_formation_saved',
+  'army_battle_started',
+  'army_battle_finished',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [

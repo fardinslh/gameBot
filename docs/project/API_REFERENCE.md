@@ -51,13 +51,13 @@ The client submits a persistent Building UUID in `buildingId`, not a building ty
 | `POST` | `/army/train` | Validate and charge one 1–25 unit training order | `{ troopType, quantity }`, idempotency key; `ArmyTrainResponse` |
 | `PUT` | `/army/formation` | Save exactly three validated Commander-led squads | `{ slots: ArmyFormationSlotInput[3] }`; `ArmyResponse` |
 
-Army mutations accept no cost, duration, completion timestamp, capacity, Commander stats, combat power, or resulting count. Castle level temporarily controls capacity. Current Raid endpoints do not read these models.
+Army mutations accept no cost, duration, completion timestamp, capacity, Commander stats, combat power, or resulting count. Castle level temporarily controls capacity. Raid and Revenge load this authoritative state for new rules-version-2 battles.
 
 ## Raid and battle
 
 | Method | Path | Purpose | Requirements and response |
 | --- | --- | --- | --- |
-| `GET` | `/raid` | Return current team, power, balances, player level, Trophies, server time, and New Kingdom Shield state | `RaidOverviewResponse` |
+| `GET` | `/raid` | Return current Army, power, balances, player level, Trophies, server time, and New Kingdom Shield state | `RaidOverviewResponse` |
 | `POST` | `/raid/search` | Select a safe real/system defender and create a 180-second Match Offer | `RaidSearchResponse` |
 | `POST` | `/raid/start` | Validate and consume one Match Offer, resolve and settle battle | `{ matchOfferId }`, idempotency key; `BattleReplayResponse` |
 | `GET` | `/raid/history` | Return up to 20 recent participant summaries | `RaidHistoryResponse` |
@@ -73,7 +73,7 @@ Army mutations accept no cost, duration, completion timestamp, capacity, Command
 | --- | --- | --- | --- |
 | `GET` | `/raid/inbox` | Return recent defenses, unread count, and Revenge state | `DefenseInboxResponse` |
 | `POST` | `/raid/inbox/read` | Mark incoming Raid/Revenge notifications read | `{ readCount: number }` |
-| `GET` | `/raid/revenge/:revengeTargetId` | Validate target and return current-team/current-loot preview | `RevengePreviewResponse` |
+| `GET` | `/raid/revenge/:revengeTargetId` | Validate target and return current-Armies/current-loot preview | `RevengePreviewResponse` |
 | `POST` | `/raid/revenge/start` | Consume one target and settle a Revenge battle | `{ revengeTargetId }`, idempotency key; `BattleReplayResponse` |
 
 ## Retention

@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. The authoritative Kingdom/Hero/Raid loop now includes the Retention 03A Army and Commander foundation: persistent troops, one server-timed training queue, capacity, and a three-slot formation whose Commanders are existing owned Heroes. Army Battle integration is deliberately deferred to Retention 03B. Persistent onboarding, the bilingual Game Guide, approved audio, missions, Achievements, and Daily Return remain intact. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2 for new Raid/Revenge battles. Historical Hero Battle v1 replay remains compatible. Persistent onboarding, the bilingual Game Guide, approved audio, Missions, Achievements, and Daily Return remain intact. PvE Campaign is next but not started; Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
@@ -36,15 +36,15 @@ KingdomPage
 └── BottomNavigation      Kingdom + unchanged coming-soon feedback
 ```
 
-The game shell switches the enabled `Kingdom`, `Raid`, and `Heroes` views. The compact 54px navigation remains shared; Guild and Shop still show Coming Soon. The Hero client is isolated under `apps/game-client/src/features/heroes/`:
+The game shell switches the enabled `Kingdom`, `Raid`, and `Army` views. The internal Army section ID remains `heroes` for compatibility. The compact 54px navigation remains shared; Guild and Shop still show Coming Soon. The Army client composes authoritative Army and Hero/Commander state:
 
 ```text
 HeroesPage
-├── useHeroState          API state, Raid Team draft, upgrade synchronization
-├── RaidTeamPanel         three tap-selectable ordered slots + save action
-├── HeroCard              portrait-first roster summary + slot assignment
-├── HeroDetailSheet       server stats, skill, Gold cost, upgrade action
-└── Hero API              GET roster, save team, upgrade Hero
+├── useArmyState          Army/Hero API state, formation draft, training
+├── Army formation        three troop squads + Commander assignment + save
+├── Training              authoritative cost, capacity, queue, countdown
+├── HeroDetailSheet       Commander stats, skill, Gold cost, upgrade action
+└── Army/Hero APIs        GET Army/roster, train, save formation, upgrade
 ```
 
 ## Prerequisites and start
@@ -186,21 +186,22 @@ The client never submits level, stats, power, cost, balance, or ownership. Hero 
 
 ## Launch-safe Raid architecture
 
-The client submits only a `matchOfferId` and an idempotency key. It never submits a defender ID, Hero stats, damage, winner, loot, Trophy delta, or duration. `/raid/search` derives team power from the Hero calculator and applies bounded real-player passes of ±150 Trophy/±15% power, ±300/±30%, then ±450/±40%. It ranks valid candidates, randomly selects within the best five, remembers eight recent offers, and falls back to a system opponent instead of making an unlimited real-player mismatch. Offers expire after 180 seconds and are single-use.
+The client submits only a `matchOfferId` and an idempotency key. It never submits a defender ID, troop or Commander stats, damage, winner, loot, Trophy delta, or duration. `/raid/search` derives Army power from authoritative formations and applies bounded real-player passes of ±150 Trophy/±15% power, ±300/±30%, then ±450/±40%. It ranks valid candidates, randomly selects within the best five, remembers eight recent offers, and falls back to a system opponent instead of making an unlimited real-player mismatch. Offers expire after 180 seconds and are single-use.
 
 A human Player receives a server-derived 24-hour New Kingdom Shield from persistent `Player.createdAt`. While active, normal search returns system opponents only and other real players cannot select that Player as a defender. Standard real attacker-to-defender repeats are blocked for six hours; Revenge remains a separate flow.
 
-`POST /raid/start` snapshots all six Heroes (key, slot, level, HP, ATK, DEF, power, skill), creates a cryptographic server seed, and runs rules version `1` immediately. The persisted event stream is the only combat input used by Pixi playback, so historical replays do not change after Hero upgrades.
+`POST /raid/start` snapshots six Army squads (troop/count, Commander, per-unit and aggregate stats, power, skill), creates a cryptographic server seed, and runs rules version `2` immediately. The persisted event stream is the only combat input used by Pixi playback, so replay does not change after training, formation edits, or Commander upgrades. Stored rules-version-1 battles continue to load their original Hero snapshots.
 
 | Rule | Temporary value |
 | --- | --- |
-| Basic damage | `max(25, ATK - round(DEF × 0.35))`, then seeded 95–105% variance |
+| Basic damage | living-unit attack minus defense contribution, minimum 5, then seeded 95–105% variance |
 | Critical | seeded 10% chance, ×1.5 |
 | Attack interval | Knight 1.4s, Ranger 1.2s, Mage 1.5s |
 | Shield Wall | 35% reduction for 2.5s, 5.0s cooldown |
 | Power Shot | 180% focused damage, 4.0s cooldown |
-| Arcane Blast | 100% damage to every living enemy, 5.5s cooldown |
-| Targeting | first living slot |
+| Arcane Blast | 75% damage to every living enemy, 5.5s cooldown |
+| Counter | 20%: Infantry > Cavalry > Archer > Infantry |
+| Targeting | same lane, then nearest living lane with lower-slot tie break |
 | Safety timeout | 30 logical seconds; remaining HP ratio resolves it |
 | Replay duration | event timeline scaled to 8–15 seconds |
 
@@ -221,7 +222,7 @@ The temporary rating formula lightly adjusts for rating difference: winners gain
 
 ### System opponents and debugging
 
-The server idempotently bootstraps 30 persistent system opponents across six centralized tiers. They use normal Player, PlatformAccount, Kingdom, balances, buildings, Heroes, Raid Team, Trophy, Battle, and ledger models; the five original `raid-fixture:*` identities are retained without duplication. `Player.isSystemOpponent` is the durable server-owned classification.
+The server idempotently bootstraps 30 persistent system opponents across six centralized tiers. They use normal Player, PlatformAccount, Kingdom, balances, buildings, Heroes/Commanders, troops, Army Formation, Trophy, Battle, and ledger models; the five original `raid-fixture:*` identities are retained without duplication. `Player.isSystemOpponent` is the durable server-owned classification.
 
 Each tier defines Trophy, Castle/building and Hero levels, resource targets, and 50% replenishment thresholds. Immediately before a selected system defender becomes a Match Offer, the API takes its advisory lock, re-reads balances, restores only resources below threshold, records exact `SYSTEM_OPPONENT_REPLENISH` ledger rows, and calculates loot from the refreshed state. System Trophy ratings do not mutate, and system Raids create neither defender notifications nor Revenge targets.
 
@@ -231,7 +232,7 @@ Manual Raid flow:
 
 1. Open `http://localhost:3000/?lang=fa&section=raid` (or `lang=en`).
 2. Find an opponent, inspect the offer, and optionally find another.
-3. Confirm the three-Hero team/power or use **Edit Team**.
+3. Confirm the three-squad Army/power or open **Army** to edit it.
 4. Attack, watch the Pixi replay, and inspect Victory/Defeat, loot, and Trophy delta.
 5. Return to Kingdom and verify the freshly fetched HUD; refresh to confirm persistence.
 
@@ -239,7 +240,7 @@ Manual Raid flow:
 
 A successful standard `RAID` against a real Player creates one `RevengeTarget` for the defender. It references the source Battle, expires after 24 hours, can be consumed once, and transitions through `AVAILABLE`, `USED`, `EXPIRED`, or `INVALID`. A `REVENGE` Battle never creates another target, which prevents reciprocal Revenge chains.
 
-The preview and start endpoints use the target Player's current valid Raid Team and current protected balances. Revenge start locks both Players in stable ID order and locks the target row, then reuses the Phase 05 snapshot, deterministic simulation, event persistence, loot/Trophy settlement, and replay response inside one idempotent transaction.
+The preview and start endpoints use both Players' current valid Army Formations and current protected balances. Revenge start locks both Players in stable ID order and locks the target row, then reuses versioned snapshots, deterministic simulation, event persistence, loot/Trophy settlement, and replay response inside one idempotent transaction.
 
 Phase 06 routes:
 
@@ -291,7 +292,7 @@ Production loads only the current required tier through a centralized Theme → 
 
 All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
 
-Retention 01A, Retention 01B, Retention 02, and Retention 03A Army & Commander Foundation are implemented. Retention 03B Army Battle Integration is next and has not started. Current `rulesVersion: 1` Raid still uses the unchanged three-Hero combat team; troops and Army formations do not affect battle yet. PvE, Shop, Kingdom Theme content, Guild, Leaderboards, Bale, troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
+Retention 01A, Retention 01B, Retention 02, Retention 03A Army & Commander Foundation, and Retention 03B Army Battle v2 are implemented. New Raid/Revenge use `rulesVersion: 2`; historical `rulesVersion: 1` Hero replay remains supported. Retention 04 PvE Campaign / Adventure is next and has not started. Shop, Kingdom Theme content, Guild, Leaderboards, Bale, permanent troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 

@@ -21,7 +21,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 | Command | Coverage at verified baseline |
 | --- | --- |
 | `npm test` | API unit suite for economy/Hero/Army config/battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
-| `npm run test:integration` | 63 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
+| `npm run test:integration` | 64 tests in 7 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge, onboarding/advisor tips, analytics, and Retention periods/history/idempotency/concurrency/ledger behavior |
 | `npm run validate:army` | Exact troop config/capacity plus focused PostgreSQL bootstrap, system-player repair, economy, idempotency, concurrency, completion, ownership, and formation coverage |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
 | `npm run test:client-experience` | 43 scheduler timing, overlapping-loop lifecycle, bus/mute/context/fallback, Battle-SFX, audition-catalog, bilingual advisor/Guide-content, and target-positioning tests |
@@ -40,7 +40,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:runtime` | Applies migrations, starts/checks API, PostgreSQL and Redis health, client reachability, 320-pixel Persian layout |
 | `npm run validate:client` | Five-building Castle 1 scene, all active taps, Collect, Mine upgrade persistence/completion, RTL, mobile overflow |
 | `npm run validate:heroes` | Three starters, portraits, detail, team reorder/save/reload, Hero upgrade charge, Kingdom return smoke test |
-| `npm run validate:raid` | New-player shield/system offer, Match Offer, victory and defeat, Pixi playback, snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
+| `npm run validate:raid` | New-player shield/system offer, Army Match Offer, deterministic victory/defeat, three-lane Pixi playback, six Army snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |
@@ -72,7 +72,7 @@ For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, 
 
 For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for all nine active buildings, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify Lv. 1/8/12/20 references in the 320/375/390 viewport-equivalent panels. Inspect Castle Kingdom Progress at Castle 1 and 5. In the exact-production status fixture, inspect every active building in normal, upgrade, active, and selected-plus-upgrade states; `data-status-overlap` must remain `false` and `data-status-stack-aligned` must remain `true` whenever an indicator is visible. Owner judgment—not passing automation—approves art quality.
 
-For Army foundation, open `/dev/army` in development. Confirm starter counts 20/15/10, capacity 60/45/0/15 at Castle 1, the Knight/Ranger/Mage default formation, and per-unit costs/time. Start five Infantry through the API, confirm a 10-second authoritative order and one Food/Gold charge, refresh before and after completion, then save and reload a valid formation. Complete a normal Raid and Revenge regression afterward; both must remain Hero-based rules version 1.
+For Army, open `/dev/army` in development. Confirm starter counts 20/15/10, capacity 60/45/0/15 at Castle 1, the Knight/Ranger/Mage default formation, squad/Army power, and per-unit costs/time. Start five Infantry through the API, confirm a 10-second authoritative order and one Food/Gold charge, refresh before and after completion, then save and reload a valid formation. Complete a normal Raid and Revenge and verify rules version 2, six Army snapshots, visible remaining-unit losses, no permanent troop deduction, and a historical rules-version-1 replay.
 
 For player experience, use a fresh identity, choose Start, perform a real Collect, open Farm, confirm the complete Aren unit does not overlap the full Upgrade CTA, start the upgrade, follow Raid/Find/Attack, complete Battle/Result, return to Kingdom, then refresh and confirm `COMPLETED`. Confirm the five contextual tips each appear once, and separately verify skip persistence. Capture Aren Welcome, Collect, Upgrade, Raid, Find Enemy, Heroes counsel, and Guide at the supported mobile sizes.
 

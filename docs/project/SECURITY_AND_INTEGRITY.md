@@ -34,7 +34,7 @@ Troop training computes cost and duration from server configuration, conditional
 
 ## Battle integrity
 
-The server creates the seed and fixes `rulesVersion`. It stores six Hero snapshots and ordered events. Historical playback reads those records instead of current Hero state.
+The server creates the seed and fixes `rulesVersion`. New battles store six Army squad snapshots and ordered events; historical version-1 battles retain six Hero snapshots. Playback dispatches by stored version and never reads current formation or Hero state.
 
 Match Offers bind attacker and defender, expire after 180 seconds, and become single-use. The start endpoint validates caller ownership and rejects self attacks. Real matchmaking is bounded to ±450 Trophy and ±40% power at its widest; protected or recently farmed real defenders cannot be selected, and the fallback is a server-owned system opponent.
 

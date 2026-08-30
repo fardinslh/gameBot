@@ -1,7 +1,7 @@
 import type { BattleEventState, BattleSide, HeroSkillKey } from '@crown-and-coin/shared';
 import {
   ARCANE_BLAST_MULTIPLIER_BPS,
-  BATTLE_RULES_VERSION,
+  HERO_BATTLE_RULES_VERSION,
   CRITICAL_CHANCE_BPS,
   CRITICAL_MULTIPLIER_BPS,
   DAMAGE_VARIANCE_MAX_BPS,
@@ -32,7 +32,7 @@ interface LogicalEvent extends Omit<BattleEventState, 'sequence' | 'timeMs'> {
 }
 
 export function simulateBattle(input: BattleEngineInput): BattleEngineResult {
-  if (input.rulesVersion !== BATTLE_RULES_VERSION) throw new Error(`Unsupported Battle rules version ${input.rulesVersion}`);
+  if (input.rulesVersion !== HERO_BATTLE_RULES_VERSION) throw new Error(`Unsupported Battle rules version ${input.rulesVersion}`);
   validateTeam(input.attacker, 'ATTACKER');
   validateTeam(input.defender, 'DEFENDER');
   const random = createSeededRandom(input.seed);

@@ -14,14 +14,16 @@ import { SystemOpponentService } from './system-opponent.service';
 import { NEW_KINGDOM_SHIELD_MS, REAL_PLAYER_REPEAT_RAID_COOLDOWN_MS } from './raid.config';
 import { SYSTEM_OPPONENTS } from './system-opponent.config';
 import { AnalyticsService } from '../analytics/analytics.service';
+import { ArmyService } from '../army/army.service';
 
 const prisma = new PrismaService();
 const notifications = new NotificationService(prisma);
 const analytics = new AnalyticsService(prisma);
 const economy = new EconomyService(prisma, notifications, analytics);
+const army = new ArmyService(prisma, economy, analytics);
 const systems = new SystemOpponentService(prisma, economy);
 const selector = new RaidCandidateSelector();
-const raids = new RaidService(prisma, economy, systems, selector, new RaidRateLimiter(), notifications, analytics);
+const raids = new RaidService(prisma, economy, systems, selector, new RaidRateLimiter(), notifications, analytics, army);
 const testExternalUserIds: string[] = [];
 
 function context(prefix = 'raid'): DevelopmentPlayerContext {
@@ -245,17 +247,17 @@ describe.sequential('authoritative Raid integration', () => {
     await expect(offer(owner.id, owner.id)).rejects.toBeTruthy();
   });
 
-  it('rejects an invalid three-Hero team and rolls the attempted settlement back', async () => {
+  it('rejects an invalid Army Commander and rolls the attempted settlement back', async () => {
     const attackerContext = context('invalid-team');
     const defenderContext = context('valid-defender');
     const attacker = await player(attackerContext);
     const defender = await player(defenderContext);
-    const team = await prisma.raidTeam.findUniqueOrThrow({ where: { playerId: attacker.id }, include: { slots: true } });
+    const formation = await prisma.armyFormation.findUniqueOrThrow({ where: { playerId: attacker.id }, include: { slots: true } });
     const foreignHero = await prisma.playerHero.findFirstOrThrow({ where: { playerId: defender.id } });
-    await prisma.raidTeamSlot.update({ where: { id: team.slots[2].id }, data: { playerHeroId: foreignHero.id } });
+    await prisma.armyFormationSlot.update({ where: { id: formation.slots[2].id }, data: { commanderPlayerHeroId: foreignHero.id } });
     const offerId = await offer(attacker.id, defender.id);
     const trophiesBefore = (await prisma.player.findUniqueOrThrow({ where: { id: attacker.id } })).trophies;
-    expect(await code(raids.start(attackerContext, offerId, randomUUID()))).toBe('INVALID_RAID_TEAM');
+    expect(await code(raids.start(attackerContext, offerId, randomUUID()))).toBe('INVALID_ARMY_FORMATION');
     expect(await prisma.battle.count({ where: { matchOfferId: offerId } })).toBe(0);
     expect((await prisma.player.findUniqueOrThrow({ where: { id: attacker.id } })).trophies).toBe(trophiesBefore);
   });
@@ -268,11 +270,19 @@ describe.sequential('authoritative Raid integration', () => {
     const defender = await player(defenderContext);
     await player(unrelatedContext);
     await prisma.playerHero.updateMany({ where: { playerId: attacker.id }, data: { level: 12 } });
+    const troopCountsBefore = await prisma.playerTroop.findMany({ where: { playerId: { in: [attacker.id, defender.id] } }, orderBy: [{ playerId: 'asc' }, { troopType: 'asc' }] });
     const offerId = await offer(attacker.id, defender.id);
     const requestKey = randomUUID();
     const first = await raids.start(attackerContext, offerId, requestKey);
     const replay = await raids.start(attackerContext, offerId, requestKey);
     expect(replay).toEqual(first);
+    expect(first.rulesVersion).toBe(2);
+    if (first.rulesVersion !== 2) throw new Error('Expected Army Battle v2.');
+    expect(first.armies.attacker).toHaveLength(3);
+    expect(first.armies.defender).toHaveLength(3);
+    expect(await prisma.battleArmySquadSnapshot.count({ where: { battleId: first.id } })).toBe(6);
+    expect(await prisma.battleHeroSnapshot.count({ where: { battleId: first.id } })).toBe(0);
+    expect(await prisma.playerTroop.findMany({ where: { playerId: { in: [attacker.id, defender.id] } }, orderBy: [{ playerId: 'asc' }, { troopType: 'asc' }] })).toEqual(troopCountsBefore);
     expect(await prisma.battle.count({ where: { matchOfferId: offerId } })).toBe(1);
     expect(await prisma.economyRequest.count({ where: { playerId: attacker.id, idempotencyKey: requestKey, action: 'RAID_START' } })).toBe(1);
     expect(await code(raids.start(attackerContext, offerId, randomUUID()))).toBe('MATCH_OFFER_ALREADY_USED');
@@ -293,6 +303,34 @@ describe.sequential('authoritative Raid integration', () => {
     expect(outcomes.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
     expect(outcomes.filter((result) => result.status === 'rejected')).toHaveLength(1);
     expect(await prisma.battle.count({ where: { matchOfferId: offerId } })).toBe(1);
+  });
+
+  it('loads an immutable historical rules-v1 Hero replay after the Army cutover', async () => {
+    const attackerContext = context('legacy-v1-attacker');
+    const defenderContext = context('legacy-v1-defender');
+    const attacker = await player(attackerContext);
+    const defender = await player(defenderContext);
+    const heroes = await prisma.playerHero.findMany({ where: { playerId: attacker.id }, include: { heroDefinition: true }, orderBy: { heroDefinition: { sortOrder: 'asc' } } });
+    const battle = await prisma.battle.create({
+      data: {
+        type: 'RAID', status: 'REWARDED', attackerPlayerId: attacker.id, defenderPlayerId: defender.id, winnerPlayerId: attacker.id,
+        result: 'ATTACKER_WIN', seed: 'historical-v1-fixture', rulesVersion: 1, durationMs: 8_000,
+        attackerTrophyBefore: 1_000, defenderTrophyBefore: 1_000, attackerTrophyDelta: 10, defenderTrophyDelta: -10,
+        loot: { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0' }, startedAt: new Date(), resolvedAt: new Date(),
+        heroSnapshots: { create: [...heroes, ...heroes].map((hero, index) => ({
+          side: index < 3 ? 'ATTACKER' : 'DEFENDER', slot: index % 3 + 1, heroKey: hero.heroDefinition.key,
+          level: hero.level, hp: hero.heroDefinition.baseHp, atk: hero.heroDefinition.baseAtk, def: hero.heroDefinition.baseDef,
+          power: 700, skillKey: hero.heroDefinition.skillKey,
+        })) },
+        events: { create: [{ sequence: 0, timeMs: 0, type: 'BATTLE_START' }, { sequence: 1, timeMs: 8_000, type: 'BATTLE_END', sourceSide: 'ATTACKER' }] },
+      },
+    });
+    const replay = await raids.battle(attackerContext, battle.id);
+    expect(replay.rulesVersion).toBe(1);
+    if (replay.rulesVersion !== 1) throw new Error('Expected historical Hero replay.');
+    expect(replay.teams.attacker).toHaveLength(3);
+    expect(replay.teams.defender).toHaveLength(3);
+    expect('armies' in replay).toBe(false);
   });
 
   it('serializes two winning attackers against one defender and reconciles every loot transaction', async () => {
@@ -345,7 +383,7 @@ describe.sequential('authoritative Raid integration', () => {
     expect(Object.values(inbox.entries[0].lootLost).some((amount) => BigInt(amount) > 0n)).toBe(true);
     const preview = await raids.revengePreview(defenderContext, target.id);
     expect(preview.target.id).toBe(attacker.id);
-    expect(preview.ownTeam.heroes).toHaveLength(3);
+    expect(preview.ownArmy.squads).toHaveLength(3);
     expect(preview.status).toBe('AVAILABLE');
     const revengeDefender = await prisma.player.findUniqueOrThrow({
       where: { id: attacker.id },
@@ -375,7 +413,9 @@ describe.sequential('authoritative Raid integration', () => {
     expect(replay).toEqual(first);
     expect(first.type).toBe('REVENGE');
     expect(first.events.length).toBeGreaterThan(0);
-    expect(first.teams.attacker).toHaveLength(3);
+    expect(first.rulesVersion).toBe(2);
+    if (first.rulesVersion !== 2) throw new Error('Expected Army Battle v2 replay.');
+    expect(first.armies.attacker).toHaveLength(3);
     expect(await prisma.battle.count({ where: { revengeTargetId: target.id } })).toBe(1);
     expect(await prisma.revengeTarget.count({ where: { sourceBattleId: first.id } })).toBe(0);
     expect((await prisma.revengeTarget.findUniqueOrThrow({ where: { id: target.id } })).status).toBe('USED');

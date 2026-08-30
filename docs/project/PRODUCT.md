@@ -30,7 +30,7 @@ The current Web build supports:
 
 The game stores all persistent state in PostgreSQL.
 
-The Army foundation currently runs beside production combat. Raid and Revenge remain the validated Hero-based rules version 1 flow until Retention 03B introduces Army Battle rules version 2.
+The Army foundation now drives production Raid and Revenge through deterministic rules version 2. Stored Hero-based rules-version-1 battles remain replay-compatible.
 
 ## Progression role
 
@@ -44,7 +44,7 @@ Progressive Kingdom Expansion changes the world at Castle levels 2 through 5. Ne
 
 Raid connects progression to the return loop. Match Offers limit target substitution and expire after 180 seconds. The API snapshots both teams, simulates the battle from a stored seed and rules version, then settles resources and Trophies in one transaction.
 
-A successful incoming Raid against a real player creates a 24-hour Revenge opportunity. Revenge uses current teams and balances at execution time, reuses the battle engine, and cannot create another Revenge target.
+A successful incoming Raid against a real player creates a 24-hour Revenge opportunity. Revenge uses current Army Formations and balances at execution time, reuses the versioned battle dispatcher, and cannot create another Revenge target.
 
 ## Platform strategy
 

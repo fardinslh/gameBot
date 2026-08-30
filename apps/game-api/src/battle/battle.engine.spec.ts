@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { BATTLE_RULES_VERSION, MAX_PLAYBACK_MS, MAX_SIMULATION_MS, MIN_PLAYBACK_MS } from './battle.config';
+import { createHash } from 'node:crypto';
+import { HERO_BATTLE_RULES_VERSION, MAX_PLAYBACK_MS, MAX_SIMULATION_MS, MIN_PLAYBACK_MS } from './battle.config';
 import { applyShieldReduction, simulateBattle } from './battle.engine';
 import type { BattleCombatHero } from './battle.types';
 
@@ -13,17 +14,21 @@ function team(side: 'ATTACKER' | 'DEFENDER', levelBoost = 0): BattleCombatHero[]
 
 describe('deterministic battle engine', () => {
   it('replays the same seed byte-for-byte and stays within timing and HP limits', () => {
-    const input = { seed: 'fixed-seed', rulesVersion: BATTLE_RULES_VERSION, attacker: team('ATTACKER'), defender: team('DEFENDER') };
+    const input = { seed: 'fixed-seed', rulesVersion: HERO_BATTLE_RULES_VERSION, attacker: team('ATTACKER'), defender: team('DEFENDER') };
     const first = simulateBattle(input);
     expect(simulateBattle(input)).toEqual(first);
     expect(first.logicalDurationMs).toBeLessThanOrEqual(MAX_SIMULATION_MS);
     expect(first.durationMs).toBeGreaterThanOrEqual(MIN_PLAYBACK_MS);
     expect(first.durationMs).toBeLessThanOrEqual(MAX_PLAYBACK_MS);
     expect(first.events.filter((event) => event.remainingHp !== null).every((event) => event.remainingHp! >= 0)).toBe(true);
+    expect({ result: first.result, winnerSide: first.winnerSide, durationMs: first.durationMs, logicalDurationMs: first.logicalDurationMs, eventCount: first.events.length }).toEqual({
+      result: 'ATTACKER_WIN', winnerSide: 'ATTACKER', durationMs: 8_000, logicalDurationMs: 11_000, eventCount: 101,
+    });
+    expect(createHash('sha256').update(JSON.stringify(first)).digest('hex')).toBe('76c6f0589424a593ee3f24af089c39866bb14d95543e07971aa48a993ae0d541');
   });
 
   it('emits all three MVP skills and never lets a defeated Hero act later', () => {
-    const result = simulateBattle({ seed: 'skill-seed', rulesVersion: BATTLE_RULES_VERSION, attacker: team('ATTACKER'), defender: team('DEFENDER') });
+    const result = simulateBattle({ seed: 'skill-seed', rulesVersion: HERO_BATTLE_RULES_VERSION, attacker: team('ATTACKER'), defender: team('DEFENDER') });
     const skills = new Set(result.events.filter((event) => event.type === 'SKILL_CAST').map((event) => event.skillKey));
     expect(skills).toEqual(new Set(['SHIELD_WALL', 'POWER_SHOT', 'ARCANE_BLAST']));
     for (const defeated of result.events.filter((event) => event.type === 'HERO_DEFEATED')) {
@@ -33,8 +38,8 @@ describe('deterministic battle engine', () => {
 
   it('permits seeded variation and keeps Power Shot single-target and Arcane Blast AOE', () => {
     const durable = (side: 'ATTACKER' | 'DEFENDER') => team(side).map((hero) => ({ ...hero, hp: hero.hp + 10_000 }));
-    const first = simulateBattle({ seed: 'variation-a', rulesVersion: BATTLE_RULES_VERSION, attacker: durable('ATTACKER'), defender: durable('DEFENDER') });
-    const second = simulateBattle({ seed: 'variation-b', rulesVersion: BATTLE_RULES_VERSION, attacker: durable('ATTACKER'), defender: durable('DEFENDER') });
+    const first = simulateBattle({ seed: 'variation-a', rulesVersion: HERO_BATTLE_RULES_VERSION, attacker: durable('ATTACKER'), defender: durable('DEFENDER') });
+    const second = simulateBattle({ seed: 'variation-b', rulesVersion: HERO_BATTLE_RULES_VERSION, attacker: durable('ATTACKER'), defender: durable('DEFENDER') });
     expect(second.events).not.toEqual(first.events);
     const powerShotCounts = new Map<string, number>();
     for (const event of first.events.filter((item) => item.type === 'DAMAGE' && item.skillKey === 'POWER_SHOT')) {

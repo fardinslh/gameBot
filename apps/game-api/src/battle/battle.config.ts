@@ -1,6 +1,8 @@
 import type { HeroKey } from '@crown-and-coin/shared';
 
-export const BATTLE_RULES_VERSION = 1;
+export const HERO_BATTLE_RULES_VERSION = 1 as const;
+export const ARMY_BATTLE_RULES_VERSION = 2 as const;
+export const BATTLE_RULES_VERSION = ARMY_BATTLE_RULES_VERSION;
 export const MAX_SIMULATION_MS = 30_000;
 export const MIN_PLAYBACK_MS = 8_000;
 export const MAX_PLAYBACK_MS = 15_000;
@@ -24,4 +26,6 @@ export const SHIELD_WALL_DURATION_MS = 2_500;
 export const SHIELD_WALL_REDUCTION_BPS = 3_500;
 export const POWER_SHOT_MULTIPLIER_BPS = 18_000;
 export const ARCANE_BLAST_MULTIPLIER_BPS = 10_000;
-
+export const ARMY_ARCANE_BLAST_MULTIPLIER_BPS = 7_500;
+export const COUNTER_DAMAGE_BONUS_BPS = 2_000;
+export const ARMY_MINIMUM_DAMAGE = 5;

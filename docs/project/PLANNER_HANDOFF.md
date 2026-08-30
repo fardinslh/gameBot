@@ -165,13 +165,13 @@ Each roadmap item is a separate authorization boundary. Completing or discussing
 
 At this document's latest roadmap update:
 
-- **Last completed**: Retention 03A — Army & Commander Foundation
-- **Next**: Retention 03B — Army Battle v2, not started
+- **Last completed**: Retention 03B — Army Battle v2
+- **Next**: Retention 04 — PvE Campaign / Adventure, not started
 - **Bale**: not started
 
 If current code or newer canonical documents disagree with that snapshot, current repository evidence overrides this sentence. Update continuity documents when the phase state legitimately changes.
 
-The intended sequence is Retention 03B Army Battle v2, Retention 04 PvE Campaign, Retention 05 Shop and Gem Economy, Retention 05B Theme Foundation, Retention 06 Guild MVP, Retention 07 Guild Cooperation, Retention 08 competitive meta and leaderboards, Retention 09 content/balance/retention QA, Bale staging, production readiness, a 30–50 player closed test, fixes, and soft launch. Use [the retention roadmap](RETENTION_ROADMAP.md) for the canonical wording and status.
+The intended sequence is Retention 04 PvE Campaign, Retention 05 Shop and Gem Economy, Retention 05B Theme Foundation, Retention 06 Guild MVP, Retention 07 Guild Cooperation, Retention 08 competitive meta and leaderboards, Retention 09 content/balance/retention QA, Bale staging, production readiness, a 30–50 player closed test, fixes, and soft launch. Use [the retention roadmap](RETENTION_ROADMAP.md) for the canonical wording and status.
 
 Before moving forward, ask:
 

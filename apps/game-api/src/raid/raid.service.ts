@@ -13,26 +13,30 @@ import {
 import { randomUUID } from 'node:crypto';
 import type {
   BattleHeroState,
+  BattleArmySquadState,
   BattleReplayResponse,
+  ArmyPreview,
+  ArmyFormationSlotState,
   DefenseInboxResponse,
   HeroKey,
-  HeroState,
   RaidHistoryResponse,
   RaidLootAmounts,
   RaidMatchOfferState,
   RaidOverviewResponse,
   RaidResourceType,
   RaidSearchResponse,
-  RaidTeamPreview,
   RevengePreviewResponse,
   ResourceAmounts,
 } from '@crown-and-coin/shared';
-import { BATTLE_RULES_VERSION } from '../battle/battle.config';
-import { simulateBattle } from '../battle/battle.engine';
-import type { BattleCombatHero } from '../battle/battle.types';
+import { ARMY_BATTLE_RULES_VERSION } from '../battle/battle.config';
+import { resolveBattleSimulation } from '../battle/battle-simulation';
+import type { ArmyCombatSquad } from '../battle/battle.types';
+import { ArmyService } from '../army/army.service';
+import { ArmyError } from '../army/army.errors';
+import { calculateArmySquad } from '../army/army-power.calculator';
 import { EconomyService } from '../economy/economy.service';
-import { deriveHeroStats, heroUpgradeCost } from '../heroes/hero.calculator';
-import { HERO_CONTENT, HERO_MAXIMUM_LEVEL } from '../heroes/hero.config';
+import { deriveHeroStats } from '../heroes/hero.calculator';
+import { HERO_CONTENT } from '../heroes/hero.config';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import { NotificationService } from '../notifications/notification.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
@@ -65,10 +69,20 @@ const teamGraph = Prisma.validator<Prisma.RaidTeamDefaultArgs>()({
   include: { slots: { include: { playerHero: { include: { heroDefinition: true } } }, orderBy: { slot: 'asc' } } },
 });
 type TeamGraph = Prisma.RaidTeamGetPayload<typeof teamGraph>;
+const armyGraph = Prisma.validator<Prisma.ArmyFormationDefaultArgs>()({
+  include: {
+    slots: {
+      include: { commander: { include: { heroDefinition: true } } },
+      orderBy: { slot: 'asc' },
+    },
+  },
+});
+type ArmyGraph = Prisma.ArmyFormationGetPayload<typeof armyGraph>;
 const candidateGraph = Prisma.validator<Prisma.PlayerDefaultArgs>()({
   include: {
     kingdom: { include: { resourceBalances: true, buildings: { where: { type: { in: ['CASTLE', 'WATCHTOWER'] } } } } },
-    raidTeam: teamGraph,
+    armyFormation: armyGraph,
+    troops: true,
   },
 });
 type CandidatePlayer = Prisma.PlayerGetPayload<typeof candidateGraph>;
@@ -85,7 +99,8 @@ interface ResolveBattleInput {
 
 interface MatchCandidate {
   player: CandidatePlayer;
-  team: RaidTeamPreview;
+  army: ArmyPreview;
+  team: { power: number };
   kind: 'REAL' | 'SYSTEM';
   systemConfig?: ConfiguredSystemOpponent;
 }
@@ -102,6 +117,7 @@ export class RaidService {
     private readonly limiter: RaidRateLimiter,
     private readonly notifications: NotificationService,
     private readonly analytics: AnalyticsService,
+    private readonly armyService: ArmyService,
     private readonly onboarding: OnboardingService = new OnboardingService(prisma, analytics),
   ) {}
 
@@ -117,7 +133,7 @@ export class RaidService {
     await this.systems.ensure();
     const now = new Date();
     const overview = await this.loadOverview(identity.playerId, now);
-    if (overview.team.heroes.length !== 3) throw new RaidError('INVALID_RAID_TEAM', 'Select exactly three Heroes before searching.');
+    if (overview.army.squads.length !== 3) throw new RaidError('INVALID_ARMY_FORMATION', 'Prepare three Army squads before searching.');
 
     const recent = await this.prisma.raidMatchOffer.findMany({
       where: { attackerPlayerId: identity.playerId }, orderBy: { createdAt: 'desc' }, take: RAID_RECENT_OPPONENT_LIMIT,
@@ -130,8 +146,8 @@ export class RaidService {
       where: {
         id: { in: [...systemConfigs.keys()], not: identity.playerId },
         isSystemOpponent: true,
-        kingdom: { isNot: null }, raidTeam: { isNot: null },
-        NOT: { raidTeam: { slots: { none: {} } } },
+        kingdom: { isNot: null }, armyFormation: { isNot: null },
+        NOT: { armyFormation: { slots: { none: {} } } },
       },
       ...candidateGraph,
     });
@@ -150,8 +166,8 @@ export class RaidService {
             isSystemOpponent: false,
             createdAt: { lte: shieldCutoff },
             trophies: { gte: minimumTrophies, lte: maximumTrophies },
-            kingdom: { isNot: null }, raidTeam: { isNot: null },
-            NOT: { raidTeam: { slots: { none: {} } } },
+            kingdom: { isNot: null }, armyFormation: { isNot: null },
+            NOT: { armyFormation: { slots: { none: {} } } },
           },
           ...candidateGraph,
         }),
@@ -195,8 +211,8 @@ export class RaidService {
         data: {
           attackerPlayerId: identity.playerId,
           defenderPlayerId: selected.player.id,
-          attackerPower: overview.team.power,
-          defenderPower: selected.team.power,
+          attackerPower: overview.army.power,
+          defenderPower: selected.army.power,
           potentialLoot: potentialLoot as unknown as Prisma.InputJsonValue,
           expiresAt,
         },
@@ -209,7 +225,7 @@ export class RaidService {
     });
     return {
       ...overview,
-      offer: this.presentOffer(offer.id, expiresAt, overview.team.power, selected.player, selected.team, potentialLoot, selected.kind),
+      offer: this.presentOffer(offer.id, expiresAt, overview.army.power, selected.player, selected.army, potentialLoot, selected.kind),
     };
   }
 
@@ -314,16 +330,17 @@ export class RaidService {
         targetPlayer: {
           include: {
             kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' }, take: 1 } } },
-            raidTeam: teamGraph,
+            armyFormation: armyGraph,
+            troops: true,
           },
         },
       },
     });
     this.assertRevengeTarget(target, identity.playerId, now);
     const own = await this.loadOverview(identity.playerId);
-    if (!target.targetPlayer.kingdom || !target.targetPlayer.raidTeam) throw new RaidError('OPPONENT_NOT_FOUND', 'The revenge target is unavailable.');
-    const targetTeam = this.presentTeam(target.targetPlayer.raidTeam);
-    if (targetTeam.heroes.length !== 3) throw new RaidError('INVALID_RAID_TEAM', 'The revenge target has no valid defense team.');
+    if (!target.targetPlayer.kingdom || !target.targetPlayer.armyFormation) throw new RaidError('OPPONENT_NOT_FOUND', 'The revenge target is unavailable.');
+    const targetArmy = this.presentArmy(target.targetPlayer.armyFormation, target.targetPlayer.troops);
+    if (targetArmy.squads.length !== 3) throw new RaidError('INVALID_ARMY_FORMATION', 'The revenge target has no valid Army formation.');
     return {
       revengeTargetId: target.id,
       sourceBattleId: target.sourceBattleId,
@@ -332,9 +349,10 @@ export class RaidService {
         id: target.targetPlayer.id,
         displayName: target.targetPlayer.displayName ?? 'Unknown Warden',
         trophies: target.targetPlayer.trophies,
-        teamPower: targetTeam.power,
+        armyPower: targetArmy.power,
+        army: targetArmy.squads,
       },
-      ownTeam: own.team,
+      ownArmy: own.army,
       potentialLoot: calculateRaidLoot(
         this.balanceMap(target.targetPlayer.kingdom.resourceBalances),
         this.watchtowerProtectionBps(target.targetPlayer.kingdom.buildings),
@@ -444,39 +462,67 @@ export class RaidService {
   private async loadOverview(playerId: string, now = new Date()): Promise<RaidOverviewResponse> {
     const player = await this.prisma.player.findUniqueOrThrow({
       where: { id: playerId },
-      include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'CASTLE' }, take: 1 } } }, raidTeam: teamGraph },
+      include: {
+        kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'CASTLE' }, take: 1 } } },
+        armyFormation: armyGraph,
+        troops: true,
+      },
     });
-    if (!player.kingdom || !player.raidTeam) throw new RaidError('INVALID_RAID_TEAM', 'Your Raid Team is not ready.');
+    if (!player.kingdom || !player.armyFormation) throw new RaidError('INVALID_ARMY_FORMATION', 'Your Army is not ready.');
     return {
       player: { id: player.id, displayName: player.displayName ?? 'Warden of Dawnkeep', level: player.kingdom.buildings[0]?.level ?? player.kingdom.level, trophies: player.trophies },
       balances: this.presentBalances(player.kingdom.resourceBalances),
-      team: this.presentTeam(player.raidTeam),
+      army: this.presentArmy(player.armyFormation, player.troops),
       newPlayerProtection: newPlayerProtection(player.createdAt, player.isSystemOpponent, now),
       serverTime: now.toISOString(),
     };
   }
 
-  private presentTeam(team: TeamGraph): RaidTeamPreview {
-    const heroes = team.slots.map((slot): HeroState => {
-      const key = slot.playerHero.heroDefinition.key as HeroKey;
-      const config = HERO_CONTENT[key];
-      const stats = deriveHeroStats(config, slot.playerHero.level);
-      const cost = slot.playerHero.level >= HERO_MAXIMUM_LEVEL ? null : heroUpgradeCost(slot.playerHero.level);
+  private presentArmy(formation: ArmyGraph, troops: { troopType: string; readyCount: number }[]): ArmyPreview {
+    if (formation.slots.length !== 3
+      || new Set(formation.slots.map((slot) => slot.commanderPlayerHeroId)).size !== 3
+      || formation.slots.some((slot) => slot.commander.playerId !== formation.playerId || !slot.commander.heroDefinition.enabled)) {
+      return { squads: [], power: 0 };
+    }
+    const assignedByType = new Map<string, number>();
+    for (const slot of formation.slots) assignedByType.set(slot.troopType, (assignedByType.get(slot.troopType) ?? 0) + slot.unitCount);
+    if ([...assignedByType].some(([type, assigned]) => assigned <= 0 || assigned > (troops.find((troop) => troop.troopType === type)?.readyCount ?? 0))) {
+      return { squads: [], power: 0 };
+    }
+    const squads = formation.slots.map((slot): ArmyFormationSlotState => {
+      const key = slot.commander.heroDefinition.key as HeroKey;
+      const stats = deriveHeroStats(HERO_CONTENT[key], slot.commander.level);
+      const calculated = calculateArmySquad({
+        troopType: slot.troopType,
+        unitCount: slot.unitCount,
+        commanderKey: key,
+        commanderLevel: slot.commander.level,
+        commanderSkillKey: HERO_CONTENT[key].skillKey,
+        commanderPower: stats.power,
+      });
       return {
-        id: slot.playerHero.id, key, level: slot.playerHero.level, class: config.combatClass, ...stats,
-        skill: { key: config.skillKey }, portraitAsset: config.portraitAsset, canUpgrade: false,
-        maximumLevel: HERO_MAXIMUM_LEVEL, upgradeCost: cost === null ? null : { gold: cost.toString() },
+        slot: slot.slot as 1 | 2 | 3,
+        troopType: slot.troopType,
+        unitCount: slot.unitCount,
+        squadPower: calculated.squadPower,
+        commander: {
+          playerHeroId: slot.commander.id,
+          key,
+          level: slot.commander.level,
+          power: stats.power,
+          portraitAsset: slot.commander.heroDefinition.portraitAsset,
+        },
       };
     });
-    return { heroes, power: heroes.reduce((total, hero) => total + hero.power, 0) };
+    return { squads, power: squads.reduce((total, squad) => total + squad.squadPower, 0) };
   }
 
-  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { type: string; level: number }[] } | null }, team: RaidTeamPreview, potentialLoot: RaidLootAmounts, kind: 'REAL' | 'SYSTEM'): RaidMatchOfferState {
+  private presentOffer(id: string, expiresAt: Date, ownPower: number, player: { id: string; displayName: string | null; trophies: number; kingdom: { level: number; buildings: { type: string; level: number }[] } | null }, army: ArmyPreview, potentialLoot: RaidLootAmounts, kind: 'REAL' | 'SYSTEM'): RaidMatchOfferState {
     return {
       id, expiresAt: expiresAt.toISOString(), ownPower,
       opponent: {
         id: player.id, displayName: player.displayName ?? 'Unknown Warden', castleLevel: player.kingdom?.buildings.find((building) => building.type === 'CASTLE')?.level ?? player.kingdom?.level ?? 1,
-        trophies: player.trophies, teamPower: team.power, team: team.heroes, kind,
+        trophies: player.trophies, armyPower: army.power, army: army.squads, kind,
       },
       potentialLoot,
     };
@@ -488,12 +534,12 @@ export class RaidService {
     systemConfigs?: Map<string, ConfiguredSystemOpponent>,
   ): MatchCandidate[] {
     return players.flatMap((player) => {
-      if (!player.raidTeam) return [];
-      const team = this.presentTeam(player.raidTeam);
-      if (team.heroes.length !== 3) return [];
+      if (!player.armyFormation) return [];
+      const army = this.presentArmy(player.armyFormation, player.troops);
+      if (army.squads.length !== 3) return [];
       const systemConfig = systemConfigs?.get(player.id);
       if (kind === 'SYSTEM' && !systemConfig) return [];
-      return [{ player, team, kind, systemConfig }];
+      return [{ player, army, team: { power: army.power }, kind, systemConfig }];
     });
   }
 
@@ -505,7 +551,7 @@ export class RaidService {
       const eligible = candidates.filter((candidate) => matchesRealPlayerPass(
         candidate,
         overview.player.trophies,
-        overview.team.power,
+        overview.army.power,
         pass,
       ));
       const selected = this.selectRankedCandidate(eligible, overview);
@@ -521,27 +567,23 @@ export class RaidService {
     return this.candidateSelector.select(rankMatchCandidates(
       candidates,
       overview.player.trophies,
-      overview.team.power,
+      overview.army.power,
     ));
   }
 
-  private async loadCombatTeam(tx: Tx, playerId: string, side: 'ATTACKER' | 'DEFENDER'): Promise<BattleCombatHero[]> {
-    const team = await tx.raidTeam.findUnique({ where: { playerId }, ...teamGraph });
-    if (!team || team.slots.length !== 3 || team.slots.some((slot) => slot.playerHero.playerId !== playerId || !slot.playerHero.heroDefinition.enabled)) {
-      throw new RaidError('INVALID_RAID_TEAM', 'Both Raid Teams must contain exactly three enabled, owned Heroes.');
-    }
-    return team.slots.map((slot) => {
-      const key = slot.playerHero.heroDefinition.key as HeroKey;
-      const stats = deriveHeroStats(HERO_CONTENT[key], slot.playerHero.level);
-      return { side, slot: slot.slot as 1 | 2 | 3, key, level: slot.playerHero.level, ...stats, skillKey: HERO_CONTENT[key].skillKey };
-    });
-  }
-
   private async resolveBattle(tx: Tx, input: ResolveBattleInput): Promise<BattleReplayResponse> {
-    const attackerTeam = await this.loadCombatTeam(tx, input.attackerPlayerId, 'ATTACKER');
-    const defenderTeam = await this.loadCombatTeam(tx, input.defenderPlayerId, 'DEFENDER');
+    const snapshotTime = new Date();
+    let attackerArmy: ArmyCombatSquad[];
+    let defenderArmy: ArmyCombatSquad[];
+    try {
+      attackerArmy = await this.armyService.loadBattleArmy(tx, input.attackerPlayerId, 'ATTACKER', snapshotTime);
+      defenderArmy = await this.armyService.loadBattleArmy(tx, input.defenderPlayerId, 'DEFENDER', snapshotTime);
+    } catch (error) {
+      if (!(error instanceof ArmyError)) throw error;
+      throw new RaidError('INVALID_ARMY_FORMATION', 'Both players need a valid battle-ready Army formation.');
+    }
     const seed = randomUUID();
-    const engine = simulateBattle({ seed, rulesVersion: BATTLE_RULES_VERSION, attacker: attackerTeam, defender: defenderTeam });
+    const engine = resolveBattleSimulation({ seed, rulesVersion: ARMY_BATTLE_RULES_VERSION, attacker: attackerArmy, defender: defenderArmy });
     const players = await tx.player.findMany({
       where: { id: { in: [input.attackerPlayerId, input.defenderPlayerId] } },
       include: { kingdom: { include: { resourceBalances: true, buildings: { where: { type: 'WATCHTOWER' }, take: 1 } } } },
@@ -583,7 +625,7 @@ export class RaidService {
         winnerPlayerId: attackerWon ? attacker.id : defender.id,
         result: engine.result,
         seed,
-        rulesVersion: BATTLE_RULES_VERSION,
+        rulesVersion: ARMY_BATTLE_RULES_VERSION,
         durationMs: engine.durationMs,
         attackerTrophyBefore: attacker.trophies,
         defenderTrophyBefore: defender.trophies,
@@ -592,16 +634,21 @@ export class RaidService {
         loot: loot as unknown as Prisma.InputJsonValue,
         startedAt,
         resolvedAt,
-        heroSnapshots: { create: [...attackerTeam, ...defenderTeam].map((hero) => ({
-          side: hero.side as PrismaBattleSide,
-          slot: hero.slot,
-          heroKey: hero.key as PrismaHeroKey,
-          level: hero.level,
-          hp: hero.hp,
-          atk: hero.atk,
-          def: hero.def,
-          power: hero.power,
-          skillKey: hero.skillKey,
+        armySquadSnapshots: { create: [...attackerArmy, ...defenderArmy].map((squad) => ({
+          side: squad.side as PrismaBattleSide,
+          slot: squad.slot,
+          troopType: squad.troopType,
+          initialUnitCount: squad.initialUnitCount,
+          perUnitHp: squad.perUnitHp,
+          perUnitAtk: squad.perUnitAtk,
+          perUnitDef: squad.perUnitDef,
+          aggregateMaxHp: squad.aggregateMaxHp,
+          commanderKey: squad.commanderKey as PrismaHeroKey,
+          commanderLevel: squad.commanderLevel,
+          commanderSkillKey: squad.commanderSkillKey,
+          commanderPower: squad.commanderPower,
+          commanderPortraitAsset: squad.commanderPortraitAsset,
+          squadPower: squad.squadPower,
         })) },
         events: { create: engine.events.map((event) => ({
           sequence: event.sequence,
@@ -613,9 +660,36 @@ export class RaidService {
           targetSlot: event.targetSlot,
           amount: event.amount,
           remainingHp: event.remainingHp,
+          remainingUnits: event.remainingUnits,
           skillKey: event.skillKey,
         })) },
       },
+    });
+
+    const attackerPower = attackerArmy.reduce((total, squad) => total + squad.squadPower, 0);
+    const defenderPower = defenderArmy.reduce((total, squad) => total + squad.squadPower, 0);
+    const initialArmySize = attackerArmy.reduce((total, squad) => total + squad.initialUnitCount, 0);
+    const remainingBySlot = new Map<number, number>();
+    for (const squad of attackerArmy) remainingBySlot.set(squad.slot, squad.initialUnitCount);
+    for (const event of engine.events) {
+      if (event.type === 'DAMAGE' && event.targetSide === 'ATTACKER' && event.targetSlot && event.remainingUnits != null) {
+        remainingBySlot.set(event.targetSlot, event.remainingUnits);
+      }
+    }
+    const remainingArmySize = [...remainingBySlot.values()].reduce((total, count) => total + count, 0);
+    await this.analytics.recordServer(tx, {
+      playerId: attacker.id,
+      eventName: 'army_battle_started',
+      dedupeKey: `army_battle_started:${battleId}`,
+      properties: { battleId, battleType: input.type, ownArmyPower: attackerPower, enemyArmyPower: defenderPower, initialArmySize },
+      occurredAt: startedAt,
+    });
+    await this.analytics.recordServer(tx, {
+      playerId: attacker.id,
+      eventName: 'army_battle_finished',
+      dedupeKey: `army_battle_finished:${battleId}`,
+      properties: { battleId, battleType: input.type, ownArmyPower: attackerPower, enemyArmyPower: defenderPower, result: engine.result, initialArmySize, remainingArmySize },
+      occurredAt: resolvedAt,
     });
 
     if (input.type === PrismaBattleType.RAID) {
@@ -715,6 +789,7 @@ export class RaidService {
         attacker: { include: { kingdom: { include: { resourceBalances: true } } } },
         defender: { include: { kingdom: { include: { resourceBalances: true } } } },
         heroSnapshots: { orderBy: [{ side: 'asc' }, { slot: 'asc' }] },
+        armySquadSnapshots: { orderBy: [{ side: 'asc' }, { slot: 'asc' }] },
         events: { orderBy: { sequence: 'asc' } },
       },
     });
@@ -725,17 +800,11 @@ export class RaidService {
       side: hero.side, slot: hero.slot as 1 | 2 | 3, key: hero.heroKey, level: hero.level, hp: hero.hp, atk: hero.atk,
       def: hero.def, power: hero.power, skillKey: hero.skillKey as BattleHeroState['skillKey'], portraitAsset: portrait(hero.heroKey),
     }));
-    return {
-      id: battle.id, type: battle.type, seed: battle.seed, rulesVersion: battle.rulesVersion, result: battle.result, winnerPlayerId: battle.winnerPlayerId,
+    const base = {
+      id: battle.id, type: battle.type, seed: battle.seed, result: battle.result, winnerPlayerId: battle.winnerPlayerId,
       durationMs: battle.durationMs,
       attacker: { playerId: battle.attacker.id, displayName: battle.attacker.displayName ?? 'Warden', trophiesBefore: battle.attackerTrophyBefore, trophyDelta: battle.attackerTrophyDelta },
       defender: { playerId: battle.defender.id, displayName: battle.defender.displayName ?? 'Warden', trophiesBefore: battle.defenderTrophyBefore, trophyDelta: battle.defenderTrophyDelta },
-      teams: { attacker: heroes.filter((hero) => hero.side === 'ATTACKER'), defender: heroes.filter((hero) => hero.side === 'DEFENDER') },
-      events: battle.events.map((event) => ({
-        sequence: event.sequence, timeMs: event.timeMs, type: event.type, sourceSide: event.sourceSide, sourceSlot: event.sourceSlot as 1 | 2 | 3 | null,
-        targetSide: event.targetSide, targetSlot: event.targetSlot as 1 | 2 | 3 | null, amount: event.amount, remainingHp: event.remainingHp,
-        skillKey: event.skillKey as BattleReplayResponse['events'][number]['skillKey'],
-      })),
       loot: battle.loot as RaidLootAmounts,
       balances: requestingPlayerId === battle.attackerPlayerId && battle.attacker.kingdom
         ? this.presentBalances(battle.attacker.kingdom.resourceBalances)
@@ -744,6 +813,51 @@ export class RaidService {
           : { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' },
       resolvedAt: battle.resolvedAt.toISOString(),
     };
+    if (battle.rulesVersion === 1) {
+      return {
+        ...base,
+        rulesVersion: 1,
+        teams: { attacker: heroes.filter((hero) => hero.side === 'ATTACKER'), defender: heroes.filter((hero) => hero.side === 'DEFENDER') },
+        events: battle.events.map((event) => ({
+          sequence: event.sequence, timeMs: event.timeMs, type: event.type, sourceSide: event.sourceSide, sourceSlot: event.sourceSlot as 1 | 2 | 3 | null,
+          targetSide: event.targetSide, targetSlot: event.targetSlot as 1 | 2 | 3 | null, amount: event.amount, remainingHp: event.remainingHp,
+          skillKey: event.skillKey as BattleReplayResponse['events'][number]['skillKey'],
+        })),
+      };
+    }
+    if (battle.rulesVersion === 2) {
+      const squads = battle.armySquadSnapshots.map((squad): BattleArmySquadState => ({
+        side: squad.side,
+        slot: squad.slot as 1 | 2 | 3,
+        troopType: squad.troopType,
+        initialUnitCount: squad.initialUnitCount,
+        perUnitHp: squad.perUnitHp,
+        perUnitAtk: squad.perUnitAtk,
+        perUnitDef: squad.perUnitDef,
+        aggregateMaxHp: squad.aggregateMaxHp,
+        commanderKey: squad.commanderKey,
+        commanderLevel: squad.commanderLevel,
+        commanderSkillKey: squad.commanderSkillKey as BattleArmySquadState['commanderSkillKey'],
+        commanderPower: squad.commanderPower,
+        commanderPortraitAsset: squad.commanderPortraitAsset,
+        squadPower: squad.squadPower,
+      }));
+      return {
+        ...base,
+        rulesVersion: 2,
+        armies: {
+          attacker: squads.filter((squad) => squad.side === 'ATTACKER'),
+          defender: squads.filter((squad) => squad.side === 'DEFENDER'),
+        },
+        events: battle.events.map((event) => ({
+          sequence: event.sequence, timeMs: event.timeMs, type: event.type, sourceSide: event.sourceSide, sourceSlot: event.sourceSlot as 1 | 2 | 3 | null,
+          targetSide: event.targetSide, targetSlot: event.targetSlot as 1 | 2 | 3 | null, amount: event.amount, remainingHp: event.remainingHp,
+          remainingUnits: event.remainingUnits,
+          skillKey: event.skillKey as BattleReplayResponse['events'][number]['skillKey'],
+        })),
+      };
+    }
+    throw new Error(`Unsupported persisted Battle rules version ${battle.rulesVersion}`);
   }
 
   private async lockPlayers(tx: Tx, ids: string[]): Promise<void> {

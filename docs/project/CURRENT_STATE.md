@@ -34,15 +34,15 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Appearance progression | Implemented for all active buildings | Levels 1–20 deterministically select Early, Developed, Advanced, Fortified, or Prestige art across all nine active buildings |
 | Missions / Achievements / Daily Return | Implemented | Three deterministic Daily and Weekly assignments, nine permanent tiered Achievement families, a seven-claim Daily Return cycle, explicit transactional claims, and bilingual mobile UI |
 | Army Foundation | Implemented | Infantry, Archer, Cavalry ownership; one training order; Castle-derived capacity; three-squad formation; existing Heroes as Commanders |
-| Army Battle | Not implemented | Retention 03B; current production combat does not read Army state |
-| PvE Campaign | Not implemented | Retention 04 only, after Retention 03B |
+| Army Battle | Implemented | New Raid/Revenge use deterministic rules version 2 with six immutable Army squad snapshots, lane targeting, counters, Commander skills, and battle-state-only casualties |
+| PvE Campaign | Not implemented | Retention 04 is next; it has not started |
 | Heroes | Implemented | Knight, Ranger, Mage, persistent levels and server-derived stats |
 | Commanders | Implemented for formation | Existing Knight, Ranger, and Mage can each command one Army Formation squad; no duplicate Commander rows or class locks |
-| Raid Team | Implemented | Exactly three unique owned Heroes in ordered persistent slots |
+| Legacy Raid Team | Preserved | Exactly three unique owned Heroes remain persisted for historical rules-version-1 compatibility; new battles use Army Formation |
 | Matchmaking | Implemented | Three bounded real-player passes, top-five pool selection, recent-eight memory, six-hour anti-farm, system fallback |
 | New Kingdom Shield | Implemented | Persistent 24-hour `Player.createdAt` protection; protected players attack system opponents and cannot be normal real defenders |
 | System opponents | Implemented | 30 persistent domain-backed opponents in six tiers with locked threshold replenishment and social exclusions |
-| Hero Raid Battle | Implemented | Current production Raid/Revenge remain server-seeded Hero battles using rules version 1 and persisted replay |
+| Versioned Battle | Implemented | New Raid/Revenge use Army rules version 2; stored Hero rules-version-1 replays remain participant-readable and unchanged |
 | Permanent troop casualties | Not implemented | Retention 03 uses battle-state casualties only; trained roster counts are not deleted by PvP |
 | Loot | Implemented | Gold, Food, Wood, Stone only; protection, reserves, caps, paired ledger rows |
 | Trophy | Implemented | Rating-aware bounded deltas with zero floor |
@@ -116,7 +116,7 @@ Fifteen ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, and 03A engineering are complete. Army persistence, training, Castle-derived capacity, and Commander-led formation now exist in parallel with the unchanged Hero Raid flow. Retention 03B Army Battle v2 is next and not started. Current Raid/Revenge remain rules version 1, Barracks remains inactive, and PvE remains after 03B. The collision-proof status stack, Castle Y 665 composition, Pixi coordinates, 54px navigation, Retention 02, and existing gameplay remain unchanged. Owner art, Aren, Persian-device, and real-device audio checks remain open. Shop, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, and 03B engineering are complete. New Raid/Revenge starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Historical rules-version-1 Hero replays remain compatible. Retention 04 PvE Campaign / Adventure is next and not started. Barracks remains inactive. The collision-proof status stack, Castle Y 665 composition, Pixi Kingdom coordinates, 54px navigation, Retention 02, and existing settlement behavior remain intact. Owner troop art, Aren, Persian-device, and real-device audio checks remain open. Shop, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 
@@ -126,4 +126,4 @@ The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Lo
 
 ## Validation entry points
 
-Run `npm run validate:army` for Army configuration and authoritative integration coverage. Use the normal test, integration, type, lint, build, Kingdom, Hero, Raid, Revenge, Retention, and documentation regressions as described in [testing](TESTING.md).
+Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for Army Battle v2 persistence/playback and forced outcomes. Use the normal test, integration, type, lint, build, Kingdom, Revenge, Retention, and documentation regressions described in [testing](TESTING.md).

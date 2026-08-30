@@ -441,6 +441,7 @@ export interface ArmyFormationSlotState {
   troopType: TroopType;
   unitCount: number;
   commander: ArmyCommanderState;
+  squadPower: number;
 }
 
 export interface ArmyFormationState {
@@ -449,6 +450,7 @@ export interface ArmyFormationState {
 
 export interface ArmyResponse {
   serverTime: string;
+  power: number;
   capacity: ArmyCapacityState;
   troops: ArmyTroopState[];
   training: ArmyTrainingState | null;
@@ -509,6 +511,7 @@ export type BattleEventType =
   | 'BUFF_APPLIED'
   | 'BUFF_EXPIRED'
   | 'HERO_DEFEATED'
+  | 'SQUAD_DEFEATED'
   | 'BATTLE_END';
 
 export interface BattleHeroState {
@@ -534,7 +537,30 @@ export interface BattleEventState {
   targetSlot: 1 | 2 | 3 | null;
   amount: number | null;
   remainingHp: number | null;
+  remainingUnits?: number | null;
   skillKey: HeroSkillKey | null;
+}
+
+export interface BattleArmySquadState {
+  side: BattleSide;
+  slot: 1 | 2 | 3;
+  troopType: TroopType;
+  initialUnitCount: number;
+  perUnitHp: number;
+  perUnitAtk: number;
+  perUnitDef: number;
+  aggregateMaxHp: number;
+  commanderKey: HeroKey;
+  commanderLevel: number;
+  commanderSkillKey: HeroSkillKey;
+  commanderPower: number;
+  commanderPortraitAsset: string;
+  squadPower: number;
+}
+
+export interface ArmyPreview {
+  squads: ArmyFormationSlotState[];
+  power: number;
 }
 
 export interface RaidTeamPreview {
@@ -550,7 +576,7 @@ export interface NewPlayerProtectionState {
 export interface RaidOverviewResponse {
   player: { id: string; displayName: string; level: number; trophies: number };
   balances: ResourceAmounts;
-  team: RaidTeamPreview;
+  army: ArmyPreview;
   newPlayerProtection: NewPlayerProtectionState;
   serverTime: string;
 }
@@ -563,8 +589,8 @@ export interface RaidMatchOfferState {
     displayName: string;
     castleLevel: number;
     trophies: number;
-    teamPower: number;
-    team: HeroState[];
+    armyPower: number;
+    army: ArmyFormationSlotState[];
     kind: 'REAL' | 'SYSTEM';
   };
   ownPower: number;
@@ -575,22 +601,32 @@ export interface RaidSearchResponse extends RaidOverviewResponse {
   offer: RaidMatchOfferState;
 }
 
-export interface BattleReplayResponse {
+export interface BattleReplayBase {
   id: string;
   type: BattleType;
   seed: string;
-  rulesVersion: number;
   result: BattleResult;
   winnerPlayerId: string;
   durationMs: number;
   attacker: { playerId: string; displayName: string; trophiesBefore: number; trophyDelta: number };
   defender: { playerId: string; displayName: string; trophiesBefore: number; trophyDelta: number };
-  teams: { attacker: BattleHeroState[]; defender: BattleHeroState[] };
   events: BattleEventState[];
   loot: RaidLootAmounts;
   balances: ResourceAmounts;
   resolvedAt: string;
 }
+
+export interface BattleReplayV1 extends BattleReplayBase {
+  rulesVersion: 1;
+  teams: { attacker: BattleHeroState[]; defender: BattleHeroState[] };
+}
+
+export interface BattleReplayV2 extends BattleReplayBase {
+  rulesVersion: 2;
+  armies: { attacker: BattleArmySquadState[]; defender: BattleArmySquadState[] };
+}
+
+export type BattleReplayResponse = BattleReplayV1 | BattleReplayV2;
 
 export interface RaidHistoryItem {
   battleId: string;
@@ -632,8 +668,8 @@ export interface RevengePreviewResponse {
   revengeTargetId: string;
   sourceBattleId: string;
   status: RevengeStatus;
-  target: { id: string; displayName: string; trophies: number; teamPower: number };
-  ownTeam: RaidTeamPreview;
+  target: { id: string; displayName: string; trophies: number; armyPower: number; army: ArmyFormationSlotState[] };
+  ownArmy: ArmyPreview;
   potentialLoot: RaidLootAmounts;
   expiresAt: string;
   serverTime: string;
@@ -661,6 +697,7 @@ export type RaidErrorCode =
   | 'MATCH_OFFER_NOT_FOUND'
   | 'MATCH_OFFER_NOT_OWNER'
   | 'INVALID_RAID_TEAM'
+  | 'INVALID_ARMY_FORMATION'
   | 'OPPONENT_NOT_FOUND'
   | 'BATTLE_NOT_FOUND'
   | 'BATTLE_NOT_PARTICIPANT'

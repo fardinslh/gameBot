@@ -6,7 +6,7 @@ contentType: Landing
 
 # Crown & Coin
 
-Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent Army and Commander progression, deterministic Hero Raid battles, and a Revenge return loop.
+Crown & Coin is a portrait mobile medieval strategy game. The current build combines a server-authoritative Kingdom economy, persistent Army and Commander progression, deterministic versioned Army Raid battles, and a Revenge return loop.
 
 ## Current verified repository state
 
@@ -16,7 +16,7 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 - **Verification date**: 2026-08-29
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
-This is the verified starting baseline for the Retention 03A change. The current tracked state adds the Army and Commander foundation; current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative.
+The current tracked state includes Retention 03A Army foundations and Retention 03B Army Battle v2. Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative; the explicit verification SHA is synchronized in the post-feature documentation checkpoint.
 
 ## Platform direction
 
@@ -30,7 +30,7 @@ The product direction is retention-first: bounded content and progression phases
 - **Database**: PostgreSQL 17 in local Docker Compose
 - **Infrastructure**: Redis 7.4 and a BullMQ queue handle; no gameplay worker or queued job exists
 - **Testing**: Vitest and browser validation through Playwright Core with a local Chromium browser
-- **Assets**: local WebP terrain, buildings, Castle, and Hero portraits
+- **Assets**: local WebP terrain, buildings, Castle, Hero portraits, and troop sprites
 
 ## Current core loop
 
@@ -38,10 +38,10 @@ The product direction is retention-first: bounded content and progression phases
 Kingdom
   -> collect server-timed production
   -> upgrade Castle and buildings
-  -> upgrade Heroes and arrange a three-Hero Raid Team
-  -> train troops and arrange the future three-squad Army Formation
+  -> upgrade Heroes as Commanders
+  -> train troops and arrange a three-squad Army Formation
   -> request a server Match Offer
-  -> start an authoritative Hero-based rules-version-1 Raid
+  -> start an authoritative Army rules-version-2 Raid
   -> receive loot and Trophy settlement
   -> inspect defense history and use an eligible Revenge
   -> return to Kingdom
@@ -84,9 +84,9 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster and Raid Team, Retention 03A Army/Commander foundation, authoritative Hero Raid and battle playback, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 03B — Army Battle v2, only when explicitly scoped
+- **Next**: Retention 04 — PvE Campaign / Adventure, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay

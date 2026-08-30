@@ -27,8 +27,10 @@ import { deriveHeroStats } from '../heroes/hero.calculator';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { ArmyClock } from './army.clock';
+import { calculateArmySquad, type ArmyPowerSquadInput } from './army-power.calculator';
 import { armyCapacity, MAX_TRAINING_BATCH, trainingCost, TROOP_CONTENT } from './army.config';
 import { ArmyError } from './army.errors';
+import type { ArmyCombatSquad } from '../battle/battle.types';
 
 const formationGraph = Prisma.validator<Prisma.ArmyFormationDefaultArgs>()({
   include: {
@@ -237,6 +239,57 @@ export class ArmyService {
     });
   }
 
+  async loadBattleArmy(
+    tx: TransactionClient,
+    playerId: string,
+    side: 'ATTACKER' | 'DEFENDER',
+    now: Date,
+  ): Promise<ArmyCombatSquad[]> {
+    await this.reconcileTraining(tx, playerId, now);
+    const [formation, troops] = await Promise.all([
+      tx.armyFormation.findUnique({ where: { playerId }, ...formationGraph }),
+      tx.playerTroop.findMany({ where: { playerId } }),
+    ]);
+    if (!formation || formation.slots.length !== 3 || formation.slots.some((slot) => slot.unitCount <= 0)) {
+      throw new ArmyError('FORMATION_INVALID', 'A complete three-squad Army formation is required.');
+    }
+    const commanderIds = formation.slots.map((slot) => slot.commanderPlayerHeroId);
+    if (new Set(commanderIds).size !== 3) {
+      throw new ArmyError('FORMATION_COMMANDER_DUPLICATE', 'A Commander can lead only one squad.');
+    }
+    for (const troopType of TROOP_TYPES) {
+      const assigned = formation.slots
+        .filter((slot) => slot.troopType === troopType)
+        .reduce((total, slot) => total + slot.unitCount, 0);
+      const ready = troops.find((troop) => troop.troopType === troopType)?.readyCount ?? 0;
+      if (assigned > ready) {
+        throw new ArmyError('FORMATION_INVALID', `The ${troopType} squad quantity is not battle-ready.`);
+      }
+    }
+    return formation.slots.map((slot): ArmyCombatSquad => {
+      if (!slot.commander.heroDefinition.enabled || slot.commander.playerId !== playerId) {
+        throw new ArmyError('FORMATION_INVALID', 'Every squad needs an owned enabled Commander.');
+      }
+      const calculated = calculateArmySquad(this.powerInput(slot));
+      return {
+        side,
+        slot: slot.slot as 1 | 2 | 3,
+        troopType: calculated.troopType,
+        initialUnitCount: calculated.unitCount,
+        perUnitHp: calculated.perUnitHp,
+        perUnitAtk: calculated.perUnitAtk,
+        perUnitDef: calculated.perUnitDef,
+        aggregateMaxHp: calculated.aggregateMaxHp,
+        commanderKey: calculated.commanderKey,
+        commanderLevel: calculated.commanderLevel,
+        commanderSkillKey: calculated.commanderSkillKey,
+        commanderPower: calculated.commanderPower,
+        commanderPortraitAsset: slot.commander.heroDefinition.portraitAsset,
+        squadPower: calculated.squadPower,
+      };
+    });
+  }
+
   private async withPlayerTransaction<T>(
     context: DevelopmentPlayerContext,
     operation: (tx: TransactionClient, playerId: string, kingdomId: string) => Promise<T>,
@@ -320,8 +373,10 @@ export class ArmyService {
     const maximum = armyCapacity(castleLevel);
     const ready = troops.reduce((total, troop) => total + troop.readyCount, 0);
     const trainingCount = training?.quantity ?? 0;
+    const presentedFormation = this.presentFormation(formation);
     return {
       serverTime: now.toISOString(),
+      power: presentedFormation.slots.reduce((total, slot) => total + slot.squadPower, 0),
       capacity: {
         maximum,
         ready,
@@ -342,7 +397,7 @@ export class ArmyService {
         completesAt: training.completesAt.toISOString(),
         remainingSeconds: Math.max(0, Math.ceil((training.completesAt.getTime() - now.getTime()) / 1_000)),
       } : null,
-      formation: this.presentFormation(formation),
+      formation: presentedFormation,
       commanders: commanders.map((commander) => this.presentCommander(commander)),
     };
   }
@@ -354,7 +409,21 @@ export class ArmyService {
         troopType: slot.troopType as TroopType,
         unitCount: slot.unitCount,
         commander: this.presentCommander(slot.commander),
+        squadPower: calculateArmySquad(this.powerInput(slot)).squadPower,
       })),
+    };
+  }
+
+  private powerInput(slot: FormationGraph['slots'][number]): ArmyPowerSquadInput {
+    const key = slot.commander.heroDefinition.key as HeroKey;
+    const stats = deriveHeroStats(HERO_CONTENT[key], slot.commander.level);
+    return {
+      troopType: slot.troopType as TroopType,
+      unitCount: slot.unitCount,
+      commanderKey: key,
+      commanderLevel: slot.commander.level,
+      commanderSkillKey: HERO_CONTENT[key].skillKey,
+      commanderPower: stats.power,
     };
   }
 

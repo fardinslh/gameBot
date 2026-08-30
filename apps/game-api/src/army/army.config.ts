@@ -7,6 +7,7 @@ export interface TroopContentConfig {
   trainingSecondsPerUnit: number;
   starterCount: number;
   futureCombatRole: 'DEFENSIVE_FRONTLINE' | 'RANGED_PRESSURE' | 'MOBILE_BURST';
+  combat: { hp: number; atk: number; def: number; attackIntervalMs: number };
 }
 
 export const MAX_TRAINING_BATCH = 25;
@@ -21,6 +22,7 @@ export const TROOP_CONTENT: Readonly<Record<TroopType, TroopContentConfig>> = {
     trainingSecondsPerUnit: 2,
     starterCount: 20,
     futureCombatRole: 'DEFENSIVE_FRONTLINE',
+    combat: { hp: 90, atk: 9, def: 14, attackIntervalMs: 1_400 },
   },
   ARCHER: {
     type: 'ARCHER',
@@ -29,6 +31,7 @@ export const TROOP_CONTENT: Readonly<Record<TroopType, TroopContentConfig>> = {
     trainingSecondsPerUnit: 3,
     starterCount: 15,
     futureCombatRole: 'RANGED_PRESSURE',
+    combat: { hp: 60, atk: 14, def: 7, attackIntervalMs: 1_200 },
   },
   CAVALRY: {
     type: 'CAVALRY',
@@ -37,6 +40,7 @@ export const TROOP_CONTENT: Readonly<Record<TroopType, TroopContentConfig>> = {
     trainingSecondsPerUnit: 5,
     starterCount: 10,
     futureCombatRole: 'MOBILE_BURST',
+    combat: { hp: 80, atk: 16, def: 10, attackIntervalMs: 1_500 },
   },
 };
 

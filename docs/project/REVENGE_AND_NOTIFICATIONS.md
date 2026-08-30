@@ -30,7 +30,7 @@ Preview and start require target ownership, distinct players, `AVAILABLE` state,
 
 `POST /raid/revenge/start` locks both players in sorted order and acquires a row lock on the `RevengeTarget`. It returns a stored response for an idempotent retry, otherwise resolves a `REVENGE` battle and marks the target `USED` in one transaction.
 
-Revenge reads both players' current Raid Teams and current balances. It does not reuse the source battle snapshots or source loot. It reuses the same snapshot format, battle engine, event persistence, loot calculator, Trophy calculator, ledger, and replay response as Raid.
+Revenge reads both players' current Army Formations and current balances. It does not reuse the source battle snapshots or source loot. It reuses the same Army snapshot format, rules-version-2 battle engine, event persistence, loot calculator, Trophy calculator, ledger, and replay response as Raid. Historical rules-version-1 battle detail remains readable.
 
 ## Loop prevention
 

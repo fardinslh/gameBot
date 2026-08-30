@@ -117,5 +117,5 @@ These active decisions explain constraints that code alone may not reveal. Chang
 
 - **Decision**: Crown & Coin's long-term combat fantasy is Army-first Kingdom strategy. Infantry, Archers, and Cavalry form three squads led by existing Player Heroes as Commanders.
 - **Reason**: The Player is a Kingdom ruler. Military forces should visibly and mechanically represent Kingdom power instead of turning the product into a three-character Hero-collection RPG.
-- **Consequences**: Army is a first-class authoritative domain; Knight, Ranger, and Mage persistence remains intact; `RaidTeam` and Hero Battle rules version 1 remain current and historically compatible during 03A; Army Battle starts only in rules version 2 during 03B; Barracks activation remains separately scoped; the first Army Battle version causes no permanent troop-roster loss.
-- **Status**: Active. Retention 03A foundation implemented; Retention 03B combat not implemented.
+- **Consequences**: Army is a first-class authoritative domain; Knight, Ranger, and Mage persistence remains intact; `RaidTeam` and Hero Battle rules version 1 remain historically compatible; new Raid/Revenge use Army Battle rules version 2; Barracks activation remains separately scoped; Army Battle v2 causes no permanent troop-roster loss.
+- **Status**: Active. Retention 03A foundation and Retention 03B combat implemented.

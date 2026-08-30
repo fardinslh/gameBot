@@ -10,7 +10,7 @@ The current systems share authoritative building, Hero, Army, resource, and batt
 
 ## Army and Commander foundation
 
-The Army domain runs in parallel with current Raid combat. Economy bootstrap creates missing starter troops and one formation after Hero bootstrap. `ArmyService` owns capacity, one training order, resource settlement, lazy completion, formation validation, and Commander assignments under the Player advisory lock. Existing `PlayerHero` rows are referenced directly; `RaidTeam` remains independent.
+The Army domain is the production Raid/Revenge combat input. Economy bootstrap creates missing starter troops and one formation after Hero bootstrap. `ArmyService` owns capacity, one training order, resource settlement, lazy completion, formation validation, Commander assignments, and authoritative battle snapshots under the Player advisory lock. Existing `PlayerHero` rows are referenced directly; `RaidTeam` remains only for rules-version-1 history compatibility.
 
 ```text
 Castle level -> Army capacity
@@ -18,10 +18,10 @@ ResourceBalance -> training charge -> EconomyTransaction
 PlayerTroop -> ready ownership
 TroopTrainingOrder -> reserved capacity -> lazy completion
 PlayerHero -> ArmyFormationSlot Commander
-ArmyFormation -> three future Army Battle squads
+ArmyFormation -> three Army Battle v2 squads
 ```
 
-Current `RaidService` does not consume Army state. See [Army and Commanders](ARMY_AND_COMMANDERS.md).
+`RaidService` consumes Army state for new rules-version-2 Raid and Revenge settlement. See [Army and Commanders](ARMY_AND_COMMANDERS.md).
 
 ## Dependency map
 

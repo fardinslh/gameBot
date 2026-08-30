@@ -76,7 +76,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 
 Unused assets, Prisma enum values, transaction reasons, or adapter interfaces do not make a feature implemented. Confirm a schema path, service, controller, shared contract, client flow, and validation before describing a system as complete.
 
-Retention work is split into explicit bounded tasks. Retention 03A is complete; do not automatically start Retention 03B Army Battle v2, PvE, Shop, Guild, Leaderboards, Bale, Telegram, Barracks activation, equipment, or new building gameplay.
+Retention work is split into explicit bounded tasks. Retention 03A and 03B are complete; do not automatically start Retention 04 PvE, Shop, Guild, Leaderboards, Bale, Telegram, Barracks activation, equipment, or new building gameplay.
 
 ## Documentation maintenance
 
@@ -113,7 +113,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A, 01B, 02, and 03A are implemented. Army persistence, one-order training, Castle-derived capacity, and three Commander-led formation slots coexist with the unchanged three-Hero Raid Team. Production Raid/Revenge and historical replay remain rules version 1; Army Battle v2 is Retention 03B and is next but not started. Barracks remains inactive. All nine active buildings, Retention 02, Pixi coordinates, Castle composition, 54px navigation, and Persian RTL remain intact. Advanced building art, Aren portrait/copy, and real-device audio still require owner review. PvE, Shop, Theme content, Guild, Bale, and Army Battle have not started.
+Retention 01A, 01B, 02, 03A, and 03B are implemented. Army persistence, one-order training, Castle-derived capacity, and three Commander-led formation slots now drive new rules-version-2 Raid/Revenge. Historical rules-version-1 Hero replay remains compatible. Retention 04 PvE Campaign / Adventure is next and not started. Barracks remains inactive. All nine active buildings, Retention 02, Kingdom Pixi coordinates, Castle composition, 54px navigation, and Persian RTL remain intact. Troop art, advanced building art, Aren portrait/copy, and real-device audio still require owner review. Shop, Theme content, Guild, and Bale have not started.
 
 ## Git completion rules
 

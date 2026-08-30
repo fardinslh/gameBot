@@ -8,7 +8,7 @@ contentType: Reference
 
 The Hero system stores content definitions separately from player ownership. The API derives stats, power, upgrade costs, and team power from server config.
 
-Retention 03A also lets these same persistent `PlayerHero` rows serve as Commanders in `ArmyFormationSlot`. It creates no separate Commander ownership, renames no Hero tables, and imposes no permanent troop-class lock. Knight, Ranger, and Mage still form the current rules-version-1 `RaidTeam`; Commander assignments are parallel preparation for Army Battle v2.
+Retention 03A/03B lets these same persistent `PlayerHero` rows serve as Commanders in `ArmyFormationSlot`. It creates no separate Commander ownership, renames no Hero tables, and imposes no permanent troop-class lock. Knight, Ranger, and Mage still persist in the legacy `RaidTeam` for historical rules-version-1 replay, while new Raid/Revenge battles use their Army Commander assignments.
 
 ## Current roster
 
@@ -58,11 +58,11 @@ Migration `20260823040000_hero_system` seeds the definitions and backfills exist
 
 `PUT /heroes/team` accepts exactly three distinct `PlayerHero` IDs. Every Hero must belong to the caller and reference an enabled definition. The API deletes and recreates the three ordered slots in the same player transaction.
 
-Battle start loads the current team, derives stats again, and stores immutable snapshots. Later Hero upgrades do not change an existing replay.
+New Battle starts load the current Army Formation, derive Commander-enhanced squad stats, and store immutable Army snapshots. Later Hero upgrades do not change an existing replay. Stored rules-version-1 battles still use their original Hero snapshots.
 
 ## Client architecture
 
-`useHeroState` owns roster loading, a three-ID draft order, save state, errors, and upgrades. `HeroesPage` composes Player HUD, Resource HUD, `RaidTeamPanel`, `HeroCard`, and `HeroDetailSheet`. English and Persian share the component tree.
+The production Army page uses `useArmyState` to combine authoritative troops/formation with the Hero roster. It composes Player HUD, Resource HUD, three formation controls, training, Commander assignment, and `HeroDetailSheet` upgrades. The internal `HeroesPage` and navigation ID remain for compatibility; English and Persian share the component tree.
 
 ## Planned Hero concepts
 

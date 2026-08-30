@@ -32,7 +32,8 @@ Player
   1--* DailyReturnClaim
 
 RaidMatchOffer 1--0..1 Battle
-Battle 1--6 BattleHeroSnapshot
+Battle 1--0..6 BattleHeroSnapshot
+Battle 1--0..6 BattleArmySquadSnapshot
 Battle 1--* BattleEvent
 Battle 1--0..1 RevengeTarget as source
 RevengeTarget 1--0..1 Battle as consumed Revenge
@@ -72,11 +73,11 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 
 ## Raid and battle models
 
-`RaidMatchOffer` stores one proposed pairing and its expiry/use state. SQL forbids a self-offer and requires positive team power.
+`RaidMatchOffer` stores one proposed pairing and its expiry/use state. SQL forbids a self-offer and requires positive authoritative power.
 
 `Battle` supports `RAID` and `REVENGE`. A standard Raid links one unique Match Offer; a Revenge links one unique Revenge target. The row stores settlement and replay metadata.
 
-`BattleHeroSnapshot` enforces one row per battle, side, and slot. `BattleEvent` enforces one sequence number per battle. SQL constrains battle duration to 8,000 through 15,000 ms and validates positive snapshot stats.
+`BattleHeroSnapshot` preserves rules-version-1 Hero records. `BattleArmySquadSnapshot` stores rules-version-2 troop, Commander, aggregate-stat, and power state with one row per battle, side, and slot. `BattleEvent` enforces one sequence number per battle and can store remaining unit count. SQL constrains battle duration to 8,000 through 15,000 ms and validates positive snapshot stats.
 
 ## Revenge and notification models
 
@@ -127,5 +128,6 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260829080000_retention_02` | Mission assignments, Daily completion claims, Achievement claims, Daily Return claims, reward ledger/action enums, constraints, and indexes |
 | `20260829090000_army_commander_foundation` | Troop ownership/training, Army Formation/slots, training ledger/action enums, constraints, and existing-player/system-opponent backfill |
 | `20260829090100_army_commander_slot_cascade` | Cascade-safe Commander slots for Player/Hero cleanup and runtime repair |
+| `20260829180000_army_battle_v2` | Versioned Army squad snapshots, squad-defeat events, and remaining-unit replay state |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

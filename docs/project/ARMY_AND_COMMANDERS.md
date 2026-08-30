@@ -1,26 +1,26 @@
 ---
-title: Operate the Army and Commander foundation
+title: Operate the Army and Commander battle system
 navLabel: Army and Commanders
 contentType: Reference
 ---
 
-# Operate the Army and Commander foundation
+# Operate the Army and Commander battle system
 
-Retention 03 changes Crown & Coin's long-term combat fantasy from Hero-only expansion to Army-first Kingdom strategy. The Player remains a ruler who trains troops, assigns existing Heroes as Commanders, builds a formation, and later takes that Army into battle.
+Retention 03 changes Crown & Coin's combat fantasy from Hero-only expansion to Army-first Kingdom strategy. The Player trains troops, assigns existing Heroes as Commanders, builds a formation, and takes that Army into Raid and Revenge battles.
 
-Retention 03A adds the authoritative Army domain in parallel with current combat. Retention 03B will introduce Army Battle rules version 2. Current Raid and Revenge still use the validated three-Hero Raid Team, `BattleHeroSnapshot`, events, and rules version 1.
+Retention 03A provides the authoritative Army domain. Retention 03B cuts new Raid and Revenge battles over to Army Battle rules version 2 while preserving stored rules-version-1 Hero replays.
 
 ## Troop content
 
 Exactly three troop types exist:
 
-| Type | Role prepared for 03B | Cost per unit | Training time | Starter count |
+| Type | Combat role | HP / ATK / DEF | Cost per unit | Training time | Starter count |
 | --- | --- | --- | ---: | ---: |
-| `INFANTRY` | Durable defensive frontline | 20 Food, 5 Gold | 2 seconds | 20 |
-| `ARCHER` | Ranged offensive pressure | 15 Food, 10 Wood, 5 Gold | 3 seconds | 15 |
-| `CAVALRY` | Mobile burst, premium military identity | 30 Food, 15 Gold | 5 seconds | 10 |
+| `INFANTRY` | Durable defensive frontline; counters Cavalry | 90 / 9 / 14 | 20 Food, 5 Gold | 2 seconds | 20 |
+| `ARCHER` | Ranged pressure; counters Infantry | 60 / 14 / 7 | 15 Food, 10 Wood, 5 Gold | 3 seconds | 15 |
+| `CAVALRY` | Mobile burst; counters Archer | 80 / 16 / 10 | 30 Food, 15 Gold | 5 seconds | 10 |
 
-`army.config.ts` owns display order, costs, time, starter counts, future role metadata, the 25-unit maximum batch, and capacity constants. These values are development-scale balance and remain subject to later tuning. No counter triangle or production combat statistics exist yet.
+`army.config.ts` owns display order, costs, time, starter counts, combat statistics, the 25-unit maximum batch, and capacity constants. These values are development-scale balance. Army Battle v2 applies a 20 percent counter advantage in the triangle above.
 
 ## Capacity
 
@@ -81,7 +81,7 @@ The API requires:
 
 The same troop type may occupy multiple squads when its combined assigned count is valid. The API does not require one of each type.
 
-Knight, Ranger, and Mage remain `PlayerHero` records and still support Hero levels, upgrades, and the current Raid Team. Army slots reference those rows directly; no duplicate Commander entity or destructive Hero migration exists. A Commander's troop assignment is flexible. Retention 03B owns future synergy and combat behavior.
+Knight, Ranger, and Mage remain `PlayerHero` records and still support Hero levels and upgrades. Army slots reference those rows directly; no duplicate Commander entity or destructive Hero migration exists. A Commander's troop assignment is flexible. Each level above 1 adds one percent to its squad's HP and ATK, capped at level 20. Knight casts Shield Wall, Ranger casts Power Shot, and Mage casts Arcane Blast.
 
 ## API
 
@@ -91,7 +91,7 @@ Knight, Ranger, and Mage remain `PlayerHero` records and still support Hero leve
 | `POST` | `/army/train` | Validate intent, charge resources, create one order, and return Army plus balances |
 | `PUT` | `/army/formation` | Validate and persist the requested three-slot formation |
 
-Shared contracts define `TroopType`, Army troop/capacity/training/formation/Commander states, mutation inputs, responses, and structured Army errors. Counts are bounded integers; resource amounts use the existing serialized string convention.
+Shared contracts define `TroopType`, Army troop/capacity/training/formation/Commander states, Army and squad power, mutation inputs, responses, and structured Army errors. Counts are bounded integers; resource amounts use the existing serialized string convention.
 
 ## Analytics
 
@@ -101,12 +101,14 @@ Server events are:
 - `troop_training_started`
 - `troop_training_completed`
 - `army_formation_saved`
+- `army_battle_started`
+- `army_battle_finished`
 
 System opponents remain excluded by the existing server analytics boundary. Reads emit no event.
 
 ## Battle-loss policy
 
-The first Army Battle version will not permanently delete trained troops. Future battle casualties are battle-state casualties, not roster loss. This avoids a Hospital, wounded queue, recovery economy, loss spiral, and player soft-lock before Army combat is proven fun.
+Army Battle v2 does not permanently delete trained troops. Replay casualties are battle-state casualties, not roster loss. This avoids a Hospital, wounded queue, recovery economy, loss spiral, and player soft-lock before Army combat is proven fun.
 
 No Hospital or wounded-troop model exists.
 
@@ -114,18 +116,12 @@ No Hospital or wounded-troop model exists.
 
 Run the client in development and open `/dev/army`. The lab calls the real Army API and shows capacity, ready counts, per-unit costs/time, active training, formation, and Commanders. It can start one-unit training orders and refresh reconciliation.
 
-The route returns 404 in production and is not linked from production navigation. The Heroes tab and current Raid Team language remain unchanged until the 03B cutover is designed.
+The route returns 404 in production and is not linked from production navigation. Production navigation keeps the internal `heroes` section ID for compatibility but presents it as Army and renders formation, training, Commander assignment, power, and Commander upgrades.
 
-## Retention 03A / 03B boundary
+## Army Battle v2
 
-Retention 03A implements persistence, bootstrap, training economy, capacity, formation, Commander assignments, APIs, analytics, tests, and development inspection.
+New Raid and Revenge starts load both validated formations under the existing sorted participant locks. Six immutable `BattleArmySquadSnapshot` rows store troop type/count, Commander identity/level/skill, per-unit stats, aggregate HP, and squad power. The server uses a cryptographic seed and deterministic rules version 2; the client receives only persisted outcomes and events.
 
-Retention 03B remains next and must separately define:
+Squads attack the same lane first, then the nearest living lane with a lower-slot tie break. Attack output falls with casualties. `SQUAD_DEFEATED` and `remainingUnits` make losses explicit in replay and results. The Pixi scene renders three fixed portrait lanes per side without mirroring world coordinates for RTL.
 
-- Army Battle rules version 2;
-- Army snapshots and events;
-- troop/Commander combat stats, counters, targeting, and balance;
-- Raid, Revenge, system-opponent, playback, and UI cutover behavior;
-- permanent rules version 1 replay compatibility.
-
-Current production Raid does not read Army data. No permanent PvP troop casualties, Barracks activation, Army missions, Army Achievements, PvE, Shop, or platform integration were added.
+Stored rules-version-1 battles continue to reconstruct from `BattleHeroSnapshot`; new rules-version-2 battles reconstruct from Army snapshots. No permanent PvP troop casualties, Barracks activation, Army missions, Army Achievements, PvE, Shop, or platform integration were added.

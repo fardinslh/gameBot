@@ -44,7 +44,7 @@ Retention uses server time relative to activation: D1 +24h to before +48h; D3 +7
 
 Reports include overall/daily funnel and activation, acquisition, retention, raids per activated player, win/loss, real/system share, Revenge attempts/completions, and collect/upgrade engagement. Retention 02 events are stored for later product analysis; they do not change the existing D1/D3/D7 definition or automatically add report sections.
 
-Army events are stored for future 03B analysis but do not change activation, retention qualification, Missions, Achievements, or the current operator report.
+Army foundation and battle events (`army_battle_started`, `army_battle_finished`) are stored for analysis but do not change activation, retention qualification, Missions, Achievements, or the current operator report.
 
 ## Tests and fixtures
 

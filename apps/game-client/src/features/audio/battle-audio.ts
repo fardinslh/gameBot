@@ -2,7 +2,7 @@ import type { BattleEventState, HeroKey } from '@crown-and-coin/shared';
 import type { SfxKey } from './audio-manager';
 
 export function sfxForBattleEvent(event: BattleEventState, sourceHero?: HeroKey): SfxKey[] {
-  if (event.type === 'HERO_DEFEATED') return ['hero_defeated'];
+  if (event.type === 'HERO_DEFEATED' || event.type === 'SQUAD_DEFEATED') return ['hero_defeated'];
   if (event.type === 'SKILL_CAST') {
     if (event.skillKey === 'SHIELD_WALL') return ['shield_wall'];
     if (event.skillKey === 'POWER_SHOT') return ['arrow_shot'];

@@ -203,7 +203,7 @@ try {
   for (const required of ['kingdom.mp3', 'battle.mp3']) if (!musicRequests.some((source) => source.includes(required))) throw new Error(`Buffered music was not requested: ${required}`);
 
   await page.locator('[data-nav-id="heroes"]').click();
-  await page.waitForSelector('[data-heroes-status="ready"]');
+  await page.waitForSelector('[data-army-status="ready"]');
   await page.waitForSelector('.advisor-context-tip');
   await page.screenshot({ path: new URL('06-heroes-advisor-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.advisor-context-tip button').click();

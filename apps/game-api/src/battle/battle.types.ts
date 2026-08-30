@@ -1,4 +1,4 @@
-import type { BattleEventState, BattleResult, BattleSide, HeroKey, HeroSkillKey } from '@crown-and-coin/shared';
+import type { BattleEventState, BattleResult, BattleSide, HeroKey, HeroSkillKey, TroopType } from '@crown-and-coin/shared';
 
 export interface BattleCombatHero {
   side: BattleSide;
@@ -14,10 +14,36 @@ export interface BattleCombatHero {
 
 export interface BattleEngineInput {
   seed: string;
-  rulesVersion: number;
+  rulesVersion: 1;
   attacker: BattleCombatHero[];
   defender: BattleCombatHero[];
 }
+
+export interface ArmyCombatSquad {
+  side: BattleSide;
+  slot: 1 | 2 | 3;
+  troopType: TroopType;
+  initialUnitCount: number;
+  perUnitHp: number;
+  perUnitAtk: number;
+  perUnitDef: number;
+  aggregateMaxHp: number;
+  commanderKey: HeroKey;
+  commanderLevel: number;
+  commanderSkillKey: HeroSkillKey;
+  commanderPower: number;
+  commanderPortraitAsset: string;
+  squadPower: number;
+}
+
+export interface ArmyBattleEngineInput {
+  seed: string;
+  rulesVersion: 2;
+  attacker: ArmyCombatSquad[];
+  defender: ArmyCombatSquad[];
+}
+
+export type VersionedBattleEngineInput = BattleEngineInput | ArmyBattleEngineInput;
 
 export interface BattleEngineResult {
   result: BattleResult;
@@ -26,4 +52,3 @@ export interface BattleEngineResult {
   logicalDurationMs: number;
   events: BattleEventState[];
 }
-

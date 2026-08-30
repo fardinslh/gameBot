@@ -6,15 +6,13 @@ contentType: Reference
 
 # Understand Raid and battle settlement
 
-Raid uses server-owned Match Offers, immutable Hero snapshots, a seeded deterministic engine, and one transactional settlement. The client never calculates the winner.
-
-Retention 03A adds persistent troops and an Army formation, but this document's production `rulesVersion: 1` flow is intentionally unchanged. Raid still snapshots and simulates the existing three-Hero Raid Team. Troop/formation battle input belongs to Retention 03B.
+Raid uses server-owned Match Offers, immutable versioned snapshots, a seeded deterministic engine, and one transactional settlement. The client never calculates the winner. New Raid and Revenge battles use Army Battle rules version 2; historical Hero battles remain replayable under rules version 1.
 
 ## Request flow
 
 ```text
 GET /raid
-  -> authoritative team, power, balances, Trophies
+  -> authoritative Army, power, balances, Trophies
 
 POST /raid/search
   -> server selects defender
@@ -24,8 +22,8 @@ POST /raid/search
 POST /raid/start + Idempotency-Key
   -> validate offer ownership, expiry, single use, and non-self target
   -> lock both players in sorted order
-  -> snapshot both three-Hero teams
-  -> simulate rules version 1 from a server UUID seed
+  -> validate and snapshot both three-squad Armies
+  -> simulate rules version 2 from a server UUID seed
   -> settle loot and Trophies
   -> persist Battle, snapshots, events, and response
 
@@ -35,7 +33,7 @@ GET /battles/:battleId
 
 ## Matchmaking
 
-`RaidService.search` idempotently ensures 30 system opponents exist, then evaluates players with a Kingdom and valid three-Hero Raid Team. Real candidates are queried inside the maximum Trophy bound, must be older than the 24-hour shield, and cannot have been Raided by this attacker in the previous six hours.
+`RaidService.search` idempotently ensures 30 system opponents exist, then evaluates players with a Kingdom and valid three-squad Army Formation. Real candidates are queried inside the maximum Trophy bound, must be older than the 24-hour shield, and cannot have been Raided by this attacker in the previous six hours.
 
 The server tries these passes in order:
 
@@ -52,41 +50,40 @@ There is no unlimited real-player fallback. Within each eligible set, the server
 
 The API derives protection from persistent `Player.createdAt`; it does not store or trust a client flag. Human Players remain protected for exactly 24 hours across refreshes, browser/API restarts, and system Raids. A protected attacker searches system opponents only. Protected real Players are excluded as normal defenders. System accounts are exempt from shield classification. Raid overview/search returns `{ active, expiresAt }` plus `serverTime`, and the client renders a compact localized countdown.
 
-## Raid Team snapshots
+## Versioned snapshots
 
-Each side must have exactly three enabled Heroes owned by that player. At settlement, the API derives HP, ATK, DEF, power, and skill from current server content and levels. `BattleHeroSnapshot` stores the six resulting combat records.
-
-Snapshots protect replay history from later Hero config, level, or team changes.
+Rules version 2 requires exactly three positive squads and three unique enabled Commanders owned by each participant. At settlement, the API reconciles training, validates ready troop ownership, derives combat values and power, and stores six `BattleArmySquadSnapshot` rows. Rules version 1 keeps using its six `BattleHeroSnapshot` rows. Snapshots protect replay history from later troop, formation, Commander, or content changes.
 
 ## Deterministic battle engine
 
 `apps/game-api/src/battle/battle.engine.ts` accepts only a seed, rules version, and two validated teams. `seeded-random.ts` supplies all variance and critical rolls. Authoritative battle code does not call `Math.random()`.
 
-Current rules version is `1`:
+Rules version 1 remains frozen for historical Hero replay. New battles use version 2:
 
 | Rule | Value |
 | --- | --- |
 | Logical simulation limit | 30,000 ms |
 | Playback duration | scaled to 8,000 through 15,000 ms |
-| Base damage | `max(25, ATK - round(DEF * 0.35))` |
+| Base damage | living-unit attack minus defense contribution, minimum 5 |
 | Damage variance | seeded 95 through 105 percent |
 | Critical | seeded 10 percent chance, 150 percent damage |
 | Knight basic interval | 1,400 ms |
 | Ranger basic interval | 1,200 ms |
 | Mage basic interval | 1,500 ms |
-| Targeting | first living enemy slot |
+| Counter bonus | 20 percent: Infantry > Cavalry > Archer > Infantry |
+| Targeting | same lane, then nearest living lane; lower slot wins ties |
 
 Skills use these rules:
 
 - **Shield Wall**: 35 percent damage reduction for 2,500 ms, 5,000 ms cooldown
 - **Power Shot**: 180 percent damage against the first living enemy, 4,000 ms cooldown
-- **Arcane Blast**: 100 percent damage against every living enemy, 5,500 ms cooldown
+- **Arcane Blast**: 75 percent damage against every living enemy, 5,500 ms cooldown
 
-If both teams remain alive at 30 logical seconds, total remaining HP ratios decide the winner. A seeded tie-break handles equal ratios.
+Squad damage output scales down as units fall. Shield Wall reduces damage by 35 percent for 2,500 ms; Power Shot deals 180 percent to one target. If both Armies remain alive at 30 logical seconds, total remaining HP ratios decide the winner. A seeded tie-break handles equal ratios.
 
 ## Persisted battle record
 
-`Battle` stores type, result, winner, participants, seed, rules version, duration, Trophy before/delta values, loot, and timestamps. `BattleEvent` stores an ordered timeline of battle start, basic attacks, skill casts, damage, buffs, defeats, and battle end.
+`Battle` stores type, result, winner, participants, seed, rules version, duration, Trophy before/delta values, loot, and timestamps. `BattleEvent` stores an ordered timeline of battle start, basic attacks, skill casts, damage, buffs, squad defeats, remaining HP/units, and battle end.
 
 The Battle response reconstructs both teams from snapshots and events from the database. It does not run the engine during replay.
 
@@ -127,19 +124,19 @@ The current rate limiter lives in API process memory. Per player and 60-second w
 
 `SystemOpponentService` creates 30 persistent Web system accounts in six tiers of five. Stable `system-opponent:*` keys plus the five retained `raid-fixture:*` keys prevent duplicates. They use normal Player, Kingdom, Building, ResourceBalance, PlayerHero, RaidTeam, Trophy, Battle, and EconomyTransaction records. `Player.isSystemOpponent` is the durable server classification; names are never used for detection.
 
-Tier Hero levels produce normal server-derived team-power ranges of 2,155–2,294, 2,366–2,516, 2,598–2,762, 2,852–3,035, 3,135–3,334, and 3,448–3,668. Each tier's GOLD/FOOD/WOOD/STONE replenishment threshold is half its configured target. Before offer creation, an advisory transaction lock serializes re-read and replenishment; only below-threshold balances are restored and every exact delta uses `SYSTEM_OPPONENT_REPLENISH`.
+Tier troop counts and Commander levels produce server-derived Army-power ranges of 1,249–1,265, 1,507–1,524, 1,781–1,799, 2,033–2,089, 2,345–2,371, and 2,638–2,679. Each tier's GOLD/FOOD/WOOD/STONE replenishment threshold is half its configured target. Before offer creation, an advisory transaction lock serializes re-read and replenishment; only below-threshold balances are restored and every exact delta uses `SYSTEM_OPPONENT_REPLENISH`.
 
-| Tier | Count | Trophy | Castle | Hero levels | Team power | Resource targets G/F/W/S | 50% thresholds G/F/W/S |
+| Tier | Count | Trophy | Castle | Commander levels | Army power | Resource targets G/F/W/S | 50% thresholds G/F/W/S |
 | --- | ---: | --- | ---: | --- | --- | --- | --- |
-| 1 | 5 | 780–940 | 1 | 1–2 | 2,155–2,294 | 12k / 10k / 8k / 6k | 6k / 5k / 4k / 3k |
-| 2 | 5 | 900–1,060 | 2 | 2–3 | 2,366–2,516 | 18k / 14k / 12k / 9k | 9k / 7k / 6k / 4.5k |
-| 3 | 5 | 1,040–1,200 | 3 | 3–4 | 2,598–2,762 | 26k / 20k / 17k / 13k | 13k / 10k / 8.5k / 6.5k |
-| 4 | 5 | 1,180–1,340 | 4 | 4–5 | 2,852–3,035 | 38k / 29k / 24k / 18k | 19k / 14.5k / 12k / 9k |
-| 5 | 5 | 1,320–1,480 | 5 | 5–6 | 3,135–3,334 | 54k / 40k / 33k / 25k | 27k / 20k / 16.5k / 12.5k |
-| 6 | 5 | 1,460–1,620 | 6 | 6–7 | 3,448–3,668 | 75k / 56k / 46k / 35k | 37.5k / 28k / 23k / 17.5k |
+| 1 | 5 | 780–940 | 1 | 1–2 | 1,249–1,265 | 12k / 10k / 8k / 6k | 6k / 5k / 4k / 3k |
+| 2 | 5 | 900–1,060 | 2 | 2–3 | 1,507–1,524 | 18k / 14k / 12k / 9k | 9k / 7k / 6k / 4.5k |
+| 3 | 5 | 1,040–1,200 | 3 | 3–4 | 1,781–1,799 | 26k / 20k / 17k / 13k | 13k / 10k / 8.5k / 6.5k |
+| 4 | 5 | 1,180–1,340 | 4 | 4–5 | 2,033–2,089 | 38k / 29k / 24k / 18k | 19k / 14.5k / 12k / 9k |
+| 5 | 5 | 1,320–1,480 | 5 | 5–6 | 2,345–2,371 | 54k / 40k / 33k / 25k | 27k / 20k / 16.5k / 12.5k |
+| 6 | 5 | 1,460–1,620 | 6 | 6–7 | 2,638–2,679 | 75k / 56k / 46k / 35k | 37.5k / 28k / 23k / 17.5k |
 
 System configured Trophy values remain stable: human Trophy settlement still applies, but a system participant receives delta zero and no Trophy update. A standard Raid against a system defender persists the Battle but creates no `PLAYER_RAIDED`, `REVENGE_AVAILABLE`, `RevengeTarget`, or human unread state.
 
 ## Client playback
 
-`BattleScene` loads the six local Hero portraits and schedules visual events using stored `timeMs`. Pixi animates attacks, skills, damage flashes, and HP bars. A browser timer shows the result after `durationMs + 450`. The client does not alter battle state.
+`BattleScene` dispatches by replay rules version. Version 1 loads the six local Hero portraits unchanged. Version 2 renders three stable portrait lanes per side with local troop sprites, compact Commander medallions, attacks, skills, damage flashes, HP bars, and representative-unit loss. A browser timer shows the result after `durationMs + 450`. The client does not alter battle state.

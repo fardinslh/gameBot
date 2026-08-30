@@ -687,6 +687,58 @@ button { color: inherit; }
 .hero-error--visible { pointer-events: auto; visibility: visible; opacity: 1; transform: translateY(0); }
 .hero-error button { min-height: 32px; padding-inline: 10px; color: #3b1d15; background: #ffc5b2; border: 0; border-radius: 8px; cursor: pointer; font-size: 8px; font-weight: 800; white-space: nowrap; }
 
+.army-scroll { padding-block-end: 28px; }
+.army-titlebar { justify-content: stretch; }
+.army-titlebar > div:nth-child(2) { min-width: 0; flex: 1; }
+.army-titlebar__power { display: grid; justify-items: end; gap: 2px; }
+.army-titlebar__power small { color: var(--cream-muted); font-size: 6px; }
+.army-titlebar__power b { display: flex; align-items: center; gap: 4px; color: var(--gold-bright); font-size: 13px; }
+.army-capacity, .army-section { margin-top: 8px; padding: 9px; background: linear-gradient(145deg, rgba(32,36,39,.97), rgba(18,21,23,.97)); border-radius: 15px; box-shadow: inset 0 0 0 1px rgba(255,215,108,.1), 0 9px 22px rgba(0,0,0,.22); }
+.army-capacity > span { display: flex; align-items: center; gap: 5px; }
+.army-capacity > span svg { color: var(--gold); }
+.army-capacity > span small { flex: 1; color: var(--cream-muted); font-size: 8px; }
+.army-capacity > span b { color: var(--cream); font-size: 10px; }
+.army-capacity > div { height: 5px; overflow: hidden; margin-top: 6px; background: #0b0e0d; border-radius: 6px; }
+.army-capacity > div i { display: block; height: 100%; background: linear-gradient(90deg, #8aa85e, #e5bc56); border-radius: inherit; }
+.army-capacity > small { display: block; margin-top: 4px; color: #8d9487; font-size: 6px; text-align: end; }
+.army-section__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.army-section__heading h2 { margin: 0; color: var(--cream); font-family: Georgia, "Times New Roman", serif; font-size: 12px; }
+.army-section__heading span { color: #958d80; font-size: 6px; }
+.army-formation { display: grid; gap: 6px; direction: ltr; }
+.army-squad-card { position: relative; display: grid; min-height: 92px; grid-template-columns: 78px 1fr 54px; align-items: stretch; overflow: hidden; background: rgba(8,11,12,.62); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.army-squad-card__art { position: relative; overflow: hidden; background: radial-gradient(circle at 50% 68%, rgba(224,180,76,.18), transparent 60%); }
+.army-squad-card__art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0,0,0,.7)); }
+.army-squad-card__art b { position: absolute; inset-inline-start: 4px; inset-block-start: 4px; padding: 3px 5px; color: #1f180c; background: var(--gold-bright); border-radius: 5px; font-size: 6px; }
+.army-squad-card__controls { display: grid; min-width: 0; align-content: center; gap: 4px; padding: 6px 4px; }
+.army-squad-card select, .army-squad-card input { min-width: 0; height: 27px; color: var(--cream); background: #202522; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; font-size: 7px; }
+.army-squad-card__controls > select { width: 100%; padding-inline: 5px; }
+.army-squad-card__controls label { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 4px; color: #999184; font-size: 6px; }
+.army-squad-card__controls input { width: 100%; padding-inline: 5px; }
+.army-commander-medallion { display: grid; min-width: 0; place-items: center; align-content: center; gap: 3px; padding: 3px; color: var(--cream); background: transparent; border: 0; cursor: pointer; font-size: 6px; }
+.army-commander-medallion img { width: 39px; height: 39px; object-fit: cover; border: 2px solid #b99043; border-radius: 50%; box-shadow: 0 3px 9px #000; }
+.army-commander-medallion span { width: 48px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.army-save { display: flex; min-height: 39px; align-items: center; justify-content: center; gap: 5px; width: 100%; margin-top: 7px; color: #2b210f; background: linear-gradient(145deg,#f1d276,#b98031); border: 0; border-radius: 10px; cursor: pointer; font-size: 8px; font-weight: 900; }
+.army-save:disabled { color: #827b70; background: rgba(255,255,255,.055); cursor: default; }
+.army-training__types { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; direction: ltr; }
+.army-training__types button { display: grid; min-width: 0; height: 88px; place-items: center; align-content: center; gap: 1px; overflow: hidden; color: var(--cream); background: rgba(8,11,12,.6); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; cursor: pointer; }
+.army-training__types button.is-active { border-color: #d7ae4f; background: rgba(120,91,35,.19); }
+.army-training__types img { width: 52px; height: 51px; object-fit: contain; filter: drop-shadow(0 3px 4px #000); }
+.army-training__types strong { font-size: 7px; }
+.army-training__types small { color: #9c9589; font-size: 6px; }
+.army-training__order { display: grid; grid-template-columns: 57px 1fr 64px; align-items: end; gap: 6px; margin-top: 7px; }
+.army-training__order label { display: grid; gap: 3px; color: #999184; font-size: 6px; }
+.army-training__order input { width: 100%; height: 33px; padding-inline: 6px; color: var(--cream); background: #171b19; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; }
+.army-training__order > div { display: flex; flex-wrap: wrap; gap: 3px; }
+.army-training__order > div span { padding: 3px 5px; color: #c7bca7; background: rgba(255,255,255,.045); border-radius: 5px; font-size: 6px; }
+.army-training__order > button { min-height: 34px; color: #251b0c; background: var(--gold-bright); border: 0; border-radius: 8px; font-size: 8px; font-weight: 900; }
+.army-training__order > button:disabled { opacity: .38; }
+.army-training__active { display: flex; min-height: 58px; align-items: center; gap: 8px; padding: 8px; color: var(--gold-bright); background: rgba(128,94,33,.14); border-radius: 10px; }
+.army-training__active span { display: grid; flex: 1; }
+.army-training__active strong { color: var(--cream); font-size: 8px; }.army-training__active small { color: #a79d8c; font-size: 7px; }.army-training__active b { font-size: 13px; }
+.army-commanders > div:last-child { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; direction: ltr; }
+.army-commanders button { display: grid; min-width: 0; min-height: 112px; place-items: center; align-content: start; overflow: hidden; padding: 0 4px 6px; color: var(--cream); text-align: center; background: rgba(8,11,12,.6); border: 0; border-radius: 10px; cursor: pointer; }
+.army-commanders img { width: calc(100% + 8px); height: 69px; object-fit: cover; }.army-commanders button > span { display: grid; gap: 2px; }.army-commanders strong { font-size: 8px; }.army-commanders small { color: #9c9589; font-size: 6px; }.army-commanders em { display: flex; align-items: center; justify-content: center; gap: 2px; color: #b6a7ee; font-size: 6px; font-style: normal; }
+
 .economy-error {
   position: absolute;
   z-index: 55;
@@ -880,6 +932,9 @@ button { color: inherit; }
 .raid-own-team span { grid-column: 1; overflow: hidden; font-size: 7px; text-overflow: ellipsis; white-space: nowrap; }
 .raid-own-team b { grid-column: 2; grid-row: 1; color: var(--gold-bright); font-size: 12px; }
 .raid-own-team button { grid-column: 2; grid-row: 2; padding: 5px 7px; color: var(--gold); background: transparent; border: 0; cursor: pointer; font-size: 7px; }
+.raid-portraits figcaption small { display: block; margin-top: 2px; color: #938b7f; font-size: 6px; }
+.raid-army-result { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; width: 100%; margin-top: 7px; padding: 7px; background: rgba(8,11,10,.54); border-radius: 10px; }
+.raid-army-result span { display: grid; gap: 2px; color: var(--gold-bright); font-size: 8px; }.raid-army-result strong { color: var(--cream); font-size: 7px; }.raid-army-result > small { grid-column: 1 / -1; color: #a9a294; font-size: 6px; line-height: 1.35; }
 .raid-battle-wrap { position: absolute; inset: 0 8px 8px; overflow: hidden; background: #151d16; border-radius: 20px; box-shadow: inset 0 0 0 1px rgba(255,215,108,.12); direction: ltr; }
 .battle-scene, .battle-canvas { width: 100%; height: 100%; }
 .battle-canvas { display: block; }

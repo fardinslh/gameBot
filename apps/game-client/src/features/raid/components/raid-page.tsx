@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Coins, Crown, History, Shield, Swords, Trophy } from 'lucide-react';
 import type { Dictionary, Locale } from '@/i18n/config';
 import type { GameSection } from '@/features/kingdom/components/bottom-navigation';
@@ -63,6 +63,10 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                 <h1>{raid.battle.type === 'REVENGE' ? (raid.battle.result === 'ATTACKER_WIN' ? t.inboxUi.revengeVictory : t.inboxUi.revengeDefeat) : (raid.battle.result === 'ATTACKER_WIN' ? t.raidUi.victory : t.raidUi.defeat)}</h1>
                 <p><Trophy size={15} /> <BidiValue direction="ltr">{raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta}</BidiValue> {t.raidUi.trophies}</p>
                 <div className="raid-loot-grid">{Object.entries(raid.battle.loot).map(([resource, amount]) => <span key={resource}><b><BidiValue direction="ltr">{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
+                {raid.battle.rulesVersion === 2 ? <div className="raid-army-result">{raid.battle.armies.attacker.map((squad) => {
+                  const last = [...raid.battle!.events].reverse().find((event) => event.targetSide === 'ATTACKER' && event.targetSlot === squad.slot && event.remainingUnits !== null);
+                  return <span key={squad.slot}><strong>{t.armyUi.troopNames[squad.troopType]}</strong><BidiValue direction="ltr">{squad.initialUnitCount} → {last?.remainingUnits ?? squad.initialUnitCount}</BidiValue></span>;
+                })}<small>{t.raidUi.battleLocalLosses}</small></div> : null}
                 <button className="raid-primary" data-guide-target="result-return" onClick={raid.battle.type === 'REVENGE' ? raid.clearBattle : () => void returnToKingdom()} type="button">{raid.battle.type === 'REVENGE' ? t.inboxUi.title : t.raidUi.returnKingdom}</button>
                 <button className="raid-secondary" onClick={raid.battle.type === 'REVENGE' ? () => onNavigate('kingdom') : raid.clearBattle} type="button">{raid.battle.type === 'REVENGE' ? t.raidUi.returnKingdom : t.raidUi.findAnother}</button>
               </div>
@@ -88,8 +92,8 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                   {raid.offer ? (
                     <>
                       <div className="raid-opponent"><span><Shield size={25} /></span><div><small>{t.raidUi.opponent}</small><h2><BidiValue>{raid.offer.opponent.displayName}</BidiValue></h2><p>{t.raidUi.castleLevel} <BidiValue direction="ltr">{raid.offer.opponent.castleLevel}</BidiValue> · <Trophy size={12} /> <BidiValue direction="ltr">{raid.offer.opponent.trophies}</BidiValue></p></div></div>
-                      <div className="raid-power"><span><small>{t.raidUi.yourPower}</small><b><BidiValue direction="ltr">{raid.offer.ownPower}</BidiValue></b></span><i dir="ltr">VS</i><span><small>{t.raidUi.enemyPower}</small><b><BidiValue direction="ltr">{raid.offer.opponent.teamPower}</BidiValue></b></span></div>
-                      <div className="raid-portraits">{raid.offer.opponent.team.map((hero) => <figure key={hero.id}><img alt={t.heroNames[hero.key]} src={hero.portraitAsset} /><figcaption>{t.heroNames[hero.key]} · <BidiValue direction="ltr">{hero.level}</BidiValue></figcaption></figure>)}</div>
+                      <div className="raid-power"><span><small>{t.raidUi.yourPower}</small><b><BidiValue direction="ltr">{raid.offer.ownPower}</BidiValue></b></span><i dir="ltr">VS</i><span><small>{t.raidUi.enemyPower}</small><b><BidiValue direction="ltr">{raid.offer.opponent.armyPower}</BidiValue></b></span></div>
+                      <div className="raid-portraits">{raid.offer.opponent.army.map((squad) => <figure key={squad.slot}><img alt={t.heroNames[squad.commander.key]} src={squad.commander.portraitAsset} /><figcaption>{t.armyUi.troopNames[squad.troopType]} × <BidiValue direction="ltr">{squad.unitCount}</BidiValue><small>{t.heroNames[squad.commander.key]} · Lv.{squad.commander.level}</small></figcaption></figure>)}</div>
                       <h3><Coins size={15} /> {t.raidUi.potentialLoot}</h3>
                       <div className="raid-loot-grid">{Object.entries(raid.offer.potentialLoot).map(([resource, amount]) => <span key={resource}><b><BidiValue direction="ltr">{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
                       <button className="raid-primary" data-guide-target="attack" disabled={raid.action !== 'idle'} onClick={() => void raid.attack()} type="button">{raid.action === 'attacking' ? t.raidUi.marching : t.raidUi.attack}</button>
@@ -99,7 +103,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                     <div className="raid-empty"><span><Swords size={38} /></span><h2>{t.raidUi.ready}</h2><p>{t.raidUi.readyHint}</p><button className="raid-primary" data-guide-target="find-enemy" disabled={raid.action !== 'idle'} onClick={() => void raid.search()} type="button">{raid.action === 'searching' || raid.action === 'loading' ? t.raidUi.searching : t.raidUi.findOpponent}</button></div>
                   )}
                 </div>
-                <div className="raid-own-team"><strong>{t.raidUi.yourTeam}</strong><span>{state?.team.heroes.map((hero, index) => <Fragment key={hero.id}>{index ? ' | ' : ''}{t.heroNames[hero.key]} {t.heroUi.level}<BidiValue direction="ltr">{hero.level} · {hero.power}</BidiValue></Fragment>)}</span><b><BidiValue direction="ltr">{state?.team.power ?? 0}</BidiValue></b><button onClick={() => onNavigate('heroes')} type="button">{t.raidUi.editTeam}</button></div>
+                <div className="raid-own-team"><strong>{t.raidUi.yourTeam}</strong><span>{state?.army.squads.map((squad) => `${t.armyUi.troopNames[squad.troopType]} × ${squad.unitCount}`).join(' | ')}</span><b><BidiValue direction="ltr">{state?.army.power ?? 0}</BidiValue></b><button onClick={() => onNavigate('heroes')} type="button">{t.raidUi.editTeam}</button></div>
               </>
             )}
           </section>

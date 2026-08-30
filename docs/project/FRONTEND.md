@@ -16,7 +16,7 @@ Bottom navigation contains five items:
 
 - Kingdom: enabled
 - Raid: enabled
-- Heroes: enabled
+- Army: enabled (internal section ID remains `heroes` for compatibility)
 - Guild: disabled with Coming Soon feedback
 - Shop: disabled with Coming Soon feedback
 
@@ -53,7 +53,7 @@ features/army-lab
 
 `useKingdomState` loads Kingdom state including authoritative `kingdomGoals`, tracks server/client clock offset, refreshes on tab visibility, updates once per second for timers, collects production, starts upgrades, and calls the completion endpoint after `finishAt`. Castle detail opens a compact React-owned Kingdom Progress sheet; it renders server-authored XP, milestones, next unlock, and effect progression without creating client-side progression state.
 
-`useHeroState` loads roster/team state, maintains an ordered local draft, persists the team, upgrades Heroes, and updates balances from responses.
+`useArmyState` loads Army and Hero state, maintains a three-squad local formation draft, persists formation changes, starts troop training, upgrades Commanders, and updates balances from authoritative responses.
 
 `useRaidState` coordinates overview, Match Offer, battle playback, inbox, Revenge preview, replay detail, and post-battle refresh. The experience provider refreshes persistent onboarding around successful actions; its UI remains non-blocking on API failure.
 
@@ -67,7 +67,7 @@ Feature API clients read `NEXT_PUBLIC_API_URL`, defaulting to `http://localhost:
 
 The production authentication boundary remains absent. Browser API clients do not attach a real platform credential.
 
-`/dev/army` exists only in development and returns 404 in production. It calls the real Army API and is not linked from production navigation. No production Army screen or current Pixi coordinates changed in Retention 03A.
+`/dev/army` exists only in development and returns 404 in production. It calls the real Army API and is not linked from production navigation. Production uses the Army screen and local optimized Infantry/Archer/Cavalry WebP art. Battle Pixi coordinates are fixed portrait lanes and remain independent of Kingdom world coordinates and RTL direction.
 
 ## Pixi boundaries
 
@@ -87,7 +87,7 @@ Kingdom world coordinates, Battle Pixi layout, ordered team/loot grids, image as
 
 ## Mobile layout
 
-Kingdom, Heroes, and Raid shells use a maximum width of 520 pixels and maximum height of 920 pixels. Desktop centers the mobile viewport. The client uses `100svh`, safe-area insets, fixed HUD layers, and scrollable content only where a feature requires it. The Retention sheet is a React-owned scroll surface above Kingdom and stops before the unchanged 54px navigation.
+Kingdom, Army, and Raid shells use a maximum width of 520 pixels and maximum height of 920 pixels. Desktop centers the mobile viewport. The client uses `100svh`, safe-area insets, fixed HUD layers, and scrollable content only where a feature requires it. The Retention sheet is a React-owned scroll surface above Kingdom and stops before the unchanged 54px navigation.
 
 Browser validations cover:
 

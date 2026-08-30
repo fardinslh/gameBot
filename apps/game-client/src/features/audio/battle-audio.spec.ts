@@ -4,7 +4,7 @@ import { sfxForBattleEvent } from './battle-audio';
 
 const event = (input: Partial<BattleEventState>): BattleEventState => ({
   sequence: 1, timeMs: 100, type: 'DAMAGE', sourceSide: 'ATTACKER', sourceSlot: 1,
-  targetSide: 'DEFENDER', targetSlot: 1, amount: 10, remainingHp: 90, skillKey: null, ...input,
+  targetSide: 'DEFENDER', targetSlot: 1, amount: 10, remainingHp: 90, remainingUnits: null, skillKey: null, ...input,
 });
 
 describe('battle audio routing', () => {

@@ -149,6 +149,7 @@ enum BattleEventType {
   BUFF_APPLIED
   BUFF_EXPIRED
   HERO_DEFEATED
+  SQUAD_DEFEATED
   BATTLE_END
 }
 
@@ -572,6 +573,7 @@ model Battle {
   defender             Player               @relation("BattleDefender", fields: [defenderPlayerId], references: [id], onDelete: Restrict)
   winner               Player               @relation("BattleWinner", fields: [winnerPlayerId], references: [id], onDelete: Restrict)
   heroSnapshots        BattleHeroSnapshot[]
+  armySquadSnapshots   BattleArmySquadSnapshot[]
   events               BattleEvent[]
 
   @@index([attackerPlayerId, createdAt])
@@ -632,6 +634,29 @@ model BattleHeroSnapshot {
   @@index([battleId, side])
 }
 
+model BattleArmySquadSnapshot {
+  id                       String     @id @default(uuid())
+  battleId                 String
+  side                     BattleSide
+  slot                     Int
+  troopType                TroopType
+  initialUnitCount         Int
+  perUnitHp                Int
+  perUnitAtk               Int
+  perUnitDef               Int
+  aggregateMaxHp           Int
+  commanderKey             HeroKey
+  commanderLevel           Int
+  commanderSkillKey        String
+  commanderPower           Int
+  commanderPortraitAsset   String
+  squadPower               Int
+  battle                   Battle     @relation(fields: [battleId], references: [id], onDelete: Cascade)
+
+  @@unique([battleId, side, slot])
+  @@index([battleId, side])
+}
+
 model BattleEvent {
   id          String          @id @default(uuid())
   battleId    String
@@ -644,6 +669,7 @@ model BattleEvent {
   targetSlot  Int?
   amount      Int?
   remainingHp Int?
+  remainingUnits Int?
   skillKey    String?
   battle      Battle          @relation(fields: [battleId], references: [id], onDelete: Cascade)
 

@@ -105,10 +105,10 @@ try {
   await page.waitForSelector('[data-building-sheet="farm"]');
   await page.screenshot({ path: new URL('building-detail-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('[data-nav-id="heroes"]').click();
-  await page.waitForSelector('[data-heroes-status="ready"]');
+  await page.waitForSelector('[data-army-status="ready"]');
   await dismissAdvisorTips(page);
-  await page.screenshot({ path: new URL('heroes-fa-320x568.png', artifacts).pathname.slice(1) });
-  await page.locator('.hero-card__main').first().click();
+  await page.screenshot({ path: new URL('army-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.army-commanders button').first().click();
   await page.waitForSelector('[data-hero-sheet]');
   await page.waitForTimeout(350);
   await page.screenshot({ path: new URL('hero-detail-fa-320x568.png', artifacts).pathname.slice(1) });
@@ -120,6 +120,13 @@ try {
   await page.waitForSelector('[data-raid-state="offer"]');
   await dismissAdvisorTips(page);
   await page.screenshot({ path: new URL('raid-opponent-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('[data-guide-target="attack"]').click();
+  await page.waitForSelector('[data-raid-state="battle"]');
+  await page.waitForTimeout(700);
+  await page.screenshot({ path: new URL('army-battle-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.waitForSelector('[data-raid-state="result"]', { timeout: 20_000 });
+  await page.screenshot({ path: new URL('army-result-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.raid-result .raid-secondary').click();
   await page.locator('.raid-titlebar__log').click();
   await page.waitForSelector('[data-raid-state="inbox"]');
   await page.waitForFunction(() => !document.querySelector('.battle-log__empty > span'));
@@ -132,6 +139,12 @@ try {
     await page.waitForSelector('[data-scene-status="ready"]');
     await assertSemanticRoot(page, 'fa', 'rtl');
     await page.screenshot({ path: new URL(`kingdom-hud-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+    if (viewport.width === 390) {
+      await page.locator('[data-nav-id="heroes"]').click();
+      await page.waitForSelector('[data-army-status="ready"]');
+      await dismissAdvisorTips(page);
+      await page.screenshot({ path: new URL('army-fa-390x844.png', artifacts).pathname.slice(1) });
+    }
   }
 
   await page.setViewportSize({ width: 320, height: 568 });
@@ -142,7 +155,7 @@ try {
 
   if (browserErrors.length) throw new Error(browserErrors.join('\n'));
   console.log('PASS semantic FA/RTL and EN/LTR roots, document metadata, isolated mixed tokens, and no horizontal overflow');
-  console.log('PASS screenshots: Kingdom HUD, Building Detail, Aren, Heroes, Hero Detail, Raid opponent, Battle Log, mixed content');
+  console.log('PASS screenshots: Kingdom HUD, Building Detail, Aren, Army, Commander Detail, Raid opponent, Army Battle, Army result, Battle Log, mixed content');
   console.log('PASS viewports: 320x568, 375x812, 390x844');
 } finally {
   await browser?.close();

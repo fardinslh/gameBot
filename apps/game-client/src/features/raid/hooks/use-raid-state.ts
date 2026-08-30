@@ -90,7 +90,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
       setOffer(response.offer);
       setErrorCode(null);
       audio.playSfx('find_enemy');
-      trackRaidEvent('raid_offer_received', { playerId: response.player.id, opponentPower: response.offer.opponent.teamPower, ownPower: response.offer.ownPower });
+      trackRaidEvent('raid_offer_received', { playerId: response.player.id, opponentPower: response.offer.opponent.armyPower, ownPower: response.offer.ownPower });
     } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
     finally { setAction('idle'); }
   }, [action, audio]);
@@ -99,7 +99,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
     if (!offer || action !== 'idle') return;
     setAction('attacking');
     audio.playSfx('attack_start');
-    trackRaidEvent('raid_started', { playerId: overview?.player.id ?? 'unknown', offerId: offer.id, opponentPower: offer.opponent.teamPower, ownPower: offer.ownPower });
+    trackRaidEvent('raid_started', { playerId: overview?.player.id ?? 'unknown', offerId: offer.id, opponentPower: offer.opponent.armyPower, ownPower: offer.ownPower });
     try {
       const response = await startRaid(offer.id);
       setBattle(response);

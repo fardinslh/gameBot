@@ -4,6 +4,7 @@ import {
   Platform,
   Prisma,
   ResourceType,
+  TroopType,
 } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import type { KingdomBuildingType, RaidResourceType } from '@crown-and-coin/shared';
@@ -16,6 +17,7 @@ import {
   type ConfiguredSystemOpponent,
   SYSTEM_OPPONENT_EXTERNAL_IDS,
   SYSTEM_OPPONENTS,
+  systemFormation,
 } from './system-opponent.config';
 
 type Tx = Prisma.TransactionClient;
@@ -111,6 +113,8 @@ export class SystemOpponentService {
             include: {
               kingdom: { include: { resourceBalances: true, buildings: true } },
               heroes: { include: { heroDefinition: true } },
+              troops: true,
+              armyFormation: true,
             },
           },
         },
@@ -145,10 +149,47 @@ export class SystemOpponentService {
         if (!hero) throw new Error(`System opponent is missing ${STARTER_HERO_KEYS[index]}.`);
         await tx.playerHero.update({ where: { id: hero.id }, data: { level: configured.heroLevels[index] } });
       }
+      await this.ensureArmy(tx, player, configured);
 
       if (newlyClassified) await this.seedTargetBalances(tx, player.id, player.kingdom.id, player.kingdom.resourceBalances, configured);
       await this.ensureBuildingShape(tx, player.kingdom.id);
     }, { maxWait: 5_000, timeout: 15_000 });
+  }
+
+  private async ensureArmy(
+    tx: Tx,
+    player: {
+      id: string;
+      heroes: { id: string; heroDefinition: { key: string } }[];
+      troops: { troopType: TroopType }[];
+      armyFormation: { id: string } | null;
+    },
+    configured: ConfiguredSystemOpponent,
+  ): Promise<void> {
+    const troopTypes = [TroopType.INFANTRY, TroopType.ARCHER, TroopType.CAVALRY] as const;
+    for (let index = 0; index < troopTypes.length; index += 1) {
+      await tx.playerTroop.upsert({
+        where: { playerId_troopType: { playerId: player.id, troopType: troopTypes[index] } },
+        create: { playerId: player.id, troopType: troopTypes[index], readyCount: configured.tier.armyCounts[index] },
+        update: { readyCount: configured.tier.armyCounts[index] },
+      });
+    }
+    const formation = player.armyFormation ?? await tx.armyFormation.create({ data: { playerId: player.id } });
+    const configuredFormation = systemFormation(configured);
+    await tx.armyFormationSlot.deleteMany({ where: { armyFormationId: formation.id } });
+    await tx.armyFormationSlot.createMany({
+      data: configuredFormation.map((slot, index) => {
+        const commander = player.heroes.find((hero) => hero.heroDefinition.key === slot.commanderKey);
+        if (!commander) throw new Error(`System opponent is missing Commander ${slot.commanderKey}.`);
+        return {
+          armyFormationId: formation.id,
+          slot: index + 1,
+          troopType: slot.troopType,
+          unitCount: slot.unitCount,
+          commanderPlayerHeroId: commander.id,
+        };
+      }),
+    });
   }
 
   private async seedTargetBalances(
