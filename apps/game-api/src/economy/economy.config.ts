@@ -22,12 +22,14 @@ export const STARTING_RESOURCES: Record<ResourceType, bigint> = {
   GEMS: 120n,
 };
 
-export const STORAGE_CONFIG: Readonly<Record<ResourceType, { baseCapacity: number; growth: number }>> = {
+export const CAPPED_RESOURCE_TYPES = ['GOLD', 'FOOD', 'WOOD', 'STONE'] as const;
+export type CappedResourceType = (typeof CAPPED_RESOURCE_TYPES)[number];
+
+export const STORAGE_CONFIG: Readonly<Record<CappedResourceType, { baseCapacity: number; growth: number }>> = {
   GOLD: { baseCapacity: 10_000, growth: 1.35 },
   FOOD: { baseCapacity: 10_000, growth: 1.32 },
   WOOD: { baseCapacity: 10_000, growth: 1.32 },
   STONE: { baseCapacity: 8_000, growth: 1.32 },
-  GEMS: { baseCapacity: 500, growth: 1.15 },
 };
 
 export const ECONOMY_CONFIG: Record<KingdomBuildingType, BuildingEconomyConfig> = {
@@ -123,8 +125,9 @@ export const ECONOMY_CONFIG: Record<KingdomBuildingType, BuildingEconomyConfig> 
   },
 };
 
-export function storageCapacity(resource: ResourceType, castleLevel: number): bigint {
-  const config = STORAGE_CONFIG[resource];
+export function storageCapacity(resource: ResourceType, castleLevel: number): bigint | null {
+  if (!CAPPED_RESOURCE_TYPES.includes(resource as CappedResourceType)) return null;
+  const config = STORAGE_CONFIG[resource as CappedResourceType];
   return BigInt(Math.round(config.baseCapacity * config.growth ** (Math.max(1, castleLevel) - 1)));
 }
 

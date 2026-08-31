@@ -79,7 +79,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 
 Unused assets, Prisma enum values, transaction reasons, or adapter interfaces do not make a feature implemented. Confirm a schema path, service, controller, shared contract, client flow, and validation before describing a system as complete.
 
-Retention work is split into explicit bounded tasks. Retention 03A, 03B, and 04 are complete; do not automatically start Retention 05 Shop, Guild, Leaderboards, Bale, Telegram, Barracks activation, equipment, or new building gameplay.
+Retention work is split into explicit bounded tasks. Retention 03A, 03B, 04, and 05 are complete; do not automatically start Retention 05B Themes, Guild, Leaderboards, Bale, Telegram, Barracks activation, equipment, or new building gameplay.
 
 ## Documentation maintenance
 
@@ -116,7 +116,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, and 04 are implemented. Army persistence, one-order training, Castle-derived capacity, and three Commander-led formation slots drive new rules-version-2 Raid/Revenge/Campaign battles. Broken Frontier provides nine authoritative stages, persistent best stars, and one-time rewards without PvP side effects. Historical rules-version-1 Hero replay remains compatible. Retention 05 Shop MVP + Gem Economy is next and not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 54px navigation, and Persian RTL remain intact. Campaign art direction, troop art, advanced building art, Aren portrait/copy, and real-device audio still require owner review. Theme content, Guild, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, and 05 are implemented. Shop uses uncapped earned Gems for three permanent Profile Crests and optional authoritative Building/training completion; no payment or Battle-outcome sale exists. Army persistence, one-order training, Castle-derived capacity, and three Commander-led formation slots drive rules-version-2 Raid/Revenge/Campaign battles. Historical rules-version-1 Hero replay remains compatible. Retention 05B Kingdom Themes is next and not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 54px navigation, and Persian RTL remain intact. Shop/Campaign art direction, troop art, advanced building art, Aren portrait/copy, and real-device audio still require owner review. Theme content, Guild, and Bale have not started.
 
 ## Git completion rules
 

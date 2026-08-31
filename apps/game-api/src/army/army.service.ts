@@ -320,35 +320,48 @@ export class ArmyService {
     throw new ArmyError('ARMY_CONFLICT', 'The Army is busy. Please retry.');
   }
 
-  private async reconcileTraining(tx: TransactionClient, playerId: string, now: Date): Promise<void> {
+  async reconcileTraining(tx: TransactionClient, playerId: string, now: Date): Promise<void> {
     const due = await tx.troopTrainingOrder.findMany({
       where: { playerId, status: TroopTrainingStatus.IN_PROGRESS, completesAt: { lte: now } },
     });
     for (const order of due) {
-      const claimed = await tx.troopTrainingOrder.updateMany({
-        where: {
-          id: order.id,
-          status: TroopTrainingStatus.IN_PROGRESS,
-          completesAt: { lte: now },
-        },
-        data: { status: TroopTrainingStatus.COMPLETED, completedAt: now },
-      });
-      if (claimed.count !== 1) continue;
-      await tx.playerTroop.update({
-        where: {
-          playerId_troopType: { playerId, troopType: order.troopType },
-        },
-        data: { readyCount: { increment: order.quantity } },
-      });
-      await this.analytics.recordServer(tx, {
-        playerId,
-        eventName: 'troop_training_completed',
-        dedupeKey: `troop_training_completed:${order.id}`,
-        properties: { troopType: order.troopType, quantity: order.quantity },
-        occurredAt: now,
-      });
-      this.logger.log(`training-complete player=${playerId} order=${order.id} quantity=${order.quantity}`);
+      await this.completeTrainingInTransaction(tx, playerId, order.id, now, false);
     }
+  }
+
+  async completeTrainingInTransaction(
+    tx: TransactionClient,
+    playerId: string,
+    orderId: string,
+    now: Date,
+    allowEarly: boolean,
+  ): Promise<{ id: string; troopType: TroopType; quantity: number } | null> {
+    const order = await tx.troopTrainingOrder.findUnique({ where: { id: orderId } });
+    if (!order || order.playerId !== playerId || order.status !== TroopTrainingStatus.IN_PROGRESS) return null;
+    if (!allowEarly && order.completesAt > now) return null;
+    const claimed = await tx.troopTrainingOrder.updateMany({
+      where: {
+        id: order.id,
+        playerId,
+        status: TroopTrainingStatus.IN_PROGRESS,
+        ...(allowEarly ? {} : { completesAt: { lte: now } }),
+      },
+      data: { status: TroopTrainingStatus.COMPLETED, completedAt: now },
+    });
+    if (claimed.count !== 1) return null;
+    await tx.playerTroop.update({
+      where: { playerId_troopType: { playerId, troopType: order.troopType } },
+      data: { readyCount: { increment: order.quantity } },
+    });
+    await this.analytics.recordServer(tx, {
+      playerId,
+      eventName: 'troop_training_completed',
+      dedupeKey: `troop_training_completed:${order.id}`,
+      properties: { troopType: order.troopType, quantity: order.quantity },
+      occurredAt: now,
+    });
+    this.logger.log(`training-complete player=${playerId} order=${order.id} quantity=${order.quantity}`);
+    return { id: order.id, troopType: order.troopType as TroopType, quantity: order.quantity };
   }
 
   private async presentArmy(

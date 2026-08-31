@@ -41,6 +41,8 @@ Every claim requires an 8–100 character `Idempotency-Key`, runs under the Play
 
 Campaign progression is a separate Retention 04 domain. Campaign battles do not count as Raid/Revenge mission progress, and Campaign rewards do not alter Retention 02 claim sequencing. Both systems reuse the transaction, ledger, idempotency, and advisory-lock integrity patterns.
 
+Retention 02 remains the current free Gem-faucet family: Daily and Weekly Mission rewards, Daily completion, Achievement claims, and Daily Return may grant configured Gems. Gems are uncapped, so a valid reward is never discarded at the former placeholder capacity. Retention 05 consumes Gems but does not change progress derivation, period assignment, claim order, or reward definitions.
+
 ## Client boundary
 
 After onboarding is complete or skipped, Kingdom shows one compact parchment/gold entry control. It opens a scrollable React sheet with Daily, Weekly, and Achievements tabs plus a seven-day return strip. The overlay preserves the existing Pixi world, coordinates, HUD, RTL/LTR boundary, safe areas, and exact 54px navigation. Successful claims refresh both Retention state and authoritative Kingdom balances.

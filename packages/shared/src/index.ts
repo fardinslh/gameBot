@@ -9,6 +9,8 @@ export const CLIENT_ANALYTICS_EVENT_NAMES = [
   'onboarding_started',
   'onboarding_step_seen',
   'retention_screen_opened',
+  'shop_opened',
+  'shop_purchase_failed',
 ] as const;
 export type ClientAnalyticsEventName = (typeof CLIENT_ANALYTICS_EVENT_NAMES)[number];
 
@@ -132,6 +134,7 @@ export type UpgradeAvailability =
   | 'MAX_LEVEL';
 
 export type ResourceAmounts = Record<ResourceType, string>;
+export type StorageCapacities = Partial<Record<ResourceType, string>>;
 
 export const RETENTION_METRICS = [
   'COLLECT_COUNT',
@@ -277,6 +280,7 @@ export interface KingdomStateResponse {
     id: string;
     displayName: string;
     level: number;
+    equippedProfileCrest: ProfileCrestKey;
   };
   kingdom: {
     id: string;
@@ -289,7 +293,7 @@ export interface KingdomStateResponse {
   kingdomExpansionStage: KingdomExpansionStage;
   unlocks: KingdomUnlockState[];
   balances: ResourceAmounts;
-  storageCapacities: ResourceAmounts;
+  storageCapacities: StorageCapacities;
   buildings: KingdomBuildingState[];
   serverTime: string;
   offlineCapHours: number;
@@ -326,6 +330,127 @@ export interface EconomyErrorResponse {
   code: EconomyErrorCode;
   message: string;
 }
+
+export const SHOP_CATEGORIES = ['CONVENIENCE', 'COSMETICS'] as const;
+export type ShopCategory = (typeof SHOP_CATEGORIES)[number];
+export const PROFILE_CREST_KEYS = [
+  'DEFAULT',
+  'PROFILE_CREST_FOREST',
+  'PROFILE_CREST_CRIMSON',
+  'PROFILE_CREST_ROYAL',
+] as const;
+export type ProfileCrestKey = (typeof PROFILE_CREST_KEYS)[number];
+export type PurchasableProfileCrestKey = Exclude<ProfileCrestKey, 'DEFAULT'>;
+export const SHOP_PURCHASE_ITEM_KEYS = [
+  'PROFILE_CREST_FOREST',
+  'PROFILE_CREST_CRIMSON',
+  'PROFILE_CREST_ROYAL',
+  'BUILDING_FINISH',
+  'TROOP_TRAINING_FINISH',
+] as const;
+export type ShopPurchaseItemKey = (typeof SHOP_PURCHASE_ITEM_KEYS)[number];
+export type ShopFulfillmentType = 'PROFILE_CREST' | 'BUILDING_FINISH' | 'TROOP_TRAINING_FINISH';
+export type ShopGemSource = 'DAILY_MISSIONS' | 'WEEKLY_MISSIONS' | 'ACHIEVEMENTS' | 'DAILY_RETURN';
+
+export interface ShopCosmeticItemState {
+  itemKey: PurchasableProfileCrestKey;
+  category: 'COSMETICS';
+  fulfillmentType: 'PROFILE_CREST';
+  priceGems: number;
+  displayOrder: number;
+  enabled: boolean;
+  owned: boolean;
+  equipped: boolean;
+}
+
+export interface ShopBuildingFinishOffer {
+  itemKey: 'BUILDING_FINISH';
+  category: 'CONVENIENCE';
+  fulfillmentType: 'BUILDING_FINISH';
+  targetId: string;
+  buildingId: string;
+  buildingType: KingdomBuildingType;
+  targetLevel: number;
+  remainingSeconds: number;
+  priceGems: number;
+}
+
+export interface ShopTroopTrainingFinishOffer {
+  itemKey: 'TROOP_TRAINING_FINISH';
+  category: 'CONVENIENCE';
+  fulfillmentType: 'TROOP_TRAINING_FINISH';
+  targetId: string;
+  trainingOrderId: string;
+  troopType: TroopType;
+  quantity: number;
+  remainingSeconds: number;
+  priceGems: number;
+}
+
+export interface ShopStateResponse {
+  serverTime: string;
+  gemBalance: string;
+  balances: ResourceAmounts;
+  equippedProfileCrest: ProfileCrestKey;
+  cosmetics: ShopCosmeticItemState[];
+  convenience: {
+    buildingFinishes: ShopBuildingFinishOffer[];
+    troopTrainingFinish: ShopTroopTrainingFinishOffer | null;
+  };
+  gemSources: ShopGemSource[];
+}
+
+export interface ShopPurchaseRequest {
+  itemKey: ShopPurchaseItemKey;
+  targetId?: string;
+}
+
+export interface ShopPurchaseEvidence {
+  id: string;
+  itemKey: ShopPurchaseItemKey;
+  category: ShopCategory;
+  fulfillmentType: ShopFulfillmentType;
+  gemPrice: number;
+  targetType: string | null;
+  targetId: string | null;
+  createdAt: string;
+}
+
+export type ShopPurchaseTargetState =
+  | { type: 'PROFILE_CREST'; itemKey: PurchasableProfileCrestKey; status: 'OWNED' }
+  | { type: 'BUILDING_UPGRADE'; id: string; buildingId: string; status: 'COMPLETED'; level: number }
+  | { type: 'TROOP_TRAINING'; id: string; troopType: TroopType; quantity: number; status: 'COMPLETED' };
+
+export interface ShopPurchaseResponse {
+  purchase: ShopPurchaseEvidence;
+  gemBalance: string;
+  balances: ResourceAmounts;
+  equippedProfileCrest: ProfileCrestKey;
+  target: ShopPurchaseTargetState;
+  shop: ShopStateResponse;
+  serverTime: string;
+}
+
+export interface EquipProfileCrestRequest { itemKey: ProfileCrestKey; }
+export interface EquipProfileCrestResponse {
+  equippedProfileCrest: ProfileCrestKey;
+  shop: ShopStateResponse;
+  serverTime: string;
+}
+
+export type ShopErrorCode =
+  | 'SHOP_ITEM_NOT_FOUND'
+  | 'SHOP_ITEM_DISABLED'
+  | 'SHOP_ITEM_ALREADY_OWNED'
+  | 'SHOP_TARGET_NOT_FOUND'
+  | 'SHOP_TARGET_NOT_OWNER'
+  | 'SHOP_TARGET_ALREADY_COMPLETE'
+  | 'INSUFFICIENT_GEMS'
+  | 'SHOP_INVALID_PURCHASE'
+  | 'SHOP_ENTITLEMENT_REQUIRED'
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'SHOP_CONFLICT';
+export interface ShopErrorResponse { statusCode: number; code: ShopErrorCode; message: string; }
 
 export const HERO_KEYS = ['KNIGHT', 'RANGER', 'MAGE'] as const;
 export type HeroKey = (typeof HERO_KEYS)[number];

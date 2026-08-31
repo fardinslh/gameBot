@@ -10,7 +10,7 @@ The client uses one Next.js route and switches game sections inside a client-sid
 
 ## Application shell
 
-`apps/game-client/src/app/page.tsx` reads `lang` and `section` query parameters. Supported initial sections are `kingdom`, `heroes`, and `raid`. `GameShell` owns the active section and opens the Raid inbox from Kingdom.
+`apps/game-client/src/app/page.tsx` reads `lang` and `section` query parameters. Supported initial sections are `kingdom`, `heroes`, `raid`, and `shop`. `GameShell` owns the active section and opens the Raid inbox from Kingdom.
 
 Bottom navigation contains five items:
 
@@ -18,7 +18,7 @@ Bottom navigation contains five items:
 - Raid: enabled
 - Army: enabled (internal section ID remains `heroes` for compatibility)
 - Guild: disabled with Coming Soon feedback
-- Shop: disabled with Coming Soon feedback
+- Shop: enabled; authoritative Gem catalog, live convenience offers, permanent Profile Crests, custom confirmation, ownership, and equip state
 
 CSS keeps the navigation at 54 pixels plus safe-area positioning.
 
@@ -58,6 +58,8 @@ features/army-lab
 `useRaidState` coordinates overview, Match Offer, battle playback, inbox, Revenge preview, replay detail, and post-battle refresh. The experience provider refreshes persistent onboarding around successful actions; its UI remains non-blocking on API failure.
 
 `useRetentionState` loads the complete authoritative Retention payload only while its Kingdom sheet is open, tracks server clock offset for UTC reset labels, sends bodyless idempotent claim requests, and refreshes Kingdom balances after rewards. Kingdom Collect and building-upgrade success dispatch a lightweight refresh signal; Hero and Raid history are re-derived when the feature is next opened. No progress counter lives in React.
+
+`useShopState` loads the complete authoritative catalog and dynamic offers, submits item intent with a browser UUID idempotency key, and replaces local Shop state only from server responses. `ShopPage` owns the premium React screen and confirmation UI. Building Detail and Army training reuse the same hook for contextual completion; neither calculates price or completion. The equipped Crest is returned through Kingdom state and changes only the Player header presentation.
 
 `AudioProvider` owns a single session manager. Stable callbacks avoid restarting music when settings change. The manager waits for a user gesture, crossfades between Kingdom and Battle contexts, suspends with page visibility, and catches media failures.
 

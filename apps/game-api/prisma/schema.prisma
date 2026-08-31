@@ -73,6 +73,7 @@ enum EconomyTransactionReason {
   TROOP_TRAINING
   CAMPAIGN_REWARD
   CAMPAIGN_STAR_REWARD
+  SHOP_GEM_SPEND
 }
 
 enum EconomyAction {
@@ -89,6 +90,29 @@ enum EconomyAction {
   TROOP_TRAINING
   CAMPAIGN_START
   CAMPAIGN_STAR_REWARD
+  SHOP_PURCHASE
+}
+
+enum ShopCategory {
+  CONVENIENCE
+  COSMETICS
+}
+
+enum ShopFulfillmentType {
+  PROFILE_CREST
+  BUILDING_FINISH
+  TROOP_TRAINING_FINISH
+}
+
+enum EntitlementSource {
+  SHOP
+}
+
+enum ProfileCrestKey {
+  DEFAULT
+  PROFILE_CREST_FOREST
+  PROFILE_CREST_CRIMSON
+  PROFILE_CREST_ROYAL
 }
 
 enum SystemOpponentKind {
@@ -216,6 +240,38 @@ model Player {
   armyFormation         ArmyFormation?
   campaignStages        PlayerCampaignStage[]
   campaignRewardClaims  CampaignRewardClaim[]
+  entitlements          PlayerEntitlement[]
+  shopPurchases         ShopPurchase[]
+  equippedProfileCrest  ProfileCrestKey             @default(DEFAULT)
+}
+
+model PlayerEntitlement {
+  id                String            @id @default(uuid())
+  playerId          String
+  entitlementKey    String
+  source            EntitlementSource
+  sourceReferenceId String
+  createdAt         DateTime          @default(now())
+  player            Player            @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, entitlementKey])
+  @@index([sourceReferenceId])
+}
+
+model ShopPurchase {
+  id              String              @id @default(uuid())
+  playerId        String
+  itemKey         String
+  category        ShopCategory
+  fulfillmentType ShopFulfillmentType
+  gemPrice        Int
+  targetType      String?
+  targetId        String?
+  createdAt       DateTime            @default(now())
+  player          Player              @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([playerId, createdAt])
+  @@index([targetId])
 }
 
 model OnboardingProgress {

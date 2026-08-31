@@ -16,7 +16,7 @@ The API owns resource balances, production time, storage, costs, timers, levels,
 | Food | 5,000 | 10,000 | 1.32 |
 | Wood | 5,000 | 10,000 | 1.32 |
 | Stone | 3,500 | 8,000 | 1.32 |
-| Gems | 120 | 500 | 1.15 |
+| Gems | 120 | Uncapped | — |
 
 For resource `r` and Castle level `L`:
 
@@ -24,7 +24,7 @@ For resource `r` and Castle level `L`:
 capacity(r, L) = round(baseCapacity[r] * growth[r]^(max(1, L) - 1))
 ```
 
-The API never lowers a legacy balance above its calculated capacity. Future production for that resource becomes zero until the balance falls below capacity.
+The capacity formula applies only to Gold, Food, Wood, and Stone. The API never lowers a legacy capped-resource balance above its calculated capacity; future production becomes zero until it falls below capacity. Gems are intentionally uncapped and may grow past the former 500 placeholder through authoritative Retention rewards.
 
 ## Building economy configuration
 
@@ -99,8 +99,12 @@ Reads and mutation paths reconcile due upgrades. Reconciliation claims a due row
 
 ## Transaction ledger and idempotency
 
-`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, troop training, Raid transfers, and Campaign rewards use the ledger. Troop-training charges use the `TROOP_TRAINING` reason and reference their `TroopTrainingOrder`.
+`EconomyTransaction` records player, Kingdom, balance, resource, delta, balance before, balance after, reason, reference ID, and timestamp. Starting resources, Collect, building upgrades, Hero upgrades, troop training, Raid transfers, Campaign rewards, Retention rewards, and Shop spending use the ledger. Troop-training charges use `TROOP_TRAINING`; Shop Gem debits use `SHOP_GEM_SPEND` and reference durable `ShopPurchase` evidence.
 
 Campaign first-clear and 9/18/27-star rewards may grant Gold, Food, Wood, and Stone only; Chapter One grants no Gems. Definitions and amounts live in `campaign.config.ts`. The client cannot submit a reward amount, battle result, or star count.
 
 `EconomyRequest` enforces uniqueness across player, idempotency key, and action. Keys must contain 8 through 100 characters. Economy transactions retry Prisma serialization conflict `P2034` up to three attempts before returning `ECONOMY_CONFLICT`.
+
+## Gem spending
+
+Retention 05 treats Gems as earned premium currency. Three permanent Profile Crests cost 40, 70, and 120 Gems. Building finish costs `clamp(ceil(remainingSeconds / 60), 1, 50)` Gems; troop-training finish costs `clamp(ceil(remainingSeconds / 30), 1, 20)` Gems. Prices, remaining time, ownership, balance, and completion are server-derived under the Player lock. See [Shop and Gems](SHOP_AND_GEMS.md).

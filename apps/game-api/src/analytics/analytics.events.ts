@@ -36,6 +36,8 @@ export const SERVER_ANALYTICS_EVENTS = [
   'campaign_star_improved',
   'campaign_star_reward_claimed',
   'campaign_chapter_completed',
+  'shop_purchase_completed',
+  'shop_cosmetic_equipped',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [
@@ -45,6 +47,8 @@ export const CLIENT_ANALYTICS_EVENTS = [
   'onboarding_started',
   'onboarding_step_seen',
   'retention_screen_opened',
+  'shop_opened',
+  'shop_purchase_failed',
 ] as const;
 export const RESERVED_ANALYTICS_EVENTS: readonly string[] = [];
 

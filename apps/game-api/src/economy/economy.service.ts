@@ -15,6 +15,7 @@ import type {
   KingdomStateResponse,
   ResourceAmounts,
   ResourceType,
+  StorageCapacities,
   UpgradeAvailability,
   UpgradeResponse,
 } from '@crown-and-coin/shared';
@@ -34,6 +35,7 @@ import {
   ECONOMY_CONFIG,
   OFFLINE_STORAGE_CAP_HOURS,
   STARTING_RESOURCES,
+  CAPPED_RESOURCE_TYPES,
   productionPerHour,
   requiredCastleLevel,
   storageCapacity,
@@ -431,34 +433,54 @@ export class EconomyService {
     }
   }
 
-  private async reconcileCompletedUpgrades(tx: TransactionClient, kingdomId: string, now: Date, buildingId?: string): Promise<void> {
+  async reconcileCompletedUpgrades(tx: TransactionClient, kingdomId: string, now: Date, buildingId?: string): Promise<void> {
     const due = await tx.buildingUpgrade.findMany({
       where: { status: UpgradeStatus.IN_PROGRESS, completesAt: { lte: now }, buildingId, building: { kingdomId } },
       include: { building: true },
     });
     for (const upgrade of due) {
-      const claimed = await tx.buildingUpgrade.updateMany({
-        where: { id: upgrade.id, status: UpgradeStatus.IN_PROGRESS, completesAt: { lte: now } },
-        data: { status: UpgradeStatus.COMPLETED, completedAt: now },
-      });
-      if (claimed.count !== 1) continue;
-      await tx.building.update({ where: { id: upgrade.buildingId }, data: { level: upgrade.toLevel } });
-      if (upgrade.building.type === 'CASTLE') await tx.kingdom.update({ where: { id: kingdomId }, data: { level: upgrade.toLevel } });
-      const kingdom = await tx.kingdom.findUniqueOrThrow({ where: { id: kingdomId }, select: { playerId: true } });
-      await this.notifications.createNotification(tx, {
-        playerId: kingdom.playerId,
-        type: 'UPGRADE_COMPLETE',
-        payload: {
-          buildingId: upgrade.buildingId,
-          buildingType: upgrade.building.type,
-          level: upgrade.toLevel,
-          completedAt: now.toISOString(),
-        },
-        deepLinkIntent: { screen: 'BUILDING', buildingId: upgrade.buildingId },
-        sourceKey: `UPGRADE_COMPLETE:${upgrade.id}`,
-      });
-      this.logger.log(`upgrade-complete building=${upgrade.buildingId} upgrade=${upgrade.id} level=${upgrade.toLevel}`);
+      await this.completeUpgradeInTransaction(tx, kingdomId, upgrade.id, now, false);
     }
+  }
+
+  async completeUpgradeInTransaction(
+    tx: TransactionClient,
+    kingdomId: string,
+    upgradeId: string,
+    now: Date,
+    allowEarly: boolean,
+  ): Promise<{ buildingId: string; buildingType: KingdomBuildingType; level: number } | null> {
+    const upgrade = await tx.buildingUpgrade.findUnique({ where: { id: upgradeId }, include: { building: true } });
+    if (!upgrade || upgrade.building.kingdomId !== kingdomId || upgrade.status !== UpgradeStatus.IN_PROGRESS) return null;
+    if (!allowEarly && (!upgrade.completesAt || upgrade.completesAt > now)) return null;
+    const claimed = await tx.buildingUpgrade.updateMany({
+      where: {
+        id: upgrade.id,
+        status: UpgradeStatus.IN_PROGRESS,
+        ...(allowEarly ? {} : { completesAt: { lte: now } }),
+      },
+      data: { status: UpgradeStatus.COMPLETED, completedAt: now },
+    });
+    if (claimed.count !== 1) return null;
+    await tx.building.update({ where: { id: upgrade.buildingId }, data: { level: upgrade.toLevel } });
+    if (upgrade.building.type === 'CASTLE') {
+      await tx.kingdom.update({ where: { id: kingdomId }, data: { level: upgrade.toLevel } });
+    }
+    const kingdom = await tx.kingdom.findUniqueOrThrow({ where: { id: kingdomId }, select: { playerId: true } });
+    await this.notifications.createNotification(tx, {
+      playerId: kingdom.playerId,
+      type: 'UPGRADE_COMPLETE',
+      payload: {
+        buildingId: upgrade.buildingId,
+        buildingType: upgrade.building.type,
+        level: upgrade.toLevel,
+        completedAt: now.toISOString(),
+      },
+      deepLinkIntent: { screen: 'BUILDING', buildingId: upgrade.buildingId },
+      sourceKey: `UPGRADE_COMPLETE:${upgrade.id}`,
+    });
+    this.logger.log(`upgrade-complete building=${upgrade.buildingId} upgrade=${upgrade.id} level=${upgrade.toLevel}`);
+    return { buildingId: upgrade.buildingId, buildingType: upgrade.building.type as KingdomBuildingType, level: upgrade.toLevel };
   }
 
   private loadGraph(tx: TransactionClient, kingdomId: string): Promise<KingdomGraph> {
@@ -473,7 +495,12 @@ export class EconomyService {
       level: building.level,
     })));
     return {
-      player: { id: graph.player.id, displayName: graph.player.displayName ?? 'Warden of Dawnkeep', level: castle?.level ?? graph.level },
+      player: {
+        id: graph.player.id,
+        displayName: graph.player.displayName ?? 'Warden of Dawnkeep',
+        level: castle?.level ?? graph.level,
+        equippedProfileCrest: graph.player.equippedProfileCrest,
+      },
       kingdom: { id: graph.id, name: graph.name, level: progression.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
       progression,
       kingdomGoals: this.kingdomProgressGoals.calculate(graph.buildings.map((building) => ({
@@ -496,9 +523,9 @@ export class EconomyService {
     return balances;
   }
 
-  private presentStorageCapacities(graph: KingdomGraph): ResourceAmounts {
+  private presentStorageCapacities(graph: KingdomGraph): StorageCapacities {
     const castleLevel = graph.buildings.find((building) => building.type === 'CASTLE')?.level ?? 1;
-    return Object.fromEntries(RESOURCE_TYPES.map((resource) => [resource, storageCapacity(resource, castleLevel).toString()])) as unknown as ResourceAmounts;
+    return Object.fromEntries(CAPPED_RESOURCE_TYPES.map((resource) => [resource, storageCapacity(resource, castleLevel)!.toString()]));
   }
 
   private presentBuildings(graph: KingdomGraph, now: Date): KingdomBuildingState[] {

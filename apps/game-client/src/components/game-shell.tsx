@@ -11,6 +11,7 @@ import { initializeAnalytics, trackScreen } from '@/features/analytics/analytics
 import { AudioProvider, useGameAudio } from '@/features/audio/audio-provider';
 import { PlayerExperienceProvider } from '@/features/experience/player-experience-provider';
 import { LocalizedGameRoot } from '@/i18n/bidi';
+import { ShopPage } from '@/features/shop/components/shop-page';
 
 interface GameShellProps {
   locale: Locale;
@@ -33,7 +34,7 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
   useEffect(() => initializeAnalytics(locale), [locale]);
   useEffect(() => { setMusicContext('KINGDOM'); }, [activeSection, setMusicContext]);
   useEffect(() => {
-    trackScreen(activeSection === 'heroes' ? 'HEROES' : activeSection === 'raid' ? 'RAID' : 'KINGDOM');
+    trackScreen(activeSection === 'heroes' ? 'HEROES' : activeSection === 'raid' ? 'RAID' : activeSection === 'shop' ? 'SHOP' : 'KINGDOM');
   }, [activeSection]);
   const navigate = (section: GameSection): void => {
     if (section === 'raid') setRaidInitialView('overview');
@@ -48,6 +49,7 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
     <PlayerExperienceProvider dictionary={dictionary}>
       {activeSection === 'heroes' ? <HeroesPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
         : activeSection === 'raid' ? <RaidPage locale={locale} dictionary={dictionary} initialView={raidInitialView} onNavigate={navigate} />
+          : activeSection === 'shop' ? <ShopPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
           : <KingdomPage locale={locale} dictionary={dictionary} onNavigate={navigate} onOpenInbox={openInbox} />}
     </PlayerExperienceProvider>
   );

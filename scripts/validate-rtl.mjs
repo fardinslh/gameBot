@@ -203,6 +203,7 @@ async function assertKingdomHudClarity(page, locale) {
         return {
           aria: chip.getAttribute('aria-label') ?? '',
           capacity: chip.getAttribute('data-capacity'),
+          resource: chip.getAttribute('data-resource'),
           primaryMeaning: chip.getAttribute('data-primary-value'),
           primaryText: primary?.textContent?.trim() ?? '',
           secondaryClipped: secondary ? secondary.scrollWidth > secondary.clientWidth + 1 : true,
@@ -235,12 +236,14 @@ async function assertKingdomHudClarity(page, locale) {
     || audit.subtitleFont < 10
     || audit.chipCount !== 5
     || audit.chips.some((chip) => chip.primaryMeaning !== 'balance'
-      || chip.secondaryMeaning !== 'capacity'
-      || !chip.capacity
       || !chip.primaryText
-      || !chip.secondaryText.startsWith(capacityLabel)
-      || chip.secondaryClipped
-      || !chip.aria.includes(capacityLabel))) {
+      || (chip.resource === 'GEMS'
+        ? chip.secondaryMeaning !== null || chip.capacity !== null || chip.secondaryText !== '' || chip.aria.includes(capacityLabel)
+        : chip.secondaryMeaning !== 'capacity'
+          || !chip.capacity
+          || !chip.secondaryText.startsWith(capacityLabel)
+          || chip.secondaryClipped
+          || !chip.aria.includes(capacityLabel)))) {
     throw new Error(`Kingdom HUD clarity failed: ${JSON.stringify(audit)}`);
   }
 }

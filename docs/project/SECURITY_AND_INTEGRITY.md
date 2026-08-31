@@ -16,13 +16,13 @@ Do not accept client-computed amounts, durations, target players, combat stats, 
 
 ## Idempotency
 
-`EconomyRequest` stores mutation responses by player, key, and action. Collect, building upgrade start/completion, Hero upgrade, troop training, Raid start, and Revenge start validate keys between 8 and 100 characters.
+`EconomyRequest` stores mutation responses by player, key, and action. Collect, building upgrade start/completion, Hero upgrade, troop training, Shop purchase, Raid start, and Revenge start validate keys between 8 and 100 characters.
 
 A retry with the same tuple returns the stored response. Unique constraints prevent two stored responses for one action key. Mission, Daily bonus, Achievement, and Daily Return claims use dedicated `EconomyAction` values, the same key validation, and database uniqueness on their semantic claim identity.
 
 ## Transaction locking
 
-Economy, Hero, and Army mutations acquire `pg_advisory_xact_lock(hashtext(platform:externalUserId))`. Army reads reconcile a due training order under the same lock; its conditional status transition grants trained troops exactly once. Raid and Revenge resolve both participant identities, sort by player ID, then acquire both locks in that order. Stable ordering prevents two concurrent battles from deadlocking by reversing participants.
+Economy, Hero, Army, and Shop mutations acquire `pg_advisory_xact_lock(hashtext(platform:externalUserId))`. Army reads reconcile a due training order under the same lock; its conditional status transition grants trained troops exactly once. Shop reconciles both Building and training timers before pricing or fulfillment. Raid and Revenge resolve both participant identities, sort by player ID, then acquire both locks in that order. Stable ordering prevents two concurrent battles from deadlocking by reversing participants.
 
 Revenge start also locks its target row with `FOR UPDATE`. System-opponent replenishment uses the same stable platform-identity advisory lock before it re-reads or changes balances, preventing concurrent searches from double-granting resources. Services retry serialization conflicts where applicable.
 
@@ -31,6 +31,8 @@ Revenge start also locks its target row with `FOR UPDATE`. System-opponent reple
 Every authoritative balance mutation records before, delta, after, reason, and reference in `EconomyTransaction`. Raid transfers write paired loss and reward records with one Battle ID. Conditional decrements prevent negative charged or looted balances.
 
 Troop training computes cost and duration from server configuration, conditionally debits resources, records `TROOP_TRAINING` ledger rows, creates one active order, and stores the idempotent response in the same transaction. The client cannot submit prices, duration, ready counts, capacity, or completion.
+
+Shop accepts only item intent and optional target ID. It derives catalog price or remaining-time price, validates target ownership, conditionally debits Gems, writes `SHOP_GEM_SPEND`, `ShopPurchase`, entitlement/target fulfillment, idempotent response, and analytics in one transaction. Unique constraints and the Player lock serialize double-buy and finish races; any failed fulfillment rolls back the Gem debit and evidence. Profile Crests never affect gameplay power.
 
 ## Battle integrity
 

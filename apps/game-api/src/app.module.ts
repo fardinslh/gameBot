@@ -16,6 +16,7 @@ import { OnboardingModule } from './onboarding/onboarding.module';
 import { RetentionModule } from './retention/retention.module';
 import { ArmyModule } from './army/army.module';
 import { CampaignModule } from './campaign/campaign.module';
+import { ShopModule } from './shop/shop.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CampaignModule } from './campaign/campaign.module';
     RetentionModule,
     ArmyModule,
     CampaignModule,
+    ShopModule,
   ],
 })
 export class AppModule {}

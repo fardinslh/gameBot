@@ -65,6 +65,7 @@ The client renders server responses. It never calculates balances, upgrade compl
 - [Building and Kingdom progression](PROGRESSION.md)
 - [Visible building evolution](BUILDING_EVOLUTION.md)
 - [Missions, achievements, and Daily Return](RETENTION_SYSTEMS.md)
+- [Shop and Gem economy](SHOP_AND_GEMS.md)
 - [Retention-first roadmap](RETENTION_ROADMAP.md)
 - [Prisma data model and migrations](DATA_MODEL.md)
 - [HTTP API inventory](API_REFERENCE.md)
@@ -85,12 +86,12 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 ## Current development status
 
-- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, Retention 04 Broken Frontier PvE Campaign, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
+- **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, Retention 04 Broken Frontier PvE Campaign, Retention 05 Shop/Gem economy, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 05 — Shop MVP + Gem Economy, only when explicitly scoped
+- **Next**: Retention 05B — Kingdom Themes Foundation and First Historical Theme, only when explicitly scoped
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
-- **Deferred**: Guild, Shop, Season, leaderboard, payments, Telegram integration, and additional building gameplay
+- **Deferred**: Kingdom Theme content, Guild, Season, leaderboard, payments, Telegram integration, and additional building gameplay
 
 ## Product constraints
 

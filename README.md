@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign with persistent stars and one-time rewards. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign. Retention 05 adds an earned-Gem Shop with permanent Profile Crests and optional Building/training timer completion. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
@@ -36,7 +36,7 @@ KingdomPage
 └── BottomNavigation      Kingdom + unchanged coming-soon feedback
 ```
 
-The game shell switches the enabled `Kingdom`, `Raid`, and `Army` views. The internal Army section ID remains `heroes` for compatibility. The compact 54px navigation remains shared; Guild and Shop still show Coming Soon. The Army client composes authoritative Army and Hero/Commander state:
+The game shell switches the enabled `Kingdom`, `Raid`, `Army`, and `Shop` views. The internal Army section ID remains `heroes` for compatibility. The compact 54px navigation remains shared; only Guild still shows Coming Soon. The Army client composes authoritative Army and Hero/Commander state:
 
 ```text
 HeroesPage
@@ -284,7 +284,7 @@ Building detail sheets expose localized structured current/next effects. Stage 2
 
 Castle, Farm, Lumber Mill, Mine, and Grand Market now derive their exact visual state from authoritative building level plus an explicit presentation-only Kingdom Theme. `DEFAULT` is the sole implemented theme. Levels 1–4 use Early art, 5–8 Developed, 9–12 Advanced, 13–16 Fortified, and 17–20 Prestige. Each tier has a local optimized WebP body under `assets/kingdom/evolution/default`; minor steps add a deliberate building-specific detail so every adjacent level differs, and level 20 receives a compact capstone.
 
-Production loads only the current required tier through a centralized Theme → Building → Tier catalog. Upgrade-in-progress buildings show restrained construction cues, reconciled upgrades use short minor/major Pixi transformations, reduced-motion is respected, and the stable coordinates, hit areas, selection, indicators, camera, RTL/LTR behavior, and 54px navigation are unchanged. Open `/dev/buildings` in development for exact `DEFAULT` production previews, N/N+1 comparison, and level 1 versus 20. Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for deterministic and visual checks. Theme selection, ownership, historical art, Shop, and Season integration are not implemented.
+Production loads only the current required tier through a centralized Theme → Building → Tier catalog. Upgrade-in-progress buildings show restrained construction cues, reconciled upgrades use short minor/major Pixi transformations, reduced-motion is respected, and the stable coordinates, hit areas, selection, indicators, camera, RTL/LTR behavior, and 54px navigation are unchanged. Open `/dev/buildings` in development for exact `DEFAULT` production previews, N/N+1 comparison, and level 1 versus 20. Run `npm run validate:building-evolution` and `npm run capture:building-evolution` for deterministic and visual checks. The Retention 05 Shop implements generic Profile-Crest entitlements only; Theme selection, Theme ownership/content, historical art, and Season integration remain unimplemented.
 
 ## Retention 02 missions, achievements, and Daily Return
 
@@ -292,7 +292,7 @@ Production loads only the current required tier through a centralized Theme → 
 
 All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
 
-Retention 01A, Retention 01B, Retention 02, Retention 03A Army & Commander Foundation, Retention 03B Army Battle v2, and Retention 04 PvE Campaign / Adventure are implemented. New Raid, Revenge, and Campaign attempts use `rulesVersion: 2`; historical `rulesVersion: 1` Hero replay remains supported. Retention 05 Shop MVP + Gem Economy is next and has not started. Kingdom Theme content, Guild, Leaderboards, Bale, permanent troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
+Retention 01A, Retention 01B, Retention 02, Retention 03A Army & Commander Foundation, Retention 03B Army Battle v2, Retention 04 PvE Campaign / Adventure, and Retention 05 Shop MVP + Gem Economy are implemented. New Raid, Revenge, and Campaign attempts use `rulesVersion: 2`; historical `rulesVersion: 1` Hero replay remains supported. Retention 05B Kingdom Themes Foundation is next and has not started. Kingdom Theme content, Guild, Leaderboards, Bale, real-money Gem acquisition, permanent troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 

@@ -1,4 +1,4 @@
-import type { KingdomBuildingType, ResourceAmounts, ResourceType } from '@crown-and-coin/shared';
+import type { KingdomBuildingType, ResourceAmounts, ResourceType, StorageCapacities } from '@crown-and-coin/shared';
 import { ECONOMY_CONFIG, OFFLINE_STORAGE_CAP_HOURS, productionPerHour } from './economy.config';
 import { applyBpsIncrease } from '../kingdom/kingdom-effects.config';
 
@@ -48,12 +48,12 @@ export function calculateProduction(
 export function capProductionToStorage(
   production: readonly ProductionResult[],
   balances: ResourceAmounts,
-  capacities: ResourceAmounts,
+  capacities: StorageCapacities,
 ): ProductionResult[] {
   const remaining = Object.fromEntries(
     Object.keys(capacities).map((resource) => {
       const type = resource as ResourceType;
-      return [type, BigInt(capacities[type]) - BigInt(balances[type])];
+      return [type, BigInt(capacities[type] ?? balances[type]) - BigInt(balances[type])];
     }),
   ) as Record<ResourceType, bigint>;
 

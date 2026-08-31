@@ -1,5 +1,7 @@
-import { Anvil, ArrowUp, BookOpen, Castle, Clock3, Hammer, Landmark, LockKeyhole, Mountain, TowerControl, Trees, Wheat, Wrench, X } from 'lucide-react';
+import { Anvil, ArrowUp, BookOpen, Castle, Clock3, Gem, Hammer, Landmark, LockKeyhole, Mountain, TowerControl, Trees, Wheat, Wrench, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import type { ShopBuildingFinishOffer } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
 import { formatAmount } from './resource-hud';
@@ -24,16 +26,20 @@ interface BuildingDetailSheetProps {
   onClose(): void;
   onOpenProgress(): void;
   onUpgrade(buildingId: string): void;
+  finishOffer?: ShopBuildingFinishOffer | null;
+  onFinishUpgrade?(offer: ShopBuildingFinishOffer): void;
   serverNow: number;
 }
 
-export function BuildingDetailSheet({ actionPending, building, dictionary: t, onClose, onOpenProgress, onUpgrade, serverNow }: BuildingDetailSheetProps) {
+export function BuildingDetailSheet({ actionPending, building, dictionary: t, finishOffer, onClose, onFinishUpgrade, onOpenProgress, onUpgrade, serverNow }: BuildingDetailSheetProps) {
+  const [confirmFinish, setConfirmFinish] = useState(false);
   const presentation = building ? t.buildings[building.visualId] : t.buildings.castle;
   const Icon = building ? BUILDING_ICONS[building.visualId] : Castle;
   const activeUpgrade = building?.activeUpgrade ?? null;
   const remainingSeconds = activeUpgrade ? Math.max(0, Math.ceil((Date.parse(activeUpgrade.finishAt) - serverNow) / 1_000)) : 0;
   const availability = building?.upgradeAvailability ?? 'CAN_UPGRADE';
   const buttonLabel = actionPending ? t.startingUpgrade : t.upgradeStates[availability];
+  useEffect(() => { setConfirmFinish(false); }, [building?.id, finishOffer?.targetId]);
 
   return (
     <aside
@@ -100,6 +106,16 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
           </strong>
         </span>
       </div>
+
+      {activeUpgrade && finishOffer ? (
+        <div className="building-finish-gems" data-shop-offer="building-context">
+          {confirmFinish ? <>
+            <span><BidiTemplate template={t.shopUi.confirmBuilding} values={{ count: { value: finishOffer.priceGems, direction: 'ltr' } }} /></span>
+            <button disabled={actionPending} onClick={() => setConfirmFinish(false)} type="button">{t.shopUi.cancel}</button>
+            <button disabled={actionPending} onClick={() => onFinishUpgrade?.(finishOffer)} type="button">{actionPending ? t.shopUi.processing : t.shopUi.finishNow}</button>
+          </> : <button disabled={actionPending} onClick={() => setConfirmFinish(true)} type="button"><Gem size={14} />{t.shopUi.finishNow} · <BidiValue direction="ltr">{finishOffer.priceGems}</BidiValue></button>}
+        </div>
+      ) : null}
 
       {!activeUpgrade && building ? (
         <div className="upgrade-economy">

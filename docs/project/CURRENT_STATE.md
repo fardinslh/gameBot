@@ -21,7 +21,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Selectable Kingdom Themes | Not implemented | No selection UI, persistence, ownership, or API exists |
 | Historical Theme assets | Not implemented | Planned historically-inspired eras have no generated or registered production catalogs |
 | Theme ownership | Not implemented | No Prisma field, inventory, entitlement, or account state exists |
-| Theme Shop integration | Not implemented | Retention 05 Shop and Gems remains future work |
+| Theme Shop integration | Not implemented | Retention 05 provides generic Profile-Crest entitlements only; Theme content belongs to unstarted Retention 05B |
 | Theme Season integration | Not implemented | Season remains future work; no reward or pass system exists |
 | Advanced building visual evolution | Implemented | Academy, Blacksmith, Watchtower, and Workshop use optimized local tier assets at levels 1/5/9/13/17 with cumulative minor steps and level-20 capstones |
 | Kingdom Progress goals | Implemented | Castle detail opens a bilingual server-authored summary of Kingdom Level/XP, Castle milestones, next real district unlock, and current/next advanced effects |
@@ -54,7 +54,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Advanced PvP | Partial | Castle 7 unlock metadata exists; no separate advanced PvP feature exists |
 | Redis/BullMQ jobs | Partial | Connection, health check, and queue handle exist; no producer or worker exists |
 | Guild | Not implemented | Disabled navigation item only |
-| Shop | Not implemented | Disabled navigation item only |
+| Shop | Implemented | Enabled bilingual destination with authoritative Gem balance, three permanent Profile Crests, live Building/training finish offers, confirmation, ownership, and equip persistence |
 | Season | Not implemented | No schema, API, or client feature |
 | Leaderboard | Not implemented | No schema, API, or client feature |
 | Bale | Not implemented | Enum, environment placeholders, and rejecting adapter only |
@@ -93,11 +93,11 @@ The same persistent Heroes also serve as Army Commanders. The default Army Forma
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, and Campaign state/start/milestone claims. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, Campaign state/start/milestone claims, and Shop state/purchase/Profile-Crest equip. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
-Eighteen ordered migrations exist:
+Nineteen ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -117,10 +117,11 @@ Eighteen ordered migrations exist:
 16. `20260829180000_army_battle_v2`
 17. `20260830090000_match_offer_army_fingerprint`
 18. `20260830100000_pve_campaign_chapter_one`
+19. `20260831120000_retention_05_shop_gem_economy`
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, and 04 engineering are complete. New Raid, Revenge, and Campaign starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Campaign grants no Trophy, loot transfer, social state, or permanent casualty. Historical rules-version-1 Hero replays remain compatible. Retention 05 Shop MVP + Gem Economy is next and not started. Barracks remains inactive. Owner Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, and 05 engineering are complete. Shop spends uncapped earned Gems on permanent Profile Crests or optional Building/training completion without selling Battle outcomes or Trophies. New Raid, Revenge, and Campaign starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Historical rules-version-1 Hero replays remain compatible. Retention 05B Kingdom Themes is next and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 
@@ -132,4 +133,4 @@ Persian production UI uses the locally packaged `Vazirmatn Variable` family at w
 
 ## Validation entry points
 
-Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for PvP Army Battle v2 persistence/playback and forced outcomes. Run `npm run validate:campaign` for Campaign authority, isolation, mobile flow, and screenshots. Use the remaining regressions described in [testing](TESTING.md).
+Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for PvP Army Battle v2 persistence/playback and forced outcomes. Run `npm run validate:campaign` for Campaign authority, isolation, mobile flow, and screenshots. Run `npm run validate:shop` for catalog, ledger, concurrency, authority, bilingual mobile flow, and screenshots. Use the remaining regressions described in [testing](TESTING.md).

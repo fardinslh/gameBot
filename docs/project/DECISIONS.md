@@ -126,3 +126,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: A bounded PvE path should deepen the existing Army investment without creating a second combat engine or weakening server authority.
 - **Consequences**: Campaign has its own Battle type, NPC discriminator, state, APIs, analytics, and reward reasons. It creates no Match Offer, PvP loot, Trophy, Revenge, notification, shield, anti-farm, stamina, permanent casualty, or Gem reward. The UI remains inside the existing Raid destination and does not add a sixth navigation item.
 - **Status**: Active. Retention 04 Broken Frontier implemented; owner art-direction review remains pending.
+
+## ADR-018: Keep Gems authoritative, uncapped, and non-pay-to-win
+
+- **Decision**: Gems are Crown & Coin's premium in-game currency and remain in `ResourceBalance`/`EconomyTransaction`, without a storage cap. Current free faucets remain Retention-based. Retention 05 sinks are three permanent Profile-Crest cosmetics and optional Building/training timer convenience through generic permanent entitlements.
+- **Reason**: The first spending loop must be auditable, useful, and reusable without allowing a client to price purchases or letting premium currency buy Battle outcomes.
+- **Consequences**: Every spend derives price server-side, locks the Player, creates `ShopPurchase` evidence and `SHOP_GEM_SPEND` ledger history, and fulfills atomically. Gems cannot directly buy Battle results or Trophies. No paid random loot exists. Real-money Gem acquisition remains forbidden until verified platform commerce is separately implemented. Generic entitlements may support cosmetic Retention 05B Theme ownership, but no Theme content is implemented here.
+- **Status**: Active. Retention 05 implemented; owner Shop visual review remains pending.

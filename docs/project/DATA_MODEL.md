@@ -100,6 +100,8 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 - No self Battle participant pair
 - No self Revenge target
 - Non-negative Player Trophies
+- One permanent entitlement per `(playerId, entitlementKey)`
+- Positive `ShopPurchase.gemPrice` with owned-player and optional target evidence
 
 ## AnalyticsEvent
 
@@ -131,5 +133,6 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260829180000_army_battle_v2` | Versioned Army squad snapshots, squad-defeat events, and remaining-unit replay state |
 | `20260830090000_match_offer_army_fingerprint` | Nullable SHA-256 attacker-Army fingerprint for secure Match Offer cutover; pre-migration offers remain readable but cannot start |
 | `20260830100000_pve_campaign_chapter_one` | Campaign NPC discriminator, Campaign battle metadata, persistent stage stars/attempts/first clear, milestone claims, and Campaign ledger/action enums |
+| `20260831120000_retention_05_shop_gem_economy` | Shop purchase/action/reason enums, generic Player entitlements, permanent Profile-Crest equip state, purchase evidence, constraints, and indexes |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

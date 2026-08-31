@@ -12,7 +12,7 @@ The NestJS API listens on port `3001` by default. Responses use shared types fro
 
 `X-Dev-Player-Id` selects an isolated Web development identity. Without the header, `DEV_PLAYER_ID` or `local-crown-player` supplies the identity. This mechanism is development scaffolding, not authentication.
 
-Economy mutations, Hero upgrade, troop training, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team/formation save, search, and inbox read do not require one because they do not grant or charge a replayable reward.
+Economy mutations, Hero upgrade, troop training, Shop purchase, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team/formation save, Shop equip, search, and inbox read do not require one because they do not grant or charge a replayable reward.
 
 ## Health
 
@@ -97,6 +97,16 @@ Campaign starts accept no NPC, Army, outcome, stars, or reward input. Claims acc
 | `POST` | `/retention/daily-return/claim` | Claim today's next reward in the seven-claim cycle | Idempotency key; `RetentionClaimResponse` |
 
 Retention claim routes accept no request body. Progress, UTC period, eligibility, sequence, amounts, balance results, and claim time are server-derived. Claims use the same Player advisory lock, economy request replay protection, PostgreSQL transaction, and immutable ledger boundary as existing economy rewards.
+
+## Shop
+
+| Method | Path | Purpose | Requirements and response |
+| --- | --- | --- | --- |
+| `GET` | `/shop` | Return Gem balance, cosmetics, ownership/equip state, live finish offers, and Gem sources | `ShopStateResponse` |
+| `POST` | `/shop/purchases` | Purchase a catalog cosmetic or finish an owned active timer | `{ itemKey, targetId? }`, idempotency key; `ShopPurchaseResponse` |
+| `PUT` | `/shop/cosmetics/profile-crest` | Equip Default or an owned permanent Crest | `{ itemKey }`; `EquipProfileCrestResponse` |
+
+Purchase requests accept no price, discount, Gem deduction, balance, remaining time, target result, or entitlement. Unknown DTO fields are stripped. The server derives catalog state and target ownership in the locked transaction.
 
 ## Internal-only modules
 

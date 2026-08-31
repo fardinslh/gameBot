@@ -2,7 +2,7 @@ import { Crown } from 'lucide-react';
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
-import type { KingdomProgressionState } from '@crown-and-coin/shared';
+import type { KingdomProgressionState, ProfileCrestKey } from '@crown-and-coin/shared';
 import { ExperienceControls } from '@/features/experience/player-experience-provider';
 import { BidiValue } from '@/i18n/bidi';
 
@@ -12,10 +12,11 @@ interface PlayerHudProps {
   playerLevel: number;
   playerName: string;
   progression?: KingdomProgressionState;
+  profileCrest?: ProfileCrestKey;
   section?: 'heroes' | 'raid';
 }
 
-export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, progression, section }: PlayerHudProps) {
+export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section }: PlayerHudProps) {
   const sectionQuery = section ? `&section=${section}` : '';
   const displayedLevel = progression?.level ?? playerLevel;
   const xpProgress = progression?.xpRequiredForNextLevel
@@ -26,7 +27,7 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, prog
     : playerName || t.playerTitle;
   return (
     <header className="player-hud">
-      <div className="player-profile">
+      <div className={`player-profile player-profile--${profileCrest.toLowerCase().replace('profile_crest_', '')}`} data-profile-crest={profileCrest}>
         <span className="player-avatar"><Crown aria-hidden="true" size={20} /></span>
         <span className="player-copy">
           <h1>{t.appName}</h1>

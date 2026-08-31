@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { ChevronDown, Clock3, Minus, Plus, Save, Shield, Sparkles, Swords, Users } from 'lucide-react';
+import { ChevronDown, Clock3, Gem, Minus, Plus, Save, Shield, Sparkles, Swords, Users } from 'lucide-react';
 import type { ResourceType, TroopType } from '@crown-and-coin/shared';
 import type { Dictionary, Locale } from '@/i18n/config';
 import type { GameSection } from '@/features/kingdom/components/bottom-navigation';
@@ -13,6 +13,7 @@ import { usePlayerExperience } from '@/features/experience/player-experience-pro
 import { HeroDetailSheet } from './hero-detail-sheet';
 import { BidiTemplate, BidiValue, useNumberLocale } from '@/i18n/bidi';
 import { localizeDigits, parseLocalizedInteger } from '@/i18n/numbers';
+import { useShopState } from '@/features/shop/hooks/use-shop-state';
 
 interface HeroesPageProps { dictionary: Dictionary; locale: Locale; onNavigate(section: GameSection): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
@@ -25,11 +26,13 @@ const TROOP_ASSET: Record<TroopType, string> = {
 export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProps) {
   const state = useArmyState();
   const experience = usePlayerExperience();
+  const shop = useShopState(false);
   const [selectedCommanderId, setSelectedCommanderId] = useState<string | null>(null);
   const [trainType, setTrainType] = useState<TroopType>('INFANTRY');
   const [trainQuantity, setTrainQuantity] = useState(1);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
   const [now, setNow] = useState(Date.now());
+  const [confirmTrainingFinish, setConfirmTrainingFinish] = useState(false);
   useEffect(() => { const timer = window.setInterval(() => setNow(Date.now()), 1_000); return () => clearInterval(timer); }, []);
   useEffect(() => { if (!comingSoon) return; const timer = window.setTimeout(() => setComingSoon(null), 1800); return () => clearTimeout(timer); }, [comingSoon]);
   useEffect(() => { experience.requestAdvisorTip('HEROES_INTRO'); }, [experience]);
@@ -38,6 +41,12 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
   const selectedTroop = state.army?.troops.find((troop) => troop.type === trainType);
   const maxTrain = Math.max(1, Math.min(25, state.army?.capacity.available ?? 1));
   const formationPower = useMemo(() => state.army?.formation.slots.reduce((sum, slot) => sum + slot.squadPower, 0) ?? 0, [state.army]);
+  const trainingFinishOffer = shop.state?.convenience.troopTrainingFinish ?? null;
+  const activeError = shop.errorCode ?? state.errorCode;
+  useEffect(() => {
+    setConfirmTrainingFinish(false);
+    if (state.army?.training) void shop.refresh();
+  }, [state.army?.training?.id, shop.refresh]);
 
   const chooseCommander = (slotNumber: number, commanderId: string): void => {
     const current = state.draftSlots.find((slot) => slot.slot === slotNumber);
@@ -87,7 +96,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
             </section>
             <section className="army-section army-training">
               <div className="army-section__heading"><h2>{t.armyUi.trainTroops}</h2><span>{t.armyUi.serverAuthoritative}</span></div>
-              {state.army.training ? <div className="army-training__active"><Clock3 size={18} /><span><strong>{t.armyUi.training}</strong><small>{t.armyUi.troopNames[state.army.training.troopType]} × <BidiValue direction="ltr">{state.army.training.quantity}</BidiValue></small></span><b><BidiValue direction="ltr">{formatTimer(trainingRemaining)}</BidiValue></b></div> : <>
+              {state.army.training ? <div className="army-training__active"><Clock3 size={18} /><span><strong>{t.armyUi.training}</strong><small>{t.armyUi.troopNames[state.army.training.troopType]} × <BidiValue direction="ltr">{state.army.training.quantity}</BidiValue></small></span><b><BidiValue direction="ltr">{formatTimer(trainingRemaining)}</BidiValue></b>{trainingFinishOffer ? <div className="army-training__finish">{confirmTrainingFinish ? <><button disabled={shop.action !== 'idle'} onClick={() => setConfirmTrainingFinish(false)} type="button">{t.shopUi.cancel}</button><button disabled={shop.action !== 'idle'} onClick={async () => { if (await shop.purchase(trainingFinishOffer.itemKey, trainingFinishOffer.targetId)) await state.refresh(); }} type="button">{shop.action !== 'idle' ? t.shopUi.processing : t.shopUi.finishTraining}</button></> : <button onClick={() => setConfirmTrainingFinish(true)} type="button"><Gem size={13} />{t.shopUi.finishTraining} · <BidiValue direction="ltr">{trainingFinishOffer.priceGems}</BidiValue></button>}</div> : null}</div> : <>
                 <div className="army-training__types">{state.army.troops.map((troop) => <button className={trainType === troop.type ? 'is-active' : ''} key={troop.type} onClick={() => setTrainType(troop.type)} type="button"><img alt="" src={TROOP_ASSET[troop.type]} /><strong>{t.armyUi.troopNames[troop.type]}</strong><small>{t.armyUi.ready}: <BidiValue direction="ltr">{troop.readyCount}</BidiValue></small></button>)}</div>
                 <div className="army-training__order"><label>{t.armyUi.quantity}<QuantityStepper decreaseLabel={t.armyUi.decreaseQuantity} increaseLabel={t.armyUi.increaseQuantity} max={maxTrain} min={1} onChange={setTrainQuantity} quantityLabel={t.armyUi.quantity} value={trainQuantity} /></label><div>{Object.entries(selectedTroop?.trainingCostPerUnit ?? {}).map(([resource, amount]) => <span key={resource}>{t.resourceShort[resource as ResourceType]} <BidiValue direction="ltr">{formatAmount(String(BigInt(amount) * BigInt(trainQuantity)))}</BidiValue></span>)}</div><button className="army-training__submit" disabled={state.action !== 'idle' || state.army.capacity.available < trainQuantity} onClick={() => void state.train(trainType, trainQuantity)} type="button">{t.armyUi.train}</button></div>
               </>}
@@ -101,7 +110,8 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
         <HeroDetailSheet dictionary={t} hero={selectedCommander} onClose={() => setSelectedCommanderId(null)} onUpgrade={(id) => void state.upgrade(id)} upgrading={state.action === 'upgrading'} />
         <BottomNavigation activeSection="heroes" dictionary={t} onComingSoon={setComingSoon} onNavigate={onNavigate} />
         <div className={comingSoon ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">{comingSoon ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoon }} /> : ''}</div>
-        <div className={state.errorCode ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{state.errorCode ? (t.armyErrors[state.errorCode as keyof typeof t.armyErrors] ?? t.armyErrors.SERVER_ERROR) : ''}{state.errorCode ? <button onClick={() => void state.refresh()} type="button">{t.retry}</button> : null}</div>
+        <div className={shop.success ? 'shop-toast shop-toast--visible' : 'shop-toast'} role="status">{shop.success ? t.shopUi.success : ''}</div>
+        <div className={activeError ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{shop.errorCode ? (t.shopErrors[shop.errorCode as keyof typeof t.shopErrors] ?? t.shopErrors.SERVER_ERROR) : state.errorCode ? (t.armyErrors[state.errorCode as keyof typeof t.armyErrors] ?? t.armyErrors.SERVER_ERROR) : ''}{activeError ? <button onClick={() => shop.errorCode ? shop.clearError() : void state.refresh()} type="button">{shop.errorCode ? t.close : t.retry}</button> : null}</div>
       </div>
     </main>
   );

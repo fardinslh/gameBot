@@ -23,6 +23,7 @@ import { KingdomProgressSheet } from './kingdom-progress-sheet';
 import { useRetentionState } from '@/features/retention/hooks/use-retention-state';
 import { RetentionEntry } from '@/features/retention/components/retention-entry';
 import { RetentionSheet } from '@/features/retention/components/retention-sheet';
+import { useShopState } from '@/features/shop/hooks/use-shop-state';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -43,8 +44,11 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const retentionEnabled = experience.onboarding?.status === 'COMPLETED' || experience.onboarding?.status === 'SKIPPED';
   const refreshKingdom = useCallback(async () => { await economy.refresh(); }, [economy.refresh]);
   const retention = useRetentionState(retentionEnabled, refreshKingdom);
+  const shop = useShopState(false);
   const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
   const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
+  const finishOffer = selectedBuilding ? shop.state?.convenience.buildingFinishes.find((offer) => offer.buildingId === selectedBuilding.id) ?? null : null;
+  const activeError = shop.errorCode ?? economy.errorCode;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
   const buildingLabels: Record<WorldBuildingId, string> = {
     castle: t.buildings.castle.name,
@@ -71,6 +75,10 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   useEffect(() => {
     if (selectedBuildingId === 'castle') experience.requestAdvisorTip('CASTLE_PROGRESSION');
   }, [experience, selectedBuildingId]);
+
+  useEffect(() => {
+    if (economy.state?.buildings.some((building) => building.activeUpgrade)) void shop.refresh();
+  }, [economy.state?.buildings, shop.refresh]);
 
   const handleBuildingSelect = useCallback((buildingId: WorldBuildingId) => {
     audio.playSfx('building_select');
@@ -100,6 +108,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             playerLevel={economy.state?.player.level ?? 1}
             playerName={economy.state?.player.displayName ?? t.playerTitle}
             progression={economy.state?.progression}
+            profileCrest={economy.state?.player.equippedProfileCrest}
           />
           <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} />
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
@@ -121,11 +130,13 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             />
           ) : null}
           <BuildingDetailSheet
-            actionPending={economy.action === 'upgrading'}
+            actionPending={economy.action === 'upgrading' || shop.action !== 'idle'}
             building={selectedBuilding}
             dictionary={t}
+            finishOffer={finishOffer}
             onClose={() => setSelectedBuildingId(null)}
             onOpenProgress={() => { setSelectedBuildingId(null); setProgressOpen(true); }}
+            onFinishUpgrade={async (offer) => { if (await shop.purchase(offer.itemKey, offer.targetId)) await economy.refresh(); }}
             onUpgrade={(buildingId) => void economy.upgrade(buildingId)}
             serverNow={economy.serverNow}
           />
@@ -160,9 +171,10 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
             {comingSoonSection ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoonSection }} /> : ''}
           </div>
-          <div className={economy.errorCode ? 'economy-error economy-error--visible' : 'economy-error'} role="alert">
-            {economy.errorCode ? errorMessage(economy.errorCode, t) : ''}
-            {economy.errorCode ? <button onClick={() => void economy.refresh()} type="button">{t.retry}</button> : null}
+          <div className={shop.success ? 'shop-toast shop-toast--visible' : 'shop-toast'} role="status">{shop.success ? t.shopUi.success : ''}</div>
+          <div className={activeError ? 'economy-error economy-error--visible' : 'economy-error'} role="alert">
+            {shop.errorCode ? (t.shopErrors[shop.errorCode as keyof typeof t.shopErrors] ?? t.shopErrors.SERVER_ERROR) : economy.errorCode ? errorMessage(economy.errorCode, t) : ''}
+            {activeError ? <button onClick={() => shop.errorCode ? shop.clearError() : void economy.refresh()} type="button">{shop.errorCode ? t.close : t.retry}</button> : null}
           </div>
         </div>
       </main>

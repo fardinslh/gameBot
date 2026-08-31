@@ -13,7 +13,7 @@ let acquisitionSource = 'DIRECT';
 let flushing = false;
 let lastScreen: string | null = null;
 let initialized = false;
-let pendingScreen: 'KINGDOM' | 'HEROES' | 'RAID' | 'BATTLE' | 'DEFENSE_INBOX' | 'RESULT' | null = null;
+let pendingScreen: 'KINGDOM' | 'HEROES' | 'RAID' | 'SHOP' | 'BATTLE' | 'DEFENSE_INBOX' | 'RESULT' | null = null;
 
 function sessionId(): string {
   const existing = sessionStorage.getItem(SESSION_KEY);
@@ -71,7 +71,7 @@ export function trackClientEvent(eventName: ClientAnalyticsEventInput['eventName
   void flushAnalytics();
 }
 
-export function trackScreen(screen: 'KINGDOM' | 'HEROES' | 'RAID' | 'BATTLE' | 'DEFENSE_INBOX' | 'RESULT'): void {
+export function trackScreen(screen: 'KINGDOM' | 'HEROES' | 'RAID' | 'SHOP' | 'BATTLE' | 'DEFENSE_INBOX' | 'RESULT'): void {
   if (!initialized) {
     pendingScreen = screen;
     return;

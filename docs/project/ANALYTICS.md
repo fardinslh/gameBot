@@ -16,7 +16,7 @@ Events carry a UUID, server-resolved player, `SERVER` or `CLIENT` source, string
 
 Server events: `player_created`, `collect_completed`, `first_collect`, `building_upgrade_started`, `first_upgrade`, `hero_upgrade_completed`, `army_bootstrapped`, `troop_training_started`, `troop_training_completed`, `army_formation_saved`, `raid_search`, `raid_started`, `raid_finished`, `raid_win`, `raid_loss`, `first_raid_completed`, `revenge_started`, `revenge_finished`, `daily_return_available`, `daily_return_claimed`, `daily_mission_completed`, `daily_mission_claimed`, `daily_all_completed`, `weekly_mission_completed`, `weekly_mission_claimed`, `achievement_completed`, and `achievement_claimed`.
 
-Client events: `app_open`, `app_resume`, `screen_opened`, `retention_screen_opened`, `onboarding_started`, `onboarding_step_seen`. Server-only onboarding event: `onboarding_completed`.
+Client events include `app_open`, `app_resume`, `screen_opened`, `retention_screen_opened`, `shop_opened`, `shop_purchase_failed`, `onboarding_started`, and `onboarding_step_seen`. Server-only onboarding event: `onboarding_completed`.
 
 Onboarding completion is a funnel milestone, not the activation definition. Activation and D1/D3/D7 retention remain anchored to the server-owned `first_raid_completed` event.
 
@@ -51,3 +51,5 @@ Army foundation and battle events (`army_battle_started`, `army_battle_finished`
 Unit tests cover taxonomy and retention boundaries. Integration tests cover duplicates, system exclusion, property rejection, and transaction rollback. Fixtures are explicit and cleaned up; normal startup creates no synthetic analytics.
 
 Retention 04 adds server-owned `campaign_opened`, `campaign_stage_started`, `campaign_stage_won`, `campaign_stage_lost`, `campaign_star_improved`, `campaign_star_reward_claimed`, and `campaign_chapter_completed`. Outcomes and rewards are emitted by authoritative Campaign transactions. Campaign NPCs remain excluded from player analytics.
+
+Retention 05 adds server-owned `shop_purchase_completed` and `shop_cosmetic_equipped`. Purchase completion is emitted in the authoritative transaction with item, category, Gem price, fulfillment type, and target type; client failure telemetry never authorizes or settles a purchase.

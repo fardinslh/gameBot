@@ -1,7 +1,7 @@
 import { Coins, Gem, Mountain, Trees, Wheat } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
-import type { ResourceAmounts, ResourceType } from '@crown-and-coin/shared';
+import type { ResourceAmounts, ResourceType, StorageCapacities } from '@crown-and-coin/shared';
 import { RESOURCE_TYPES } from '@crown-and-coin/shared';
 import { RESOURCE_TO_ID, type ResourceId } from '../domain/kingdom-types';
 import { BidiValue } from '@/i18n/bidi';
@@ -16,7 +16,7 @@ const RESOURCE_ICONS: Record<ResourceId, LucideIcon> = {
 
 interface ResourceHudProps {
   balances: ResourceAmounts;
-  capacities?: ResourceAmounts;
+  capacities?: StorageCapacities;
   dictionary: Dictionary;
 }
 
@@ -35,7 +35,8 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
       {RESOURCE_TYPES.map((resource: ResourceType) => {
         const id = RESOURCE_TO_ID[resource];
         const value = formatAmount(balances[resource]);
-        const capacity = capacities ? formatAmount(capacities[resource]) : null;
+        const rawCapacity = capacities?.[resource];
+        const capacity = rawCapacity ? formatAmount(rawCapacity) : null;
         const Icon = RESOURCE_ICONS[id];
         const accessibilityLabel = `${labels[id]}: ${t.resourceBalance} ${value}${capacity ? `; ${t.resourceCapacity} ${capacity}` : ''}`;
         return (
@@ -45,12 +46,13 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
             data-balance={balances[resource]}
             data-capacity={capacities?.[resource]}
             data-primary-value="balance"
+            data-resource={resource}
             data-secondary-value={capacity ? 'capacity' : undefined}
             key={resource}
           >
             <span className="resource-chip__icon"><Icon aria-hidden="true" size={14} strokeWidth={2.4} /></span>
             <strong><BidiValue direction="ltr">{value}</BidiValue></strong>
-            <small>{capacity ? <>{t.resourceCapacity} <BidiValue direction="ltr">{capacity}</BidiValue></> : labels[id]}</small>
+            {capacity ? <small>{t.resourceCapacity} <BidiValue direction="ltr">{capacity}</BidiValue></small> : null}
           </div>
         );
       })}
