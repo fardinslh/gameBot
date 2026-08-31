@@ -746,29 +746,29 @@ button { color: inherit; }
 .army-capacity > div i { display: block; height: 100%; background: linear-gradient(90deg, #8aa85e, #e5bc56); border-radius: inherit; }
 .army-capacity > small { display: block; margin-top: 4px; color: #8d9487; font-size: var(--text-caption); text-align: end; }
 .army-section__heading { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.army-section__heading h2 { margin: 0; color: var(--cream); font-family: var(--font-display); font-size: var(--text-body); }
+.army-section__heading h2 { margin: 0; color: var(--cream); font-family: var(--font-display); font-size: var(--text-section); }
 .army-section__heading span { color: #958d80; font-size: var(--text-caption); }
 .army-formation { display: grid; gap: 6px; direction: ltr; }
-.army-squad-card { position: relative; display: grid; min-height: 92px; grid-template-columns: 78px 1fr 54px; align-items: stretch; overflow: hidden; background: rgba(8,11,12,.62); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
+.army-squad-card { position: relative; display: grid; min-height: 112px; grid-template-columns: 80px minmax(0,1fr) 58px; align-items: stretch; overflow: hidden; background: rgba(8,11,12,.62); border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.06); }
 .army-squad-card__art { position: relative; overflow: hidden; background: radial-gradient(circle at 50% 68%, rgba(224,180,76,.18), transparent 60%); }
 .army-squad-card__art img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 5px rgba(0,0,0,.7)); }
-.army-squad-card__art b { position: absolute; inset-inline-start: 4px; inset-block-start: 4px; padding: 3px 5px; color: #1f180c; background: var(--gold-bright); border-radius: 5px; font-size: var(--text-caption); }
-.army-squad-card__controls { display: grid; min-width: 0; align-content: center; gap: 4px; padding: 6px 4px; }
-.army-squad-card select { min-width: 0; width: 100%; height: 29px; appearance: none; padding-inline: 6px 25px; color: var(--cream); background: #202522; border: 1px solid rgba(255,255,255,.09); border-radius: 7px; font-size: var(--text-caption); }
+.army-squad-card__art b { position: absolute; inset-inline-start: 4px; inset-block-start: 4px; padding: 3px 5px; color: #1f180c; background: var(--gold-bright); border-radius: 5px; font-size: var(--text-body); }
+.army-squad-card__controls { display: grid; min-width: 0; align-content: center; gap: 3px; padding: 2px 5px; }
+.army-squad-card select { min-width: 0; width: 100%; height: 34px; appearance: none; padding-inline: 7px 25px; color: var(--cream); background: #202522; border: 1px solid rgba(255,255,255,.09); border-radius: 8px; font-size: var(--text-body-strong); }
 .army-select { position: relative; display: block; min-width: 0; }
 .army-select > svg { position: absolute; inset-inline-end: 7px; inset-block-start: 50%; color: #d7c99f; pointer-events: none; transform: translateY(-50%); }
-.army-squad-card__controls label { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 4px; color: #999184; font-size: var(--text-caption); }
-.army-quantity-stepper { direction: ltr; display: grid; min-width: 0; height: 29px; grid-template-columns: 29px minmax(28px,1fr) 29px; overflow: hidden; background: #202522; border-radius: 7px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
-.army-quantity-stepper button { display: grid; min-width: 0; height: 29px; place-items: center; padding: 0; color: #eadcae; background: rgba(255,255,255,.035); border: 0; cursor: pointer; }
+.army-squad-card__controls label { display: grid; grid-template-columns: 48px minmax(0,1fr); align-items: center; gap: 5px; color: #aaa192; font-size: var(--text-body); }
+.army-quantity-stepper { direction: ltr; display: grid; min-width: 0; height: 34px; grid-template-columns: 32px minmax(28px,1fr) 32px; overflow: hidden; background: #202522; border-radius: 8px; box-shadow: inset 0 0 0 1px rgba(255,255,255,.09); }
+.army-quantity-stepper button { display: grid; min-width: 0; height: 34px; place-items: center; padding: 0; color: #eadcae; background: rgba(255,255,255,.035); border: 0; cursor: pointer; }
 .army-quantity-stepper button:first-child { border-inline-end: 1px solid rgba(255,255,255,.07); }
 .army-quantity-stepper button:last-child { border-inline-start: 1px solid rgba(255,255,255,.07); }
 .army-quantity-stepper button:active:not(:disabled) { transform: scale(.96); }
 .army-quantity-stepper button:disabled { color: #5f615d; cursor: default; }
-.army-quantity-stepper input { min-width: 0; width: 100%; height: 100%; padding: 0 2px; color: var(--cream); text-align: center; background: transparent; border: 0; outline: 0; font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
-.army-commander-medallion { display: grid; min-width: 0; place-items: center; align-content: center; gap: 3px; padding: 3px; color: var(--cream); background: transparent; border: 0; cursor: pointer; font-size: var(--text-caption); }
-.army-commander-medallion img { width: 39px; height: 39px; object-fit: cover; border: 2px solid #b99043; border-radius: 50%; box-shadow: 0 3px 9px #000; }
-.army-commander-medallion span { width: 48px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.army-save { display: flex; min-height: 39px; align-items: center; justify-content: center; gap: 5px; width: 100%; margin-top: 7px; color: #2b210f; background: linear-gradient(145deg,#f1d276,#b98031); border: 0; border-radius: 10px; cursor: pointer; font-size: var(--text-caption); font-weight: 900; }
+.army-quantity-stepper input { min-width: 0; width: 100%; height: 100%; padding: 0 2px; color: var(--cream); text-align: center; background: transparent; border: 0; outline: 0; font-size: var(--text-section-compact); font-weight: 750; font-variant-numeric: tabular-nums; }
+.army-commander-medallion { display: grid; min-width: 0; place-items: center; align-content: center; gap: 4px; padding: 4px 2px; color: var(--cream); background: transparent; border: 0; cursor: pointer; font-size: var(--text-body-strong); }
+.army-commander-medallion img { width: 42px; height: 42px; object-fit: cover; border: 2px solid #b99043; border-radius: 50%; box-shadow: 0 3px 9px #000; }
+.army-commander-medallion span { width: 54px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.army-save { display: flex; min-height: 42px; align-items: center; justify-content: center; gap: 5px; width: 100%; margin-top: 7px; color: #2b210f; background: linear-gradient(145deg,#f1d276,#b98031); border: 0; border-radius: 10px; cursor: pointer; font-size: var(--text-body-strong); font-weight: 900; }
 .army-save:disabled { color: #827b70; background: rgba(255,255,255,.055); cursor: default; }
 .army-training__types { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; direction: ltr; }
 .army-training__types button { display: grid; min-width: 0; height: 88px; place-items: center; align-content: center; gap: 1px; overflow: hidden; color: var(--cream); background: rgba(8,11,12,.6); border: 1px solid rgba(255,255,255,.07); border-radius: 10px; cursor: pointer; }

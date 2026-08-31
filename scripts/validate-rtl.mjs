@@ -111,6 +111,72 @@ async function assertTypography(page, selector, locale) {
   if (locale === 'en' && audit.fontFamily.includes('Vazirmatn Variable')) throw new Error(`English inherited Persian UI font: ${audit.fontFamily}`);
 }
 
+async function assertArmyFormationReadability(page) {
+  const audit = await page.locator('.army-section').first().evaluate((section) => {
+    const formation = section.querySelector('.army-formation');
+    const cards = [...section.querySelectorAll('.army-squad-card')];
+    const heading = section.querySelector('.army-section__heading h2');
+    const badge = section.querySelector('.army-squad-card__art b');
+    const select = section.querySelector('.army-squad-card select');
+    const label = section.querySelector('.army-squad-card__controls label');
+    const stepper = section.querySelector('.army-quantity-stepper');
+    const stepperButton = section.querySelector('.army-quantity-stepper button');
+    const quantity = section.querySelector('.army-quantity-stepper input');
+    const commander = section.querySelector('.army-commander-medallion');
+    const save = section.querySelector('.army-save');
+    const scroller = section.closest('.heroes-scroll');
+    if (!formation || !heading || !badge || !select || !label || !stepper || !stepperButton || !quantity || !commander || !save || !scroller) return null;
+    const fontSize = (element) => Number.parseFloat(getComputedStyle(element).fontSize);
+    const formationRect = formation.getBoundingClientRect();
+    const oldScrollTop = scroller.scrollTop;
+    const scrollerRect = scroller.getBoundingClientRect();
+    const lastCard = cards.at(-1);
+    lastCard?.scrollIntoView({ block: 'center' });
+    const lastCardRect = lastCard?.getBoundingClientRect();
+    const lastCardReachable = Boolean(lastCardRect && lastCardRect.top >= scrollerRect.top - 1 && lastCardRect.bottom <= scrollerRect.bottom + 1);
+    save.scrollIntoView({ block: 'end' });
+    const saveRect = save.getBoundingClientRect();
+    const saveReachable = saveRect.top >= scrollerRect.top - 1 && saveRect.bottom <= scrollerRect.bottom + 1;
+    scroller.scrollTop = oldScrollTop;
+    return {
+      badgeFont: fontSize(badge),
+      cardCount: cards.length,
+      cardHeights: cards.map((card) => card.getBoundingClientRect().height),
+      commanderFont: fontSize(commander),
+      controlHeight: select.getBoundingClientRect().height,
+      headingFont: fontSize(heading),
+      horizontalOverflow: cards.some((card) => card.getBoundingClientRect().width > formationRect.width + 1),
+      labelFont: fontSize(label),
+      quantityFont: fontSize(quantity),
+      quantityWeight: Number.parseInt(getComputedStyle(quantity).fontWeight, 10),
+      reachable: lastCardReachable && saveReachable,
+      saveFont: fontSize(save),
+      stepperButtonHeight: stepperButton.getBoundingClientRect().height,
+      stepperHeight: stepper.getBoundingClientRect().height,
+      troopSelectFont: fontSize(select),
+    };
+  });
+  const inRange = (value, minimum, maximum) => value >= minimum && value <= maximum;
+  if (!audit
+    || audit.cardCount !== 3
+    || audit.cardHeights.some((height) => !inRange(height, 104, 112))
+    || !inRange(audit.headingFont, 15, 16)
+    || !inRange(audit.badgeFont, 12, 13)
+    || !inRange(audit.troopSelectFont, 13, 14)
+    || !inRange(audit.labelFont, 12, 13)
+    || !inRange(audit.quantityFont, 14, 15)
+    || audit.quantityWeight < 700
+    || !inRange(audit.commanderFont, 13, 14)
+    || !inRange(audit.saveFont, 13, 14)
+    || !inRange(audit.controlHeight, 34, 38)
+    || !inRange(audit.stepperHeight, 34, 38)
+    || !inRange(audit.stepperButtonHeight, 34, 38)
+    || audit.horizontalOverflow
+    || !audit.reachable) {
+    throw new Error(`Army Formation readability failed: ${JSON.stringify(audit)}`);
+  }
+}
+
 async function dismissAdvisorTips(page) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const tip = page.locator('.advisor-context-tip');
@@ -176,6 +242,7 @@ try {
   await dismissAdvisorTips(page);
   await assertTypography(page, '.heroes-scroll', 'fa');
   await assertPersianNumerals(page, '.heroes-scroll');
+  await assertArmyFormationReadability(page);
   await page.screenshot({ path: new URL('army-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.army-commanders button').first().click();
   await page.waitForSelector('[data-hero-sheet]');
@@ -193,7 +260,7 @@ try {
     const stepperRect = stepper.getBoundingClientRect();
     return { aspect: portraitRect.width / portraitRect.height, iconWidth: iconRect.width, iconHeight: iconRect.height, stepperHeight: stepperRect.height, objectPosition: getComputedStyle(image).objectPosition };
   });
-  if (!commanderUi || Math.abs(commanderUi.aspect - 16 / 9) > .04 || commanderUi.iconWidth > 14 || commanderUi.iconHeight > 14 || commanderUi.stepperHeight > 35) throw new Error(`Commander UI proportions failed: ${JSON.stringify(commanderUi)}`);
+  if (!commanderUi || Math.abs(commanderUi.aspect - 16 / 9) > .04 || commanderUi.iconWidth > 14 || commanderUi.iconHeight > 14 || commanderUi.stepperHeight < 34 || commanderUi.stepperHeight > 38) throw new Error(`Commander UI proportions failed: ${JSON.stringify(commanderUi)}`);
   await page.screenshot({ path: new URL('hero-detail-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.hero-sheet__close').click();
   await page.locator('[data-nav-id="raid"]').click();
@@ -247,6 +314,7 @@ try {
     await dismissAdvisorTips(page);
     await assertTypography(page, '.heroes-scroll', 'fa');
     await assertPersianNumerals(page, '.heroes-scroll');
+    await assertArmyFormationReadability(page);
     await page.screenshot({ path: new URL(`army-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
     await page.locator('.army-commanders button').first().click();
     await page.waitForSelector('[data-hero-sheet]');
@@ -270,6 +338,7 @@ try {
     await dismissAdvisorTips(page);
     await assertSemanticRoot(page, 'en', 'ltr');
     await assertTypography(page, '.heroes-scroll', 'en');
+    await assertArmyFormationReadability(page);
     await page.screenshot({ path: new URL(`army-en-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
     await page.goto('http://localhost:3000/?lang=en&section=raid', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.combat-mode-tabs');
