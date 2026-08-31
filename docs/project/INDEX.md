@@ -11,9 +11,9 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `06df253e6ac686b164243f86b28ab2ef35fe97a1`
-- **Baseline commit message**: `feat: add pve campaign chapter one`
-- **Verification date**: 2026-08-30
+- **Last verified against commit**: `7c67d1b5f1ccc7be220655c829ec9e1a011f2d0f`
+- **Baseline commit message**: `feat: add shop and gem economy`
+- **Verification date**: 2026-08-31
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
 Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative when a published verification marker trails active work.
