@@ -16,6 +16,8 @@ export const fa: Dictionary = {
   resourceWood: 'چوب',
   resourceStone: 'سنگ',
   resourceGems: 'الماس',
+  resourceBalance: 'موجودی',
+  resourceCapacity: 'ظرفیت',
   mockData: 'داده آزمایشی',
   serverData: 'زنده',
   serverBalances: 'موجودی منابع سرور',

@@ -49,6 +49,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Use `getLocaleDirection` and the shared `LocalizedGameRoot`; do not add page-local direction checks
 - Isolate external names with `BidiValue`/`dir="auto"` and numeric, timer, percentage, ID, or signed values with `dir="ltr"`
 - Keep sentence punctuation in the localized parent and render placeholders through `BidiTemplate`; never rely on `text-align` alone for Persian
+- Treat the Kingdom Resource HUD values as authoritative current balance first and Castle-derived storage capacity second. Keep `Cap` / `ظرفیت` explicit; these values are not hourly production or ready-to-collect amounts.
 - Never mirror Pixi Kingdom/Battle geometry or ordered spatial grids when correcting interface direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`

@@ -127,7 +127,7 @@ try {
   await moveWorldBuilding(365);
   await clickWorldBuilding(145, 365);
   await page.waitForSelector('[data-building-sheet="mine"]');
-  const levelBeforeUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
+  const levelBeforeUpgrade = Number(await page.locator('[data-building-level]').getAttribute('data-building-level'));
   await page.locator('.upgrade-button').click();
   await page.waitForSelector('.upgrade-preview--active');
 
@@ -148,7 +148,7 @@ try {
   await page.waitForSelector('.collect-button');
   await moveWorldBuilding(365);
   await clickWorldBuilding(145, 365);
-  const levelAfterUpgrade = Number(await page.locator('.building-sheet__stats strong').first().textContent());
+  const levelAfterUpgrade = Number(await page.locator('[data-building-level]').getAttribute('data-building-level'));
   if (levelAfterUpgrade !== levelBeforeUpgrade + 1) throw new Error('Server did not reconcile the completed upgrade exactly once');
 
   if (consoleErrors.length > 0) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);

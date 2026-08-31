@@ -177,6 +177,74 @@ async function assertArmyFormationReadability(page) {
   }
 }
 
+async function assertKingdomHudClarity(page, locale) {
+  await page.waitForSelector('.resource-chip[data-secondary-value="capacity"]');
+  const audit = await page.evaluate((expectedLocale) => {
+    const profile = document.querySelector('.player-profile');
+    const actions = document.querySelector('.player-actions');
+    const title = document.querySelector('.player-copy h1');
+    const subtitle = document.querySelector('.player-copy small');
+    const level = document.querySelector('.player-level');
+    const copy = document.querySelector('.player-copy');
+    const chips = [...document.querySelectorAll('.resource-chip')];
+    if (!profile || !actions || !title || !subtitle || !level || !copy) return null;
+    const rect = (element) => element.getBoundingClientRect();
+    const overlaps = (a, b) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
+    const profileRect = rect(profile);
+    const levelRect = rect(level);
+    const titleStyle = getComputedStyle(title);
+    const subtitleStyle = getComputedStyle(subtitle);
+    return {
+      actionsOverlapProfile: overlaps(profileRect, rect(actions)),
+      chipCount: chips.length,
+      chips: chips.map((chip) => {
+        const primary = chip.querySelector('strong');
+        const secondary = chip.querySelector('small');
+        return {
+          aria: chip.getAttribute('aria-label') ?? '',
+          capacity: chip.getAttribute('data-capacity'),
+          primaryMeaning: chip.getAttribute('data-primary-value'),
+          primaryText: primary?.textContent?.trim() ?? '',
+          secondaryClipped: secondary ? secondary.scrollWidth > secondary.clientWidth + 1 : true,
+          secondaryMeaning: chip.getAttribute('data-secondary-value'),
+          secondaryText: secondary?.textContent?.trim() ?? '',
+        };
+      }),
+      levelInsideProfile: levelRect.left >= profileRect.left - 1 && levelRect.right <= profileRect.right + 1
+        && levelRect.top >= profileRect.top - 1 && levelRect.bottom <= profileRect.bottom + 1,
+      levelOverlapsCopy: overlaps(levelRect, rect(copy)),
+      locale: expectedLocale,
+      subtitleClipped: subtitle.scrollWidth > subtitle.clientWidth + 1,
+      subtitleFont: Number.parseFloat(subtitleStyle.fontSize),
+      subtitleWraps: subtitle.scrollHeight > subtitle.clientHeight + 2,
+      titleClipped: title.scrollWidth > title.clientWidth + 1,
+      titleFont: Number.parseFloat(titleStyle.fontSize),
+      titleWraps: title.scrollHeight > title.clientHeight + 2,
+    };
+  }, locale);
+  const capacityLabel = locale === 'fa' ? 'ظرفیت' : 'Cap';
+  if (!audit
+    || audit.actionsOverlapProfile
+    || !audit.levelInsideProfile
+    || audit.levelOverlapsCopy
+    || audit.titleClipped
+    || audit.titleWraps
+    || audit.subtitleClipped
+    || audit.subtitleWraps
+    || audit.titleFont < 13
+    || audit.subtitleFont < 10
+    || audit.chipCount !== 5
+    || audit.chips.some((chip) => chip.primaryMeaning !== 'balance'
+      || chip.secondaryMeaning !== 'capacity'
+      || !chip.capacity
+      || !chip.primaryText
+      || !chip.secondaryText.startsWith(capacityLabel)
+      || chip.secondaryClipped
+      || !chip.aria.includes(capacityLabel))) {
+    throw new Error(`Kingdom HUD clarity failed: ${JSON.stringify(audit)}`);
+  }
+}
+
 async function dismissAdvisorTips(page) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
     const tip = page.locator('.advisor-context-tip');
@@ -231,6 +299,7 @@ try {
   await page.waitForSelector('[data-scene-status="ready"]');
   await assertTypography(page, '.game-viewport', 'fa');
   await assertPersianNumerals(page, '.game-viewport');
+  await assertKingdomHudClarity(page, 'fa');
   await page.screenshot({ path: new URL('kingdom-hud-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.screenshot({
     clip: { x: 18, y: 165, width: 180, height: 155 },
@@ -323,6 +392,7 @@ try {
     await page.waitForSelector('[data-scene-status="ready"]');
     await assertSemanticRoot(page, 'fa', 'rtl');
     await assertTypography(page, '.game-viewport', 'fa');
+    await assertKingdomHudClarity(page, 'fa');
     await page.screenshot({ path: new URL(`kingdom-hud-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
     await page.locator('[data-nav-id="heroes"]').click();
     await page.waitForSelector('[data-army-status="ready"]');
@@ -346,12 +416,17 @@ try {
     await page.screenshot({ path: new URL(`campaign-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
   }
 
-  for (const viewport of [{ width: 320, height: 568 }, { width: 390, height: 844 }]) {
+  for (const viewport of [{ width: 320, height: 568 }, { width: 375, height: 812 }, { width: 390, height: 844 }]) {
     await page.setViewportSize(viewport);
-    await page.goto('http://localhost:3000/?lang=en&section=heroes', { waitUntil: 'domcontentloaded' });
+    await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'domcontentloaded' });
+    await page.waitForSelector('[data-scene-status="ready"]');
+    await assertSemanticRoot(page, 'en', 'ltr');
+    await assertTypography(page, '.game-viewport', 'en');
+    await assertKingdomHudClarity(page, 'en');
+    await page.screenshot({ path: new URL(`kingdom-hud-en-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+    await page.locator('[data-nav-id="heroes"]').click();
     await page.waitForSelector('[data-army-status="ready"]');
     await dismissAdvisorTips(page);
-    await assertSemanticRoot(page, 'en', 'ltr');
     await assertTypography(page, '.heroes-scroll', 'en');
     await assertArmyFormationReadability(page);
     await page.screenshot({ path: new URL(`army-en-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
@@ -376,7 +451,7 @@ try {
   console.log('PASS semantic FA/RTL and EN/LTR roots, document metadata, isolated mixed tokens, and no horizontal overflow');
   console.log('PASS Vazirmatn Persian root, English font separation, 10px production text floor, unclipped controls, and 54px navigation');
   console.log('PASS screenshots: Kingdom HUD, Building Detail, Aren, Army, Commander Detail, Raid opponent, Army Battle, Army result, Battle Log, Campaign map/detail, mixed content');
-  console.log('PASS Persian viewports: 320x568, 375x812, 390x844; English viewports: 320x568, 390x844');
+  console.log('PASS Persian viewports: 320x568, 375x812, 390x844; English viewports: 320x568, 375x812, 390x844');
 } finally {
   await browser?.close();
   client?.kill();

@@ -37,11 +37,20 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
         const value = formatAmount(balances[resource]);
         const capacity = capacities ? formatAmount(capacities[resource]) : null;
         const Icon = RESOURCE_ICONS[id];
+        const accessibilityLabel = `${labels[id]}: ${t.resourceBalance} ${value}${capacity ? `; ${t.resourceCapacity} ${capacity}` : ''}`;
         return (
-          <div className={`resource-chip resource-chip--${id}`} data-balance={balances[resource]} data-capacity={capacities?.[resource]} key={resource} aria-label={`${labels[id]} ${value}${capacity ? ` / ${capacity}` : ''}`}>
+          <div
+            aria-label={accessibilityLabel}
+            className={`resource-chip resource-chip--${id}`}
+            data-balance={balances[resource]}
+            data-capacity={capacities?.[resource]}
+            data-primary-value="balance"
+            data-secondary-value={capacity ? 'capacity' : undefined}
+            key={resource}
+          >
             <span className="resource-chip__icon"><Icon aria-hidden="true" size={14} strokeWidth={2.4} /></span>
             <strong><BidiValue direction="ltr">{value}</BidiValue></strong>
-            <small>{labels[id]}{capacity ? <> · <BidiValue direction="ltr">{capacity}</BidiValue></> : null}</small>
+            <small>{capacity ? <>{t.resourceCapacity} <BidiValue direction="ltr">{capacity}</BidiValue></> : labels[id]}</small>
           </div>
         );
       })}

@@ -14,6 +14,8 @@ export const en = {
   resourceWood: 'Wood',
   resourceStone: 'Stone',
   resourceGems: 'Gems',
+  resourceBalance: 'Balance',
+  resourceCapacity: 'Cap',
   mockData: 'Mock data',
   serverData: 'Live',
   serverBalances: 'Server resource balances',
