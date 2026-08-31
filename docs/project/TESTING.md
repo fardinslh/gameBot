@@ -48,6 +48,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:campaign` | Campaign config and integration authority plus Persian/English 320/375/390 map, lock, detail, Battle, result, stars, milestone, overflow, console, and screenshot validation |
 | `npm run validate:retention` | Daily Return, three Daily missions, nine Achievement families, Persian RTL, English LTR, exact 54px navigation, no overflow, and clean console at 320/375/390 |
 | `npm run validate:shop` | Shop config and 12 integration cases plus Persian/English 320/375/390 purchase/equip/persistence, live Building/training offers, forged-price defense, uncapped Gem HUD, screenshots, overflow, navigation, and console validation |
+| `npm run validate:economy-hud` | Controlled normal/full/overflow storage, capacity-aware Collect, 900ms exact count-up, positive gains, reduced motion, Persian/English 320/375/390, 54px navigation, overflow, screenshots, and browser console |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:typography` | Runs the RTL suite plus computed Vazirmatn/system-font separation, a 10px visible production text floor, control-clipping checks, 54px navigation, and Persian/English Kingdom, Building, Army, Commander, Raid, Battle, Campaign map/detail screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |
@@ -74,6 +75,8 @@ For typography changes, run `npm run validate:typography`. Inspect the generated
 ## Manual acceptance paths
 
 For Kingdom changes, inspect Castle 1 and Castle 5, pan to both world extremes, tap every active building, and verify HUD/sheet clearance. For Hero changes, save a reordered team and refresh. For Raid or Revenge changes, complete a battle, inspect the stored replay, and return to Kingdom to confirm balances.
+
+For storage/Collect changes, verify production below room, partial room, exact full, preserved overflow, resume-after-spend, and uncapped Gems. During successful Collect, confirm displayed values count from the previous authoritative balance to the exact response balance, only positive resources show `+gain`, Persian digits remain localized, and reduced motion snaps without counting.
 
 For building evolution, open `/dev/buildings`, confirm `Theme DEFAULT`, compare every quick tier for all nine active buildings, then use N vs N+1 at representative minor upgrades including 1→2, 6→7, and 19→20. Toggle Construction and inspect 100/150/200%. Verify Lv. 1/8/12/20 references in the 320/375/390 viewport-equivalent panels. Inspect Castle Kingdom Progress at Castle 1 and 5. In the exact-production status fixture, inspect every active building in normal, upgrade, active, and selected-plus-upgrade states; `data-status-overlap` must remain `false` and `data-status-stack-aligned` must remain `true` whenever an indicator is visible. Owner judgment—not passing automation—approves art quality.
 

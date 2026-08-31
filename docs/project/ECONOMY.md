@@ -24,7 +24,7 @@ For resource `r` and Castle level `L`:
 capacity(r, L) = round(baseCapacity[r] * growth[r]^(max(1, L) - 1))
 ```
 
-The capacity formula applies only to Gold, Food, Wood, and Stone. The API never lowers a legacy capped-resource balance above its calculated capacity; future production becomes zero until it falls below capacity. Gems are intentionally uncapped and may grow past the former 500 placeholder through authoritative Retention rewards.
+The capacity formula applies only to Gold, Food, Wood, and Stone. Passive Building production can fill these resources only to capacity. Explicit earned rewards may temporarily exceed capacity so a claimed reward is never destroyed. The API never lowers an overflow balance; passive production for that resource pauses while the balance is at or above capacity and resumes after spending creates room. Gems are intentionally uncapped.
 
 ## Building economy configuration
 
@@ -70,6 +70,21 @@ The server caps each raw gain against current resource capacity. Academy applies
 6. Increment each balance and create `OFFLINE_PRODUCTION` ledger rows
 7. Set `Kingdom.lastCollectedAt` to server time
 8. Store the complete response in `EconomyRequest`
+
+The client mirrors this rule only for its ready estimate: it aggregates production per resource, clamps each capped resource to `max(capacity - balance, 0)`, then totals the collectible amounts. `POST /kingdom/collect` remains authoritative. After success, React stores final balances immediately while the HUD performs a presentation-only 900ms BigInt count-up and localized per-resource gain feedback; reduced-motion users see the final values immediately.
+
+## Capacity behavior by gain path
+
+| Gain path | Capacity behavior |
+| --- | --- |
+| Passive production / Collect | Capacity-limited per resource |
+| Raid and Revenge loot | Explicit earned transfer; may overflow the attacker's storage |
+| Campaign first-clear and star milestones | Explicit earned reward; may overflow |
+| Daily/weekly Missions, daily completion, Achievements, Daily Return | Explicit earned reward; may overflow |
+| Bootstrap / seed | Configured initial or system state, not a recurring Player reward; normal starts remain below capacity |
+| Gems from any authoritative source | Uncapped |
+
+Shop, Building Upgrade, Hero/Commander Upgrade, and troop training are spend paths. They never invoke the positive Collect count-up.
 
 ## Upgrade formulas
 

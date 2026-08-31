@@ -50,6 +50,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const finishOffer = selectedBuilding ? shop.state?.convenience.buildingFinishes.find((offer) => offer.buildingId === selectedBuilding.id) ?? null : null;
   const activeError = shop.errorCode ?? economy.errorCode;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
+  const displayedBalances = economy.displayedBalances ?? balances;
   const buildingLabels: Record<WorldBuildingId, string> = {
     castle: t.buildings.castle.name,
     farm: t.buildings.farm.name,
@@ -110,7 +111,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             progression={economy.state?.progression}
             profileCrest={economy.state?.player.equippedProfileCrest}
           />
-          <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} />
+          <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} displayedBalances={displayedBalances} gains={economy.lastGains} />
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
             <History aria-hidden="true" size={17} />
             <span>{t.inboxUi.title}</span>
@@ -119,10 +120,13 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           {retentionEnabled ? <RetentionEntry dictionary={t} state={retention.state} onOpen={() => { audio.playSfx('panel_open'); setRetentionOpen(true); void retention.refresh(); }} /> : null}
           {economy.state ? (
             <CollectControl
+              balances={balances}
               buildings={economy.buildings}
+              capacities={economy.state.storageCapacities}
               dictionary={t}
               disabled={economy.action !== 'idle'}
               lastGains={economy.lastGains}
+              lastCollectedAt={economy.state.kingdom.lastCollectedAt}
               offlineCapHours={economy.state.offlineCapHours}
               onCollect={() => void economy.collect()}
               serverNow={economy.serverNow}

@@ -4,29 +4,22 @@ import type { Dictionary } from '@/i18n/config';
 import type { ResourceAmounts, ResourceType, StorageCapacities } from '@crown-and-coin/shared';
 import { RESOURCE_TYPES } from '@crown-and-coin/shared';
 import { RESOURCE_TO_ID, type ResourceId } from '../domain/kingdom-types';
+import { formatAmount, getCapacityState } from '../domain/collection-presentation';
 import { BidiValue } from '@/i18n/bidi';
 
-const RESOURCE_ICONS: Record<ResourceId, LucideIcon> = {
-  gold: Coins,
-  food: Wheat,
-  wood: Trees,
-  stone: Mountain,
-  gems: Gem,
-};
+const RESOURCE_ICONS: Record<ResourceId, LucideIcon> = { gold: Coins, food: Wheat, wood: Trees, stone: Mountain, gems: Gem };
 
 interface ResourceHudProps {
   balances: ResourceAmounts;
   capacities?: StorageCapacities;
   dictionary: Dictionary;
+  displayedBalances?: ResourceAmounts;
+  gains?: ResourceAmounts | null;
 }
 
-export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHudProps) {
+export function ResourceHud({ balances, capacities, dictionary: t, displayedBalances = balances, gains }: ResourceHudProps) {
   const labels: Record<ResourceId, string> = {
-    gold: t.resourceGold,
-    food: t.resourceFood,
-    wood: t.resourceWood,
-    stone: t.resourceStone,
-    gems: t.resourceGems,
+    gold: t.resourceGold, food: t.resourceFood, wood: t.resourceWood, stone: t.resourceStone, gems: t.resourceGems,
   };
 
   return (
@@ -34,17 +27,24 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
       <span className="resource-hud__server">{t.serverData}</span>
       {RESOURCE_TYPES.map((resource: ResourceType) => {
         const id = RESOURCE_TO_ID[resource];
-        const value = formatAmount(balances[resource]);
+        const value = formatAmount(displayedBalances[resource]);
         const rawCapacity = capacities?.[resource];
         const capacity = rawCapacity ? formatAmount(rawCapacity) : null;
+        const capacityState = getCapacityState(balances[resource], rawCapacity);
+        const displayedCapacityState = getCapacityState(displayedBalances[resource], rawCapacity);
+        const statusLabel = displayedCapacityState === 'full' ? t.resourceFull
+          : displayedCapacityState === 'overflow' ? t.resourceOverCapacity : t.resourceCapacity;
+        const gain = gains?.[resource] && BigInt(gains[resource]) > BigInt(0) ? formatAmount(gains[resource]) : null;
         const Icon = RESOURCE_ICONS[id];
-        const accessibilityLabel = `${labels[id]}: ${t.resourceBalance} ${value}${capacity ? `; ${t.resourceCapacity} ${capacity}` : ''}`;
+        const accessibilityLabel = `${labels[id]}: ${t.resourceBalance} ${value}${capacity ? `; ${statusLabel} ${capacity}` : ''}`;
         return (
           <div
             aria-label={accessibilityLabel}
             className={`resource-chip resource-chip--${id}`}
             data-balance={balances[resource]}
-            data-capacity={capacities?.[resource]}
+            data-capacity={rawCapacity}
+            data-capacity-state={capacityState ?? undefined}
+            data-display-balance={displayedBalances[resource]}
             data-primary-value="balance"
             data-resource={resource}
             data-secondary-value={capacity ? 'capacity' : undefined}
@@ -52,7 +52,8 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
           >
             <span className="resource-chip__icon"><Icon aria-hidden="true" size={14} strokeWidth={2.4} /></span>
             <strong><BidiValue direction="ltr">{value}</BidiValue></strong>
-            {capacity ? <small>{t.resourceCapacity} <BidiValue direction="ltr">{capacity}</BidiValue></small> : null}
+            {capacity ? <small>{statusLabel} <BidiValue direction="ltr">{capacity}</BidiValue></small> : null}
+            {gain ? <span aria-hidden="true" className="resource-chip__gain"><BidiValue direction="ltr">+{gain}</BidiValue></span> : null}
           </div>
         );
       })}
@@ -60,13 +61,4 @@ export function ResourceHud({ balances, capacities, dictionary: t }: ResourceHud
   );
 }
 
-export function formatAmount(value: string): string {
-  const amount = BigInt(value);
-  if (amount >= BigInt(1_000_000)) return `${trimDecimal(Number(amount / BigInt(100_000)) / 10)}M`;
-  if (amount >= BigInt(1_000)) return `${trimDecimal(Number(amount / BigInt(100)) / 10)}K`;
-  return amount.toString();
-}
-
-function trimDecimal(value: number): string {
-  return Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1);
-}
+export { formatAmount } from '../domain/collection-presentation';

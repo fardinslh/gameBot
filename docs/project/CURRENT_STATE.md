@@ -13,7 +13,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Area | Status | Current implementation |
 | --- | --- | --- |
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
-| Economy | Implemented | PostgreSQL balances, production, storage caps, ledger, idempotency, advisory locks |
+| Economy | Implemented | PostgreSQL balances, capacity-limited passive production, preserved explicit-reward overflow, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Active building visual evolution | Implemented | All nine active buildings derive five major raster tiers plus a visible minor step at every level; all 45 assets pass effective-resolution audit through moderate 200% inspection |
 | World building status stack | Implemented | One DPR-aware screen-space Pixi stack keeps the compact upgrade/active indicator centered above the level badge with a fixed gap while following pan, resize, tier changes, and unlock scale |
@@ -125,7 +125,7 @@ Retention 01A, 01B, 02, 03A, 03B, 04, and 05 engineering are complete. Shop spen
 
 ## Persian RTL and bidirectional text
 
-The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Log, sheets, onboarding, Guide, errors, and overlays. It sets semantic `lang`/`dir` attributes and synchronizes the document root when `?lang=fa` or `?lang=en` changes. Player names use automatic Unicode isolation; numeric amounts, levels, timers, signed Trophy deltas, and percentages use explicit left-to-right isolation. Pixi Kingdom and Battle coordinates remain left-to-right internally and are not mirrored. The Kingdom Resource HUD presents current server balance first and explicitly labeled storage capacity second; it does not present hourly or collectible production.
+The game shell now owns one locale boundary for Kingdom, Heroes, Raid, Battle Log, sheets, onboarding, Guide, errors, and overlays. It sets semantic `lang`/`dir` attributes and synchronizes the document root when `?lang=fa` or `?lang=en` changes. Player names use automatic Unicode isolation; numeric amounts, levels, timers, signed Trophy deltas, and percentages use explicit left-to-right isolation. Pixi Kingdom and Battle coordinates remain left-to-right internally and are not mirrored. The Kingdom Resource HUD presents localized normal/full/overflow capacity states, keeps Gems uncapped, and uses a presentation-only count-up after authoritative Collect success. Its Collect estimate cannot advertise production beyond remaining storage.
 
 `/dev/rtl` is a development-only mixed-content fixture. `npm run validate:rtl` checks semantic DOM and computed direction in a real browser, no horizontal overflow, English regression, and the supported 320x568, 375x812, and 390x844 viewports.
 

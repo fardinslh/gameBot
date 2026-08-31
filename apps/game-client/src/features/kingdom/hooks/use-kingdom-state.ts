@@ -7,6 +7,7 @@ import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { usePlayerExperience } from '@/features/experience/player-experience-provider';
+import { easeOutCubic, interpolateResourceBalances } from '../domain/collection-presentation';
 
 type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade';
 
@@ -17,13 +18,49 @@ export function useKingdomState() {
   const [errorCode, setErrorCode] = useState<string | null>(null);
   const [action, setAction] = useState<ActionState>('idle');
   const [lastGains, setLastGains] = useState<ResourceAmounts | null>(null);
+  const [displayedBalances, setDisplayedBalances] = useState<ResourceAmounts | null>(null);
   const [clock, setClock] = useState(() => Date.now());
   const [serverOffsetMs, setServerOffsetMs] = useState(0);
   const initialLoadStarted = useRef(false);
+  const balanceAnimationFrame = useRef<number | null>(null);
+  const feedbackTimeout = useRef<number | null>(null);
+
+  const cancelCollectionPresentation = useCallback((balances?: ResourceAmounts) => {
+    if (balanceAnimationFrame.current !== null) window.cancelAnimationFrame(balanceAnimationFrame.current);
+    if (feedbackTimeout.current !== null) window.clearTimeout(feedbackTimeout.current);
+    balanceAnimationFrame.current = null;
+    feedbackTimeout.current = null;
+    setLastGains(null);
+    if (balances) setDisplayedBalances(balances);
+  }, []);
+
+  const presentCollection = useCallback((start: ResourceAmounts, end: ResourceAmounts, gains: ResourceAmounts) => {
+    cancelCollectionPresentation();
+    setLastGains(gains);
+    feedbackTimeout.current = window.setTimeout(() => setLastGains(null), 1_100);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setDisplayedBalances(end);
+      return;
+    }
+    setDisplayedBalances(start);
+    let startedAt: number | null = null;
+    const frame = (timestamp: number) => {
+      startedAt ??= timestamp;
+      const progress = Math.min(1, (timestamp - startedAt) / 900);
+      setDisplayedBalances(interpolateResourceBalances(start, end, easeOutCubic(progress)));
+      if (progress < 1) balanceAnimationFrame.current = window.requestAnimationFrame(frame);
+      else {
+        balanceAnimationFrame.current = null;
+        setDisplayedBalances(end);
+      }
+    };
+    balanceAnimationFrame.current = window.requestAnimationFrame(frame);
+  }, [cancelCollectionPresentation]);
 
   const refresh = useCallback(async (signal?: AbortSignal) => {
     try {
       const response = await fetchKingdom(signal);
+      cancelCollectionPresentation(response.balances);
       setState(response);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
@@ -31,7 +68,7 @@ export function useKingdomState() {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     }
-  }, []);
+  }, [cancelCollectionPresentation]);
 
   const finishUpgrade = useCallback(async (buildingId: string) => {
     setAction('finishing-upgrade');
@@ -56,6 +93,11 @@ export function useKingdomState() {
   useEffect(() => {
     const interval = window.setInterval(() => setClock(Date.now()), 1_000);
     return () => window.clearInterval(interval);
+  }, []);
+
+  useEffect(() => () => {
+    if (balanceAnimationFrame.current !== null) window.cancelAnimationFrame(balanceAnimationFrame.current);
+    if (feedbackTimeout.current !== null) window.clearTimeout(feedbackTimeout.current);
   }, []);
 
   useEffect(() => {
@@ -83,6 +125,7 @@ export function useKingdomState() {
     if (!state || action !== 'idle') return;
     setAction('collecting');
     try {
+      const previousBalances = state.balances;
       const response: CollectResponse = await collectKingdom();
       setState((current) => current ? {
         ...current,
@@ -91,25 +134,25 @@ export function useKingdomState() {
         kingdom: { ...current.kingdom, lastCollectedAt: response.lastCollectedAt },
         serverTime: response.serverTime,
       } : current);
-      setLastGains(response.gains);
+      presentCollection(previousBalances, response.balances, response.gains);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
       audio.playSfx('collect');
       await experience.refreshOnboarding();
       window.dispatchEvent(new Event('crown:retention-refresh'));
-      window.setTimeout(() => setLastGains(null), 2_400);
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {
       setAction('idle');
     }
-  }, [state, action, audio, experience]);
+  }, [state, action, audio, experience, presentCollection]);
 
   const upgrade = useCallback(async (buildingId: string) => {
     if (!state || action !== 'idle') return;
     setAction('upgrading');
     try {
       const response = await upgradeBuilding(buildingId);
+      cancelCollectionPresentation(response.balances);
       setState((current) => current ? {
         ...current,
         balances: response.balances,
@@ -126,7 +169,7 @@ export function useKingdomState() {
     } finally {
       setAction('idle');
     }
-  }, [state, action, audio, experience]);
+  }, [state, action, audio, experience, cancelCollectionPresentation]);
 
   const buildings = useMemo<KingdomBuildingView[]>(() => state?.buildings.map((building) => ({
     ...building,
@@ -134,5 +177,5 @@ export function useKingdomState() {
   })) ?? [], [state]);
 
   const serverNow = clock + serverOffsetMs;
-  return { state, buildings, errorCode, action, lastGains, serverNow, collect, upgrade, refresh };
+  return { state, buildings, errorCode, action, lastGains, displayedBalances, serverNow, collect, upgrade, refresh };
 }

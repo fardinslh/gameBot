@@ -314,6 +314,7 @@ button { color: inherit; }
 }
 .resource-hud__server { color: #15200f; background: #9bc879; }
 .resource-chip {
+  position: relative;
   display: grid;
   min-width: 0;
   grid-template-columns: 17px 1fr;
@@ -326,6 +327,27 @@ button { color: inherit; }
 .resource-chip__icon { grid-row: 1; }
 .resource-chip strong { font-size: var(--text-small); line-height: 1; font-variant-numeric: tabular-nums; }
 .resource-chip small { grid-column: 1 / 3; overflow: hidden; color: var(--cream-muted); font-size: var(--text-caption); text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.resource-chip[data-capacity-state="full"] small { color: #f2c969; }
+.resource-chip[data-capacity-state="overflow"] small { color: #ffad88; }
+.resource-chip__gain {
+  position: absolute;
+  z-index: 2;
+  inset-inline: 0;
+  inset-block-start: -10px;
+  color: #d9f6b8;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,.8));
+  font-size: var(--text-caption);
+  font-weight: 900;
+  text-align: center;
+  pointer-events: none;
+  animation: resource-gain 1s var(--ease) both;
+}
+@keyframes resource-gain {
+  0% { opacity: 0; transform: translateY(5px) scale(.96); }
+  18% { opacity: 1; }
+  72% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-11px) scale(1.03); }
+}
 .resource-chip--food { color: #e4bd68; }
 .resource-chip--wood { color: #a9cf83; }
 .resource-chip--stone { color: #c0c2bd; }
@@ -373,22 +395,15 @@ button { color: inherit; }
 .collect-button small { color: var(--cream-muted); font-size: var(--text-caption); }
 .collect-button strong { color: var(--gold-bright); font-size: var(--text-small); font-variant-numeric: tabular-nums; }
 .collect-feedback {
-  display: flex;
-  max-width: min(420px, calc(100vw - 32px));
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  visibility: hidden;
-  opacity: 0;
-  color: #e7f6d5;
-  background: rgba(37,57,29,.94);
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0,0,0,.3), inset 0 0 0 1px rgba(180,218,145,.16);
-  transform: translateY(-5px);
-  transition: opacity 180ms var(--ease), transform 180ms var(--ease), visibility 180ms var(--ease);
-  font-size: var(--text-caption);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
 }
-.collect-feedback--visible { visibility: visible; opacity: 1; transform: translateY(0); }
 
 .bottom-navigation {
   position: absolute;
@@ -1327,6 +1342,7 @@ button { color: inherit; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .resource-chip__gain { animation: none; }
   *, *::before, *::after {
     scroll-behavior: auto !important;
     animation-duration: .01ms !important;

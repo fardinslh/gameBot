@@ -82,9 +82,27 @@ describe('server economy calculator', () => {
     expect(capped[0].remainder).toBe(production[0].remainder);
   });
 
+  it('blocks passive production at or above capacity without clamping the existing balance', () => {
+    const start = new Date('2026-08-23T10:00:00.000Z');
+    const production = calculateProduction([buildings[0]], start, new Date('2026-08-23T11:00:00.000Z'));
+    const full = capProductionToStorage(
+      production,
+      { GOLD: '0', FOOD: '10000', WOOD: '0', STONE: '0', GEMS: '0' },
+      { GOLD: '10000', FOOD: '10000', WOOD: '10000', STONE: '8000' },
+    );
+    const overflow = capProductionToStorage(
+      production,
+      { GOLD: '0', FOOD: '12500', WOOD: '0', STONE: '0', GEMS: '0' },
+      { GOLD: '10000', FOOD: '10000', WOOD: '10000', STONE: '8000' },
+    );
+    expect(full[0].gain).toBe(0n);
+    expect(overflow[0].gain).toBe(0n);
+  });
+
   it('derives storage, visual variants, and unlocks from centralized config', () => {
     expect(storageCapacity('GOLD', 1)).toBe(10_000n);
     expect(storageCapacity('GOLD', 2)).toBe(13_500n);
+    expect(storageCapacity('GEMS', 20)).toBeNull();
     expect(appearanceVariant(1)).toBe('WOOD');
     expect(appearanceVariant(5)).toBe('STONE');
     expect(appearanceVariant(10)).toBe('FORTIFIED');

@@ -237,6 +237,25 @@ describe.sequential('authoritative economy integration', () => {
     expect(collected.balances.FOOD).toBe('10000');
   });
 
+  it('preserves an earned overflow balance and grants no passive production until room exists', async () => {
+    const player = context();
+    const initial = await economy.getKingdom(player);
+    await prisma.resourceBalance.updateMany({
+      where: { kingdomId: initial.kingdom.id, resource: 'FOOD' },
+      data: { amount: 12_500n },
+    });
+    await prisma.kingdom.update({ where: { id: initial.kingdom.id }, data: { lastCollectedAt: new Date(Date.now() - 3_600_000) } });
+    const collected = await economy.collect(player, key());
+    expect(collected.gains.FOOD).toBe('0');
+    expect(collected.balances.FOOD).toBe('12500');
+
+    await prisma.resourceBalance.updateMany({ where: { kingdomId: initial.kingdom.id, resource: 'FOOD' }, data: { amount: 9_900n } });
+    await prisma.kingdom.update({ where: { id: initial.kingdom.id }, data: { lastCollectedAt: new Date(Date.now() - 3_600_000) } });
+    const resumed = await economy.collect(player, key());
+    expect(resumed.gains.FOOD).toBe('100');
+    expect(resumed.balances.FOOD).toBe('10000');
+  });
+
   it('applies the Academy bonus to offline production before the storage cap', async () => {
     const player = context();
     const initial = await economy.getKingdom(player);

@@ -133,3 +133,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: The first spending loop must be auditable, useful, and reusable without allowing a client to price purchases or letting premium currency buy Battle outcomes.
 - **Consequences**: Every spend derives price server-side, locks the Player, creates `ShopPurchase` evidence and `SHOP_GEM_SPEND` ledger history, and fulfills atomically. Gems cannot directly buy Battle results or Trophies. No paid random loot exists. Real-money Gem acquisition remains forbidden until verified platform commerce is separately implemented. Generic entitlements may support cosmetic Retention 05B Theme ownership, but no Theme content is implemented here.
 - **Status**: Active. Retention 05 implemented; owner Shop visual review remains pending.
+
+## ADR-019: Preserve explicit reward overflow while limiting passive production
+
+- **Decision**: Gold, Food, Wood, and Stone use Castle-derived capacity for passive production, but explicit earned rewards may overflow. Existing overflow is never clamped; production pauses for that resource until spending creates room. Gems remain uncapped.
+- **Reason**: A Player must receive the complete reward they earned even when storage is full, while Building production still respects progression capacity.
+- **Consequences**: The HUD identifies normal/full/overflow states, Collect estimates remaining room per resource, and the server remains the sole authority for final gains and balances.
+- **Status**: Active.

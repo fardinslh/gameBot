@@ -135,6 +135,7 @@ Use these principles when judging proposals:
 
 - The Kingdom and Castle remain the main visual and progression anchors.
 - The server decides balances, time, costs, levels, eligibility, battle outcomes, loot, and rewards.
+- Gold, Food, Wood, and Stone capacity limits passive production only. Explicit earned rewards may overflow and remain preserved; production for that resource resumes after spending below capacity. Gems remain uncapped. The Collect HUD estimate is capacity-aware and its count-up never becomes gameplay state.
 - A client sends intent and renders authoritative results.
 - Mobile portrait usability and Persian RTL are launch requirements, not cleanup work.
 - Every phase should improve a measurable player behavior or remove a real launch risk.

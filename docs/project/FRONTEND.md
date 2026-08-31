@@ -63,7 +63,7 @@ features/army-lab
 
 `AudioProvider` owns a single session manager. Stable callbacks avoid restarting music when settings change. The manager waits for a user gesture, crossfades between Kingdom and Battle contexts, suspends with page visibility, and catches media failures.
 
-The compact Kingdom header gives the game title primary emphasis, keeps the localized ruler title secondary, and presents Kingdom Level as a crest-attached numeric chip without increasing HUD height. Each Resource HUD cell shows the authoritative current balance as its primary value and the API-provided Castle-derived storage capacity as its smaller explicitly labeled `Cap` / `ظرفیت` value. It does not show production rate or ready-to-collect production.
+The compact Kingdom header gives the game title primary emphasis, keeps the localized ruler title secondary, and presents Kingdom Level as a crest-attached numeric chip without increasing HUD height. Each capped Resource HUD cell exposes `normal`, `full`, or `overflow` through `data-capacity-state` and pairs the authoritative balance with compact localized capacity wording. Gems have no capacity state. `CollectControl` uses BigInt per-resource remaining room before aggregating its estimate and distinguishes genuine zero accrual from storage-blocked production. A successful Collect applies authoritative state immediately, then animates only displayed balances with an ease-out count-up and transient positive per-resource gains; refreshes and non-Collect mutations cancel the presentation layer, while reduced motion snaps to the final values.
 
 ## API clients
 
