@@ -56,7 +56,7 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, on
       </div>
 
       <div className="building-sheet__stats">
-        <div><small>{t.currentLevel}</small><strong><BidiValue direction="ltr">{building?.level ?? 0}</BidiValue></strong></div>
+        <div><small>{t.currentLevel}</small><strong data-building-level-label>{t.heroUi.level} <BidiValue direction="ltr">{building?.level ?? 0}</BidiValue></strong></div>
         <div><small>{t.currentProduction}</small><strong>{building?.resource ? <><BidiValue direction="ltr">{formatAmount(building.productionPerHour)}</BidiValue> / {t.hour}</> : presentation.production}</strong></div>
       </div>
 

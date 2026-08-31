@@ -19,7 +19,7 @@ export const BUILDING_UPGRADE_INDICATOR = Object.freeze({
 export type BuildingStatusIndicator = 'upgrade' | 'active' | null;
 
 export function formatBuildingLevelLabel(level: number, locale: Locale): string {
-  return locale === 'fa' ? `سطح ${localizeDigits(level, locale)}` : `Lv. ${level}`;
+  return localizeDigits(level, locale);
 }
 
 interface PointLike {

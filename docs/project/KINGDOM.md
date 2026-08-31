@@ -80,7 +80,7 @@ Do not replace this anchor with a generic bottom-center anchor. Move the Mine th
 
 Each mounted building receives an elliptical hit area larger than its opaque pixels. A tap selects the gameplay ID and opens `BuildingDetailSheet`. The sheet reads server production, costs, unlock requirements, timer, appearance, and effects. Castle detail also opens `KingdomProgressSheet`, which reads the authoritative `kingdomGoals` snapshot: Kingdom XP, real Castle-2-through-5 district milestones, next unlock or all-current-districts-unlocked state, and current/next advanced effects.
 
-Pixi renders a compact green upgrade arrow, a gold active-timer symbol, a `Lv.N` badge, and a pulsing selection ellipse. React also renders an accessible off-screen button for each unlocked building. Locked server buildings create none of these targets.
+Pixi renders a compact green upgrade arrow, a gold active-timer symbol, a localized-numeral-only level badge, and a pulsing selection ellipse. Full localized Level wording remains in the React Building Detail sheet. React also renders an accessible off-screen button for each unlocked building. Locked server buildings create none of these targets.
 
 ## Visual constraints
 

@@ -28,9 +28,13 @@ describe('building status badge', () => {
     expect(BUILDING_UPGRADE_INDICATOR).toMatchObject({ height: 20, width: 20, gap: 6 });
   });
 
-  it('uses a natural localized level label in each locale', () => {
-    expect(formatBuildingLevelLabel(12, 'fa')).toBe('سطح ۱۲');
-    expect(formatBuildingLevelLabel(12, 'en')).toBe('Lv. 12');
+  it.each([
+    { expected: '۴', level: 4, locale: 'fa' as const },
+    { expected: '۱۲', level: 12, locale: 'fa' as const },
+    { expected: '4', level: 4, locale: 'en' as const },
+    { expected: '12', level: 12, locale: 'en' as const },
+  ])('uses only localized digits for level $level in $locale', ({ expected, level, locale }) => {
+    expect(formatBuildingLevelLabel(level, locale)).toBe(expected);
   });
 
   it('tracks world, building, and unlock scale without scaling its own UI', () => {

@@ -232,11 +232,26 @@ try {
   await assertTypography(page, '.game-viewport', 'fa');
   await assertPersianNumerals(page, '.game-viewport');
   await page.screenshot({ path: new URL('kingdom-hud-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.screenshot({
+    clip: { x: 18, y: 165, width: 180, height: 155 },
+    path: new URL('pixi-level-badge-fa-320x568-closeup.png', artifacts).pathname.slice(1),
+  });
   await page.locator('[data-world-building-id="farm"]').evaluate((button) => button.click());
   await page.waitForSelector('[data-building-sheet="farm"]');
   await assertTypography(page, '.building-sheet', 'fa');
   await assertPersianNumerals(page, '.building-sheet');
+  const persianBuildingLevel = (await page.locator('[data-building-level-label]').innerText()).trim();
+  if (persianBuildingLevel !== 'سطح ۱') throw new Error(`Persian DOM building level wording failed: ${persianBuildingLevel}`);
   await page.screenshot({ path: new URL('building-detail-fa-320x568.png', artifacts).pathname.slice(1) });
+  await page.locator('.building-sheet .upgrade-button').click();
+  await page.waitForSelector('[data-building-sheet="farm"] .upgrade-preview--active');
+  await page.locator('.building-sheet .icon-button').click();
+  await page.mouse.move(160, 430);
+  await page.mouse.down();
+  await page.mouse.move(160, 210, { steps: 8 });
+  await page.mouse.up();
+  await page.waitForTimeout(180);
+  await page.screenshot({ path: new URL('pixi-active-level-badge-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('[data-nav-id="heroes"]').click();
   await page.waitForSelector('[data-army-status="ready"]');
   await dismissAdvisorTips(page);
@@ -340,6 +355,14 @@ try {
     await assertTypography(page, '.heroes-scroll', 'en');
     await assertArmyFormationReadability(page);
     await page.screenshot({ path: new URL(`army-en-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
+    if (viewport.width === 320) {
+      await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('[data-scene-status="ready"]');
+      await page.locator('[data-world-building-id="farm"]').evaluate((button) => button.click());
+      await page.waitForSelector('[data-building-sheet="farm"]');
+      const englishBuildingLevel = (await page.locator('[data-building-level-label]').innerText()).trim();
+      if (!/^Lv\. [0-9]+$/u.test(englishBuildingLevel)) throw new Error(`English DOM building level wording failed: ${englishBuildingLevel}`);
+    }
     await page.goto('http://localhost:3000/?lang=en&section=raid', { waitUntil: 'domcontentloaded' });
     await page.waitForSelector('.combat-mode-tabs');
     await page.locator('.combat-mode-tabs button').nth(1).click();

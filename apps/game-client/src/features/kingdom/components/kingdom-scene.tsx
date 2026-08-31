@@ -118,7 +118,7 @@ export function KingdomScene({
 
 async function ensureSceneFont(locale: Locale): Promise<void> {
   if (locale === 'fa' && 'fonts' in document) {
-    await document.fonts.load('800 11px "Vazirmatn Variable"', 'سطح ۱۲');
+    await document.fonts.load('800 11px "Vazirmatn Variable"', '۱۲');
   }
 }
 
