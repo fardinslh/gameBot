@@ -15,6 +15,15 @@ export function getCapacityState(balance: string, capacity?: string): CapacitySt
   return 'normal';
 }
 
+export function aggregateProductionRates(buildings: readonly KingdomBuildingView[]): ResourceAmounts {
+  const rates: ResourceAmounts = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
+  for (const building of buildings) {
+    if (!building.unlocked || !building.resource) continue;
+    rates[building.resource] = (BigInt(rates[building.resource]) + BigInt(building.productionPerHour)).toString();
+  }
+  return rates;
+}
+
 export function estimateCollectableProduction(
   buildings: readonly KingdomBuildingView[],
   balances: ResourceAmounts,

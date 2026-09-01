@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { History } from 'lucide-react';
 import type { ResourceAmounts } from '@crown-and-coin/shared';
 import type { Dictionary, Locale } from '@/i18n/config';
@@ -24,6 +24,7 @@ import { useRetentionState } from '@/features/retention/hooks/use-retention-stat
 import { RetentionEntry } from '@/features/retention/components/retention-entry';
 import { RetentionSheet } from '@/features/retention/components/retention-sheet';
 import { useShopState } from '@/features/shop/hooks/use-shop-state';
+import { aggregateProductionRates } from '../domain/collection-presentation';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -51,6 +52,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const activeError = shop.errorCode ?? economy.errorCode;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
   const displayedBalances = economy.displayedBalances ?? balances;
+  const productionRates = useMemo(() => aggregateProductionRates(economy.buildings), [economy.buildings]);
   const buildingLabels: Record<WorldBuildingId, string> = {
     castle: t.buildings.castle.name,
     farm: t.buildings.farm.name,
@@ -111,7 +113,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             progression={economy.state?.progression}
             profileCrest={economy.state?.player.equippedProfileCrest}
           />
-          <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} displayedBalances={displayedBalances} gains={economy.lastGains} />
+          <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} displayedBalances={displayedBalances} gains={economy.lastGains} productionRates={productionRates} />
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
             <History aria-hidden="true" size={17} />
             <span>{t.inboxUi.title}</span>

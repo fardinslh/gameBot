@@ -49,7 +49,7 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Use `getLocaleDirection` and the shared `LocalizedGameRoot`; do not add page-local direction checks
 - Isolate external names with `BidiValue`/`dir="auto"` and numeric, timer, percentage, ID, or signed values with `dir="ltr"`
 - Keep sentence punctuation in the localized parent and render placeholders through `BidiTemplate`; never rely on `text-align` alone for Persian
-- Treat the Kingdom Resource HUD balance and capacity states as authoritative presentation. Passive Gold/Food/Wood/Stone production stops at capacity; explicit earned rewards may overflow and must never be clamped away; Gems are uncapped. Collect ready estimates clamp each resource to remaining room. The post-Collect count-up is display-only and must land on the immediate authoritative response.
+- Keep the Kingdom Resource HUD in compact mobile-strategy form: unchanged icon, `current / capacity`, then server-derived hourly production or localized `FULL` / `پر`. Do not restore Live, overflow, or redundant capacity labels. Passive Gold/Food/Wood/Stone production stops at capacity; explicit earned rewards may overflow and must never be clamped away; Gems are uncapped. Collect ready estimates clamp each resource to remaining room. The post-Collect count-up is display-only and must land on the immediate authoritative response.
 - Never mirror Pixi Kingdom/Battle geometry or ordered spatial grids when correcting interface direction
 - Preserve Mine anchor source pixel `(280, 453)` unless the Mine source image changes
 - Respect `prefers-reduced-motion`

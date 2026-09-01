@@ -69,8 +69,10 @@ try {
   await load('fa');
   if (await page.locator('[data-capacity-state="normal"]').count() !== 4) throw new Error('Expected four normal capped resources');
   if (await page.locator('[data-resource="GEMS"][data-capacity-state]').count()) throw new Error('Gems received a capacity state');
+  if (await page.locator('.resource-hud__server').count()) throw new Error('Legacy Live badge still renders');
+  if (await page.locator('.resource-chip__amount').count() !== 4 || await page.locator('[data-secondary-value="production-rate"]').count() !== 4) throw new Error('Amount/capacity or production-rate layout is incomplete');
   const faHud = await page.locator('.resource-hud').textContent() ?? '';
-  if (/[0-9]/u.test(faHud) || !/[\u06F0-\u06F9]/u.test(faHud)) throw new Error('Persian HUD digits are not localized');
+  if (/[0-9]/u.test(faHud) || !/[\u06F0-\u06F9]/u.test(faHud) || faHud.includes('مازاد') || faHud.includes('زنده')) throw new Error('Persian HUD text is not clean/localized');
   await assertLayout(320, 568, 'rtl');
   await screenshot('01-fa-normal-320x568.png');
 
@@ -79,6 +81,7 @@ try {
   await prisma.kingdom.update({ where: { id: kingdomId }, data: { lastCollectedAt: new Date(Date.now() - 60 * 60_000) } });
   await load('fa');
   if (await page.locator('[data-capacity-state="full"]').count() !== 3 || await page.locator('[data-capacity-state="overflow"]').count() !== 1) throw new Error('Full/overflow states are incorrect');
+  if (await page.locator('[data-secondary-value="full"]').count() !== 4) throw new Error('Full resources do not use compact full state');
   if (await page.locator('[data-collect-state="storage-full"]').count() !== 1) {
     throw new Error(`Storage-full Collect state is missing: ${await page.locator('.collect-button').getAttribute('data-collect-state')} / ${await page.locator('.collect-button').textContent()}`);
   }
@@ -118,7 +121,7 @@ try {
   for (const resource of ['GOLD', 'FOOD', 'WOOD', 'STONE']) await setBalance(kingdomId, resource, capacity(state, resource) - BigInt(500));
   await load('en');
   const enHud = await page.locator('.resource-hud').textContent() ?? '';
-  if (!enHud.includes('Cap') || /[\u06F0-\u06F9]/u.test(enHud)) throw new Error('English HUD regression');
+  if (!enHud.includes('/') || !enHud.includes('/h') || enHud.includes('Live') || enHud.includes('Over cap') || /[\u06F0-\u06F9]/u.test(enHud)) throw new Error('English HUD regression');
   await assertLayout(320, 568, 'ltr');
   await screenshot('04-en-normal-320x568.png');
   for (const [width, height] of [[375, 812], [390, 844]]) {
@@ -135,7 +138,7 @@ try {
   await prisma.$disconnect();
 }
 
-console.log('PASS normal/full/overflow HUD states, uncapped Gems, and capacity-aware Collect state');
+console.log('PASS current/capacity, production/full HUD presentation, uncapped Gems, and capacity-aware Collect state');
 console.log('PASS 900ms Collect count-up, per-resource gain, exact landing, and reduced-motion snap');
 console.log('PASS Persian RTL and English LTR at 320x568, 375x812, and 390x844');
 console.log('PASS 54px navigation, zero horizontal overflow, and clean browser console');

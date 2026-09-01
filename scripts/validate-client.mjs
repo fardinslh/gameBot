@@ -57,7 +57,7 @@ try {
 
   await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'domcontentloaded' });
   await page.waitForSelector('[data-scene-status="ready"]');
-  await page.waitForSelector('.resource-hud__server');
+  await page.waitForSelector('.resource-hud');
   await page.waitForSelector('.collect-button');
   const buildingCount = await page.locator('.kingdom-scene__canvas').getAttribute('data-building-count');
   if (buildingCount !== '5') throw new Error(`Expected five Castle-level-one Pixi buildings, found ${buildingCount ?? 'none'}`);
@@ -104,7 +104,8 @@ try {
   const balancesBeforeCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
   await page.waitForTimeout(8_000);
   await page.locator('.collect-button').click();
-  await page.waitForSelector('.collect-feedback--visible');
+  await page.waitForSelector('.resource-chip__gain');
+  await page.waitForFunction(() => (document.querySelector('.collect-feedback')?.textContent?.trim().length ?? 0) > 0);
   const balancesAfterCollect = await page.locator('.resource-chip').evaluateAll((items) => items.map((item) => item.getAttribute('data-balance')));
   if (balancesBeforeCollect.join('|') === balancesAfterCollect.join('|')) throw new Error('Collect did not update authoritative HUD balances');
 

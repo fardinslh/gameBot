@@ -71,7 +71,7 @@ The server caps each raw gain against current resource capacity. Academy applies
 7. Set `Kingdom.lastCollectedAt` to server time
 8. Store the complete response in `EconomyRequest`
 
-The client mirrors this rule only for its ready estimate: it aggregates production per resource, clamps each capped resource to `max(capacity - balance, 0)`, then totals the collectible amounts. `POST /kingdom/collect` remains authoritative. After success, React stores final balances immediately while the HUD performs a presentation-only 900ms BigInt count-up and localized per-resource gain feedback; reduced-motion users see the final values immediately.
+The client mirrors this rule only for its ready estimate: it aggregates production per resource, clamps each capped resource to `max(capacity - balance, 0)`, then totals the collectible amounts. `POST /kingdom/collect` remains authoritative. Each capped HUD cell presents `current / capacity`, then either the authoritative per-hour Building rate or compact `FULL` / `پر` text when at or above capacity. It does not expose a separate overflow label. After Collect success, React stores final balances immediately while the HUD performs a presentation-only 900ms BigInt count-up and localized per-resource gain feedback; reduced-motion users see the final values immediately.
 
 ## Capacity behavior by gain path
 

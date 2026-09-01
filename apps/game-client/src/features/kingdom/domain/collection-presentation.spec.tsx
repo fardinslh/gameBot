@@ -3,15 +3,15 @@ import type { ResourceAmounts, StorageCapacities } from '@crown-and-coin/shared'
 import { en } from '../../../i18n/messages/en';
 import { fa } from '../../../i18n/messages/fa';
 import type { KingdomBuildingView } from './kingdom-types';
-import { easeOutCubic, estimateCollectableProduction, formatAmount, getCapacityState, interpolateResourceBalances } from './collection-presentation';
+import { aggregateProductionRates, easeOutCubic, estimateCollectableProduction, formatAmount, getCapacityState, interpolateResourceBalances } from './collection-presentation';
 
 const balances: ResourceAmounts = { GOLD: '900', FOOD: '1000', WOOD: '1200', STONE: '500', GEMS: '50' };
 const capacities: StorageCapacities = { GOLD: '1000', FOOD: '1000', WOOD: '1000', STONE: '1000' };
 const buildings = [
-  { collectable: '150', productionPerHour: '360', resource: 'GOLD' },
-  { collectable: '80', productionPerHour: '360', resource: 'FOOD' },
-  { collectable: '90', productionPerHour: '360', resource: 'WOOD' },
-  { collectable: '40', productionPerHour: '360', resource: 'STONE' },
+  { collectable: '150', productionPerHour: '360', resource: 'GOLD', unlocked: true },
+  { collectable: '80', productionPerHour: '360', resource: 'FOOD', unlocked: true },
+  { collectable: '90', productionPerHour: '360', resource: 'WOOD', unlocked: true },
+  { collectable: '40', productionPerHour: '360', resource: 'STONE', unlocked: true },
 ] as KingdomBuildingView[];
 
 describe('collection presentation', () => {
@@ -47,8 +47,16 @@ describe('collection presentation', () => {
     expect(formatAmount('999999999999999999999')).toBe('999999999999999.9M');
   });
 
-  it('defines compact localized capacity and blocked-storage labels', () => {
-    expect([en.resourceCapacity, en.resourceFull, en.resourceOverCapacity, en.storageFull]).toEqual(['Cap', 'Full ·', 'Over cap ·', 'Storage full']);
-    expect([fa.resourceCapacity, fa.resourceFull, fa.resourceOverCapacity, fa.storageFull]).toEqual(['ظرفیت', 'پر ·', 'مازاد ·', 'انبارها پر هستند']);
+  it('aggregates authoritative unlocked building rates per resource', () => {
+    expect(aggregateProductionRates([
+      ...buildings,
+      { ...buildings[0], productionPerHour: '40' },
+      { ...buildings[1], productionPerHour: '999', unlocked: false },
+    ])).toEqual({ GOLD: '400', FOOD: '360', WOOD: '360', STONE: '360', GEMS: '0' });
+  });
+
+  it('defines compact localized production and full labels', () => {
+    expect([en.resourceFullShort, en.resourcePerHourShort, en.storageFull]).toEqual(['FULL', 'h', 'Storage full']);
+    expect([fa.resourceFullShort, fa.resourcePerHourShort, fa.storageFull]).toEqual(['پر', 'س', 'انبارها پر هستند']);
   });
 });

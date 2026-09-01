@@ -178,7 +178,7 @@ async function assertArmyFormationReadability(page) {
 }
 
 async function assertKingdomHudClarity(page, locale) {
-  await page.waitForSelector('.resource-chip[data-secondary-value="capacity"]');
+  await page.waitForSelector('.resource-chip[data-primary-value="balance-capacity"]');
   const audit = await page.evaluate((expectedLocale) => {
     const profile = document.querySelector('.player-profile');
     const actions = document.querySelector('.player-actions');
@@ -197,12 +197,23 @@ async function assertKingdomHudClarity(page, locale) {
     return {
       actionsOverlapProfile: overlaps(profileRect, rect(actions)),
       chipCount: chips.length,
+      liveBadgeCount: document.querySelectorAll('.resource-hud__server').length,
       chips: chips.map((chip) => {
         const primary = chip.querySelector('strong');
         const secondary = chip.querySelector('small');
+        const amount = chip.querySelector('.resource-chip__amount');
+        const capacityValue = chip.querySelector('.resource-chip__capacity');
+        const amountRect = amount?.getBoundingClientRect();
         return {
+          amountClipped: amount ? amount.scrollWidth > amount.clientWidth + 1 || [...amount.children].some((child) => {
+            const childRect = child.getBoundingClientRect();
+            return !!amountRect && (childRect.left < amountRect.left - 1 || childRect.right > amountRect.right + 1);
+          }) : false,
+          amountText: amount?.textContent?.trim() ?? primary?.textContent?.trim() ?? '',
           aria: chip.getAttribute('aria-label') ?? '',
           capacity: chip.getAttribute('data-capacity'),
+          capacityText: capacityValue?.textContent?.trim() ?? '',
+          productionRate: chip.getAttribute('data-production-rate'),
           resource: chip.getAttribute('data-resource'),
           primaryMeaning: chip.getAttribute('data-primary-value'),
           primaryText: primary?.textContent?.trim() ?? '',
@@ -235,13 +246,18 @@ async function assertKingdomHudClarity(page, locale) {
     || audit.titleFont < 13
     || audit.subtitleFont < 10
     || audit.chipCount !== 5
-    || audit.chips.some((chip) => chip.primaryMeaning !== 'balance'
+    || audit.liveBadgeCount !== 0
+    || audit.chips.some((chip) => chip.primaryMeaning !== 'balance-capacity'
       || !chip.primaryText
       || (chip.resource === 'GEMS'
-        ? chip.secondaryMeaning !== null || chip.capacity !== null || chip.secondaryText !== '' || chip.aria.includes(capacityLabel)
-        : chip.secondaryMeaning !== 'capacity'
+        ? chip.secondaryMeaning !== null || chip.capacity !== null || chip.secondaryText !== '' || chip.productionRate !== null || chip.aria.includes(capacityLabel)
+        : chip.secondaryMeaning !== 'production-rate'
           || !chip.capacity
-          || !chip.secondaryText.startsWith(capacityLabel)
+          || !chip.capacityText
+          || !chip.amountText.includes('/')
+          || chip.amountClipped
+          || !chip.productionRate
+          || !chip.secondaryText.includes('/')
           || chip.secondaryClipped
           || !chip.aria.includes(capacityLabel)))) {
     throw new Error(`Kingdom HUD clarity failed: ${JSON.stringify(audit)}`);
