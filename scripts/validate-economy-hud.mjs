@@ -58,6 +58,33 @@ async function assertLayout(width, height, direction) {
   }));
   if (result.direction !== direction || result.overflow > 0 || result.navHeight !== 54) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(result)}`);
 }
+async function assertHudComposition() {
+  const audit = await page.evaluate(() => {
+    const bar = document.querySelector('.resource-hud');
+    const chips = [...document.querySelectorAll('.resource-hud > .resource-chip')];
+    const gem = document.querySelector('.premium-currency-pill');
+    const profile = document.querySelector('.player-profile');
+    const copy = document.querySelector('.player-copy');
+    if (!bar || !gem || !profile || !copy) return null;
+    const gemRect = gem.getBoundingClientRect();
+    const profileRect = profile.getBoundingClientRect();
+    const widths = chips.map((chip) => chip.getBoundingClientRect().width);
+    return {
+      chipCount: chips.length,
+      gemInsideMainBar: bar.contains(gem),
+      gemInsideProfile: profile.contains(gem) && gemRect.left >= profileRect.left && gemRect.right <= profileRect.right,
+      gemSecondaryCount: gem.querySelectorAll('small, .resource-chip__capacity').length,
+      gemVerticalOffset: Math.abs((gemRect.top + gemRect.bottom) / 2 - (profileRect.top + profileRect.bottom) / 2),
+      maxWidthDifference: Math.max(...widths) - Math.min(...widths),
+      textClipped: chips.some((chip) => [...chip.querySelectorAll('.resource-chip__amount, .resource-chip__rate')]
+        .some((line) => line.scrollWidth > line.clientWidth + 1)),
+    };
+  });
+  if (!audit || audit.chipCount !== 4 || audit.gemInsideMainBar || !audit.gemInsideProfile
+    || audit.gemSecondaryCount !== 0 || audit.gemVerticalOffset > 1 || audit.maxWidthDifference > 1 || audit.textClipped) {
+    throw new Error(`Unbalanced HUD composition: ${JSON.stringify(audit)}`);
+  }
+}
 
 try {
   await api('/onboarding/skip', { method: 'POST' });
@@ -68,12 +95,14 @@ try {
   await prisma.kingdom.update({ where: { id: kingdomId }, data: { lastCollectedAt: new Date(Date.now() - 30 * 60_000) } });
   await load('fa');
   if (await page.locator('[data-capacity-state="normal"]').count() !== 4) throw new Error('Expected four normal capped resources');
+  if (await page.locator('.resource-hud > .resource-chip').count() !== 4 || await page.locator('.premium-currency-pill[data-resource="GEMS"]').count() !== 1) throw new Error('Premium Gem pill or four-resource bar is missing');
   if (await page.locator('[data-resource="GEMS"][data-capacity-state]').count()) throw new Error('Gems received a capacity state');
   if (await page.locator('.resource-hud__server').count()) throw new Error('Legacy Live badge still renders');
   if (await page.locator('.resource-chip__amount').count() !== 4 || await page.locator('[data-secondary-value="production-rate"]').count() !== 4) throw new Error('Amount/capacity or production-rate layout is incomplete');
   const faHud = await page.locator('.resource-hud').textContent() ?? '';
   if (/[0-9]/u.test(faHud) || !/[\u06F0-\u06F9]/u.test(faHud) || faHud.includes('مازاد') || faHud.includes('زنده')) throw new Error('Persian HUD text is not clean/localized');
   await assertLayout(320, 568, 'rtl');
+  await assertHudComposition();
   await screenshot('01-fa-normal-320x568.png');
 
   for (const resource of ['GOLD', 'FOOD', 'WOOD']) await setBalance(kingdomId, resource, capacity(state, resource));
@@ -123,11 +152,14 @@ try {
   const enHud = await page.locator('.resource-hud').textContent() ?? '';
   if (!enHud.includes('/') || !enHud.includes('/h') || enHud.includes('Live') || enHud.includes('Over cap') || /[\u06F0-\u06F9]/u.test(enHud)) throw new Error('English HUD regression');
   await assertLayout(320, 568, 'ltr');
+  await assertHudComposition();
   await screenshot('04-en-normal-320x568.png');
   for (const [width, height] of [[375, 812], [390, 844]]) {
     await assertLayout(width, height, 'ltr');
+    await assertHudComposition();
     await load('fa');
     await assertLayout(width, height, 'rtl');
+    await assertHudComposition();
     await load('en');
   }
   if (consoleErrors.length) throw new Error(`Browser console errors:\n${consoleErrors.join('\n')}`);
@@ -138,7 +170,7 @@ try {
   await prisma.$disconnect();
 }
 
-console.log('PASS current/capacity, production/full HUD presentation, uncapped Gems, and capacity-aware Collect state');
+console.log('PASS four-column current/capacity HUD, separate premium Gem pill, production/full states, and capacity-aware Collect');
 console.log('PASS 900ms Collect count-up, per-resource gain, exact landing, and reduced-motion snap');
 console.log('PASS Persian RTL and English LTR at 320x568, 375x812, and 390x844');
 console.log('PASS 54px navigation, zero horizontal overflow, and clean browser console');

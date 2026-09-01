@@ -107,6 +107,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
         <div className="game-ui-layer">
           <PlayerHud
             dictionary={t}
+            gemBalance={balances.GEMS}
             locale={locale}
             playerLevel={economy.state?.player.level ?? 1}
             playerName={economy.state?.player.displayName ?? t.playerTitle}

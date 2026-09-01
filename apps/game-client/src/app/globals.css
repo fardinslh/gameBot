@@ -218,6 +218,25 @@ button { color: inherit; }
   text-wrap: balance;
 }
 .player-copy small { overflow: hidden; color: var(--cream-muted); font-size: var(--text-caption); line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+.premium-currency-pill {
+  display: flex;
+  flex: 0 0 auto;
+  min-width: 47px;
+  height: 29px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding-inline: 6px;
+  color: #9ce7e4;
+  background: linear-gradient(145deg, rgba(27,55,56,.96), rgba(17,29,31,.96));
+  border: 1px solid rgba(126,214,210,.32);
+  border-radius: 10px;
+  box-shadow: inset 0 1px rgba(214,255,251,.1), 0 3px 9px rgba(0,0,0,.3);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.premium-currency-pill svg { flex: 0 0 auto; filter: drop-shadow(0 1px 2px rgba(0,0,0,.55)); }
+.premium-currency-pill strong { font-size: var(--text-small); letter-spacing: -.015em; }
 .player-level {
   position: absolute;
   inset-inline-start: 24px;
@@ -290,9 +309,9 @@ button { color: inherit; }
   inset-block-start: calc(max(8px, env(safe-area-inset-top)) + 51px);
   inset-inline: 8px;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   min-height: 46px;
-  padding: 5px;
+  padding: 5px 7px;
   background: rgba(21,18,14,.86);
   border-radius: 15px;
   box-shadow: 0 8px 24px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.08);
@@ -306,7 +325,7 @@ button { color: inherit; }
   grid-template-rows: 11px 14px 11px;
   align-items: center;
   justify-items: center;
-  padding: 0 1px;
+  padding: 0 4px;
   color: var(--gold-bright);
 }
 .resource-chip + .resource-chip { border-inline-start: 1px solid rgba(255,255,255,.07); }
@@ -327,10 +346,9 @@ button { color: inherit; }
 }
 .resource-chip__amount > *,
 .resource-chip__rate > * { flex: none; }
-.resource-chip__amount strong,
-.resource-chip__uncapped { color: currentColor; font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: -.025em; line-height: 1; }
+.resource-chip__amount strong { color: currentColor; font-size: var(--text-small); font-variant-numeric: tabular-nums; letter-spacing: -.025em; line-height: 1; }
 .resource-chip__slash { color: rgba(239,229,206,.42); font-size: 10px; }
-.resource-chip__capacity { color: rgba(239,229,206,.64); font-size: 10px; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+.resource-chip__capacity { color: rgba(239,229,206,.62); font-size: var(--text-caption); font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
 .resource-chip__rate {
   display: flex;
   width: auto;
@@ -373,9 +391,6 @@ button { color: inherit; }
 .resource-chip--food { color: #e4bd68; }
 .resource-chip--wood { color: #a9cf83; }
 .resource-chip--stone { color: #c0c2bd; }
-.resource-chip--gems { color: #7ed6d2; }
-.resource-chip--gems { grid-template-rows: 13px 23px; align-items: center; }
-.resource-chip--gems .resource-chip__uncapped { grid-row: 2; align-self: start; }
 
 .collect-control {
   position: absolute;
@@ -1006,13 +1021,15 @@ button { color: inherit; }
 
 @media (max-width: 359px) {
   .player-copy h1 { display: block; font-size: var(--text-body-strong); }
-  .player-copy small { display: block; max-width: none; overflow: hidden; color: var(--cream-muted); font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+  .player-copy { justify-content: center; }
+  .player-copy small { display: none; }
   .player-profile { gap: 6px; padding-inline-end: 6px; }
   .player-avatar { flex-basis: 34px; width: 34px; height: 34px; }
   .player-level { inset-inline-start: 21px; }
+  .premium-currency-pill { min-width: 44px; height: 27px; gap: 3px; padding-inline: 5px; }
   .player-actions .api-status { display: none; }
-  .resource-chip { grid-template-columns: minmax(0, 1fr); padding-inline: 1px; }
-  .resource-chip strong { font-size: var(--text-caption); }
+  .resource-hud { padding-inline: 5px; }
+  .resource-chip { grid-template-columns: minmax(0, 1fr); padding-inline: 3px; }
   .resource-chip small { font-size: var(--text-caption); }
   .building-sheet { padding: 13px; gap: 7px; }
   .building-sheet h2 { font-size: var(--text-title); }
@@ -1024,6 +1041,10 @@ button { color: inherit; }
   .hero-card__main { grid-template-columns: 102px 1fr; }
   [dir="rtl"] .hero-card__main { grid-template-columns: 1fr 102px; }
   .hero-card__body { padding-inline: 7px; }
+}
+
+@media (min-width: 360px) and (max-width: 390px) {
+  .player-actions .api-status { display: none; }
 }
 
 @media (max-height: 650px) {

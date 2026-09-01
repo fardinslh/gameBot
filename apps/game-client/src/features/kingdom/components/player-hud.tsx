@@ -1,13 +1,15 @@
-import { Crown } from 'lucide-react';
+import { Crown, Gem } from 'lucide-react';
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
 import type { KingdomProgressionState, ProfileCrestKey } from '@crown-and-coin/shared';
 import { ExperienceControls } from '@/features/experience/player-experience-provider';
 import { BidiValue } from '@/i18n/bidi';
+import { formatAmount } from '../domain/collection-presentation';
 
 interface PlayerHudProps {
   dictionary: Dictionary;
+  gemBalance?: string;
   locale: Locale;
   playerLevel: number;
   playerName: string;
@@ -16,7 +18,7 @@ interface PlayerHudProps {
   section?: 'heroes' | 'raid';
 }
 
-export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section }: PlayerHudProps) {
+export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section }: PlayerHudProps) {
   const sectionQuery = section ? `&section=${section}` : '';
   const displayedLevel = progression?.level ?? playerLevel;
   const xpProgress = progression?.xpRequiredForNextLevel
@@ -33,6 +35,12 @@ export function PlayerHud({ dictionary: t, locale, playerLevel, playerName, prog
           <h1>{t.appName}</h1>
           <small><BidiValue>{displayedPlayerName}</BidiValue></small>
         </span>
+        {gemBalance !== undefined ? (
+          <span aria-label={`${t.resourceGems}: ${formatAmount(gemBalance)}`} className="premium-currency-pill" data-balance={gemBalance} data-resource="GEMS" dir="ltr">
+            <Gem aria-hidden="true" size={13} strokeWidth={2.4} />
+            <strong><BidiValue direction="ltr">{formatAmount(gemBalance)}</BidiValue></strong>
+          </span>
+        ) : null}
         <span className="player-level" aria-label={`${t.playerLevel} ${displayedLevel}`} title={progression ? `${progression.xp} XP` : undefined}>
           <small>{t.playerLevel}</small><strong><BidiValue direction="ltr">{displayedLevel}</BidiValue></strong>
           {progression ? <i aria-hidden="true"><b style={{ width: `${xpProgress}%` }} /></i> : null}

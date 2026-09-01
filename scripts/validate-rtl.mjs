@@ -186,17 +186,22 @@ async function assertKingdomHudClarity(page, locale) {
     const subtitle = document.querySelector('.player-copy small');
     const level = document.querySelector('.player-level');
     const copy = document.querySelector('.player-copy');
+    const gem = document.querySelector('.premium-currency-pill');
     const chips = [...document.querySelectorAll('.resource-chip')];
-    if (!profile || !actions || !title || !subtitle || !level || !copy) return null;
+    if (!profile || !actions || !title || !subtitle || !level || !copy || !gem) return null;
     const rect = (element) => element.getBoundingClientRect();
     const overlaps = (a, b) => a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1;
     const profileRect = rect(profile);
+    const gemRect = rect(gem);
     const levelRect = rect(level);
     const titleStyle = getComputedStyle(title);
     const subtitleStyle = getComputedStyle(subtitle);
     return {
       actionsOverlapProfile: overlaps(profileRect, rect(actions)),
       chipCount: chips.length,
+      gemInsideProfile: profile.contains(gem) && gemRect.left >= profileRect.left - 1 && gemRect.right <= profileRect.right + 1,
+      gemSecondaryCount: gem.querySelectorAll('small, .resource-chip__capacity').length,
+      gemVerticalOffset: Math.abs((gemRect.top + gemRect.bottom) / 2 - (profileRect.top + profileRect.bottom) / 2),
       liveBadgeCount: document.querySelectorAll('.resource-hud__server').length,
       chips: chips.map((chip) => {
         const primary = chip.querySelector('strong');
@@ -228,6 +233,7 @@ async function assertKingdomHudClarity(page, locale) {
       locale: expectedLocale,
       subtitleClipped: subtitle.scrollWidth > subtitle.clientWidth + 1,
       subtitleFont: Number.parseFloat(subtitleStyle.fontSize),
+      subtitleVisible: subtitleStyle.display !== 'none',
       subtitleWraps: subtitle.scrollHeight > subtitle.clientHeight + 2,
       titleClipped: title.scrollWidth > title.clientWidth + 1,
       titleFont: Number.parseFloat(titleStyle.fontSize),
@@ -241,25 +247,26 @@ async function assertKingdomHudClarity(page, locale) {
     || audit.levelOverlapsCopy
     || audit.titleClipped
     || audit.titleWraps
-    || audit.subtitleClipped
-    || audit.subtitleWraps
+    || (audit.subtitleVisible && audit.subtitleClipped)
+    || (audit.subtitleVisible && audit.subtitleWraps)
     || audit.titleFont < 13
-    || audit.subtitleFont < 10
-    || audit.chipCount !== 5
+    || (audit.subtitleVisible && audit.subtitleFont < 10)
+    || audit.chipCount !== 4
+    || !audit.gemInsideProfile
+    || audit.gemSecondaryCount !== 0
+    || audit.gemVerticalOffset > 1
     || audit.liveBadgeCount !== 0
     || audit.chips.some((chip) => chip.primaryMeaning !== 'balance-capacity'
       || !chip.primaryText
-      || (chip.resource === 'GEMS'
-        ? chip.secondaryMeaning !== null || chip.capacity !== null || chip.secondaryText !== '' || chip.productionRate !== null || chip.aria.includes(capacityLabel)
-        : chip.secondaryMeaning !== 'production-rate'
-          || !chip.capacity
-          || !chip.capacityText
-          || !chip.amountText.includes('/')
-          || chip.amountClipped
-          || !chip.productionRate
-          || !chip.secondaryText.includes('/')
-          || chip.secondaryClipped
-          || !chip.aria.includes(capacityLabel)))) {
+      || chip.secondaryMeaning !== 'production-rate'
+      || !chip.capacity
+      || !chip.capacityText
+      || !chip.amountText.includes('/')
+      || chip.amountClipped
+      || !chip.productionRate
+      || !chip.secondaryText.includes('/')
+      || chip.secondaryClipped
+      || !chip.aria.includes(capacityLabel))) {
     throw new Error(`Kingdom HUD clarity failed: ${JSON.stringify(audit)}`);
   }
 }

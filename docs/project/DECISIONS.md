@@ -138,5 +138,5 @@ These active decisions explain constraints that code alone may not reveal. Chang
 
 - **Decision**: Gold, Food, Wood, and Stone use Castle-derived capacity for passive production, but explicit earned rewards may overflow. Existing overflow is never clamped; production pauses for that resource until spending creates room. Gems remain uncapped.
 - **Reason**: A Player must receive the complete reward they earned even when storage is full, while Building production still respects progression capacity.
-- **Consequences**: The HUD keeps normal/full/overflow as internal state but presents capped resources as `current / capacity` plus hourly production or compact full text. Collect estimates remaining room per resource, and the server remains the sole authority for final gains and balances.
+- **Consequences**: The HUD keeps normal/full/overflow as internal state but presents four equal-width capped-resource cells as `current / capacity` plus hourly production or compact full text. Uncapped Gems use a separate icon-and-balance premium pill in the player header. Collect estimates remaining room per resource, and the server remains the sole authority for final gains and balances.
 - **Status**: Active.
