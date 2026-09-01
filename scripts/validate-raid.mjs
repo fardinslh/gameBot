@@ -23,6 +23,7 @@ const browser = await chromium.launch({ executablePath: browserPath, headless: t
 const artifacts = new URL('artifacts/', new URL('../', import.meta.url));
 mkdirSync(artifacts, { recursive: true });
 const consoleErrors = [];
+const resourceSelector = (resource) => resource === 'GEMS' ? '[data-resource="GEMS"]' : `.resource-chip--${resource.toLowerCase()}`;
 
 async function scenario(kind) {
   const externalUserId = `raid-browser-${kind}-${Date.now()}`;
@@ -107,8 +108,9 @@ async function scenario(kind) {
     await page.locator('.raid-result .raid-primary').click();
     await page.waitForSelector('[data-scene-status="ready"]');
     for (const [resource, value] of Object.entries(resultBalances)) {
-      const chip = page.locator(`.resource-chip--${resource.toLowerCase()}`);
-      await page.waitForFunction(({ selector, expected }) => document.querySelector(selector)?.getAttribute('data-balance') === expected, { selector: `.resource-chip--${resource.toLowerCase()}`, expected: value });
+      const selector = resourceSelector(resource);
+      const chip = page.locator(selector);
+      await page.waitForFunction(({ selector, expected }) => document.querySelector(selector)?.getAttribute('data-balance') === expected, { selector, expected: value });
       if (await chip.getAttribute('data-balance') !== value) throw new Error(`Kingdom ${resource} did not refresh after Raid`);
     }
   }
@@ -133,9 +135,10 @@ async function trainingHudScenario() {
   if (!trainResponse.ok()) throw new Error(`Training failed with HTTP ${trainResponse.status()}`);
   const trained = await trainResponse.json();
   for (const [resource, value] of Object.entries(trained.balances)) {
+    const selector = resourceSelector(resource);
     await page.waitForFunction(
       ({ selector, expected }) => document.querySelector(selector)?.getAttribute('data-balance') === expected,
-      { selector: `.resource-chip--${resource.toLowerCase()}`, expected: value },
+      { selector, expected: value },
     );
   }
   await page.close();

@@ -53,14 +53,15 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
     playSfx('back');
     onNavigate('kingdom');
   };
+  const hudBalances = combatMode === 'campaign' ? campaign.state?.balances ?? state?.balances ?? EMPTY : raid.battle?.balances ?? state?.balances ?? EMPTY;
 
   return (
     <>
       <main className="raid-shell">
         <div className="raid-backdrop" aria-hidden="true" />
         <div className="game-ui-layer">
-          <PlayerHud dictionary={t} locale={locale} playerLevel={state?.player.level ?? 1} playerName={state?.player.displayName ?? t.playerTitle} section="raid" />
-          <ResourceHud balances={combatMode === 'campaign' ? campaign.state?.balances ?? state?.balances ?? EMPTY : raid.battle?.balances ?? state?.balances ?? EMPTY} dictionary={t} />
+          <PlayerHud dictionary={t} gemBalance={hudBalances.GEMS} locale={locale} playerLevel={state?.player.level ?? 1} playerName={state?.player.displayName ?? t.playerTitle} section="raid" />
+          <ResourceHud balances={hudBalances} dictionary={t} />
           <section className="raid-content" data-player-id={state?.player.id} data-combat-mode={combatMode} data-raid-state={activeBattle ? battleFinished ? 'result' : 'battle' : combatMode === 'campaign' ? 'campaign' : raid.view === 'inbox' ? 'inbox' : raid.offer ? 'offer' : 'overview'}>
             {combatMode === 'campaign' ? campaign.result ? battleFinished ? (
               <CampaignResult

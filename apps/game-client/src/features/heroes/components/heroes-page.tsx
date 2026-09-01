@@ -59,7 +59,7 @@ export function HeroesPage({ dictionary: t, locale, onNavigate }: HeroesPageProp
     <main className="heroes-shell army-shell">
       <div className="heroes-backdrop" aria-hidden="true" />
       <div className="game-ui-layer">
-        <PlayerHud dictionary={t} locale={locale} playerLevel={state.heroes?.player.level ?? 1} playerName={state.heroes?.player.displayName ?? t.playerTitle} section="heroes" />
+        <PlayerHud dictionary={t} gemBalance={(state.heroes?.balances ?? EMPTY).GEMS} locale={locale} playerLevel={state.heroes?.player.level ?? 1} playerName={state.heroes?.player.displayName ?? t.playerTitle} section="heroes" />
         <ResourceHud balances={state.heroes?.balances ?? EMPTY} dictionary={t} />
         <div className="heroes-scroll army-scroll" data-army-status={state.army ? 'ready' : state.errorCode ? 'error' : 'loading'}>
           <header className="heroes-titlebar army-titlebar">

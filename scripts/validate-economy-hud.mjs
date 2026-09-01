@@ -69,19 +69,35 @@ async function assertHudComposition() {
     const gemRect = gem.getBoundingClientRect();
     const profileRect = profile.getBoundingClientRect();
     const widths = chips.map((chip) => chip.getBoundingClientRect().width);
+    const layers = chips.map((chip) => {
+      const icon = chip.querySelector('.resource-chip__icon svg')?.getBoundingClientRect();
+      const amount = chip.querySelector('.resource-chip__amount')?.getBoundingClientRect();
+      const rate = chip.querySelector('.resource-chip__rate')?.getBoundingClientRect();
+      const chipRect = chip.getBoundingClientRect();
+      return icon && amount && rate ? {
+        amountRateGap: rate.top - amount.bottom,
+        iconAmountGap: amount.top - icon.bottom,
+        iconCenterOffset: Math.abs((icon.left + icon.right) / 2 - (chipRect.left + chipRect.right) / 2),
+      } : null;
+    });
     return {
+      barHeight: bar.getBoundingClientRect().height,
       chipCount: chips.length,
       gemInsideMainBar: bar.contains(gem),
       gemInsideProfile: profile.contains(gem) && gemRect.left >= profileRect.left && gemRect.right <= profileRect.right,
       gemSecondaryCount: gem.querySelectorAll('small, .resource-chip__capacity').length,
       gemVerticalOffset: Math.abs((gemRect.top + gemRect.bottom) / 2 - (profileRect.top + profileRect.bottom) / 2),
       maxWidthDifference: Math.max(...widths) - Math.min(...widths),
+      minimumAmountRateGap: Math.min(...layers.map((layer) => layer?.amountRateGap ?? -1)),
+      minimumIconAmountGap: Math.min(...layers.map((layer) => layer?.iconAmountGap ?? -1)),
+      maximumIconCenterOffset: Math.max(...layers.map((layer) => layer?.iconCenterOffset ?? 999)),
       textClipped: chips.some((chip) => [...chip.querySelectorAll('.resource-chip__amount, .resource-chip__rate')]
         .some((line) => line.scrollWidth > line.clientWidth + 1)),
     };
   });
-  if (!audit || audit.chipCount !== 4 || audit.gemInsideMainBar || !audit.gemInsideProfile
-    || audit.gemSecondaryCount !== 0 || audit.gemVerticalOffset > 1 || audit.maxWidthDifference > 1 || audit.textClipped) {
+  if (!audit || audit.barHeight < 60 || audit.chipCount !== 4 || audit.gemInsideMainBar || !audit.gemInsideProfile
+    || audit.gemSecondaryCount !== 0 || audit.gemVerticalOffset > 1 || audit.maxWidthDifference > 1
+    || audit.minimumIconAmountGap < 2 || audit.minimumAmountRateGap < 2 || audit.maximumIconCenterOffset > 1 || audit.textClipped) {
     throw new Error(`Unbalanced HUD composition: ${JSON.stringify(audit)}`);
   }
 }
