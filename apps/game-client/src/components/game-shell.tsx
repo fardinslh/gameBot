@@ -62,5 +62,5 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
 
 function EngagementReturnLayer({ dictionary }: { dictionary: Dictionary }) {
   const engagement = useEngagement();
-  return engagement.returnSummary ? <ReturnSummary dictionary={dictionary} onClose={engagement.dismissReturnSummary} summary={engagement.returnSummary} /> : null;
+  return engagement.returnSummary ? <ReturnSummary dictionary={dictionary} identity={engagement.state?.kingdomIdentity ?? null} onClose={engagement.dismissReturnSummary} summary={engagement.returnSummary} /> : null;
 }

@@ -65,6 +65,23 @@ export const en = {
     next: 'Next',
     maximum: 'Maximum effect reached',
   },
+  kingdomIdentity: {
+    yourRealm: 'Your realm', ruledBy: 'Ruled by {title} {name}', edit: 'Edit realm identity', kingdomName: 'Kingdom name', rulerTitle: 'Ruler title', banner: 'Starter banner', save: 'Save identity', saving: 'Saving…',
+    titles: { LORD: 'Lord', LADY: 'Lady', WARDEN: 'Warden' },
+    heraldry: { GOLDEN_LION: 'Golden Lion', VERDANT_STAG: 'Verdant Stag', CRIMSON_FALCON: 'Crimson Falcon' },
+    currentRealmState: 'Current realm state', nextTransformation: 'Next transformation', futurePreview: 'Later',
+    castleLevelRealm: 'Castle Lv.{level} · {realm}', futureRealm: '{realm} · {building} at Castle Lv.{level}',
+    realmEstablished: 'Current realm established', realmEstablishedHint: 'Further Castle levels strengthen your realm and its prestige.',
+    realmStates: { FRONTIER_HOLD: 'Frontier Hold', GUARDED_SETTLEMENT: 'Guarded Settlement', LEARNED_COURT: 'Learned Court', MAKERS_WARD: 'Makers’ Ward', FORGED_KINGDOM: 'Forged Kingdom' },
+    transformationArrival: {
+      CASTLE: 'The Castle rises', FARM: 'Farm district arrives', LUMBER_MILL: 'Lumber district arrives', MINE: 'Mine district arrives', GRAND_MARKET: 'Grand Market arrives',
+      WATCHTOWER: 'Watchtower district arrives', ACADEMY: 'Academy district arrives', WORKSHOP: 'Workshop district arrives', BLACKSMITH: 'Royal Forge district arrives',
+    },
+    transformationActivity: {
+      CASTLE: 'The royal court gathers.', FARM: 'Harvest workers enter the fields.', LUMBER_MILL: 'Timber crews begin work.', MINE: 'Miners open the rock face.', GRAND_MARKET: 'Merchants gather around new stalls.',
+      WATCHTOWER: 'Guards begin patrols along the frontier.', ACADEMY: 'Scholars and knowledge activity appear.', WORKSHOP: 'Engineers and resource carts enter the yard.', BLACKSMITH: 'Smiths light the forge and arm the realm.',
+    },
+  },
   upgradeInProgress: 'Upgrade in progress',
   startingUpgrade: 'Starting upgrade…',
   upgradePreview: 'Upgrade preview',
@@ -105,7 +122,7 @@ export const en = {
     },
   },
   engagement: {
-    returnKicker: 'Your kingdom kept moving', welcomeBack: 'Welcome back, Lord!', awaySummary: 'While you were away, these changes became ready:', continue: 'Enter the Kingdom',
+    returnKicker: 'Your kingdom kept moving', welcomeBack: 'Welcome back, Lord!', welcomeBackRealm: 'Welcome back to {kingdom}', realmSignature: '{title} {name}', victoryForRealm: 'Victory for {kingdom}', awaySummary: 'While you were away, these changes became ready:', continue: 'Enter the Kingdom',
     upgradeComplete: 'Upgrade completed', trainingComplete: 'Training completed', rewardsReady: 'Rewards ready', revengeReady: 'Revenge available',
     nextGoal: 'Next Goal', royalDecree: 'Royal Decree', royalDecreeOne: 'Royal Decree I', firstDirection: 'First royal direction', restoreKingdom: 'Restore the Kingdom',
     claimReadyReward: 'Claim your ready reward', collectGoal: 'Collect kingdom resources', raidGoal: 'Win another Raid', armyGoal: 'Strengthen your Army',

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { CollectResponse, KingdomStateResponse, UpgradeResponse } from '@crown-and-coin/shared';
+import type { CollectResponse, KingdomStateResponse, UpdateKingdomIdentityRequest, UpdateKingdomIdentityResponse, UpgradeResponse } from '@crown-and-coin/shared';
 import { EconomyService } from '../economy/economy.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 
@@ -9,6 +9,10 @@ export class KingdomService {
 
   get(context: DevelopmentPlayerContext): Promise<KingdomStateResponse> {
     return this.economy.getKingdom(context);
+  }
+
+  updateIdentity(context: DevelopmentPlayerContext, input: UpdateKingdomIdentityRequest): Promise<UpdateKingdomIdentityResponse> {
+    return this.economy.updateKingdomIdentity(context, input);
   }
 
   collect(context: DevelopmentPlayerContext, idempotencyKey?: string): Promise<CollectResponse> {

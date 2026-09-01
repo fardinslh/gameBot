@@ -1,7 +1,8 @@
-import { Controller, Get, Headers, Param, Post } from '@nestjs/common';
-import type { CollectResponse, KingdomStateResponse, UpgradeResponse } from '@crown-and-coin/shared';
+import { Body, Controller, Get, Headers, Param, Post, Put } from '@nestjs/common';
+import type { CollectResponse, KingdomStateResponse, UpdateKingdomIdentityResponse, UpgradeResponse } from '@crown-and-coin/shared';
 import { PlayerContextService } from '../player/player-context.service';
 import { KingdomService } from './kingdom.service';
+import { UpdateKingdomIdentityDto } from './update-kingdom-identity.dto';
 
 @Controller('kingdom')
 export class KingdomController {
@@ -18,6 +19,14 @@ export class KingdomController {
   @Get('buildings')
   getBuildingStatus(@Headers('x-dev-player-id') developmentPlayerId?: string): Promise<KingdomStateResponse> {
     return this.kingdom.get(this.playerContext.resolve(developmentPlayerId));
+  }
+
+  @Put('identity')
+  updateIdentity(
+    @Body() body: UpdateKingdomIdentityDto,
+    @Headers('x-dev-player-id') developmentPlayerId?: string,
+  ): Promise<UpdateKingdomIdentityResponse> {
+    return this.kingdom.updateIdentity(this.playerContext.resolve(developmentPlayerId), body);
   }
 
   @Post('collect')

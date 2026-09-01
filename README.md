@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign. Retention 05 adds an earned-Gem Shop. Phase A Engagement Cohesion connects return activity, one Next Goal, Royal Decree I, upgrades, objectives, and Raid results without duplicating their authoritative systems. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign. Retention 05 adds an earned-Gem Shop. Phase A Engagement Cohesion connects return activity, one Next Goal, Royal Decree I, upgrades, objectives, and Raid results. Phase 08.1 adds server-owned Kingdom identity, Castle transformation previews, and lightweight ambient life without duplicating progression. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
@@ -121,6 +121,7 @@ Starting balances are 8000 Gold, 5000 Food, 5000 Wood, 3500 Stone, and 120 Gems.
 | --- | --- | --- |
 | `GET` | `/kingdom` | Bootstrap if needed, reconcile upgrades, return the complete Kingdom state |
 | `GET` | `/kingdom/buildings` | Return the authoritative building/progression status payload |
+| `PUT` | `/kingdom/identity` | Validate and persist Kingdom name, ruler title, and heraldry |
 | `POST` | `/kingdom/collect` | Transactionally collect capped offline production |
 | `POST` | `/kingdom/buildings/:buildingId/upgrade` | Validate, charge, log, and start one upgrade |
 | `POST` | `/kingdom/buildings/:buildingId/upgrade/collect` | Authoritatively finish and collect a due upgrade |

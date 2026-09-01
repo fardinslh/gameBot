@@ -1,11 +1,12 @@
 import { Anvil, ArrowUp, BookOpen, Castle, Clock3, Gem, Hammer, Landmark, LockKeyhole, Mountain, TowerControl, Trees, Wheat, Wrench, X } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import type { ShopBuildingFinishOffer } from '@crown-and-coin/shared';
+import type { KingdomIdentityState, KingdomTransformationState, ShopBuildingFinishOffer } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
 import { formatAmount } from './resource-hud';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
+import { KingdomIdentityCard } from './kingdom-identity-card';
 
 const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
   castle: Castle,
@@ -25,13 +26,17 @@ interface BuildingDetailSheetProps {
   dictionary: Dictionary;
   onClose(): void;
   onOpenProgress(): void;
+  onSaveIdentity(identity: KingdomIdentityState): Promise<boolean>;
   onUpgrade(buildingId: string): void;
+  identity: KingdomIdentityState | null;
+  playerName: string;
   finishOffer?: ShopBuildingFinishOffer | null;
   onFinishUpgrade?(offer: ShopBuildingFinishOffer): void;
   serverNow: number;
+  transformation: KingdomTransformationState | null;
 }
 
-export function BuildingDetailSheet({ actionPending, building, dictionary: t, finishOffer, onClose, onFinishUpgrade, onOpenProgress, onUpgrade, serverNow }: BuildingDetailSheetProps) {
+export function BuildingDetailSheet({ actionPending, building, dictionary: t, finishOffer, identity, onClose, onFinishUpgrade, onOpenProgress, onSaveIdentity, onUpgrade, playerName, serverNow, transformation }: BuildingDetailSheetProps) {
   const [confirmFinish, setConfirmFinish] = useState(false);
   const presentation = building ? t.buildings[building.visualId] : t.buildings.castle;
   const Icon = building ? BUILDING_ICONS[building.visualId] : Castle;
@@ -60,6 +65,8 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, fi
           <X aria-hidden="true" size={20} />
         </button>
       </div>
+
+      {building?.visualId === 'castle' && identity && transformation ? <KingdomIdentityCard dictionary={t} identity={identity} onSave={onSaveIdentity} playerName={playerName} saving={actionPending} transformation={transformation} /> : null}
 
       <div className="building-sheet__stats">
         <div><small>{t.currentLevel}</small><strong data-building-level={building?.level ?? 0} data-building-level-label>{t.heroUi.level} <BidiValue direction="ltr">{building?.level ?? 0}</BidiValue></strong></div>

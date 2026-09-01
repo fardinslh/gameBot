@@ -1,18 +1,19 @@
 'use client';
 
 import { ArrowUpCircle, Coins, Gift, ShieldAlert, Sparkles, Swords, Wheat, Trees, Mountain } from 'lucide-react';
-import type { EngagementReturnSummary, ResourceType } from '@crown-and-coin/shared';
+import type { EngagementReturnSummary, KingdomIdentityState, ResourceType } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
-import { BidiValue } from '@/i18n/bidi';
+import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { formatAmount } from '@/features/kingdom/components/resource-hud';
+import { HeraldryMark } from '@/features/kingdom/components/kingdom-identity-card';
 
 const RESOURCE_ICONS = { GOLD: Coins, FOOD: Wheat, WOOD: Trees, STONE: Mountain } as const;
 
-export function ReturnSummary({ dictionary: t, summary, onClose }: { dictionary: Dictionary; summary: EngagementReturnSummary; onClose(): void }) {
+export function ReturnSummary({ dictionary: t, identity, summary, onClose }: { dictionary: Dictionary; identity: KingdomIdentityState | null; summary: EngagementReturnSummary; onClose(): void }) {
   const resources = (Object.entries(summary.resourcesReady) as [ResourceType, string][]).filter(([resource, value]) => resource !== 'GEMS' && BigInt(value) > BigInt(0));
   return <div className="engagement-backdrop" role="presentation">
     <section aria-labelledby="return-summary-title" aria-modal="true" className="return-summary" role="dialog">
-      <header><span><Sparkles size={22} /></span><div><small>{t.engagement.returnKicker}</small><h2 id="return-summary-title">{t.engagement.welcomeBack}</h2></div></header>
+      <header>{identity ? <HeraldryMark heraldry={identity.heraldry} /> : <span><Sparkles size={22} /></span>}<div><small>{t.engagement.returnKicker}</small><h2 id="return-summary-title">{identity ? <BidiTemplate template={t.engagement.welcomeBackRealm} values={{ kingdom: { direction: 'auto', value: identity.name } }} /> : t.engagement.welcomeBack}</h2>{identity ? <em>{t.kingdomIdentity.titles[identity.rulerTitle]} · <span dir="auto">{identity.name}</span></em> : null}</div></header>
       <p>{t.engagement.awaySummary}</p>
       <div className="return-summary__list">
         {resources.map(([resource, amount]) => { const Icon = RESOURCE_ICONS[resource as keyof typeof RESOURCE_ICONS]; return <div key={resource}>{Icon ? <Icon size={17} /> : null}<span>{t.resourceShort[resource]}</span><b><BidiValue direction="ltr">+{formatAmount(amount)}</BidiValue></b></div>; })}

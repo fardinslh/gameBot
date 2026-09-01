@@ -156,10 +156,11 @@ export class EngagementService {
     retention: RetentionStateResponse,
     now: Date,
   ): Promise<EngagementOverviewResponse> {
-    const [values, onboarding, engagement] = await Promise.all([
+    const [values, onboarding, engagement, kingdomIdentity] = await Promise.all([
       this.metrics.resolve(tx, playerId),
       tx.onboardingProgress.findUnique({ where: { playerId } }),
       tx.playerEngagementState.findUnique({ where: { playerId } }),
+      tx.kingdom.findUniqueOrThrow({ where: { playerId }, select: { name: true, rulerTitle: true, heraldry: true } }),
     ]);
     const decree = this.presentDecree(
       onboarding?.status === 'COMPLETED' || values.RAID_COMPLETED > 0n,
@@ -171,6 +172,7 @@ export class EngagementService {
     const progress = this.selectProgress(retention);
     return {
       serverTime: now.toISOString(),
+      kingdomIdentity,
       nextGoal: this.selectGoal(buildings, retention, decree, values.RAID_WON),
       progress,
       royalDecree: decree,

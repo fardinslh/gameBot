@@ -21,6 +21,7 @@ import { CampaignMap } from '@/features/campaign/components/campaign-map';
 import { CampaignResult } from '@/features/campaign/components/campaign-result';
 import { useEngagement } from '@/features/engagement/engagement-provider';
 import { RaidEngagementSummary } from '@/features/engagement/components/raid-engagement-summary';
+import { HeraldryMark } from '@/features/kingdom/components/kingdom-identity-card';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
@@ -87,6 +88,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                 <span className="raid-result__crest"><Crown size={30} /></span>
                 <small>{t.raidUi.battleComplete}</small>
                 <h1>{raid.battle.type === 'REVENGE' ? (raid.battle.result === 'ATTACKER_WIN' ? t.inboxUi.revengeVictory : t.inboxUi.revengeDefeat) : (raid.battle.result === 'ATTACKER_WIN' ? t.raidUi.victory : t.raidUi.defeat)}</h1>
+                {raid.battle.result === 'ATTACKER_WIN' && engagement.state?.kingdomIdentity ? <div className="raid-realm-victory" data-kingdom-identity><HeraldryMark heraldry={engagement.state.kingdomIdentity.heraldry} /><span><strong><BidiTemplate template={t.engagement.victoryForRealm} values={{ kingdom: { direction: 'auto', value: engagement.state.kingdomIdentity.name } }} /></strong><small>{t.kingdomIdentity.titles[engagement.state.kingdomIdentity.rulerTitle]}</small></span></div> : null}
                 <p><Trophy size={15} /> <BidiValue direction="ltr">{raid.battle.attacker.trophiesBefore} → {raid.battle.attacker.trophiesBefore + raid.battle.attacker.trophyDelta} ({raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta})</BidiValue> {t.raidUi.trophies}</p>
                 <div className="raid-loot-grid">{Object.entries(raid.battle.loot).map(([resource, amount]) => <span key={resource}><b><BidiValue direction="ltr">{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
                 {engagement.state ? <RaidEngagementSummary dictionary={t} engagement={engagement.state} /> : null}

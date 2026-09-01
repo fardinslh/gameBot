@@ -14,6 +14,8 @@ The Kingdom combines a PixiJS world with React controls. Server state decides wh
 
 `KingdomScene` mounts `createKingdomScene` once and forwards building state changes. React owns Player HUD, Resource HUD, Collect, inbox access, bottom navigation, errors, and detail sheets. Pixi owns terrain, building sprites, selection, indicators, unlock reveals, z-order, hit areas, and vertical camera movement.
 
+Castle detail also owns the compact Kingdom identity editor. Name, ruler title, and heraldry persist on the server and appear selectively in Welcome Back, important upgrade celebrations, and Raid victory presentation rather than permanently covering the map.
+
 ## World and camera
 
 `KINGDOM_WORLD` in `building-layout.ts` uses:
@@ -57,6 +59,12 @@ Locked buildings never enter `buildingsLayer`, so they do not affect `getLocalBo
 The API derives the stage from Castle level and returns it in `KingdomStateResponse`. The scene also requires the matching building to have `locked === false`, which prevents visual config from bypassing server unlock state.
 
 During a live stage increase, the environment fades in while a local mist clears. The building starts after 24 percent of the configured duration and settles from 90 percent scale. Its pointer mode becomes active after the reveal. Reduced-motion mode displays the completed state without the animation.
+
+Castle realm-state presentation reuses these same milestones. The API derives the current realm label, the next real building arrival, and one later preview; the client does not maintain another roadmap or unlock counter.
+
+## Ambient life V1
+
+`ambient-life.ts` mounts deterministic decorative actors in a separate Pixi layer. Stage 1 shows two Castle guards, four production workers, a resource cart, and a farm animal; Stage 2 adds the Watchtower guard. The total remains between six and ten. Actors use simple bounded loops without pathfinding, collision, economy state, hit areas, or pointer events. Animation pauses when the document is hidden and becomes static when reduced motion is requested.
 
 ## Building visuals
 

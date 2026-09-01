@@ -84,6 +84,8 @@ Resolved standard Raid
 
 `EconomyService` owns Collect, building upgrades, completion reconciliation, balances, storage calculations, and economy ledger rows. `HeroService` owns team persistence and Hero upgrade charges. `RaidService` owns Match Offers, battle settlement, loot transfer, Trophies, inbox data, and Revenge.
 
+`EconomyService` also validates and persists the lightweight Kingdom identity. Name, ruler title, and heraldry are ownership presentation only; they add no modifiers. Castle transformation text is derived from the existing unlock configuration and never creates a second progression path.
+
 Each mutation validates ownership and server state. `EconomyRequest` stores replayable responses for economy, Hero upgrade, Raid start, and Revenge start actions that require an idempotency key.
 
 ## Analytics signals
@@ -98,7 +100,7 @@ Onboarding advances inside successful authoritative Collect, building-upgrade, a
 
 ## Presentation-only systems
 
-The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For all nine active buildings, authoritative level plus explicit presentation Theme deterministically selects a five-tier raster asset and minor detail set. `DEFAULT` is the only implemented theme; no appearance/theme column or client economy state exists. Theme, appearance fallback, construction cues, transformation timing, camera movement, labels, and HUD formatting do not decide gameplay eligibility or power.
+The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For all nine active buildings, authoritative level plus explicit presentation Theme deterministically selects a five-tier raster asset and minor detail set. `DEFAULT` is the only implemented theme; no appearance/theme column or client economy state exists. Theme, appearance fallback, construction cues, transformation timing, camera movement, labels, HUD formatting, and deterministic ambient actors do not decide gameplay eligibility or power. Ambient actors have no pathfinding, hit area, collision, or economy state.
 
 Coach marks and the permanent Guide explain server behavior but never decide progress. Music context, Battle-event-to-SFX mapping, volume, and mute state are presentation-only and fail safely.
 

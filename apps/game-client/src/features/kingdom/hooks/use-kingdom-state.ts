@@ -1,15 +1,15 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CollectResponse, KingdomBuildingState, KingdomStateResponse, ResourceAmounts } from '@crown-and-coin/shared';
+import type { CollectResponse, KingdomBuildingState, KingdomStateResponse, ResourceAmounts, UpdateKingdomIdentityRequest } from '@crown-and-coin/shared';
 import { BUILDING_TYPE_TO_ID } from '../data/building-layout';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
-import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
+import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, updateKingdomIdentity, upgradeBuilding } from '../api/kingdom-api';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { easeOutCubic, interpolateResourceBalances } from '../domain/collection-presentation';
 
-type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade';
+type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade' | 'saving-identity';
 
 export function useKingdomState() {
   const audio = useGameAudio();
@@ -215,11 +215,34 @@ export function useKingdomState() {
     }
   }, [state, action, audio, experience, cancelCollectionPresentation]);
 
+  const saveIdentity = useCallback(async (input: UpdateKingdomIdentityRequest): Promise<boolean> => {
+    if (!state || action !== 'idle') return false;
+    setAction('saving-identity');
+    try {
+      const response = await updateKingdomIdentity(input);
+      const applyIdentity = (current: KingdomStateResponse): KingdomStateResponse => ({
+        ...current,
+        kingdom: { ...current.kingdom, ...response.identity },
+        serverTime: response.serverTime,
+      });
+      setState((current) => current ? applyIdentity(current) : current);
+      if (stateRef.current) stateRef.current = applyIdentity(stateRef.current);
+      setErrorCode(null);
+      window.dispatchEvent(new Event('crown:engagement-refresh'));
+      return true;
+    } catch (error) {
+      setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
+      return false;
+    } finally {
+      setAction('idle');
+    }
+  }, [state, action]);
+
   const buildings = useMemo<KingdomBuildingView[]>(() => state?.buildings.map((building) => ({
     ...building,
     visualId: BUILDING_TYPE_TO_ID[building.type],
   })) ?? [], [state]);
 
   const serverNow = clock + serverOffsetMs;
-  return { state, buildings, errorCode, action, lastGains, displayedBalances, serverNow, completedUpgrade, dismissCompletedUpgrade: () => setCompletedUpgrade(null), collect, upgrade, refresh };
+  return { state, buildings, errorCode, action, lastGains, displayedBalances, serverNow, completedUpgrade, dismissCompletedUpgrade: () => setCompletedUpgrade(null), collect, upgrade, saveIdentity, refresh };
 }

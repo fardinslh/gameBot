@@ -25,6 +25,7 @@ describe('KingdomProgressGoalsService', () => {
   ] as const)('returns next real building unlock at Castle %i', (castleLevel, key, requiredCastleLevel) => {
     const result = service.calculate(buildings(castleLevel));
     expect(result.nextUnlock).toMatchObject({ key, kind: 'BUILDING', requiredCastleLevel, unlocked: false });
+    expect(result.transformation.next).toMatchObject({ requiredCastleLevel, unlockBuildingType: key });
     expect(result.milestones.some((milestone) => milestone.key === 'ADVANCED_PVP')).toBe(false);
     expect(result.allDistrictsUnlocked).toBe(false);
   });
@@ -33,7 +34,21 @@ describe('KingdomProgressGoalsService', () => {
     const result = service.calculate(buildings(5));
     expect(result.nextUnlock).toBeNull();
     expect(result.allDistrictsUnlocked).toBe(true);
+    expect(result.transformation).toMatchObject({
+      current: { realmState: 'FORGED_KINGDOM', requiredCastleLevel: 5, unlockBuildingType: 'BLACKSMITH' },
+      next: null,
+      future: null,
+    });
     expect(result.milestones).toHaveLength(4);
+  });
+
+  it('exposes only the next transformation and one future preview', () => {
+    const result = service.calculate(buildings(1));
+    expect(result.transformation).toEqual({
+      current: { realmState: 'FRONTIER_HOLD', requiredCastleLevel: 1, unlockBuildingType: null },
+      next: { realmState: 'GUARDED_SETTLEMENT', requiredCastleLevel: 2, unlockBuildingType: 'WATCHTOWER' },
+      future: { realmState: 'LEARNED_COURT', requiredCastleLevel: 3, unlockBuildingType: 'ACADEMY' },
+    });
   });
 
   it('matches effect progression and maximum-level state', () => {

@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { BadRequestException } from '@nestjs/common';
 import { EconomyTransactionReason } from '@prisma/client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
@@ -51,9 +52,30 @@ describe.sequential('authoritative economy integration', () => {
     expect(first.progression).toEqual({ level: 1, xp: 0, xpIntoLevel: 0, xpRequiredForNextLevel: 900 });
     expect(first.kingdomExpansionStage).toBe(1);
     expect(first.storageCapacities.GOLD).toBe('10000');
+    expect(first.kingdom).toMatchObject({ name: 'Dawnkeep', rulerTitle: 'LORD', heraldry: 'GOLDEN_LION' });
     expect(first.buildings.find((building) => building.type === 'ACADEMY')).toMatchObject({ unlocked: false, unlockCastleLevel: 3 });
     expect(second.kingdom.id).toBe(first.kingdom.id);
     expect(await prisma.kingdom.count({ where: { playerId: first.player.id } })).toBe(1);
+  });
+
+  it('persists validated free Kingdom identity choices', async () => {
+    const player = context();
+    await economy.getKingdom(player);
+    const updated = await economy.updateKingdomIdentity(player, {
+      name: '  Ember   Crown  ',
+      rulerTitle: 'WARDEN',
+      heraldry: 'VERDANT_STAG',
+    });
+    expect(updated.identity).toEqual({ name: 'Ember Crown', rulerTitle: 'WARDEN', heraldry: 'VERDANT_STAG' });
+    expect((await economy.getKingdom(player)).kingdom).toMatchObject(updated.identity);
+
+    try {
+      await economy.updateKingdomIdentity(player, { name: '<>', rulerTitle: 'LORD', heraldry: 'GOLDEN_LION' });
+      throw new Error('Expected invalid identity to fail');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BadRequestException);
+      expect((error as BadRequestException).getResponse()).toMatchObject({ code: 'KINGDOM_IDENTITY_INVALID' });
+    }
   });
 
   it('exposes exactly the server-authoritative unlock sequence', async () => {

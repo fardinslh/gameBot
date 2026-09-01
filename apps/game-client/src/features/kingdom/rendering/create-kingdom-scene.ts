@@ -24,6 +24,7 @@ import {
   type BuildingStatusIndicator,
 } from './building-status-badge';
 import type { Locale } from '@/i18n/config';
+import { createAmbientLifeArtwork } from './ambient-life';
 
 interface KingdomSceneRuntime {
   destroy(): void;
@@ -70,6 +71,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const buildingsLayer = new Container();
   buildingsLayer.sortableChildren = true;
   world.addChild(buildingsLayer);
+  const ambientLife = createAmbientLifeArtwork(1);
+  ambientLife.container.visible = debugKingdomLayers === null;
+  world.addChild(ambientLife.container);
   app.stage.addChild(statusLayer);
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
@@ -216,6 +220,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.futureBuildingCount = '0';
   host.dataset.expansionAreaCount = '0';
   host.dataset.expansionStage = '1';
+  host.dataset.ambientActorCount = '8';
   const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');
   host.dataset.mineGround = mineLayout ? `${mineLayout.groundX},${mineLayout.groundY}` : '';
   host.dataset.panEnabled = 'true';
@@ -331,6 +336,13 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   canvas.addEventListener('pointercancel', onPointerUp);
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ambientPaused = document.visibilityState === 'hidden';
+  const syncAmbientMotionState = (): void => {
+    host.dataset.ambientMotion = reducedMotion ? 'reduced' : ambientPaused ? 'paused' : 'active';
+  };
+  const onVisibilityChange = (): void => { ambientPaused = document.visibilityState === 'hidden'; syncAmbientMotionState(); };
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  syncAmbientMotionState();
   const startTransformation = (id: BuildingId, previousLevel: number, nextLevel: number): void => {
     const transition = getUpgradeTransition(previousLevel, nextLevel, reducedMotion);
     const item = artwork.get(id);
@@ -345,6 +357,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   };
   const animate = (ticker: Ticker): void => {
     elapsed += ticker.deltaMS / 1_000;
+    if (!ambientPaused) ambientLife.update(elapsed);
     for (const [id, item] of artwork) {
       if (id === selectedBuildingId) {
         const pulse = 1 + Math.sin(elapsed * 3.2) * .045;
@@ -435,6 +448,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     setBuildingStates: (states, expansionStage) => {
       desiredStates = states;
       syncExpansionAreas(states, expansionStage);
+      host.dataset.ambientActorCount = String(ambientLife.setExpansionStage(expansionStage));
       for (const building of KINGDOM_BUILDING_LAYOUT) {
         const id = building.id;
         const state = states[id];
@@ -484,7 +498,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);
       canvas.removeEventListener('pointercancel', onPointerUp);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       if (!reducedMotion) app.ticker.remove(animate);
+      world.removeChild(ambientLife.container);
+      ambientLife.destroy();
       runtime.destroy();
     },
   };

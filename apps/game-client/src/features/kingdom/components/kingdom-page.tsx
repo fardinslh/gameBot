@@ -163,15 +163,19 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             onOpenProgress={() => setRetentionOpen(true)}
           /> : null}
           <BuildingDetailSheet
-            actionPending={economy.action === 'upgrading' || shop.action !== 'idle'}
+            actionPending={economy.action !== 'idle' || shop.action !== 'idle'}
             building={selectedBuilding}
             dictionary={t}
             finishOffer={finishOffer}
+            identity={economy.state ? { name: economy.state.kingdom.name, rulerTitle: economy.state.kingdom.rulerTitle, heraldry: economy.state.kingdom.heraldry } : null}
             onClose={() => setSelectedBuildingId(null)}
             onOpenProgress={() => { setSelectedBuildingId(null); setProgressOpen(true); }}
+            onSaveIdentity={economy.saveIdentity}
             onFinishUpgrade={async (offer) => { if (await shop.purchase(offer.itemKey, offer.targetId)) await economy.refresh(); }}
             onUpgrade={(buildingId) => void economy.upgrade(buildingId)}
+            playerName={economy.state?.player.displayName ?? t.playerTitle}
             serverNow={economy.serverNow}
+            transformation={economy.state?.kingdomGoals.transformation ?? null}
           />
           <KingdomProgressSheet
             dictionary={t}
@@ -194,7 +198,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             state={retention.state}
           /> : null}
           {decreeOpen && engagement.state ? <RoyalDecreeSheet action={engagement.action} decree={engagement.state.royalDecree} dictionary={t} onClaim={() => void engagement.claimDecree().then((claimed) => { if (claimed) setDecreeOpen(false); })} onClose={() => setDecreeOpen(false)} /> : null}
-          {economy.completedUpgrade ? <UpgradeCelebration before={economy.completedUpgrade.before} after={economy.completedUpgrade.after} dictionary={t} effectGainedBps={economy.completedUpgrade.effectGainedBps} onClose={economy.dismissCompletedUpgrade} storageGained={economy.completedUpgrade.storageGained} xpGained={economy.completedUpgrade.xpGained} /> : null}
+          {economy.completedUpgrade ? <UpgradeCelebration before={economy.completedUpgrade.before} after={economy.completedUpgrade.after} dictionary={t} effectGainedBps={economy.completedUpgrade.effectGainedBps} identity={economy.state ? { name: economy.state.kingdom.name, rulerTitle: economy.state.kingdom.rulerTitle, heraldry: economy.state.kingdom.heraldry } : null} onClose={economy.dismissCompletedUpgrade} realmState={economy.state?.kingdomGoals.transformation.current.realmState ?? null} storageGained={economy.completedUpgrade.storageGained} xpGained={economy.completedUpgrade.xpGained} /> : null}
           <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'COLLECT'
             ? <AdvisorCoach title={t.experience.collectTitle} body={t.experience.advisor.collect} target="collect" /> : null}

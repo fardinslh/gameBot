@@ -48,7 +48,7 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 
 ## Kingdom economy models
 
-`Kingdom` has one Player, a name, legacy level, collection timestamp, balances, buildings, and ledger rows. `ResourceBalance` enforces one row per Kingdom and resource.
+`Kingdom` has one Player, a validated name, ruler title, heraldry key, legacy level, collection timestamp, balances, buildings, and ledger rows. `rulerTitle` defaults to `LORD`; `heraldry` defaults to `GOLDEN_LION`, so old and new players migrate safely. `ResourceBalance` enforces one row per Kingdom and resource.
 
 `Building` enforces one row per Kingdom and type. It stores level and production remainder. `BuildingUpgrade` stores one-level transitions and lifecycle timestamps.
 
@@ -137,5 +137,6 @@ Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyReq
 | `20260830090000_match_offer_army_fingerprint` | Nullable SHA-256 attacker-Army fingerprint for secure Match Offer cutover; pre-migration offers remain readable but cannot start |
 | `20260830100000_pve_campaign_chapter_one` | Campaign NPC discriminator, Campaign battle metadata, persistent stage stars/attempts/first clear, milestone claims, and Campaign ledger/action enums |
 | `20260831120000_retention_05_shop_gem_economy` | Shop purchase/action/reason enums, generic Player entitlements, permanent Profile-Crest equip state, purchase evidence, constraints, and indexes |
+| `20260901100000_kingdom_identity` | Server-owned ruler title and heraldry identity with safe defaults |
 
 Do not infer the final schema from the first migration. Read `schema.prisma` and all later SQL migrations together.

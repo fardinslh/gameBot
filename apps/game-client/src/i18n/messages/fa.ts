@@ -67,6 +67,23 @@ export const fa: Dictionary = {
     next: 'بعدی',
     maximum: 'بیشترین اثر',
   },
+  kingdomIdentity: {
+    yourRealm: 'قلمرو شما', ruledBy: 'فرمانرواییِ {title} {name}', edit: 'ویرایش هویت قلمرو', kingdomName: 'نام پادشاهی', rulerTitle: 'عنوان فرمانروا', banner: 'نشان آغازین', save: 'ذخیره هویت', saving: 'در حال ذخیره…',
+    titles: { LORD: 'لرد', LADY: 'بانو', WARDEN: 'نگهبان' },
+    heraldry: { GOLDEN_LION: 'شیر طلایی', VERDANT_STAG: 'گوزن سبز', CRIMSON_FALCON: 'شاهین سرخ' },
+    currentRealmState: 'وضعیت کنونی قلمرو', nextTransformation: 'دگرگونی بعدی', futurePreview: 'پس از آن',
+    castleLevelRealm: 'قلعه سطح {level} · {realm}', futureRealm: '{realm} · {building} در قلعه سطح {level}',
+    realmEstablished: 'قلمرو کنونی استوار شده است', realmEstablishedHint: 'سطح‌های بعدی قلعه، شکوه و قدرت قلمرو را افزایش می‌دهند.',
+    realmStates: { FRONTIER_HOLD: 'دژ مرزی', GUARDED_SETTLEMENT: 'آبادی محافظت‌شده', LEARNED_COURT: 'دربار دانش', MAKERS_WARD: 'ناحیه سازندگان', FORGED_KINGDOM: 'پادشاهی استوار' },
+    transformationArrival: {
+      CASTLE: 'قلعه برافراشته می‌شود', FARM: 'ناحیه مزرعه پدیدار می‌شود', LUMBER_MILL: 'ناحیه چوب‌بری پدیدار می‌شود', MINE: 'ناحیه معدن پدیدار می‌شود', GRAND_MARKET: 'بازار بزرگ پدیدار می‌شود',
+      WATCHTOWER: 'ناحیه برج نگهبانی پدیدار می‌شود', ACADEMY: 'ناحیه آکادمی پدیدار می‌شود', WORKSHOP: 'ناحیه کارگاه پدیدار می‌شود', BLACKSMITH: 'ناحیه آهنگری سلطنتی پدیدار می‌شود',
+    },
+    transformationActivity: {
+      CASTLE: 'دربار سلطنتی گرد هم می‌آید.', FARM: 'کارگران برداشت وارد کشتزار می‌شوند.', LUMBER_MILL: 'گروه‌های چوب‌بری کار را آغاز می‌کنند.', MINE: 'معدنچیان دل سنگ را می‌شکافند.', GRAND_MARKET: 'بازرگانان پیرامون غرفه‌های تازه جمع می‌شوند.',
+      WATCHTOWER: 'نگهبانان گشت‌زنی در مرزها را آغاز می‌کنند.', ACADEMY: 'دانشوران و جنب‌وجوش علمی پدیدار می‌شوند.', WORKSHOP: 'مهندسان و گاری‌های منابع وارد محوطه می‌شوند.', BLACKSMITH: 'آهنگران کوره را روشن و قلمرو را مسلح می‌کنند.',
+    },
+  },
   upgradeInProgress: 'ارتقا در حال انجام',
   startingUpgrade: 'شروع ارتقا…',
   upgradePreview: 'پیش‌نمایش ارتقا',
@@ -107,7 +124,7 @@ export const fa: Dictionary = {
     },
   },
   engagement: {
-    returnKicker: 'پادشاهی تو در حرکت بود', welcomeBack: 'خوش آمدی، فرمانروا!', awaySummary: 'در زمان نبودنت، این تغییرها آماده شدند:', continue: 'ورود به پادشاهی',
+    returnKicker: 'پادشاهی تو در حرکت بود', welcomeBack: 'خوش آمدی، فرمانروا!', welcomeBackRealm: 'به {kingdom} خوش آمدی', realmSignature: '{title} {name}', victoryForRealm: 'پیروزی برای {kingdom}', awaySummary: 'در زمان نبودنت، این تغییرها آماده شدند:', continue: 'ورود به پادشاهی',
     upgradeComplete: 'ارتقا کامل شد', trainingComplete: 'آموزش کامل شد', rewardsReady: 'پاداش آماده', revengeReady: 'انتقام در دسترس',
     nextGoal: 'هدف بعدی', royalDecree: 'فرمان سلطنتی', royalDecreeOne: 'فرمان سلطنتی یک', firstDirection: 'نخستین فرمان پادشاهی', restoreKingdom: 'بازسازی پادشاهی',
     claimReadyReward: 'پاداش آماده را دریافت کن', collectGoal: 'منابع پادشاهی را جمع کن', raidGoal: 'یک یورش دیگر را ببر', armyGoal: 'ارتش را نیرومند کن',

@@ -80,6 +80,37 @@ export type KingdomBuildingType = (typeof KINGDOM_BUILDING_TYPES)[number];
 export type BuildingAppearanceVariant = 'WOOD' | 'STONE' | 'FORTIFIED';
 export type KingdomExpansionStage = 1 | 2 | 3 | 4 | 5;
 
+export const KINGDOM_RULER_TITLES = ['LORD', 'LADY', 'WARDEN'] as const;
+export type KingdomRulerTitle = (typeof KINGDOM_RULER_TITLES)[number];
+export const KINGDOM_HERALDRY_KEYS = ['GOLDEN_LION', 'VERDANT_STAG', 'CRIMSON_FALCON'] as const;
+export type KingdomHeraldryKey = (typeof KINGDOM_HERALDRY_KEYS)[number];
+export const KINGDOM_REALM_STATE_KEYS = [
+  'FRONTIER_HOLD',
+  'GUARDED_SETTLEMENT',
+  'LEARNED_COURT',
+  'MAKERS_WARD',
+  'FORGED_KINGDOM',
+] as const;
+export type KingdomRealmStateKey = (typeof KINGDOM_REALM_STATE_KEYS)[number];
+
+export interface KingdomIdentityState {
+  name: string;
+  rulerTitle: KingdomRulerTitle;
+  heraldry: KingdomHeraldryKey;
+}
+
+export interface KingdomTransformationMilestone {
+  realmState: KingdomRealmStateKey;
+  requiredCastleLevel: number;
+  unlockBuildingType: KingdomBuildingType | null;
+}
+
+export interface KingdomTransformationState {
+  current: KingdomTransformationMilestone;
+  next: KingdomTransformationMilestone | null;
+  future: KingdomTransformationMilestone | null;
+}
+
 export const KINGDOM_EFFECT_TYPES = [
   'PRODUCTION_BONUS',
   'HERO_UPGRADE_DISCOUNT',
@@ -122,6 +153,7 @@ export interface KingdomProgressGoalsState {
   milestones: KingdomUnlockState[];
   nextUnlock: KingdomUnlockState | null;
   allDistrictsUnlocked: boolean;
+  transformation: KingdomTransformationState;
   effects: KingdomEffectProgressState[];
 }
 
@@ -269,6 +301,7 @@ export interface EngagementReturnSummary {
 }
 export interface EngagementOverviewResponse {
   serverTime: string;
+  kingdomIdentity: KingdomIdentityState;
   nextGoal: EngagementGoalState;
   progress: EngagementProgressCue[];
   royalDecree: RoyalDecreeState;
@@ -353,6 +386,8 @@ export interface KingdomStateResponse {
   kingdom: {
     id: string;
     name: string;
+    rulerTitle: KingdomRulerTitle;
+    heraldry: KingdomHeraldryKey;
     level: number;
     lastCollectedAt: string;
   };
@@ -366,6 +401,13 @@ export interface KingdomStateResponse {
   serverTime: string;
   offlineCapHours: number;
 }
+
+export interface UpdateKingdomIdentityRequest extends KingdomIdentityState {}
+export interface UpdateKingdomIdentityResponse {
+  identity: KingdomIdentityState;
+  serverTime: string;
+}
+export type KingdomIdentityErrorCode = 'KINGDOM_IDENTITY_INVALID';
 
 export interface CollectResponse {
   gains: ResourceAmounts;

@@ -28,6 +28,7 @@
     "validate:campaign": "npm run test:campaign --workspace @crown-and-coin/game-api && dotenv -e .env -- node scripts/validate-campaign.mjs",
     "validate:shop": "npm run test:shop --workspace @crown-and-coin/game-api && dotenv -e .env -- node scripts/validate-shop.mjs",
     "validate:economy-hud": "dotenv -e .env -- node scripts/validate-economy-hud.mjs",
+    "validate:kingdom-soul": "dotenv -e .env -- node scripts/validate-kingdom-soul.mjs",
     "validate:docs": "node scripts/validate-project-docs.mjs",
     "analytics:report": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js",
     "analytics:check": "npm run build --workspace @crown-and-coin/game-api && dotenv -e .env -- node apps/game-api/dist/analytics/analytics-report.cli.js --check",

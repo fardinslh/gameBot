@@ -13,6 +13,9 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Area | Status | Current implementation |
 | --- | --- | --- |
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
+| Kingdom ownership identity | Implemented | Server-owned Kingdom name, ruler title, and one of three free heraldry choices; safe defaults backfill old players and Castle detail owns editing |
+| Castle transformation preview | Implemented | Castle detail derives the current realm state, next transformation, and one later preview from existing authoritative Castle unlock milestones |
+| Ambient life V1 | Implemented | Eight or nine deterministic, non-interactive Pixi actors represent guards, workers, a cart, and a farm animal; motion pauses while hidden and freezes for reduced motion |
 | Economy | Implemented | PostgreSQL balances, capacity-limited passive production, preserved explicit-reward overflow, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Active building visual evolution | Implemented | All nine active buildings derive five major raster tiers plus a visible minor step at every level; all 45 assets pass effective-resolution audit through moderate 200% inspection |
@@ -94,11 +97,11 @@ The same persistent Heroes also serve as Army Commanders. The default Army Forma
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, Engagement overview/session/heartbeat/Decree claim, Campaign state/start/milestone claims, and Shop state/purchase/Profile-Crest equip. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations including identity editing, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, Engagement overview/session/heartbeat/Decree claim, Campaign state/start/milestone claims, and Shop state/purchase/Profile-Crest equip. Kingdom bootstrap includes authoritative progression goals and Castle transformation presentation without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
-Twenty ordered migrations exist:
+Twenty-one ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -120,10 +123,11 @@ Twenty ordered migrations exist:
 18. `20260830100000_pve_campaign_chapter_one`
 19. `20260831120000_retention_05_shop_gem_economy`
 20. `20260901090000_engagement_cohesion`
+21. `20260901100000_kingdom_identity`
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, and the Phase A Engagement Cohesion pass are complete. The cohesion layer reads existing authoritative facts; it does not create parallel mission, Achievement, economy, Army, or Raid progress. Shop spends uncapped earned Gems on permanent Profile Crests or optional Building/training completion without selling Battle outcomes or Trophies. Retention 05B Kingdom Themes is next and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, and Phase 08.1 Ownership & Visible Anticipation are complete. Phase 08.1 adds identity, Castle anticipation, and ambient presentation without parallel progression or simulation state. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 

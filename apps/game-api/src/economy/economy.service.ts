@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {
   EconomyAction,
   EconomyTransactionReason,
@@ -16,6 +16,8 @@ import type {
   ResourceAmounts,
   ResourceType,
   StorageCapacities,
+  UpdateKingdomIdentityRequest,
+  UpdateKingdomIdentityResponse,
   UpgradeAvailability,
   UpgradeResponse,
 } from '@crown-and-coin/shared';
@@ -86,6 +88,29 @@ export class EconomyService {
       await this.reconcileCompletedUpgrades(tx, kingdomId, now);
       const graph = await this.loadGraph(tx, kingdomId);
       return this.presentKingdom(graph, now);
+    });
+  }
+
+  updateKingdomIdentity(context: DevelopmentPlayerContext, input: UpdateKingdomIdentityRequest): Promise<UpdateKingdomIdentityResponse> {
+    return this.withPlayerTransaction(context, async (tx, playerId, kingdomId) => {
+      const name = input.name.normalize('NFKC').replace(/\s+/gu, ' ').trim();
+      const length = [...name].length;
+      if (length < 2 || length > 24 || /[\p{Cc}\p{Cs}<>]/u.test(name)) {
+        throw new BadRequestException({ statusCode: 400, code: 'KINGDOM_IDENTITY_INVALID', message: 'Kingdom name must contain 2 to 24 safe characters.' });
+      }
+      const kingdom = await tx.kingdom.update({
+        where: { id: kingdomId },
+        data: { name, rulerTitle: input.rulerTitle, heraldry: input.heraldry },
+        select: { name: true, rulerTitle: true, heraldry: true },
+      });
+      await this.analytics.recordServer(tx, {
+        playerId,
+        eventName: 'kingdom_identity_updated',
+        dedupeKey: `kingdom_identity_updated:${randomUUID()}`,
+        properties: { rulerTitle: kingdom.rulerTitle, heraldry: kingdom.heraldry },
+        occurredAt: new Date(),
+      });
+      return { identity: kingdom, serverTime: new Date().toISOString() };
     });
   }
 
@@ -501,7 +526,14 @@ export class EconomyService {
         level: castle?.level ?? graph.level,
         equippedProfileCrest: graph.player.equippedProfileCrest,
       },
-      kingdom: { id: graph.id, name: graph.name, level: progression.level, lastCollectedAt: graph.lastCollectedAt.toISOString() },
+      kingdom: {
+        id: graph.id,
+        name: graph.name,
+        rulerTitle: graph.rulerTitle,
+        heraldry: graph.heraldry,
+        level: progression.level,
+        lastCollectedAt: graph.lastCollectedAt.toISOString(),
+      },
       progression,
       kingdomGoals: this.kingdomProgressGoals.calculate(graph.buildings.map((building) => ({
         type: building.type as KingdomBuildingType,

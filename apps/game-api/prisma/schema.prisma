@@ -13,6 +13,18 @@ enum Platform {
   WEB
 }
 
+enum KingdomRulerTitle {
+  LORD
+  LADY
+  WARDEN
+}
+
+enum KingdomHeraldry {
+  GOLDEN_LION
+  VERDANT_STAG
+  CRIMSON_FALCON
+}
+
 enum AnalyticsSource {
   SERVER
   CLIENT
@@ -250,13 +262,13 @@ model Player {
 }
 
 model PlayerEngagementState {
-  id                     String    @id @default(uuid())
-  playerId               String    @unique
-  lastSeenAt             DateTime
-  royalDecreeClaimedAt   DateTime?
-  createdAt              DateTime  @default(now())
-  updatedAt              DateTime  @updatedAt
-  player                 Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  id                   String    @id @default(uuid())
+  playerId             String    @unique
+  lastSeenAt           DateTime
+  royalDecreeClaimedAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  player               Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@index([lastSeenAt])
 }
@@ -358,6 +370,8 @@ model Kingdom {
   id                  String               @id @default(uuid())
   playerId            String               @unique
   name                String
+  rulerTitle          KingdomRulerTitle    @default(LORD)
+  heraldry            KingdomHeraldry      @default(GOLDEN_LION)
   level               Int                  @default(1)
   lastCollectedAt     DateTime             @default(now())
   createdAt           DateTime             @default(now())
@@ -671,16 +685,16 @@ model Battle {
 }
 
 model PlayerCampaignStage {
-  id             String   @id @default(uuid())
+  id             String    @id @default(uuid())
   playerId       String
   stageKey       String
-  bestStars      Int      @default(0)
-  attempts       Int      @default(0)
+  bestStars      Int       @default(0)
+  attempts       Int       @default(0)
   firstClearedAt DateTime?
   lastPlayedAt   DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  player         Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
 
   @@unique([playerId, stageKey])
   @@index([playerId, lastPlayedAt])

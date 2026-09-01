@@ -2,6 +2,8 @@ import type {
   CollectResponse,
   EconomyErrorResponse,
   KingdomStateResponse,
+  UpdateKingdomIdentityRequest,
+  UpdateKingdomIdentityResponse,
   UpgradeResponse,
 } from '@crown-and-coin/shared';
 
@@ -28,6 +30,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 
 export function fetchKingdom(signal?: AbortSignal): Promise<KingdomStateResponse> {
   return request('/kingdom', { signal });
+}
+
+export function updateKingdomIdentity(input: UpdateKingdomIdentityRequest): Promise<UpdateKingdomIdentityResponse> {
+  return request('/kingdom/identity', { method: 'PUT', body: JSON.stringify(input) });
 }
 
 export function collectKingdom(): Promise<CollectResponse> {
