@@ -38,6 +38,7 @@ export const SERVER_ANALYTICS_EVENTS = [
   'campaign_chapter_completed',
   'shop_purchase_completed',
   'shop_cosmetic_equipped',
+  'royal_decree_claimed',
 ] as const;
 
 export const CLIENT_ANALYTICS_EVENTS = [

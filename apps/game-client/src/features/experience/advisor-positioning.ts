@@ -1,5 +1,5 @@
 export const ADVISOR_TARGET_GAP = 12;
-export const ADVISOR_REFLOW_BUFFER = 8;
+export const ADVISOR_REFLOW_BUFFER = 28;
 export const MOBILE_NAV_HEIGHT = 54;
 
 export interface Rect { left: number; top: number; right: number; bottom: number; width: number; height: number; }

@@ -9,6 +9,8 @@ import type { GameSection } from '@/features/kingdom/components/bottom-navigatio
 import type { RaidView } from '@/features/raid/hooks/use-raid-state';
 import { initializeAnalytics, trackScreen } from '@/features/analytics/analytics-client';
 import { AudioProvider, useGameAudio } from '@/features/audio/audio-provider';
+import { EngagementProvider, useEngagement } from '@/features/engagement/engagement-provider';
+import { ReturnSummary } from '@/features/engagement/components/return-summary';
 import { PlayerExperienceProvider } from '@/features/experience/player-experience-provider';
 import { LocalizedGameRoot } from '@/i18n/bidi';
 import { ShopPage } from '@/features/shop/components/shop-page';
@@ -47,10 +49,18 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
   };
   return (
     <PlayerExperienceProvider dictionary={dictionary}>
+      <EngagementProvider>
       {activeSection === 'heroes' ? <HeroesPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
         : activeSection === 'raid' ? <RaidPage locale={locale} dictionary={dictionary} initialView={raidInitialView} onNavigate={navigate} />
           : activeSection === 'shop' ? <ShopPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
           : <KingdomPage locale={locale} dictionary={dictionary} onNavigate={navigate} onOpenInbox={openInbox} />}
+      <EngagementReturnLayer dictionary={dictionary} />
+      </EngagementProvider>
     </PlayerExperienceProvider>
   );
+}
+
+function EngagementReturnLayer({ dictionary }: { dictionary: Dictionary }) {
+  const engagement = useEngagement();
+  return engagement.returnSummary ? <ReturnSummary dictionary={dictionary} onClose={engagement.dismissReturnSummary} summary={engagement.returnSummary} /> : null;
 }

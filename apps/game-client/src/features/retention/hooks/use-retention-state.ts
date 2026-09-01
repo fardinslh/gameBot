@@ -59,6 +59,7 @@ export function useRetentionState(enabled: boolean, onBalancesChanged: () => Pro
       setErrorCode(null);
       audio.playSfx('collect');
       await onBalancesChanged();
+      window.dispatchEvent(new Event('crown:engagement-refresh'));
     } catch (error) {
       setErrorCode(error instanceof RetentionApiError ? error.code : 'SERVER_ERROR');
     } finally { setAction('idle'); }

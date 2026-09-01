@@ -29,6 +29,7 @@ Player
   1--* RetentionMissionInstance
   1--* RetentionDailyBonusClaim
   1--* RetentionAchievementClaim
+  1--0..1 PlayerEngagementState
   1--* DailyReturnClaim
 
 RaidMatchOffer 1--0..1 Battle
@@ -58,6 +59,8 @@ RevengeTarget 1--0..1 Battle as consumed Revenge
 `RetentionMissionInstance` stores one deterministic assignment snapshot per Player, cadence, UTC period, and definition key. It persists target/rewards and optional claim time; progress remains derived from gameplay facts. `RetentionDailyBonusClaim` permits one all-Daily reward per Player and UTC day. `RetentionAchievementClaim` permits one claim per Player, family key, and tier. `DailyReturnClaim` permits one claim per Player and UTC day and records the claimed day index from 1 through 7.
 
 Retention rewards reuse `ResourceBalance`, `EconomyTransaction`, and `EconomyRequest`. New transaction reasons distinguish Daily/Weekly missions, Achievements, Daily Return, and Daily completion. Database uniqueness plus the existing advisory-lock boundary prevents duplicate grants under concurrent requests.
+
+`PlayerEngagementState` stores only server-owned `lastSeenAt` and the optional one-time Royal Decree claim timestamp. Return details, goals, Decree task progress, Mission/Achievement cues, and affordability remain derived read models. `ENGAGEMENT_SESSION` responses use `EconomyRequest` replay protection; the Decree reward uses `ROYAL_DECREE_REWARD` ledger rows and `ROYAL_DECREE_CLAIM` request replay.
 
 ## Hero models
 

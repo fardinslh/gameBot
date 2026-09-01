@@ -92,6 +92,8 @@ Collection, building upgrade start, Hero upgrade completion, Raid search/battle/
 
 Retention progress is a read model over those durable authoritative facts. Daily and Weekly assignments snapshot a deterministic server-selected definition for the UTC period; Achievement milestones backfill from history. Explicit claims reuse Player locks, balances, the economy ledger, and idempotent request storage. Retention never changes the underlying Collect, building, Hero, Raid, or Revenge outcome.
 
+The Phase A Engagement layer is a second read composition, not another progression system. It combines current Kingdom, Army, Raid, onboarding, Mission, Achievement, Daily Return, and Revenge facts into one Next Goal, a concise return summary, and contextual result cues. A visibility heartbeat records authoritative last activity. Royal Decree I unlocks after completed onboarding, derives its three tasks from existing Castle, Collect, and Raid history, and settles its fixed reward exactly once through the Player lock, ledger, and idempotency boundary.
+
 Onboarding advances inside successful authoritative Collect, building-upgrade, and standard-Raid transactions. The client may report `onboarding_started` and `onboarding_step_seen`; only the server emits `onboarding_completed`. Skipping and system-opponent identities do not create completion or activation events. Activation remains `first_raid_completed`. Kingdom goals are read-only server derivation: no client claim, reward, mission, or unlock write path exists.
 
 ## Presentation-only systems

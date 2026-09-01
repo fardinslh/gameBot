@@ -73,7 +73,7 @@ async function assertCoachClear(page, targetSelector) {
   const gap = 12;
   const overlap = coach.x < target.x + target.width + gap && coach.x + coach.width > target.x - gap
     && coach.y < target.y + target.height + gap && coach.y + coach.height > target.y - gap;
-  if (overlap) throw new Error(`Advisor overlaps expanded target ${targetSelector}`);
+  if (overlap) throw new Error(`Advisor overlaps expanded target ${targetSelector}: placement=${await page.locator('.advisor-coach').getAttribute('data-placement')} coach=${JSON.stringify(coach)} target=${JSON.stringify(target)}`);
   await page.locator(targetSelector).click({ trial: true });
 }
 

@@ -169,8 +169,12 @@ export function AdvisorCoach({ title, body, target, durationMs }: { title: strin
           setPlacement({ side: 'fallback', left: Math.max(8, (width - coachRect.width) / 2), top: (viewport?.offsetTop ?? 0) + 146 });
           return;
         }
-        const targetRect = targetElement.getBoundingClientRect();
-        if (!scrolled && (targetRect.bottom < 0 || targetRect.top > height)) { scrolled = true; targetElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+        let targetRect = targetElement.getBoundingClientRect();
+        if (!scrolled && (targetRect.bottom < 0 || targetRect.top > height)) {
+          scrolled = true;
+          targetElement.scrollIntoView({ block: 'nearest', behavior: 'auto' });
+          targetRect = targetElement.getBoundingClientRect();
+        }
         const hudBottom = [...document.querySelectorAll<HTMLElement>('.player-hud, .resource-hud')].reduce((bottom, element) => Math.max(bottom, element.getBoundingClientRect().bottom), 0);
         setPlacement(calculateAdvisorPlacement(toRect(targetRect), { width: coachRect.width, height: coachRect.height }, { width, height, offsetLeft: viewport?.offsetLeft, offsetTop: viewport?.offsetTop, safeTop: safeInsets.top, safeBottom: safeInsets.bottom, reservedTop: hudBottom ? hudBottom + 8 : undefined }));
       });

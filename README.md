@@ -1,6 +1,6 @@
 # Crown & Coin
 
-Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign. Retention 05 adds an earned-Gem Shop with permanent Profile Crests and optional Building/training timer completion. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
+Crown & Coin is a portrait-oriented medieval strategy game. Retention 03A and 03B provide persistent troops, one server-timed training queue, Castle-derived capacity, three Commander-led squads, and deterministic Army Battle v2. Retention 04 adds the nine-stage Broken Frontier PvE Campaign. Retention 05 adds an earned-Gem Shop. Phase A Engagement Cohesion connects return activity, one Next Goal, Royal Decree I, upgrades, objectives, and Raid results without duplicating their authoritative systems. Historical Hero Battle v1 replay remains compatible. Guilds, payments, Bale/platform authentication, and external delivery remain out of scope.
 
 ## Project documentation
 
@@ -293,6 +293,8 @@ Production loads only the current required tier through a centralized Theme → 
 All claims are explicit, idempotent, advisory-locked PostgreSQL transactions. They recheck eligibility, credit authoritative balances, append typed economy ledger rows, persist semantic claim uniqueness, and emit analytics together. The bodyless claim endpoints never accept progress, amount, period, tier eligibility, or completion time. The compact bilingual React sheet appears from Kingdom after onboarding and does not change Pixi coordinates, gameplay, safe areas, or the 54px navigation.
 
 Retention 01A, Retention 01B, Retention 02, Retention 03A Army & Commander Foundation, Retention 03B Army Battle v2, Retention 04 PvE Campaign / Adventure, and Retention 05 Shop MVP + Gem Economy are implemented. New Raid, Revenge, and Campaign attempts use `rulesVersion: 2`; historical `rulesVersion: 1` Hero replay remains supported. Retention 05B Kingdom Themes Foundation is next and has not started. Kingdom Theme content, Guild, Leaderboards, Bale, real-money Gem acquisition, permanent troop casualty/recovery, Hospital, and active Barracks gameplay remain unimplemented.
+
+Phase A Engagement Cohesion is also implemented: a server-owned return session/heartbeat, concise Welcome Back summary, one contextual Next Goal, bounded Royal Decree I, before/after upgrade feedback, objective progress cues, and Raid-result affordability feedback. It reuses existing economy, Army, Raid, Mission, Achievement, Daily Return, and Revenge facts.
 
 The visual approach is layered: `terrain/kingdom-base-v3.webp` is an optimized local 1024×1536 environment with no baked gameplay-looking structures and distinct irregular Farm, Lumber, Mine, and Market ground treatments. The approved Castle and four secondary buildings load as separate Pixi sprites with deterministic placement, hit areas, selection, indicators, glow, flags, and smoke. `kingdom-base-v2.webp` and the earlier `kingdom-expansion-v1.webp` remain available only for comparison and rollback.
 

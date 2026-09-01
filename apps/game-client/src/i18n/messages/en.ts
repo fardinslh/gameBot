@@ -104,6 +104,18 @@ export const en = {
       MISSION_INCOMPLETE: 'Mission is not complete.', MISSION_ALREADY_CLAIMED: 'Reward already claimed.', MISSION_EXPIRED: 'Mission period ended.', DAILY_BONUS_INCOMPLETE: 'Complete all Daily Missions first.', DAILY_BONUS_ALREADY_CLAIMED: 'Daily completion reward already claimed.', ACHIEVEMENT_INCOMPLETE: 'Achievement tier is not complete.', ACHIEVEMENT_TIER_OUT_OF_ORDER: 'Claim the earlier tier first.', ACHIEVEMENT_ALREADY_CLAIMED: 'Achievement reward already claimed.', DAILY_RETURN_ALREADY_CLAIMED: 'Daily reward already claimed today.', SERVER_ERROR: 'Objectives are unavailable.',
     },
   },
+  engagement: {
+    returnKicker: 'Your kingdom kept moving', welcomeBack: 'Welcome back, Lord!', awaySummary: 'While you were away, these changes became ready:', continue: 'Enter the Kingdom',
+    upgradeComplete: 'Upgrade completed', trainingComplete: 'Training completed', rewardsReady: 'Rewards ready', revengeReady: 'Revenge available',
+    nextGoal: 'Next Goal', royalDecree: 'Royal Decree', royalDecreeOne: 'Royal Decree I', firstDirection: 'First royal direction', restoreKingdom: 'Restore the Kingdom',
+    claimReadyReward: 'Claim your ready reward', collectGoal: 'Collect kingdom resources', raidGoal: 'Win another Raid', armyGoal: 'Strengthen your Army',
+    upgradeWaiting: 'Upgrade is nearly ready', decreeReady: 'Royal Decree reward ready', upgradeGoal: 'Upgrade {building}',
+    missionProgress: 'Mission progress', achievementProgress: 'Achievement progress', reward: 'Reward', claimDecree: 'Claim Royal Reward', decreeInProgress: 'Decree in progress',
+    decreeTasks: { CASTLE_LEVEL: 'Upgrade the Castle', COLLECT_RESOURCES: 'Collect resources twice', COMPLETE_RAIDS: 'Complete another Raid' },
+    kingdomChanged: 'Your Kingdom changed', productionImproved: 'Production improved', storageImproved: 'Royal storage expanded', effectImproved: 'Kingdom effect improved', buildingStronger: 'Kingdom power increased', appearanceUnlocked: 'New appearance unlocked',
+    raidProgress: 'Progress from this Raid', nowAffordable: '{building} upgrade is now affordable',
+    errors: { ROYAL_DECREE_LOCKED: 'Complete the first Raid first.', ROYAL_DECREE_INCOMPLETE: 'Royal Decree tasks are incomplete.', ROYAL_DECREE_ALREADY_CLAIMED: 'Royal Decree reward already claimed.', SERVER_ERROR: 'Kingdom guidance is unavailable.' },
+  },
   experience: {
     advisor: {
       name: 'Aren', role: 'Royal Steward', guideRole: 'Royal Steward / Kingdom Advisor',

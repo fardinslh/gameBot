@@ -1374,6 +1374,82 @@ button { color: inherit; }
 .retention-empty > span { width: 27px; height: 27px; border: 2px solid rgba(255,215,108,.14); border-top-color: var(--gold-bright); border-radius: 50%; animation: spin 900ms linear infinite; }
 .retention-header button:focus-visible, .retention-tabs button:focus-visible, .retention-entry:focus-visible, .retention-claim:focus-visible, .retention-error button:focus-visible { outline: 2px solid var(--gold-bright); outline-offset: 2px; }
 
+/* Phase A engagement cohesion: one compact direction, one return moment, no new navigation. */
+.engagement-backdrop {
+  position: absolute; z-index: 140; inset: 0 0 calc(54px + max(0px, env(safe-area-inset-bottom))) 0;
+  display: grid; align-items: center; padding: max(8px, env(safe-area-inset-top)) 8px 8px;
+  pointer-events: auto; background: radial-gradient(circle at 50% 35%, rgba(82,62,29,.2), transparent 46%), rgba(6,7,5,.78); backdrop-filter: blur(5px);
+}
+.return-summary, .royal-decree-sheet {
+  width: min(100%, 380px); max-height: 100%; margin: auto; overflow-y: auto; padding: 15px;
+  color: var(--cream); background: linear-gradient(165deg, rgba(42,34,23,.98), rgba(17,16,13,.99));
+  border: 1px solid rgba(225,185,91,.34); border-radius: 19px;
+  box-shadow: 0 24px 60px rgba(0,0,0,.56), inset 0 0 0 1px rgba(255,232,167,.06);
+}
+.return-summary header, .royal-decree-sheet header { display: flex; align-items: center; gap: 10px; margin-block-end: 8px; }
+.return-summary header > span, .royal-decree-sheet header > span { display: grid; width: 40px; height: 40px; flex: 0 0 auto; place-items: center; color: #f3d274; background: rgba(200,146,51,.13); border: 1px solid rgba(242,207,116,.2); border-radius: 13px; }
+.return-summary header div, .royal-decree-sheet header div { min-width: 0; flex: 1; }
+.return-summary header small, .royal-decree-sheet header small { color: #c4a96c; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.return-summary h2, .royal-decree-sheet h2 { margin: 1px 0 0; font-size: 20px; line-height: 1.15; }
+.return-summary > p, .royal-decree-sheet > p { margin: 0 0 10px; color: var(--cream-muted); font-size: 12px; line-height: 1.5; }
+.return-summary__list { display: grid; gap: 6px; }
+.return-summary__list > div { display: grid; grid-template-columns: 20px minmax(0,1fr) auto; align-items: center; gap: 7px; min-height: 37px; padding: 6px 8px; background: rgba(255,255,255,.035); border: 1px solid rgba(239,214,156,.08); border-radius: 10px; }
+.return-summary__list svg { color: #d6ae59; }
+.return-summary__list span { color: var(--cream-muted); font-size: 11px; }
+.return-summary__list b { color: #f4dfac; font-size: 12px; font-weight: 700; }
+.return-summary > button, .royal-decree-sheet__claim { width: 100%; min-height: 44px; margin-block-start: 12px; color: #241707; font-weight: 800; background: linear-gradient(180deg,#f1d477,#ba7b2c); border: 0; border-radius: 12px; box-shadow: 0 7px 18px rgba(0,0,0,.3); cursor: pointer; }
+.engagement-goal-card {
+  position: absolute; z-index: 18; inset-inline: 8px; inset-block-end: calc(61px + max(0px, env(safe-area-inset-bottom)));
+  pointer-events: auto; overflow: hidden; background: linear-gradient(100deg,rgba(25,22,17,.96),rgba(40,31,19,.94));
+  border: 1px solid rgba(227,184,80,.28); border-radius: 14px; box-shadow: 0 9px 24px rgba(0,0,0,.4), inset 0 0 0 1px rgba(255,235,175,.035); backdrop-filter: blur(8px);
+}
+.engagement-goal-card button { color: inherit; border: 0; cursor: pointer; }
+.engagement-goal-card__main { display: grid; width: 100%; min-height: 43px; grid-template-columns: 34px minmax(0,1fr) auto; align-items: center; gap: 7px; padding: 5px 8px; text-align: start; background: transparent; }
+.engagement-goal-card__icon { display: grid; width: 31px; height: 31px; place-items: center; color: #efd06d; background: rgba(211,155,52,.12); border-radius: 10px; }
+.engagement-goal-card__main > span:nth-child(2) { display: grid; min-width: 0; gap: 1px; }
+.engagement-goal-card__main small { color: #b9a274; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; }
+.engagement-goal-card__main strong { overflow: hidden; color: #f3e3bb; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.engagement-goal-card__progress { display: flex; align-items: center; gap: 3px; color: #d5b768; font-size: 10px; }
+.engagement-goal-card__cue { display: flex; width: 100%; min-height: 24px; align-items: center; justify-content: space-between; gap: 8px; padding: 3px 10px; color: #aaa28f; background: rgba(255,255,255,.025); border-block-start: 1px solid rgba(255,255,255,.055) !important; font-size: 10px; }
+.royal-decree-sheet header > button { display: grid; width: 36px; height: 36px; place-items: center; color: var(--cream-muted); background: rgba(255,255,255,.04); border: 0; border-radius: 10px; cursor: pointer; }
+.royal-decree-sheet__tasks { display: grid; gap: 7px; }
+.royal-decree-sheet__tasks > div { display: grid; grid-template-columns: 25px minmax(0,1fr) auto; min-height: 40px; align-items: center; gap: 7px; padding: 6px 8px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); border-radius: 11px; }
+.royal-decree-sheet__tasks > div > span { display: grid; width: 22px; height: 22px; place-items: center; color: #162110; background: #6f9d56; border-radius: 50%; }
+.royal-decree-sheet__tasks > div > span i { width: 7px; height: 7px; background: #75684b; border-radius: 50%; }
+.royal-decree-sheet__tasks strong { font-size: 11px; font-weight: 650; }
+.royal-decree-sheet__tasks bdi { color: #b9a875; font-size: 10px; }
+.royal-decree-sheet__tasks .is-complete { border-color: rgba(132,180,91,.22); }
+.royal-decree-sheet__reward { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 9px; margin-block-start: 10px; padding: 9px; color: #d7b75f; background: rgba(207,154,55,.08); border-radius: 11px; }
+.royal-decree-sheet__reward span { margin-inline-end: auto; color: var(--cream-muted); font-size: 10px; }
+.royal-decree-sheet__reward b { color: #eed89e; font-size: 10px; }
+.royal-decree-sheet__claim:disabled { color: #8f846b; background: #39352d; box-shadow: none; cursor: default; }
+.upgrade-celebration {
+  position: absolute; z-index: 76; inset-inline: 8px; inset-block-end: calc(130px + max(0px, env(safe-area-inset-bottom)));
+  display: grid; grid-template-columns: 32px minmax(0,1fr) 30px; align-items: center; gap: 7px; min-height: 58px; padding: 7px 8px;
+  pointer-events: auto; color: var(--cream); background: linear-gradient(110deg,rgba(39,31,18,.98),rgba(20,19,15,.97)); border: 1px solid rgba(237,196,90,.36); border-radius: 14px; box-shadow: 0 12px 30px rgba(0,0,0,.48), 0 0 22px rgba(215,164,59,.1);
+}
+.upgrade-celebration > span { display: grid; width: 31px; height: 31px; place-items: center; color: #f2d36f; background: rgba(216,163,56,.13); border-radius: 10px; }
+.upgrade-celebration > div { display: grid; min-width: 0; gap: 1px; }
+.upgrade-celebration small { color: #bfa76d; font-size: 10px; }
+.upgrade-celebration strong { display: flex; align-items: center; gap: 5px; font-size: 12px; }
+.upgrade-celebration p { margin: 0; overflow: hidden; color: var(--cream-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.upgrade-celebration > button { display: grid; width: 30px; height: 30px; place-items: center; color: var(--cream-muted); background: transparent; border: 0; cursor: pointer; }
+.raid-engagement-summary { display: grid; gap: 5px; margin-block: 9px; padding: 8px; text-align: start; background: rgba(11,14,11,.35); border: 1px solid rgba(220,181,77,.16); border-radius: 11px; }
+.raid-engagement-summary header, .raid-engagement-summary > div, .raid-engagement-summary p { display: grid; grid-template-columns: 18px minmax(0,1fr) auto; align-items: center; gap: 5px; margin: 0; }
+.raid-engagement-summary header { color: #dfbd64; font-size: 10px; }
+.raid-engagement-summary > div { color: var(--cream-muted); font-size: 10px; }
+.raid-engagement-summary > div b { color: #dac783; }
+.raid-engagement-summary p { grid-template-columns: 18px minmax(0,1fr); padding-block-start: 4px; color: #bcd28e; border-block-start: 1px solid rgba(255,255,255,.06); font-size: 10px; }
+
+@media (max-width: 340px), (max-height: 620px) {
+  .engagement-goal-card { inset-inline: 6px; }
+  .engagement-goal-card__cue { display: none; }
+  .engagement-goal-card__main { min-height: 42px; }
+  .upgrade-celebration { inset-block-end: calc(112px + max(0px, env(safe-area-inset-bottom))); }
+  .return-summary, .royal-decree-sheet { padding: 12px; }
+  .return-summary__list > div { min-height: 34px; }
+}
+
 @media (max-width: 340px) {
   .retention-header { grid-template-columns: 36px 1fr 36px; }
   .retention-header > span, .retention-header > button { width: 36px; height: 36px; }

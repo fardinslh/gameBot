@@ -25,6 +25,10 @@ import { RetentionEntry } from '@/features/retention/components/retention-entry'
 import { RetentionSheet } from '@/features/retention/components/retention-sheet';
 import { useShopState } from '@/features/shop/hooks/use-shop-state';
 import { aggregateProductionRates } from '../domain/collection-presentation';
+import { useEngagement } from '@/features/engagement/engagement-provider';
+import { EngagementGoalCard } from '@/features/engagement/components/engagement-goal-card';
+import { RoyalDecreeSheet } from '@/features/engagement/components/royal-decree-sheet';
+import { UpgradeCelebration } from '@/features/engagement/components/upgrade-celebration';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -42,14 +46,16 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
   const [retentionOpen, setRetentionOpen] = useState(false);
+  const [decreeOpen, setDecreeOpen] = useState(false);
   const retentionEnabled = experience.onboarding?.status === 'COMPLETED' || experience.onboarding?.status === 'SKIPPED';
   const refreshKingdom = useCallback(async () => { await economy.refresh(); }, [economy.refresh]);
   const retention = useRetentionState(retentionEnabled, refreshKingdom);
+  const engagement = useEngagement();
   const shop = useShopState(false);
   const selectedBuilding = isActiveBuildingId(selectedBuildingId) ? economy.buildings.find((item) => item.visualId === selectedBuildingId) ?? null : null;
   const selectedFutureBuilding = FUTURE_BUILDING_LAYOUT.find((item) => item.id === selectedBuildingId) ?? null;
   const finishOffer = selectedBuilding ? shop.state?.convenience.buildingFinishes.find((offer) => offer.buildingId === selectedBuilding.id) ?? null : null;
-  const activeError = shop.errorCode ?? economy.errorCode;
+  const activeError = engagement.errorCode ?? shop.errorCode ?? economy.errorCode;
   const balances: ResourceAmounts = economy.state?.balances ?? { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' };
   const displayedBalances = economy.displayedBalances ?? balances;
   const productionRates = useMemo(() => aggregateProductionRates(economy.buildings), [economy.buildings]);
@@ -87,6 +93,20 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
     audio.playSfx('building_select');
     setSelectedBuildingId(buildingId);
   }, [audio]);
+
+  const handleEngagementGoal = useCallback(() => {
+    const goal = engagement.state?.nextGoal;
+    if (!goal) return;
+    audio.playSfx('ui_tap');
+    if (goal.kind === 'CLAIM_REWARD') { setRetentionOpen(true); return; }
+    if (goal.kind === 'ROYAL_DECREE') { setDecreeOpen(true); return; }
+    if (goal.kind === 'COLLECT_RESOURCES') { void economy.collect(); return; }
+    if (goal.kind === 'WIN_RAID') { onNavigate('raid'); return; }
+    if (goal.buildingType) {
+      const building = economy.buildings.find((item) => item.type === goal.buildingType);
+      if (building) setSelectedBuildingId(building.visualId);
+    }
+  }, [audio, economy, engagement.state?.nextGoal, onNavigate]);
 
   return (
     <>
@@ -136,6 +156,12 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
               serverTime={economy.state.serverTime}
             />
           ) : null}
+          {retentionEnabled && engagement.state && !selectedBuildingId && !retentionOpen && !progressOpen ? <EngagementGoalCard
+            dictionary={t}
+            engagement={engagement.state}
+            onAction={handleEngagementGoal}
+            onOpenProgress={() => setRetentionOpen(true)}
+          /> : null}
           <BuildingDetailSheet
             actionPending={economy.action === 'upgrading' || shop.action !== 'idle'}
             building={selectedBuilding}
@@ -167,6 +193,8 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
             serverNow={retention.serverNow}
             state={retention.state}
           /> : null}
+          {decreeOpen && engagement.state ? <RoyalDecreeSheet action={engagement.action} decree={engagement.state.royalDecree} dictionary={t} onClaim={() => void engagement.claimDecree().then((claimed) => { if (claimed) setDecreeOpen(false); })} onClose={() => setDecreeOpen(false)} /> : null}
+          {economy.completedUpgrade ? <UpgradeCelebration before={economy.completedUpgrade.before} after={economy.completedUpgrade.after} dictionary={t} effectGainedBps={economy.completedUpgrade.effectGainedBps} onClose={economy.dismissCompletedUpgrade} storageGained={economy.completedUpgrade.storageGained} xpGained={economy.completedUpgrade.xpGained} /> : null}
           <LockedBuildingSheet building={selectedFutureBuilding} dictionary={t} onClose={() => setSelectedBuildingId(null)} />
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'COLLECT'
             ? <AdvisorCoach title={t.experience.collectTitle} body={t.experience.advisor.collect} target="collect" /> : null}
@@ -180,8 +208,8 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           </div>
           <div className={shop.success ? 'shop-toast shop-toast--visible' : 'shop-toast'} role="status">{shop.success ? t.shopUi.success : ''}</div>
           <div className={activeError ? 'economy-error economy-error--visible' : 'economy-error'} role="alert">
-            {shop.errorCode ? (t.shopErrors[shop.errorCode as keyof typeof t.shopErrors] ?? t.shopErrors.SERVER_ERROR) : economy.errorCode ? errorMessage(economy.errorCode, t) : ''}
-            {activeError ? <button onClick={() => shop.errorCode ? shop.clearError() : void economy.refresh()} type="button">{shop.errorCode ? t.close : t.retry}</button> : null}
+            {engagement.errorCode ? (t.engagement.errors[engagement.errorCode as keyof typeof t.engagement.errors] ?? t.engagement.errors.SERVER_ERROR) : shop.errorCode ? (t.shopErrors[shop.errorCode as keyof typeof t.shopErrors] ?? t.shopErrors.SERVER_ERROR) : economy.errorCode ? errorMessage(economy.errorCode, t) : ''}
+            {activeError ? <button onClick={() => engagement.errorCode ? void engagement.refresh() : shop.errorCode ? shop.clearError() : void economy.refresh()} type="button">{shop.errorCode ? t.close : t.retry}</button> : null}
           </div>
         </div>
       </main>

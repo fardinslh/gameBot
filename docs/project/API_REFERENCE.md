@@ -12,7 +12,7 @@ The NestJS API listens on port `3001` by default. Responses use shared types fro
 
 `X-Dev-Player-Id` selects an isolated Web development identity. Without the header, `DEV_PLAYER_ID` or `local-crown-player` supplies the identity. This mechanism is development scaffolding, not authentication.
 
-Economy mutations, Hero upgrade, troop training, Shop purchase, Raid start, Revenge start, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team/formation save, Shop equip, search, and inbox read do not require one because they do not grant or charge a replayable reward.
+Economy mutations, Hero upgrade, troop training, Shop purchase, Raid start, Revenge start, Engagement session/Decree claim, and every Retention reward claim require `Idempotency-Key` with 8 through 100 characters. Team/formation save, Engagement heartbeat, Shop equip, search, and inbox read do not require one because they do not grant or charge a replayable reward.
 
 ## Health
 
@@ -97,6 +97,15 @@ Campaign starts accept no NPC, Army, outcome, stars, or reward input. Claims acc
 | `POST` | `/retention/daily-return/claim` | Claim today's next reward in the seven-claim cycle | Idempotency key; `RetentionClaimResponse` |
 
 Retention claim routes accept no request body. Progress, UTC period, eligibility, sequence, amounts, balance results, and claim time are server-derived. Claims use the same Player advisory lock, economy request replay protection, PostgreSQL transaction, and immutable ledger boundary as existing economy rewards.
+
+## Engagement
+
+| Method | Route | Behavior | Response |
+| --- | --- | --- | --- |
+| `GET` | `/engagement` | Compose one current goal, contextual progress, Decree state, and affordable upgrade from authoritative systems | `EngagementOverviewResponse` |
+| `POST` | `/engagement/session` | Open an idempotent foreground session and optionally return changes after five minutes away | `EngagementSessionResponse` |
+| `POST` | `/engagement/heartbeat` | Record server-owned foreground activity without changing progression | `{ serverTime }` |
+| `POST` | `/engagement/royal-decree/claim` | Settle completed Royal Decree I once | `RoyalDecreeClaimResponse` |
 
 ## Shop
 

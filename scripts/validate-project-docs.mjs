@@ -80,7 +80,7 @@ for (const fileName of projectDocs) {
 }
 
 const index = readRequiredFile("docs/project/INDEX.md");
-const baselineCommit = "7c67d1b5f1ccc7be220655c829ec9e1a011f2d0f";
+const baselineCommit = "8662619aac50264eaec934af345fbaf4e903d606";
 if (!index.includes("Last verified against commit") || !index.includes(baselineCommit)) {
   failures.push("docs/project/INDEX.md does not identify the verified gameplay baseline");
 }

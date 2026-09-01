@@ -33,6 +33,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Audio settings | Implemented | Master, Music, and SFX toggles/volumes persisted per browser device |
 | Appearance progression | Implemented for all active buildings | Levels 1–20 deterministically select Early, Developed, Advanced, Fortified, or Prestige art across all nine active buildings |
 | Missions / Achievements / Daily Return | Implemented | Three deterministic Daily and Weekly assignments, nine permanent tiered Achievement families, a seven-claim Daily Return cycle, explicit transactional claims, and bilingual mobile UI |
+| Engagement cohesion | Implemented | Server-derived Welcome Back summary, one contextual Next Goal, post-onboarding Royal Decree I, meaningful upgrade completion feedback, contextual mission/Achievement progress, and Raid-to-Kingdom affordability feedback |
 | Army Foundation | Implemented | Infantry, Archer, Cavalry ownership; one training order; Castle-derived capacity; three-squad formation; existing Heroes as Commanders |
 | Army Battle | Implemented | New Raid/Revenge use deterministic rules version 2 with six immutable Army squad snapshots, lane targeting, counters, Commander skills, and battle-state-only casualties |
 | Commander combat roles | Implemented | Knight sustains and shields its own squad; Ranger uses single-target Power Shot; Mage uses all-living-enemy Arcane Blast; basic attacks use same-lane then nearest-slot targeting; Infantry > Cavalry > Archer > Infantry |
@@ -93,11 +94,11 @@ The same persistent Heroes also serve as Army Commanders. The default Army Forma
 
 ## Current API feature set
 
-The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, Campaign state/start/milestone claims, and Shop state/purchase/Profile-Crest equip. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
+The API exposes health, Kingdom state and mutations, Hero roster/team/upgrade, Army state/training/formation, Raid overview/search/start/history, defense inbox/read, Revenge preview/start, participant-only battle replay, authoritative Retention state/claims, Engagement overview/session/heartbeat/Decree claim, Campaign state/start/milestone claims, and Shop state/purchase/Profile-Crest equip. Kingdom bootstrap includes authoritative progression goals without exposing unused `ADVANCED_PVP` metadata. [API reference](API_REFERENCE.md) lists every route.
 
 ## Current migrations
 
-Nineteen ordered migrations exist:
+Twenty ordered migrations exist:
 
 1. `20260823000000_initial_foundation`
 2. `20260823030000_server_authoritative_economy`
@@ -118,10 +119,11 @@ Nineteen ordered migrations exist:
 17. `20260830090000_match_offer_army_fingerprint`
 18. `20260830100000_pve_campaign_chapter_one`
 19. `20260831120000_retention_05_shop_gem_economy`
+20. `20260901090000_engagement_cohesion`
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, and 05 engineering are complete. Shop spends uncapped earned Gems on permanent Profile Crests or optional Building/training completion without selling Battle outcomes or Trophies. New Raid, Revenge, and Campaign starts consume the authoritative Commander-led Army Formation and persist rules-version-2 squad snapshots/events. Historical rules-version-1 Hero replays remain compatible. Retention 05B Kingdom Themes is next and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, and the Phase A Engagement Cohesion pass are complete. The cohesion layer reads existing authoritative facts; it does not create parallel mission, Achievement, economy, Army, or Raid progress. Shop spends uncapped earned Gems on permanent Profile Crests or optional Building/training completion without selling Battle outcomes or Trophies. Retention 05B Kingdom Themes is next and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 

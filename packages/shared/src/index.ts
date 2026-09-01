@@ -221,6 +221,74 @@ export interface RetentionClaimResponse {
   balances: ResourceAmounts;
   retention: RetentionStateResponse;
 }
+
+export type EngagementSection = 'KINGDOM' | 'ARMY' | 'RAID' | 'RETENTION';
+export type EngagementGoalKind =
+  | 'CLAIM_REWARD'
+  | 'ROYAL_DECREE'
+  | 'COLLECT_RESOURCES'
+  | 'UPGRADE_BUILDING'
+  | 'WIN_RAID'
+  | 'TRAIN_TROOPS'
+  | 'UPGRADE_IN_PROGRESS';
+export interface EngagementGoalState {
+  kind: EngagementGoalKind;
+  section: EngagementSection;
+  current: string;
+  target: string;
+  buildingType: KingdomBuildingType | null;
+  readyAt: string | null;
+}
+export interface EngagementProgressCue {
+  source: 'DAILY_MISSION' | 'ACHIEVEMENT';
+  key: string;
+  current: string;
+  target: string;
+  claimable: boolean;
+}
+export interface RoyalDecreeTaskState {
+  key: 'CASTLE_LEVEL' | 'COLLECT_RESOURCES' | 'COMPLETE_RAIDS';
+  current: string;
+  target: string;
+  completed: boolean;
+}
+export interface RoyalDecreeState {
+  available: boolean;
+  claimed: boolean;
+  claimable: boolean;
+  tasks: RoyalDecreeTaskState[];
+  rewards: RetentionRewardItem[];
+}
+export interface EngagementReturnSummary {
+  awaySeconds: number;
+  resourcesReady: ResourceAmounts;
+  completedUpgrades: Array<{ buildingType: KingdomBuildingType; fromLevel: number; toLevel: number }>;
+  completedTraining: Array<{ troopType: TroopType; quantity: number }>;
+  availableRewardCount: number;
+  revengeCount: number;
+}
+export interface EngagementOverviewResponse {
+  serverTime: string;
+  nextGoal: EngagementGoalState;
+  progress: EngagementProgressCue[];
+  royalDecree: RoyalDecreeState;
+  affordableBuildingType: KingdomBuildingType | null;
+}
+export interface EngagementSessionResponse extends EngagementOverviewResponse {
+  returnSummary: EngagementReturnSummary | null;
+}
+export interface RoyalDecreeClaimResponse {
+  granted: RetentionRewardItem[];
+  balances: ResourceAmounts;
+  engagement: EngagementOverviewResponse;
+}
+export type EngagementErrorCode =
+  | 'INVALID_IDEMPOTENCY_KEY'
+  | 'ROYAL_DECREE_LOCKED'
+  | 'ROYAL_DECREE_INCOMPLETE'
+  | 'ROYAL_DECREE_ALREADY_CLAIMED'
+  | 'ENGAGEMENT_CONFLICT';
+export interface EngagementErrorResponse { statusCode: number; code: EngagementErrorCode; message: string; }
 export type RetentionErrorCode =
   | 'INVALID_IDEMPOTENCY_KEY'
   | 'MISSION_NOT_FOUND'

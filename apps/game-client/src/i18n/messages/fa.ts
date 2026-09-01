@@ -106,6 +106,18 @@ export const fa: Dictionary = {
       MISSION_INCOMPLETE: 'ماموریت هنوز کامل نشده است.', MISSION_ALREADY_CLAIMED: 'این پاداش دریافت شده است.', MISSION_EXPIRED: 'زمان ماموریت پایان یافته است.', DAILY_BONUS_INCOMPLETE: 'ابتدا همه ماموریت‌های روزانه را کامل کنید.', DAILY_BONUS_ALREADY_CLAIMED: 'پاداش تکمیل روزانه دریافت شده است.', ACHIEVEMENT_INCOMPLETE: 'این مرحله دستاورد کامل نشده است.', ACHIEVEMENT_TIER_OUT_OF_ORDER: 'ابتدا مرحله پیشین را دریافت کنید.', ACHIEVEMENT_ALREADY_CLAIMED: 'پاداش دستاورد دریافت شده است.', DAILY_RETURN_ALREADY_CLAIMED: 'پاداش امروز دریافت شده است.', SERVER_ERROR: 'اهداف در دسترس نیستند.',
     },
   },
+  engagement: {
+    returnKicker: 'پادشاهی تو در حرکت بود', welcomeBack: 'خوش آمدی، فرمانروا!', awaySummary: 'در زمان نبودنت، این تغییرها آماده شدند:', continue: 'ورود به پادشاهی',
+    upgradeComplete: 'ارتقا کامل شد', trainingComplete: 'آموزش کامل شد', rewardsReady: 'پاداش آماده', revengeReady: 'انتقام در دسترس',
+    nextGoal: 'هدف بعدی', royalDecree: 'فرمان سلطنتی', royalDecreeOne: 'فرمان سلطنتی یک', firstDirection: 'نخستین فرمان پادشاهی', restoreKingdom: 'بازسازی پادشاهی',
+    claimReadyReward: 'پاداش آماده را دریافت کن', collectGoal: 'منابع پادشاهی را جمع کن', raidGoal: 'یک یورش دیگر را ببر', armyGoal: 'ارتش را نیرومند کن',
+    upgradeWaiting: 'ارتقا به‌زودی آماده است', decreeReady: 'پاداش فرمان سلطنتی آماده است', upgradeGoal: 'ارتقای {building}',
+    missionProgress: 'پیشرفت مأموریت', achievementProgress: 'پیشرفت دستاورد', reward: 'پاداش', claimDecree: 'دریافت پاداش سلطنتی', decreeInProgress: 'فرمان در حال اجراست',
+    decreeTasks: { CASTLE_LEVEL: 'قلعه را ارتقا بده', COLLECT_RESOURCES: 'دو بار منابع جمع کن', COMPLETE_RAIDS: 'یک یورش دیگر کامل کن' },
+    kingdomChanged: 'پادشاهی تو تغییر کرد', productionImproved: 'تولید افزایش یافت', storageImproved: 'ظرفیت خزانه بیشتر شد', effectImproved: 'اثر پادشاهی بهتر شد', buildingStronger: 'قدرت پادشاهی بیشتر شد', appearanceUnlocked: 'ظاهر تازه باز شد',
+    raidProgress: 'پیشرفت این یورش', nowAffordable: 'ارتقای {building} اکنون قابل پرداخت است',
+    errors: { ROYAL_DECREE_LOCKED: 'ابتدا نخستین یورش را کامل کن.', ROYAL_DECREE_INCOMPLETE: 'وظایف فرمان سلطنتی هنوز کامل نیست.', ROYAL_DECREE_ALREADY_CLAIMED: 'پاداش فرمان سلطنتی دریافت شده است.', SERVER_ERROR: 'راهنمای پادشاهی در دسترس نیست.' },
+  },
   experience: {
     advisor: {
       name: 'آرِن', role: 'مشاور پادشاهی', guideRole: 'کارگزار سلطنتی / مشاور پادشاهی',

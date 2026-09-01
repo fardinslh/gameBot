@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { CollectResponse, KingdomStateResponse, ResourceAmounts } from '@crown-and-coin/shared';
+import type { CollectResponse, KingdomBuildingState, KingdomStateResponse, ResourceAmounts } from '@crown-and-coin/shared';
 import { BUILDING_TYPE_TO_ID } from '../data/building-layout';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, upgradeBuilding } from '../api/kingdom-api';
@@ -21,6 +21,8 @@ export function useKingdomState() {
   const [displayedBalances, setDisplayedBalances] = useState<ResourceAmounts | null>(null);
   const [clock, setClock] = useState(() => Date.now());
   const [serverOffsetMs, setServerOffsetMs] = useState(0);
+  const [completedUpgrade, setCompletedUpgrade] = useState<{ before: KingdomBuildingState; after: KingdomBuildingState; xpGained: number; storageGained: string; effectGainedBps: number } | null>(null);
+  const stateRef = useRef<KingdomStateResponse | null>(null);
   const initialLoadStarted = useRef(false);
   const balanceAnimationFrame = useRef<number | null>(null);
   const feedbackTimeout = useRef<number | null>(null);
@@ -60,6 +62,26 @@ export function useKingdomState() {
   const refresh = useCallback(async (signal?: AbortSignal) => {
     try {
       const response = await fetchKingdom(signal);
+      const previous = stateRef.current;
+      if (previous) {
+        const changed = response.buildings.find((building) => {
+          const before = previous.buildings.find((item) => item.id === building.id);
+          return before && building.level > before.level;
+        });
+        const before = changed ? previous.buildings.find((item) => item.id === changed.id) : null;
+        if (changed && before) {
+          const previousEffect = before.effects[0]?.valueBps ?? 0;
+          const nextEffect = changed.effects[0]?.valueBps ?? 0;
+          setCompletedUpgrade({
+            before,
+            after: changed,
+            xpGained: Math.max(0, response.progression.xp - previous.progression.xp),
+            storageGained: changed.type === 'CASTLE' ? (BigInt(response.storageCapacities.GOLD ?? '0') - BigInt(previous.storageCapacities.GOLD ?? '0')).toString() : '0',
+            effectGainedBps: Math.max(0, nextEffect - previousEffect),
+          });
+        }
+      }
+      stateRef.current = response;
       cancelCollectionPresentation(response.balances);
       setState(response);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
@@ -76,6 +98,7 @@ export function useKingdomState() {
       await collectCompletedBuildingUpgrade(buildingId);
       audio.playSfx('upgrade_complete');
       await refresh();
+      window.dispatchEvent(new Event('crown:engagement-refresh'));
       setErrorCode(null);
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
@@ -88,6 +111,12 @@ export function useKingdomState() {
     if (initialLoadStarted.current) return;
     initialLoadStarted.current = true;
     void refresh();
+  }, [refresh]);
+
+  useEffect(() => {
+    const gameplay = (): void => { void refresh(); };
+    window.addEventListener('crown:kingdom-refresh', gameplay);
+    return () => window.removeEventListener('crown:kingdom-refresh', gameplay);
   }, [refresh]);
 
   useEffect(() => {
@@ -134,12 +163,20 @@ export function useKingdomState() {
         kingdom: { ...current.kingdom, lastCollectedAt: response.lastCollectedAt },
         serverTime: response.serverTime,
       } : current);
+      stateRef.current = stateRef.current ? {
+        ...stateRef.current,
+        balances: response.balances,
+        buildings: response.buildings,
+        kingdom: { ...stateRef.current.kingdom, lastCollectedAt: response.lastCollectedAt },
+        serverTime: response.serverTime,
+      } : stateRef.current;
       presentCollection(previousBalances, response.balances, response.gains);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
       audio.playSfx('collect');
       await experience.refreshOnboarding();
       window.dispatchEvent(new Event('crown:retention-refresh'));
+      window.dispatchEvent(new Event('crown:engagement-refresh'));
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {
@@ -159,11 +196,18 @@ export function useKingdomState() {
         buildings: current.buildings.map((building) => building.id === response.building.id ? response.building : building),
         serverTime: response.serverTime,
       } : current);
+      stateRef.current = stateRef.current ? {
+        ...stateRef.current,
+        balances: response.balances,
+        buildings: stateRef.current.buildings.map((building) => building.id === response.building.id ? response.building : building),
+        serverTime: response.serverTime,
+      } : stateRef.current;
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
       audio.playSfx('upgrade_start');
       await experience.refreshOnboarding();
       window.dispatchEvent(new Event('crown:retention-refresh'));
+      window.dispatchEvent(new Event('crown:engagement-refresh'));
     } catch (error) {
       setErrorCode(error instanceof KingdomApiError ? error.code : 'SERVER_ERROR');
     } finally {
@@ -177,5 +221,5 @@ export function useKingdomState() {
   })) ?? [], [state]);
 
   const serverNow = clock + serverOffsetMs;
-  return { state, buildings, errorCode, action, lastGains, displayedBalances, serverNow, collect, upgrade, refresh };
+  return { state, buildings, errorCode, action, lastGains, displayedBalances, serverNow, completedUpgrade, dismissCompletedUpgrade: () => setCompletedUpgrade(null), collect, upgrade, refresh };
 }

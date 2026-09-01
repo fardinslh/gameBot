@@ -6,11 +6,14 @@ import { RetentionController } from './retention.controller';
 import { RetentionMetricsService } from './retention-metrics.service';
 import { RetentionService } from './retention.service';
 import { RetentionClock } from './retention-clock.service';
+import { ArmyModule } from '../army/army.module';
+import { EngagementController } from './engagement.controller';
+import { EngagementService } from './engagement.service';
 
 @Module({
-  imports: [EconomyModule, AnalyticsModule, PlayerModule],
-  controllers: [RetentionController],
-  providers: [RetentionService, RetentionMetricsService, RetentionClock],
-  exports: [RetentionService],
+  imports: [EconomyModule, AnalyticsModule, PlayerModule, ArmyModule],
+  controllers: [RetentionController, EngagementController],
+  providers: [RetentionService, RetentionMetricsService, RetentionClock, EngagementService],
+  exports: [RetentionService, EngagementService],
 })
 export class RetentionModule {}

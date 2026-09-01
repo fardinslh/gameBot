@@ -74,6 +74,7 @@ enum EconomyTransactionReason {
   CAMPAIGN_REWARD
   CAMPAIGN_STAR_REWARD
   SHOP_GEM_SPEND
+  ROYAL_DECREE_REWARD
 }
 
 enum EconomyAction {
@@ -91,6 +92,8 @@ enum EconomyAction {
   CAMPAIGN_START
   CAMPAIGN_STAR_REWARD
   SHOP_PURCHASE
+  ENGAGEMENT_SESSION
+  ROYAL_DECREE_CLAIM
 }
 
 enum ShopCategory {
@@ -243,6 +246,19 @@ model Player {
   entitlements          PlayerEntitlement[]
   shopPurchases         ShopPurchase[]
   equippedProfileCrest  ProfileCrestKey             @default(DEFAULT)
+  engagement            PlayerEngagementState?
+}
+
+model PlayerEngagementState {
+  id                     String    @id @default(uuid())
+  playerId               String    @unique
+  lastSeenAt             DateTime
+  royalDecreeClaimedAt   DateTime?
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+  player                 Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([lastSeenAt])
 }
 
 model PlayerEntitlement {

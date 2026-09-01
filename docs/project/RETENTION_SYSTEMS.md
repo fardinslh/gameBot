@@ -43,6 +43,12 @@ Campaign progression is a separate Retention 04 domain. Campaign battles do not 
 
 Retention 02 remains the current free Gem-faucet family: Daily and Weekly Mission rewards, Daily completion, Achievement claims, and Daily Return may grant configured Gems. Gems are uncapped, so a valid reward is never discarded at the former placeholder capacity. Retention 05 consumes Gems but does not change progress derivation, period assignment, claim order, or reward definitions.
 
+## Engagement cohesion
+
+Phase A exposes existing progress at the moment it matters. `GET /engagement` returns one contextual Next Goal, the closest Daily Mission and Achievement cues, Royal Decree I state, and one currently affordable building upgrade. `POST /engagement/session` returns the same snapshot plus a concise summary after at least five minutes away; `POST /engagement/heartbeat` keeps absence measurement tied to actual visibility rather than page age. The summary reports ready-to-collect production, completed upgrades/training, claimable reward count, and available Revenge count without auto-collecting or mutating those systems.
+
+Royal Decree I is a bounded first-direction bridge after onboarding: Castle level 2, two authoritative Collect actions, and two completed Raids. Its one-time Gold/Wood/Gem reward is server-configured, ledgered, locked, and idempotent. It is not a reusable quest framework.
+
 ## Client boundary
 
 After onboarding is complete or skipped, Kingdom shows one compact parchment/gold entry control. It opens a scrollable React sheet with Daily, Weekly, and Achievements tabs plus a seven-day return strip. The overlay preserves the existing Pixi world, coordinates, HUD, RTL/LTR boundary, safe areas, and exact 54px navigation. Successful claims refresh both Retention state and authoritative Kingdom balances.

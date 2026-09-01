@@ -19,6 +19,8 @@ import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { useCampaignState } from '@/features/campaign/hooks/use-campaign-state';
 import { CampaignMap } from '@/features/campaign/components/campaign-map';
 import { CampaignResult } from '@/features/campaign/components/campaign-result';
+import { useEngagement } from '@/features/engagement/engagement-provider';
+import { RaidEngagementSummary } from '@/features/engagement/components/raid-engagement-summary';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
@@ -28,11 +30,15 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
   const [combatMode, setCombatMode] = useState<'raid' | 'campaign'>('raid');
   const campaign = useCampaignState(combatMode === 'campaign');
   const experience = usePlayerExperience();
+  const engagement = useEngagement();
   const { playSfx, setMusicContext } = useGameAudio();
   const [battleFinished, setBattleFinished] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
   const activeBattle = combatMode === 'campaign' ? campaign.result?.battle ?? null : raid.battle;
   useEffect(() => { if (activeBattle) setBattleFinished(false); }, [activeBattle?.id]);
+  useEffect(() => {
+    if (battleFinished && combatMode === 'raid' && raid.battle) void engagement.refresh();
+  }, [battleFinished, combatMode, raid.battle?.id, engagement.refresh]);
   useEffect(() => { setMusicContext(activeBattle && !battleFinished ? 'BATTLE' : 'KINGDOM'); }, [activeBattle, battleFinished, setMusicContext]);
   useEffect(() => {
     trackScreen(activeBattle ? (battleFinished ? 'RESULT' : 'BATTLE') : raid.view === 'inbox' && combatMode === 'raid' ? 'DEFENSE_INBOX' : 'RAID');
@@ -81,8 +87,9 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                 <span className="raid-result__crest"><Crown size={30} /></span>
                 <small>{t.raidUi.battleComplete}</small>
                 <h1>{raid.battle.type === 'REVENGE' ? (raid.battle.result === 'ATTACKER_WIN' ? t.inboxUi.revengeVictory : t.inboxUi.revengeDefeat) : (raid.battle.result === 'ATTACKER_WIN' ? t.raidUi.victory : t.raidUi.defeat)}</h1>
-                <p><Trophy size={15} /> <BidiValue direction="ltr">{raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta}</BidiValue> {t.raidUi.trophies}</p>
+                <p><Trophy size={15} /> <BidiValue direction="ltr">{raid.battle.attacker.trophiesBefore} → {raid.battle.attacker.trophiesBefore + raid.battle.attacker.trophyDelta} ({raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta})</BidiValue> {t.raidUi.trophies}</p>
                 <div className="raid-loot-grid">{Object.entries(raid.battle.loot).map(([resource, amount]) => <span key={resource}><b><BidiValue direction="ltr">{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
+                {engagement.state ? <RaidEngagementSummary dictionary={t} engagement={engagement.state} /> : null}
                 {raid.battle.rulesVersion === 2 ? <div className="raid-army-result">{raid.battle.armies.attacker.map((squad) => {
                   const last = [...raid.battle!.events].reverse().find((event) => event.targetSide === 'ATTACKER' && event.targetSlot === squad.slot && event.remainingUnits !== null);
                   return <span key={squad.slot}><strong>{t.armyUi.troopNames[squad.troopType]}</strong><BidiValue direction="ltr">{squad.initialUnitCount} → {last?.remainingUnits ?? squad.initialUnitCount}</BidiValue></span>;
