@@ -269,6 +269,10 @@ export const fa: Dictionary = {
     newKingdomShield: 'سپر پادشاهی نو', shieldHint: 'تا پایان محافظت فقط با رقیبان تمرینی روبه‌رو می‌شوی.',
     shieldExpiresIn: '{count} ساعت باقی‌مانده',
   },
+  raidJourney: {
+    departureKicker: 'از پادشاهی شما', departureTitle: 'ارتش به راه افتاد', departureBody: 'فرماندهان شما، ارتش را از دروازه‌ها به سوی نبرد می‌برند.',
+    returnVictory: 'پیروزمندان بازگشتند', returnVictoryBody: 'غنیمت وارد پادشاهی شد و فرصت بعدی آماده است.', returnDefeat: 'ارتش بازگشت', returnDefeatBody: 'فرماندهان شما برای نبرد بعدی در پادشاهی تجدید قوا می‌کنند.',
+  },
   inboxUi: {
     back: 'بازگشت', title: 'گزارش نبرد', incomingAttacks: 'حمله‌های دریافتی', loading: 'در حال خواندن دفتر جنگ…',
     noAttacks: 'هنوز حمله‌ای نشده', attackedYou: 'به پادشاهی شما حمله کرد', defenseDefeat: 'شکست در دفاع',

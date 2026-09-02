@@ -57,12 +57,12 @@ const ACTORS: readonly AmbientDefinition[] = [
 
 export interface AmbientLifeArtwork {
   container: Container;
-  setProgression(states: AmbientProgressionState): readonly string[];
+  setProgression(states: AmbientProgressionState, maximumActors?: number): readonly string[];
   update(elapsedSeconds: number): void;
   destroy(): void;
 }
 
-export function selectAmbientActorIds(states: AmbientProgressionState): readonly string[] {
+export function selectAmbientActorIds(states: AmbientProgressionState, maximumActors = MAX_AMBIENT_ACTORS): readonly string[] {
   const castleLevel = states.castle?.level ?? 1;
   return ACTORS.filter((actor) => {
     const state = actor.buildingId ? states[actor.buildingId] : undefined;
@@ -70,7 +70,7 @@ export function selectAmbientActorIds(states: AmbientProgressionState): readonly
     if (actor.activeUpgradeOnly && !state?.upgrading) return false;
     if ((actor.minimumLevel ?? 1) > (state?.level ?? 1)) return false;
     return (actor.minimumCastleLevel ?? 1) <= castleLevel;
-  }).sort((left, right) => left.priority - right.priority).slice(0, MAX_AMBIENT_ACTORS).map((actor) => actor.id);
+  }).sort((left, right) => left.priority - right.priority).slice(0, Math.max(0, Math.min(MAX_AMBIENT_ACTORS, maximumActors))).map((actor) => actor.id);
 }
 
 export function buildingActivityMilestone(level: number): 1 | 5 | 9 | 13 | 17 | 20 {
@@ -96,9 +96,9 @@ export function createAmbientLifeArtwork(): AmbientLifeArtwork {
   let progression: AmbientProgressionState = {};
   return {
     container,
-    setProgression: (states) => {
+    setProgression: (states, maximumActors) => {
       progression = states;
-      const visibleIds = new Set(selectAmbientActorIds(states));
+      const visibleIds = new Set(selectAmbientActorIds(states, maximumActors));
       for (const actor of actors) actor.container.visible = visibleIds.has(actor.id);
       return [...visibleIds];
     },

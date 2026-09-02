@@ -31,6 +31,10 @@ describe('progression-aware ambient life', () => {
     expect(selectAmbientActorIds(states)).toContain('construction-mine');
   });
 
+  it('shares the normal actor budget with three persistent Heroes', () => {
+    expect(selectAmbientActorIds(allBuildings(20), MAX_AMBIENT_ACTORS - 3)).toHaveLength(11);
+  });
+
   it.each([[1, 1], [4, 1], [5, 5], [9, 9], [13, 13], [17, 17], [20, 20]])(
     'maps building level %i to its existing visual milestone %i',
     (level, milestone) => expect(buildingActivityMilestone(level)).toBe(milestone),

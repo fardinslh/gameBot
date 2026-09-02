@@ -1,10 +1,9 @@
 import { existsSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { PrismaClient } from '@prisma/client';
 
-const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
+const browserPath = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium', 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'].find(existsSync);
 if (!browserPath) throw new Error('No supported local Chromium browser was found');
 
 async function waitForUrl(url, timeoutMs = 20_000) {
@@ -21,7 +20,7 @@ await waitForUrl('http://localhost:3000/?lang=fa&section=raid');
 const prisma = new PrismaClient();
 const browser = await chromium.launch({ executablePath: browserPath, headless: true });
 const artifacts = new URL('artifacts/', new URL('../', import.meta.url));
-mkdirSync(artifacts, { recursive: true });
+mkdirSync(fileURLToPath(artifacts), { recursive: true });
 const consoleErrors = [];
 const resourceSelector = (resource) => resource === 'GEMS' ? '[data-resource="GEMS"]' : `.resource-chip--${resource.toLowerCase()}`;
 
@@ -48,7 +47,7 @@ async function scenario(kind) {
   if (!search.newPlayerProtection?.active) throw new Error('Fresh Raid browser player is not shielded');
   if (search.offer?.opponent?.kind !== 'SYSTEM') throw new Error('Shielded Raid browser player received a real opponent');
   await page.waitForSelector('[data-raid-state="offer"]');
-  if (kind === 'victory') await page.screenshot({ path: new URL('army-raid-preview-fa-320x568.png', artifacts).pathname.slice(1) });
+  if (kind === 'victory') await page.screenshot({ path: fileURLToPath(new URL('army-raid-preview-fa-320x568.png', artifacts)) });
   const defenderSlots = await prisma.armyFormationSlot.findMany({
     where: { armyFormation: { playerId: search.offer.opponent.id } },
     select: { id: true, unitCount: true },
@@ -74,6 +73,9 @@ async function scenario(kind) {
 
   const startResponsePromise = page.waitForResponse((response) => response.url().endsWith('/raid/start') && response.request().method() === 'POST');
   await page.locator('.raid-match-card .raid-primary').click();
+  await page.waitForSelector('[data-raid-state="departing"]');
+  if (Number(await page.locator('.raid-departure').getAttribute('data-raid-departure-count')) !== 3) throw new Error('Raid departure did not show the authoritative three-squad Army');
+  if (kind === 'victory') await page.screenshot({ path: fileURLToPath(new URL('army-departure-fa-320x568.png', artifacts)) });
   const startResponse = await startResponsePromise;
   const battle = await startResponse.json();
   if (kind === 'victory') {
@@ -92,7 +94,7 @@ async function scenario(kind) {
   await page.waitForSelector('[data-raid-state="battle"]');
   if (kind === 'victory') {
     await page.waitForTimeout(1_500);
-    await page.screenshot({ path: new URL('army-battle-fa-320x568.png', artifacts).pathname.slice(1) });
+    await page.screenshot({ path: fileURLToPath(new URL('army-battle-fa-320x568.png', artifacts)) });
   }
   try {
     await page.waitForSelector('[data-raid-state="result"]', { timeout: 30_000 });
@@ -101,19 +103,31 @@ async function scenario(kind) {
     throw new Error(`Result wait failed; state=${currentState}; console=${consoleErrors.join(' | ')}`, { cause: error });
   }
   if (battle.result !== (kind === 'victory' ? 'ATTACKER_WIN' : 'DEFENDER_WIN')) throw new Error(`Expected ${kind}, got ${battle.result}`);
-  await page.screenshot({ path: new URL(`army-${kind}-fa-320x568.png`, artifacts).pathname.slice(1) });
+  await page.screenshot({ path: fileURLToPath(new URL(`army-${kind}-fa-320x568.png`, artifacts)) });
 
-  if (kind === 'victory') {
+  const ledgerBeforeReturn = await prisma.economyTransaction.count({ where: { referenceId: battle.id } });
+  {
     const resultBalances = battle.balances;
     await page.locator('.raid-result .raid-primary').click();
     await page.waitForSelector('[data-scene-status="ready"]');
+    await page.waitForSelector(`[data-raid-return-presentation="${kind === 'victory' ? 'VICTORY' : 'DEFEAT'}"]`);
+    const returnState = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
+      outcome: element.getAttribute('data-raid-return'),
+      lootCart: element.getAttribute('data-raid-return-loot-cart'),
+      actors: Number(element.getAttribute('data-world-actor-count')),
+    }));
+    if (returnState.outcome !== kind || returnState.lootCart !== String(kind === 'victory') || returnState.actors > 14) throw new Error(`Incorrect ${kind} return presentation: ${JSON.stringify(returnState)}`);
+    await page.screenshot({ path: fileURLToPath(new URL(`army-${kind}-return-fa-320x568.png`, artifacts)) });
     for (const [resource, value] of Object.entries(resultBalances)) {
       const selector = resourceSelector(resource);
       const chip = page.locator(selector);
       await page.waitForFunction(({ selector, expected }) => document.querySelector(selector)?.getAttribute('data-balance') === expected, { selector, expected: value });
       if (await chip.getAttribute('data-balance') !== value) throw new Error(`Kingdom ${resource} did not refresh after Raid`);
     }
+    await page.waitForSelector('[data-raid-return-presentation]', { state: 'detached', timeout: 5_000 });
   }
+  const ledgerAfterReturn = await prisma.economyTransaction.count({ where: { referenceId: battle.id } });
+  if (ledgerAfterReturn !== ledgerBeforeReturn) throw new Error(`Raid return duplicated settlement ledger rows: ${ledgerBeforeReturn} -> ${ledgerAfterReturn}`);
   const persisted = await prisma.battle.findUnique({ where: { id: battle.id }, include: { events: true, heroSnapshots: true, armySquadSnapshots: true } });
   if (!persisted || persisted.rulesVersion !== 2 || persisted.events.length === 0 || persisted.heroSnapshots.length !== 0 || persisted.armySquadSnapshots.length !== 6) throw new Error('Army Battle v2 persistence is incomplete');
   await page.close();
@@ -214,8 +228,8 @@ try {
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS compact New Kingdom Shield layout at 320x568, 375x812, 390x844 in English LTR and Persian RTL');
   console.log('PASS fresh players receive system-only Raid offers from authoritative shield state');
-  console.log('PASS server match offer + Pixi event playback + Victory/Defeat result screenshots');
-  console.log('PASS post-Raid Kingdom HUD refresh + six persisted Army snapshots/events');
+  console.log('PASS authoritative Army departure + Pixi event playback + Victory/Defeat result screenshots');
+  console.log('PASS distinct Victory/Defeat Kingdom returns, no duplicate settlement, HUD refresh, and six persisted Army snapshots/events');
   console.log('PASS troop-training response updates visible HUD balances immediately without refetch');
   console.log('PASS changed attacker Army rejects the old offer and a fresh browser search starts successfully');
   console.log(`DEBUG battle=${victory.id} seed=${victory.seed} rules=${victory.rulesVersion} result=${victory.result} duration=${victory.durationMs} events=${victory.events.length}`);

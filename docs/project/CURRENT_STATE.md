@@ -17,6 +17,8 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | Castle transformation preview | Implemented | One authoritative presentation configuration spans Castle levels 1–20, references real district unlocks when applicable, and returns the current realm state, next transformation, and one later preview |
 | Living progression | Implemented | Existing building levels, visual milestones, unlock state, and active upgrades drive restrained district specialists, richer activity, construction workers, and persistent environmental detail without gameplay state |
 | Ambient life V2 | Implemented | Eight early actors grow into a capped 14-actor mix of guards, workers, carts, animals, scholars, merchants, builders, and court life; motion pauses while hidden and freezes for reduced motion |
+| Heroes in the Kingdom | Implemented | The authoritative active Army Formation places Knight near Castle, Ranger near Lumber Mill, and Mage near unlocked Academy; these decorative Pixi portraits share the existing 14-actor budget and never receive hit areas |
+| Raid journey presentation | Implemented | Standard Raid shows its authoritative three-squad Army departing, then returns Commanders to Kingdom after replay/result; victories include a presentation-only loot cart and defeats regroup without fake loot or any second settlement |
 | Economy | Implemented | PostgreSQL balances, capacity-limited passive production, preserved explicit-reward overflow, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Active building visual evolution | Implemented | All nine active buildings derive five major raster tiers plus a visible minor step at every level; all 45 assets pass effective-resolution audit through moderate 200% inspection |
@@ -128,7 +130,7 @@ Twenty-one ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1 Ownership & Visible Anticipation, and Phase 08.2A Living Progression & Visible Consequences are complete. Phase 08.2A extends Castle presentation through level 20 and makes existing building milestones and upgrade state visibly affect the world without parallel progression or simulation state. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1, Phase 08.2A, and Phase 08.2B Heroes in the Kingdom & Raid Departure/Return are complete. Phase 08.2B derives persistent Hero presence from the active Army Formation and unlocked buildings, and adds bounded client-only standard-Raid journey presentation around the existing authoritative start/replay/result flow. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 
@@ -140,4 +142,4 @@ Persian production UI uses the locally packaged `Vazirmatn Variable` family at w
 
 ## Validation entry points
 
-Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for PvP Army Battle v2 persistence/playback and forced outcomes. Run `npm run validate:campaign` for Campaign authority, isolation, mobile flow, and screenshots. Run `npm run validate:shop` for catalog, ledger, concurrency, authority, bilingual mobile flow, and screenshots. Use the remaining regressions described in [testing](TESTING.md).
+Run `npm run validate:army` for Army configuration and authoritative integration coverage. Run `npm run validate:raid` for PvP Army Battle v2 persistence/playback, departure, both return outcomes, and forced outcomes. Run `npm run validate:kingdom-soul` for identity, transformations, ambient/Hero population, shared actor budget, and mobile presentation. Run `npm run validate:campaign` for Campaign authority, isolation, mobile flow, and screenshots. Run `npm run validate:shop` for catalog, ledger, concurrency, authority, bilingual mobile flow, and screenshots. Use the remaining regressions described in [testing](TESTING.md).

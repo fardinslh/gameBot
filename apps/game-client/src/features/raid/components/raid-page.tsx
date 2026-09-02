@@ -22,11 +22,14 @@ import { CampaignResult } from '@/features/campaign/components/campaign-result';
 import { useEngagement } from '@/features/engagement/engagement-provider';
 import { RaidEngagementSummary } from '@/features/engagement/components/raid-engagement-summary';
 import { HeraldryMark } from '@/features/kingdom/components/kingdom-identity-card';
+import type { BattleReplayResponse } from '@crown-and-coin/shared';
+import { RaidDeparture } from './raid-departure';
+import { deriveKingdomRaidReturn, type KingdomRaidReturnPresentation } from '../domain/raid-journey-presentation';
 
-interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; }
+interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; onRaidReturn(presentation: KingdomRaidReturnPresentation): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
 
-export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNavigate }: RaidPageProps) {
+export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNavigate, onRaidReturn }: RaidPageProps) {
   const raid = useRaidState(initialView);
   const [combatMode, setCombatMode] = useState<'raid' | 'campaign'>('raid');
   const campaign = useCampaignState(combatMode === 'campaign');
@@ -51,14 +54,18 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
     : 0;
   const tutorialRaid = experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'RAID';
   useEffect(() => {
+    experience.setAdvisorTipsSuppressed(Boolean(raid.departure || raid.battle));
+    return () => experience.setAdvisorTipsSuppressed(false);
+  }, [experience.setAdvisorTipsSuppressed, raid.battle, raid.departure]);
+  useEffect(() => {
     if (state?.newPlayerProtection.active && raid.view === 'overview') experience.requestAdvisorTip('NEW_KINGDOM_SHIELD');
     if (raid.view === 'inbox' && raid.inbox?.entries.length) experience.requestAdvisorTip('DEFENSE_INBOX');
     if (raid.inbox?.entries.some((entry) => entry.revengeStatus === 'AVAILABLE')) experience.requestAdvisorTip('REVENGE');
   }, [experience, raid.inbox, raid.view, state?.newPlayerProtection.active]);
-  const returnToKingdom = async (): Promise<void> => {
+  const returnToKingdom = async (battle: BattleReplayResponse): Promise<void> => {
     await experience.refreshOnboarding();
     playSfx('back');
-    onNavigate('kingdom');
+    onRaidReturn(deriveKingdomRaidReturn(battle));
   };
   const hudBalances = combatMode === 'campaign' ? campaign.state?.balances ?? state?.balances ?? EMPTY : raid.battle?.balances ?? state?.balances ?? EMPTY;
 
@@ -69,7 +76,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
         <div className="game-ui-layer">
           <PlayerHud dictionary={t} gemBalance={hudBalances.GEMS} locale={locale} playerLevel={state?.player.level ?? 1} playerName={state?.player.displayName ?? t.playerTitle} section="raid" />
           <ResourceHud balances={hudBalances} dictionary={t} />
-          <section className="raid-content" data-player-id={state?.player.id} data-combat-mode={combatMode} data-raid-state={activeBattle ? battleFinished ? 'result' : 'battle' : combatMode === 'campaign' ? 'campaign' : raid.view === 'inbox' ? 'inbox' : raid.offer ? 'offer' : 'overview'}>
+          <section className="raid-content" data-player-id={state?.player.id} data-combat-mode={combatMode} data-raid-state={raid.departure ? 'departing' : activeBattle ? battleFinished ? 'result' : 'battle' : combatMode === 'campaign' ? 'campaign' : raid.view === 'inbox' ? 'inbox' : raid.offer ? 'offer' : 'overview'}>
             {combatMode === 'campaign' ? campaign.result ? battleFinished ? (
               <CampaignResult
                 dictionary={t}
@@ -83,7 +90,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
               <div className="raid-battle-wrap"><BattleScene battle={campaign.result.battle} onComplete={() => { playSfx(campaign.result?.battle.result === 'ATTACKER_WIN' ? 'victory' : 'defeat'); setBattleFinished(true); }} /><div className="raid-battle-label"><Swords size={16} /> {t.campaign.battleLabel} · {campaign.result.campaign.chapter.stages.find((stage) => stage.key === campaign.result?.stageKey)?.title[locale]}</div></div>
             ) : (
               <><CombatModeTabs active={combatMode} dictionary={t} onChange={(mode) => { setCombatMode(mode); if (mode === 'campaign') experience.requestAdvisorTip('CAMPAIGN_INTRO'); }} /><CampaignMap campaign={campaign} dictionary={t} locale={locale} onEditArmy={() => onNavigate('heroes')} /></>
-            ) : raid.battle ? battleFinished ? (
+            ) : raid.departure ? <RaidDeparture army={raid.departure} dictionary={t} /> : raid.battle ? battleFinished ? (
               <div className={`raid-result raid-result--${raid.battle.result === 'ATTACKER_WIN' ? 'victory' : 'defeat'}`}>
                 <span className="raid-result__crest"><Crown size={30} /></span>
                 <small>{t.raidUi.battleComplete}</small>
@@ -96,7 +103,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                   const last = [...raid.battle!.events].reverse().find((event) => event.targetSide === 'ATTACKER' && event.targetSlot === squad.slot && event.remainingUnits !== null);
                   return <span key={squad.slot}><strong>{t.armyUi.troopNames[squad.troopType]}</strong><BidiValue direction="ltr">{squad.initialUnitCount} → {last?.remainingUnits ?? squad.initialUnitCount}</BidiValue></span>;
                 })}<small>{t.raidUi.battleLocalLosses}</small></div> : null}
-                <button className="raid-primary" data-guide-target="result-return" onClick={raid.battle.type === 'REVENGE' ? raid.clearBattle : () => void returnToKingdom()} type="button">{raid.battle.type === 'REVENGE' ? t.inboxUi.title : t.raidUi.returnKingdom}</button>
+                <button className="raid-primary" data-guide-target="result-return" onClick={raid.battle.type === 'REVENGE' ? raid.clearBattle : () => void returnToKingdom(raid.battle!)} type="button">{raid.battle.type === 'REVENGE' ? t.inboxUi.title : t.raidUi.returnKingdom}</button>
                 <button className="raid-secondary" onClick={raid.battle.type === 'REVENGE' ? () => onNavigate('kingdom') : raid.clearBattle} type="button">{raid.battle.type === 'REVENGE' ? t.raidUi.returnKingdom : t.raidUi.findAnother}</button>
               </div>
             ) : (
@@ -139,8 +146,8 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
           </section>
           {tutorialRaid && raid.battle && !battleFinished ? <AdvisorCoach title={t.experience.battleTitle} body={t.experience.advisor.battle} durationMs={3500} /> : null}
           {tutorialRaid && raid.battle && battleFinished ? <AdvisorCoach title={t.experience.resultTitle} body={t.experience.advisor.result} target="result-return" /> : null}
-          {tutorialRaid && !raid.battle && raid.offer ? <AdvisorCoach title={t.experience.attackTitle} body={t.experience.advisor.attack} target="attack" /> : null}
-          {tutorialRaid && !raid.battle && !raid.offer ? <AdvisorCoach title={t.experience.findTitle} body={t.experience.advisor.findEnemy} target="find-enemy" /> : null}
+          {tutorialRaid && !raid.battle && !raid.departure && raid.offer ? <AdvisorCoach title={t.experience.attackTitle} body={t.experience.advisor.attack} target="attack" /> : null}
+          {tutorialRaid && !raid.battle && !raid.departure && !raid.offer ? <AdvisorCoach title={t.experience.findTitle} body={t.experience.advisor.findEnemy} target="find-enemy" /> : null}
           <BottomNavigation activeSection="raid" dictionary={t} onComingSoon={setComingSoon} onNavigate={onNavigate} />
           <div className={comingSoon ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">{comingSoon ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoon }} /> : ''}</div>
           <div className={(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{combatMode === 'campaign' && campaign.errorCode ? (t.campaign.errors[campaign.errorCode as keyof typeof t.campaign.errors] ?? t.campaign.errors.SERVER_ERROR) : raid.errorCode ? (t.raidErrors[raid.errorCode as keyof typeof t.raidErrors] ?? t.raidErrors.SERVER_ERROR) : ''}{(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? <button onClick={() => void (combatMode === 'campaign' ? campaign.refresh() : raid.refresh())} type="button">{t.retry}</button> : null}</div>

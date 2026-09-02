@@ -135,3 +135,7 @@ New Raid and Revenge starts load both validated formations under the existing so
 Squads attack the same lane first, then the nearest living lane with a lower-slot tie break. Shield Wall affects its own squad, Power Shot hits one selected enemy squad, and Arcane Blast hits all living enemy squads. Attack output falls with casualties. `SQUAD_DEFEATED` and `remainingUnits` make losses explicit in replay and results. The Pixi scene renders three fixed portrait lanes per side without mirroring world coordinates for RTL.
 
 Stored rules-version-1 battles continue to reconstruct from `BattleHeroSnapshot`; new rules-version-2 battles reconstruct from Army snapshots. No permanent PvP troop casualties, Barracks activation, Army missions, Army Achievements, PvE, Shop, or platform integration were added.
+
+## Kingdom and Raid journey presentation
+
+The active Formation returned by `GET /army` is reused for persistent Kingdom Hero presence and the short standard-Raid departure beat. `POST /raid/start` begins immediately; the client only enforces a bounded minimum visual duration before playing the returned stored replay. After the result, a one-shot return presentation derives Commander portraits, outcome, and victory loot cues from that replay. It never changes Formation, troop counts, Battle events, resource balances, or settlement evidence. Revenge and Campaign flows remain unchanged.

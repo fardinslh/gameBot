@@ -71,8 +71,9 @@ async function assertLayout(width, height, direction) {
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     navHeight: Math.round(document.querySelector('.bottom-navigation')?.getBoundingClientRect().height ?? 0),
     actorCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-ambient-actor-count')),
+    worldActorCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-world-actor-count')),
   }));
-  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.actorCount > 14) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
+  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.worldActorCount > 14) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
 }
 
 try {
@@ -87,6 +88,13 @@ try {
 
   await load('fa');
   await dismissAdvisorTip();
+  await page.waitForFunction(() => Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-hero-presence-count')) === 2);
+  const initialHeroes = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
+    count: Number(element.getAttribute('data-hero-presence-count')),
+    keys: element.getAttribute('data-hero-presence-keys'),
+    total: Number(element.getAttribute('data-world-actor-count')),
+  }));
+  if (initialHeroes.count !== 2 || initialHeroes.keys !== 'KNIGHT,RANGER' || initialHeroes.total > 14) throw new Error(`Initial Hero presence is incorrect: ${JSON.stringify(initialHeroes)}`);
   await assertLayout(320, 568, 'rtl');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'active') throw new Error('Ambient life is not active');
   await openCastle();
@@ -118,6 +126,13 @@ try {
   if (levelTen.kingdomGoals.transformation.current.realmState !== 'FORTIFIED_REALM' || levelTen.kingdomGoals.transformation.next?.realmState !== 'GRAND_COURT' || levelTen.kingdomGoals.transformation.future?.realmState !== 'CROWNED_REALM') throw new Error('Castle level 10 realm projection is incorrect');
   await load('en');
   await dismissAdvisorTip();
+  await page.waitForFunction(() => Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-hero-presence-count')) === 3);
+  const progressedHeroes = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
+    count: Number(element.getAttribute('data-hero-presence-count')),
+    keys: element.getAttribute('data-hero-presence-keys'),
+    total: Number(element.getAttribute('data-world-actor-count')),
+  }));
+  if (progressedHeroes.count !== 3 || progressedHeroes.keys !== 'KNIGHT,RANGER,MAGE' || progressedHeroes.total > 14) throw new Error(`Progressed Hero presence is incorrect: ${JSON.stringify(progressedHeroes)}`);
   await openCastle();
   const nextText = await page.locator('[data-next-transformation]').innerText();
   const laterText = await page.locator('.castle-future-preview').innerText();
@@ -149,10 +164,12 @@ try {
     document.dispatchEvent(new Event('visibilitychange'));
   });
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'paused') throw new Error('Hidden page did not pause ambient movement');
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-hero-motion') !== 'paused') throw new Error('Hidden page did not pause Hero movement');
   await assertLayout(320, 568, 'ltr');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await load('en');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'reduced') throw new Error('Reduced motion did not freeze ambient movement');
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-hero-motion') !== 'reduced') throw new Error('Reduced motion did not freeze Hero movement');
   await assertLayout(390, 844, 'ltr');
   if (consoleErrors.length) throw new Error(`Browser console errors:\n${consoleErrors.join('\n')}`);
 } finally {
@@ -165,4 +182,5 @@ try {
 console.log('PASS server-owned identity defaults, update, and persistence');
 console.log('PASS Castle realm milestones through level 20 with next/future previews');
 console.log('PASS building milestones, active construction, 14-actor budget, hidden-page pause, and reduced motion');
+console.log('PASS authoritative active-formation Heroes appear by unlocked home and share the 14-actor world budget');
 console.log('PASS RTL/LTR, mobile viewports, 54px nav, no overflow, clean console');

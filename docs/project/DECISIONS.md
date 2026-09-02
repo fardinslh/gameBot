@@ -147,3 +147,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: Castle and building investment should leave visible evidence without creating a competing progression model or citizen simulation.
 - **Consequences**: Realm milestones may reference a real building unlock but can be presentation-only. Ambient actors remain deterministic, non-interactive, pathless, paused while hidden, frozen for reduced motion, and capped at 14 visible actors. Existing upgrade records, visual tiers, completion effects, and celebrations remain the only inputs and transitions.
 - **Status**: Active. Phase 08.2A implemented.
+
+## ADR-021: Treat Heroes and Raid travel as projections of authoritative state
+
+- **Decision**: Persistent Kingdom Hero presence derives from the active Army Formation plus real building unlocks, while standard-Raid departure and return derive from the submitted Army preview and stored Battle replay.
+- **Reason**: Commanders should visibly belong to the Kingdom and connect Raid to home without adding a second Hero roster, travel timer, simulation, or settlement path.
+- **Consequences**: Hero markers are non-interactive and share the 14-actor world budget. Raid start remains immediate and server-authoritative; the client adds only a bounded minimum departure beat. Victory and defeat return presentations differ, but loot, balances, casualties, and outcomes are never recalculated or written during return. Revenge and Campaign remain unchanged.
+- **Status**: Active. Phase 08.2B implemented.

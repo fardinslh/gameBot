@@ -1,6 +1,6 @@
 import { Assets, Container, Graphics, Sprite } from 'pixi.js';
 import type { Ticker } from 'pixi.js';
-import type { BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-and-coin/shared';
+import type { ArmyResponse, BuildingAppearanceVariant, KingdomExpansionStage } from '@crown-and-coin/shared';
 import { createPixiRuntime } from '@/game/rendering/pixi-runtime';
 import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
@@ -25,12 +25,16 @@ import {
 } from './building-status-badge';
 import type { Locale } from '@/i18n/config';
 import { buildingActivityMilestone, createAmbientLifeArtwork } from './ambient-life';
+import { createHeroPresenceArtwork, deriveKingdomHeroPresences } from './hero-presence';
+import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
 
 interface KingdomSceneRuntime {
   destroy(): void;
   select(buildingId: WorldBuildingId | null): void;
   setLocale(locale: Locale): void;
   setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>, expansionStage: KingdomExpansionStage): void;
+  setArmyState(army: ArmyResponse | null): void;
+  playRaidReturn(presentation: KingdomRaidReturnPresentation, onComplete: () => void): void;
 }
 
 export type BuildingIndicator = BuildingStatusIndicator;
@@ -74,6 +78,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const ambientLife = createAmbientLifeArtwork();
   ambientLife.container.visible = debugKingdomLayers === null;
   world.addChild(ambientLife.container);
+  const heroPresence = createHeroPresenceArtwork();
+  heroPresence.container.visible = debugKingdomLayers === null;
+  heroPresence.returnContainer.visible = debugKingdomLayers === null;
+  world.addChild(heroPresence.container, heroPresence.returnContainer);
   app.stage.addChild(statusLayer);
   const artwork = new Map<WorldBuildingId, BuildingArtwork>();
   const indicatorArtwork = new Map<BuildingId, Graphics>();
@@ -87,6 +95,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const expansionArtwork = new Map<BuildingId, ExpansionAreaArtwork>();
   const expansionAnimation = new Map<BuildingId, number>();
   let desiredStates: Partial<Record<BuildingId, BuildingSceneState>> = {};
+  let currentArmy: ArmyResponse | null = null;
+  let heroPresenceCount = 0;
   let currentExpansionStage: KingdomExpansionStage = 1;
   let hasReceivedExpansionStage = false;
   let selectedBuildingId: WorldBuildingId | null = null;
@@ -221,6 +231,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.expansionAreaCount = '0';
   host.dataset.expansionStage = '1';
   host.dataset.ambientActorCount = '0';
+  host.dataset.heroPresenceCount = '0';
+  host.dataset.worldActorCount = '0';
+  host.dataset.raidReturn = 'idle';
   const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');
   host.dataset.mineGround = mineLayout ? `${mineLayout.groundX},${mineLayout.groundY}` : '';
   host.dataset.panEnabled = 'true';
@@ -339,6 +352,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   let ambientPaused = document.visibilityState === 'hidden';
   const syncAmbientMotionState = (): void => {
     host.dataset.ambientMotion = reducedMotion ? 'reduced' : ambientPaused ? 'paused' : 'active';
+    host.dataset.heroMotion = reducedMotion ? 'reduced' : ambientPaused ? 'paused' : 'active';
   };
   const onVisibilityChange = (): void => { ambientPaused = document.visibilityState === 'hidden'; syncAmbientMotionState(); };
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -357,7 +371,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   };
   const animate = (ticker: Ticker): void => {
     elapsed += ticker.deltaMS / 1_000;
-    if (!ambientPaused) ambientLife.update(elapsed);
+    if (!ambientPaused) {
+      ambientLife.update(elapsed);
+      heroPresence.update(ticker.deltaMS, elapsed);
+    }
     for (const [id, item] of artwork) {
       if (id === selectedBuildingId) {
         const pulse = 1 + Math.sin(elapsed * 3.2) * .045;
@@ -431,6 +448,28 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   };
   if (!reducedMotion) app.ticker.add(animate);
 
+  const syncLivingPopulation = (): void => {
+    const ambientStates = Object.fromEntries(Object.entries(desiredStates).map(([id, state]) => [id, {
+      level: state?.level ?? 1,
+      unlocked: state?.locked === false,
+      upgrading: state?.indicator === 'active',
+    }]));
+    const heroes = deriveKingdomHeroPresences(currentArmy, desiredStates);
+    heroPresenceCount = heroes.length;
+    heroPresence.setHeroes(heroes);
+    const visibleAmbientActors = ambientLife.setProgression(ambientStates, 14 - heroPresenceCount);
+    host.dataset.ambientActorCount = String(visibleAmbientActors.length);
+    host.dataset.ambientActorIds = visibleAmbientActors.join(',');
+    host.dataset.heroPresenceCount = String(heroPresenceCount);
+    host.dataset.heroPresenceKeys = heroes.map((hero) => hero.key).join(',');
+    host.dataset.worldActorCount = String(visibleAmbientActors.length + heroPresenceCount);
+    host.dataset.ambientMilestones = Object.entries(desiredStates)
+      .filter(([, state]) => state?.locked === false)
+      .map(([id, state]) => `${id}:${buildingActivityMilestone(state?.level ?? 1)}`)
+      .join(',');
+    host.dataset.activeConstructionActors = String(Object.values(desiredStates).filter((state) => state?.locked === false && state.indicator === 'active').length);
+  };
+
   let resizeFrame = 0;
   const resizeObserver = new ResizeObserver(() => {
     window.cancelAnimationFrame(resizeFrame);
@@ -448,19 +487,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     setBuildingStates: (states, expansionStage) => {
       desiredStates = states;
       syncExpansionAreas(states, expansionStage);
-      const ambientStates = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, {
-        level: state?.level ?? 1,
-        unlocked: state?.locked === false,
-        upgrading: state?.indicator === 'active',
-      }]));
-      const visibleAmbientActors = ambientLife.setProgression(ambientStates);
-      host.dataset.ambientActorCount = String(visibleAmbientActors.length);
-      host.dataset.ambientActorIds = visibleAmbientActors.join(',');
-      host.dataset.ambientMilestones = Object.entries(states)
-        .filter(([, state]) => state?.locked === false)
-        .map(([id, state]) => `${id}:${buildingActivityMilestone(state?.level ?? 1)}`)
-        .join(',');
-      host.dataset.activeConstructionActors = String(Object.values(states).filter((state) => state?.locked === false && state.indicator === 'active').length);
+      syncLivingPopulation();
       for (const building of KINGDOM_BUILDING_LAYOUT) {
         const id = building.id;
         const state = states[id];
@@ -503,6 +530,19 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         if (status) drawBuildingStatusBadge(status, state.level, app.renderer.resolution, locale);
       }
     },
+    setArmyState: (army) => {
+      currentArmy = army;
+      syncLivingPopulation();
+    },
+    playRaidReturn: (presentation, onComplete) => {
+      host.dataset.raidReturn = presentation.outcome.toLowerCase();
+      host.dataset.raidReturnLootCart = String(presentation.outcome === 'VICTORY');
+      heroPresence.playReturn(presentation, reducedMotion, () => {
+        host.dataset.raidReturn = 'complete';
+        onComplete();
+      });
+      if (reducedMotion) window.setTimeout(() => heroPresence.update(450, elapsed), 450);
+    },
     destroy: () => {
       resizeObserver.disconnect();
       window.cancelAnimationFrame(resizeFrame);
@@ -514,6 +554,8 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       if (!reducedMotion) app.ticker.remove(animate);
       world.removeChild(ambientLife.container);
       ambientLife.destroy();
+      world.removeChild(heroPresence.container, heroPresence.returnContainer);
+      heroPresence.destroy();
       runtime.destroy();
     },
   };

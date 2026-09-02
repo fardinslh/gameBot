@@ -123,6 +123,26 @@ button { color: inherit; }
 .kingdom-scene { direction: ltr; }
 .kingdom-scene__canvas { background: linear-gradient(#4d613a, #22331f); }
 .kingdom-canvas { display: block; touch-action: none; }
+.kingdom-raid-return {
+  position: absolute;
+  z-index: 12;
+  inset-block-start: 238px;
+  inset-inline-start: 50%;
+  display: grid;
+  width: min(300px, calc(100% - 34px));
+  padding: 9px 14px;
+  color: var(--cream);
+  text-align: center;
+  pointer-events: none;
+  background: rgba(22, 28, 19, .9);
+  border: 1px solid rgba(223, 187, 96, .55);
+  border-radius: 13px;
+  box-shadow: 0 9px 24px rgba(0, 0, 0, .34);
+  transform: translateX(-50%);
+}
+.kingdom-raid-return strong { color: var(--gold-pale); font: 700 16px/1.2 var(--font-display); }
+.kingdom-raid-return span { margin-top: 2px; color: var(--cream-muted); font-size: var(--text-caption); }
+.kingdom-raid-return--defeat { border-color: rgba(167, 172, 158, .42); }
 .kingdom-scene__vignette {
   position: absolute;
   z-index: 2;
@@ -1179,6 +1199,20 @@ button { color: inherit; }
 .battle-scene, .battle-canvas { width: 100%; height: 100%; }
 .battle-canvas { display: block; }
 .raid-battle-label { position: absolute; inset-block-end: 12px; inset-inline-start: 50%; display: flex; align-items: center; gap: 5px; padding: 7px 10px; color: var(--gold-bright); background: rgba(12,14,12,.8); border-radius: 12px; transform: translateX(-50%); font-size: var(--text-caption); white-space: nowrap; }
+.raid-departure { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 7px; overflow: hidden; color: var(--cream); text-align: center; background: linear-gradient(rgba(10,15,11,.3),rgba(10,13,10,.9)), url('/assets/kingdom/terrain/kingdom-base-v3.webp') center 45%/cover; border-radius: 20px; box-shadow: inset 0 0 0 1px rgba(255,215,108,.14); }
+.raid-departure__gate { position: absolute; inset-inline-start: 50%; inset-block-end: 11%; width: 150px; height: 90px; border: 3px solid rgba(207,181,124,.26); border-bottom: 0; border-radius: 70px 70px 0 0; transform: translateX(-50%); box-shadow: 0 0 35px rgba(226,180,71,.08); }
+.raid-departure > small { color: var(--gold); font-size: var(--text-caption); font-weight: 850; letter-spacing: .08em; text-transform: uppercase; }
+.raid-departure > h1 { display: flex; align-items: center; gap: 7px; margin: 0; color: var(--gold-pale); font: 700 21px/1.1 var(--font-display); }
+.raid-departure > p { max-width: 270px; margin: 0 16px 11px; color: var(--cream-muted); font-size: var(--text-small); }
+.raid-departure__formation { display: flex; width: min(290px,calc(100% - 30px)); justify-content: center; gap: 9px; }
+.raid-departure__formation figure { width: 82px; margin: 0; animation: raid-march 900ms cubic-bezier(.3,.7,.3,1) both; animation-delay: calc(var(--departure-order) * 70ms); }
+.raid-departure__formation figure > span { position: relative; display: block; width: 58px; height: 58px; margin: auto; }
+.raid-departure__formation figure > span img:first-child { width: 50px; height: 50px; object-fit: cover; border: 2px solid #d2ad57; border-radius: 50%; box-shadow: 0 7px 16px rgba(0,0,0,.45); }
+.raid-departure__formation figure > span img:last-child { position: absolute; inset-inline-end: -1px; inset-block-end: 0; width: 25px; height: 25px; object-fit: cover; border: 1px solid rgba(255,215,108,.55); border-radius: 7px; background: #171b15; }
+.raid-departure__formation figcaption { color: var(--gold-pale); font-size: var(--text-caption); font-weight: 850; }
+.raid-departure__formation figcaption small { display: block; margin-top: 2px; color: var(--cream-muted); font-size: var(--text-caption); font-weight: 650; }
+@keyframes raid-march { from { opacity: 0; transform: translateY(70px) scale(.88); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (prefers-reduced-motion: reduce) { .raid-departure__formation figure { animation: none; } }
 .raid-result { display: grid; min-height: calc(100% - 8px); align-content: center; justify-items: center; text-align: center; }
 .raid-result__crest { display: grid; width: 70px; height: 70px; place-items: center; border-radius: 50%; }
 .raid-result--victory .raid-result__crest { color: var(--gold-bright); background: rgba(226,180,71,.15); box-shadow: 0 0 34px rgba(226,180,71,.15); }

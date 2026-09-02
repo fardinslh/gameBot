@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
+  ArmyPreview,
   BattleReplayResponse,
   DefenseInboxResponse,
   RaidOverviewResponse,
@@ -21,6 +22,7 @@ import {
 } from '../api/raid-api';
 import { trackRaidEvent } from '../analytics/raid-analytics';
 import { useGameAudio } from '@/features/audio/audio-provider';
+import { deriveRaidDeparture, raidDepartureDuration } from '../domain/raid-journey-presentation';
 
 export type RaidView = 'overview' | 'inbox';
 
@@ -32,6 +34,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
   const [inbox, setInbox] = useState<DefenseInboxResponse | null>(null);
   const [revengePreview, setRevengePreview] = useState<RevengePreviewResponse | null>(null);
   const [battleDetail, setBattleDetail] = useState<BattleReplayResponse | null>(null);
+  const [departure, setDeparture] = useState<ArmyPreview | null>(null);
   const [view, setView] = useState<RaidView>(initialView);
   const [action, setAction] = useState<'loading' | 'idle' | 'searching' | 'attacking' | 'loading-inbox' | 'loading-preview'>('loading');
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -83,6 +86,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
     if (action !== 'idle') return;
     setAction('searching');
     setBattle(null);
+    setDeparture(null);
     trackRaidEvent('raid_search');
     try {
       const response = await searchRaid();
@@ -98,15 +102,18 @@ export function useRaidState(initialView: RaidView = 'overview') {
   const attack = useCallback(async () => {
     if (!offer || action !== 'idle') return;
     setAction('attacking');
+    setDeparture(overview?.army ? deriveRaidDeparture(overview.army) : null);
     audio.playSfx('attack_start');
     trackRaidEvent('raid_started', { playerId: overview?.player.id ?? 'unknown', offerId: offer.id, opponentPower: offer.opponent.armyPower, ownPower: offer.ownPower });
     try {
-      const response = await startRaid(offer.id);
+      const request = startRaid(offer.id);
+      const minimumPresentation = new Promise<void>((resolve) => window.setTimeout(resolve, raidDepartureDuration(window.matchMedia('(prefers-reduced-motion: reduce)').matches)));
+      const [response] = await Promise.all([request, minimumPresentation]);
       setBattle(response);
       setOffer(null);
       setErrorCode(null);
     } catch (error) { setErrorCode(error instanceof RaidApiError ? error.code : 'SERVER_ERROR'); }
-    finally { setAction('idle'); }
+    finally { setDeparture(null); setAction('idle'); }
   }, [offer, action, overview, audio]);
 
   const openRevengePreview = useCallback(async (revengeTargetId: string) => {
@@ -166,7 +173,7 @@ export function useRaidState(initialView: RaidView = 'overview') {
   }, []);
 
   return {
-    overview, offer, battle, inbox, revengePreview, battleDetail, view, action, errorCode,
+    overview, offer, battle, departure, inbox, revengePreview, battleDetail, view, action, errorCode,
     refresh, search, attack, openInbox, closeInbox, openRevengePreview, revenge,
     openBattleDetail, closeBattleDetail: () => setBattleDetail(null),
     closeRevengePreview: () => setRevengePreview(null), finishBattle, clearBattle,

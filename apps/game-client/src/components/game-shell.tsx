@@ -14,6 +14,7 @@ import { ReturnSummary } from '@/features/engagement/components/return-summary';
 import { PlayerExperienceProvider } from '@/features/experience/player-experience-provider';
 import { LocalizedGameRoot } from '@/i18n/bidi';
 import { ShopPage } from '@/features/shop/components/shop-page';
+import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
 
 interface GameShellProps {
   locale: Locale;
@@ -32,6 +33,7 @@ export function GameShell({ locale, dictionary, initialSection }: GameShellProps
 function GameShellContent({ locale, dictionary, initialSection }: GameShellProps) {
   const [activeSection, setActiveSection] = useState<GameSection>(initialSection);
   const [raidInitialView, setRaidInitialView] = useState<RaidView>('overview');
+  const [raidReturn, setRaidReturn] = useState<KingdomRaidReturnPresentation | null>(null);
   const { playSfx, setMusicContext } = useGameAudio();
   useEffect(() => initializeAnalytics(locale), [locale]);
   useEffect(() => { setMusicContext('KINGDOM'); }, [activeSection, setMusicContext]);
@@ -47,13 +49,17 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
     setRaidInitialView('inbox');
     setActiveSection('raid');
   };
+  const returnFromRaid = (presentation: KingdomRaidReturnPresentation): void => {
+    setRaidReturn(presentation);
+    setActiveSection('kingdom');
+  };
   return (
     <PlayerExperienceProvider dictionary={dictionary}>
       <EngagementProvider>
       {activeSection === 'heroes' ? <HeroesPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
-        : activeSection === 'raid' ? <RaidPage locale={locale} dictionary={dictionary} initialView={raidInitialView} onNavigate={navigate} />
+        : activeSection === 'raid' ? <RaidPage locale={locale} dictionary={dictionary} initialView={raidInitialView} onNavigate={navigate} onRaidReturn={returnFromRaid} />
           : activeSection === 'shop' ? <ShopPage locale={locale} dictionary={dictionary} onNavigate={navigate} />
-          : <KingdomPage locale={locale} dictionary={dictionary} onNavigate={navigate} onOpenInbox={openInbox} />}
+          : <KingdomPage locale={locale} dictionary={dictionary} onNavigate={navigate} onOpenInbox={openInbox} onRaidReturnComplete={() => setRaidReturn(null)} raidReturn={raidReturn} />}
       <EngagementReturnLayer dictionary={dictionary} />
       </EngagementProvider>
     </PlayerExperienceProvider>

@@ -20,7 +20,7 @@ Choose validation by the affected boundary. Authoritative logic needs unit and i
 
 | Command | Coverage at verified baseline |
 | --- | --- |
-| `npm test` | 66 tests in 20 files for economy/Hero/Army/Campaign/Shop config, battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
+| `npm test` | 75 tests in 20 files for economy/Hero/Army/Campaign/Shop config, battle/progression goals and effects, analytics, system-opponent config, shield, bounded passes, ranking, and top-five selection |
 | `npm run test:integration` | 84 tests in 9 files: economy, Heroes, Army bootstrap/training/formation, versioned Raid/Revenge including Army-offer cutover, Campaign, Shop authority/ledger/entitlement/concurrency/rollback, onboarding/advisor tips, analytics, and Retention |
 | `npm run validate:army` | Exact troop config/capacity plus focused PostgreSQL bootstrap, system-player repair, economy, idempotency, concurrency, completion, ownership, and formation coverage |
 | `npm run test:client-analytics` | 2 client analytics contract tests |
@@ -40,7 +40,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:runtime` | Applies migrations, starts/checks API, PostgreSQL and Redis health, client reachability, 320-pixel Persian layout |
 | `npm run validate:client` | Five-building Castle 1 scene, all active taps, Collect, Mine upgrade persistence/completion, RTL, mobile overflow |
 | `npm run validate:heroes` | Three starters, portraits, detail, team reorder/save/reload, Hero upgrade charge, Kingdom return smoke test |
-| `npm run validate:raid` | New-player shield/system offer, Army Match Offer and changed-Army rejection/fresh-search recovery, immediate training HUD balances, deterministic victory/defeat, three-lane Pixi playback, six Army snapshots/events, settlement, Kingdom HUD refresh, mobile locales |
+| `npm run validate:raid` | New-player shield/system offer, Army Match Offer and changed-Army rejection/fresh-search recovery, immediate training HUD balances, authoritative departure, deterministic victory/defeat, three-lane Pixi playback, distinct Kingdom returns, no duplicate settlement, six Army snapshots/events, HUD refresh, mobile locales |
 | `npm run validate:revenge` | Incoming Raid badge, inbox, preview, Revenge battle/result, used state, mobile locales |
 | `npm run validate:visual` | Castle 1 world, bounded pan, active detail, locked exclusion, 54-pixel nav, asset budgets |
 | `npm run validate:progression` | Stages 1 through 5 with 5/6/7/8/9 buildings, lazy advanced assets, camera bounds, Mine point, public milestone/effect contract, hidden feature-metadata exclusion, Kingdom Progress UI, effects, screenshots |
@@ -49,7 +49,7 @@ These scripts require the API and client to be running unless the command states
 | `npm run validate:retention` | Daily Return, three Daily missions, nine Achievement families, Persian RTL, English LTR, exact 54px navigation, no overflow, and clean console at 320/375/390 |
 | `npm run validate:shop` | Shop config and 12 integration cases plus Persian/English 320/375/390 purchase/equip/persistence, live Building/training offers, forged-price defense, uncapped Gem HUD, screenshots, overflow, navigation, and console validation |
 | `npm run validate:economy-hud` | Controlled 62px four-column grid, separate centered Gem pill, equal widths, measured icon/amount/rate gaps and centering, hourly production/full states, no legacy Live/overflow wording, capacity-aware Collect, exact count-up, reduced motion, Persian/English 320/375/390, screenshots, layout, and browser console |
-| `npm run validate:kingdom-soul` | Identity defaults/update/persistence, Castle current/next/future milestones through level 20, building milestone activity, active construction, 14-actor cap, hidden-page pause, reduced motion, Persian/English 320/375/390, 54px navigation, overflow, screenshots, and browser console |
+| `npm run validate:kingdom-soul` | Unit coverage plus identity defaults/update/persistence, Castle milestones through level 20, building activity/construction, active-Formation Hero homes, combined 14-actor cap, hidden-page pause, reduced motion, Persian/English 320/375/390, navigation, overflow, screenshots, and browser console |
 | `npm run validate:rtl` | Real-browser semantic/computed RTL/LTR, document metadata, isolated names/numbers/timers/signed values, English regression, mobile overflow, and required screenshots |
 | `npm run validate:typography` | Runs the RTL suite plus computed Vazirmatn/system-font separation, a 10px visible production text floor, control-clipping checks, 54px navigation, and Persian/English Kingdom, Building, Army, Commander, Raid, Battle, Campaign map/detail screenshots |
 | `npm run validate:audio-lab` | Starts or reuses a development client; checks all 24 approved assets, decoded peak headroom, the completed Audio Lab state, and 320/375/390 layout |

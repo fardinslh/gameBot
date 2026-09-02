@@ -58,7 +58,8 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Judge core texture quality from effective opaque-pixel resolution at production size, DPR, and moderate 150/200% inspection. Never claim improvement from naive raster upscaling; preserve current-stage lazy loading and the per-file budget.
 - Keep Kingdom Theme presentation-only. Do not add persistence, ownership, selection, historical catalogs, commerce, Seasons, or gameplay bonuses without their explicit future phase
 - Kingdom identity is server-owned: edit it only through `PUT /kingdom/identity`; Castle transformations use the authoritative levels 1–20 realm milestone configuration, with optional references to real unlocks, rather than a second progression system
-- Ambient life is decorative only: derive it from existing levels, unlocks, visual milestones, and active upgrades; keep at most 14 non-interactive deterministic actors, no pathfinding or economy simulation, hidden-page pause, and reduced-motion freeze
+- Ambient life and Hero presence are decorative only: derive them from existing levels/unlocks and the active Army Formation; keep at most 14 combined non-interactive deterministic actors, no pathfinding or economy simulation, hidden-page pause, and reduced-motion freeze
+- Standard-Raid departure/return is client presentation around the immediate authoritative start and stored replay; never recalculate outcome/loot, write journey state, or settle rewards a second time
 
 ## Backend integrity rules
 
@@ -118,7 +119,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1 Ownership & Visible Anticipation, and Phase 08.2A Living Progression & Visible Consequences are implemented. Phase 08.2A extends authoritative Castle realm presentation through level 20 and derives persistent district life/construction from existing progression state without a new progression or simulation system. Shop uses uncapped earned Gems for three permanent Profile Crests and optional authoritative Building/training completion; no payment or Battle-outcome sale exists. Retention 05B Kingdom Themes is still not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 62px resource HUD, 54px navigation, and Persian RTL remain intact. Theme content, Guild, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1, Phase 08.2A, and Phase 08.2B Heroes in the Kingdom & Raid Departure/Return are implemented. Phase 08.2B reuses active Formation and stored standard-Raid replay data for non-authoritative world/journey presentation without new progression, simulation, or settlement state. Shop uses uncapped earned Gems for three permanent Profile Crests and optional authoritative Building/training completion; no payment or Battle-outcome sale exists. Retention 05B Kingdom Themes is still not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 62px resource HUD, 54px navigation, and Persian RTL remain intact. Theme content, Guild, and Bale have not started.
 
 ## Git completion rules
 

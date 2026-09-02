@@ -64,6 +64,8 @@ New Battle starts load the current Army Formation, derive Commander-enhanced squ
 
 The production Army page uses `useArmyState` to combine authoritative troops/formation with the Hero roster. It composes Player HUD, Resource HUD, three formation controls, training, Commander assignment, and `HeroDetailSheet` upgrades. The internal `HeroesPage` and navigation ID remain for compatibility; English and Persian share the component tree.
 
+The Kingdom also reads `GET /army` and derives up to three decorative Pixi portrait markers from the active Formation. Knight, Ranger, and Mage keep their existing identities and portrait assets; no separate world-Hero row or progression state exists. A marker appears only when its associated real building is unlocked, remains non-interactive, and shares the capped ambient population budget.
+
 ## Planned Hero concepts
 
 The previous standalone Hero Expansion roadmap is superseded by [Army and Commander Expansion](ARMY_AND_COMMANDERS.md). Future Hero depth should strengthen Commander identity inside the Kingdom/Army loop rather than turn combat into a Hero-only collection RPG.

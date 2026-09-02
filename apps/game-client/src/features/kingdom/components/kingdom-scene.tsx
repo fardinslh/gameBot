@@ -1,12 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { KingdomExpansionStage } from '@crown-and-coin/shared';
+import type { ArmyResponse, KingdomExpansionStage } from '@crown-and-coin/shared';
 import type { Locale } from '@/i18n/config';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
+import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
 
 interface KingdomSceneProps {
+  army: ArmyResponse | null;
   buildingLabels: Record<WorldBuildingId, string>;
   buildings: KingdomBuildingView[];
   expansionStage: KingdomExpansionStage;
@@ -14,13 +16,16 @@ interface KingdomSceneProps {
   loadingLabel: string;
   locale: Locale;
   onSelect(buildingId: WorldBuildingId): void;
+  onRaidReturnComplete(): void;
   panLabel: string;
   selectedBuildingId: WorldBuildingId | null;
+  raidReturn: KingdomRaidReturnPresentation | null;
 }
 
 type SceneStatus = 'loading' | 'ready' | 'error';
 
 export function KingdomScene({
+  army,
   buildingLabels,
   buildings,
   expansionStage,
@@ -28,12 +33,17 @@ export function KingdomScene({
   loadingLabel,
   locale,
   onSelect,
+  onRaidReturnComplete,
   panLabel,
   selectedBuildingId,
+  raidReturn,
 }: KingdomSceneProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onSelectRef = useRef(onSelect);
   const buildingsRef = useRef(buildings);
+  const armyRef = useRef(army);
+  const raidReturnRef = useRef(raidReturn);
+  const onRaidReturnCompleteRef = useRef(onRaidReturnComplete);
   const expansionStageRef = useRef(expansionStage);
   const localeRef = useRef(locale);
   const sceneRef = useRef<Awaited<ReturnType<typeof import('../rendering/create-kingdom-scene').createKingdomScene>> | null>(null);
@@ -42,6 +52,18 @@ export function KingdomScene({
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
+
+  useEffect(() => { onRaidReturnCompleteRef.current = onRaidReturnComplete; }, [onRaidReturnComplete]);
+
+  useEffect(() => {
+    armyRef.current = army;
+    sceneRef.current?.setArmyState(army);
+  }, [army]);
+
+  useEffect(() => {
+    raidReturnRef.current = raidReturn;
+    if (raidReturn) sceneRef.current?.playRaidReturn(raidReturn, () => onRaidReturnCompleteRef.current());
+  }, [raidReturn?.battleId]);
 
   useEffect(() => {
     sceneRef.current?.select(selectedBuildingId);
@@ -78,6 +100,8 @@ export function KingdomScene({
         }
         sceneRef.current = scene;
         scene.setBuildingStates(toSceneStates(buildingsRef.current), expansionStageRef.current);
+        scene.setArmyState(armyRef.current);
+        if (raidReturnRef.current) scene.playRaidReturn(raidReturnRef.current, () => onRaidReturnCompleteRef.current());
         setStatus('ready');
       })
       .catch(() => {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { History } from 'lucide-react';
-import type { ResourceAmounts } from '@crown-and-coin/shared';
+import type { ArmyResponse, ResourceAmounts } from '@crown-and-coin/shared';
 import type { Dictionary, Locale } from '@/i18n/config';
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { FUTURE_BUILDING_LAYOUT } from '../data/building-layout';
@@ -29,24 +29,33 @@ import { useEngagement } from '@/features/engagement/engagement-provider';
 import { EngagementGoalCard } from '@/features/engagement/components/engagement-goal-card';
 import { RoyalDecreeSheet } from '@/features/engagement/components/royal-decree-sheet';
 import { UpgradeCelebration } from '@/features/engagement/components/upgrade-celebration';
+import { fetchArmy } from '@/features/army/api/army-api';
+import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
   locale: Locale;
   onNavigate(section: GameSection): void;
   onOpenInbox(): void;
+  onRaidReturnComplete(): void;
+  raidReturn: KingdomRaidReturnPresentation | null;
 }
 
-export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: KingdomPageProps) {
+export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, onRaidReturnComplete, raidReturn }: KingdomPageProps) {
   const economy = useKingdomState();
   const experience = usePlayerExperience();
   const audio = useGameAudio();
   const inboxCount = useInboxCount();
   const [selectedBuildingId, setSelectedBuildingId] = useState<WorldBuildingId | null>(null);
+  useEffect(() => {
+    experience.setAdvisorTipsSuppressed(Boolean(raidReturn));
+    return () => experience.setAdvisorTipsSuppressed(false);
+  }, [experience.setAdvisorTipsSuppressed, raidReturn]);
   const [comingSoonSection, setComingSoonSection] = useState<string | null>(null);
   const [progressOpen, setProgressOpen] = useState(false);
   const [retentionOpen, setRetentionOpen] = useState(false);
   const [decreeOpen, setDecreeOpen] = useState(false);
+  const [kingdomArmy, setKingdomArmy] = useState<ArmyResponse | null>(null);
   const retentionEnabled = experience.onboarding?.status === 'COMPLETED' || experience.onboarding?.status === 'SKIPPED';
   const refreshKingdom = useCallback(async () => { await economy.refresh(); }, [economy.refresh]);
   const retention = useRetentionState(retentionEnabled, refreshKingdom);
@@ -82,6 +91,14 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
   }, [comingSoonSection]);
 
   useEffect(() => {
+    const controller = new AbortController();
+    void fetchArmy(controller.signal).then(setKingdomArmy).catch((error) => {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) setKingdomArmy(null);
+    });
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
     if (selectedBuildingId === 'castle') experience.requestAdvisorTip('CASTLE_PROGRESSION');
   }, [experience, selectedBuildingId]);
 
@@ -113,6 +130,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
       <a className="skip-link" href="#kingdom-world">{t.skipToGame}</a>
       <main className="kingdom-shell" id="kingdom-world">
         <KingdomScene
+          army={kingdomArmy}
           buildingLabels={buildingLabels}
           buildings={economy.buildings}
           expansionStage={economy.state?.kingdomExpansionStage ?? 1}
@@ -120,9 +138,16 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox }: 
           loadingLabel={t.loadingKingdom}
           locale={locale}
           onSelect={handleBuildingSelect}
+          onRaidReturnComplete={onRaidReturnComplete}
           panLabel={t.dragToExplore}
           selectedBuildingId={selectedBuildingId}
+          raidReturn={raidReturn}
         />
+
+        {raidReturn ? <div className={`kingdom-raid-return kingdom-raid-return--${raidReturn.outcome.toLowerCase()}`} data-raid-return-presentation={raidReturn.outcome} role="status">
+          <strong>{raidReturn.outcome === 'VICTORY' ? t.raidJourney.returnVictory : t.raidJourney.returnDefeat}</strong>
+          <span>{raidReturn.outcome === 'VICTORY' ? t.raidJourney.returnVictoryBody : t.raidJourney.returnDefeatBody}</span>
+        </div> : null}
 
         <div className="game-ui-layer">
           <PlayerHud

@@ -268,6 +268,10 @@ export const en = {
     newKingdomShield: 'New Kingdom Shield', shieldHint: 'Training rivals only while protected.',
     shieldExpiresIn: '{count}h remaining',
   },
+  raidJourney: {
+    departureKicker: 'From your Kingdom', departureTitle: 'The Army marches', departureBody: 'Your Commanders lead the standing Army beyond the gates.',
+    returnVictory: 'The victors return', returnVictoryBody: 'Spoils enter the Kingdom and its next opportunity is ready.', returnDefeat: 'The Army returns', returnDefeatBody: 'Your Commanders regroup in the Kingdom for the next campaign.',
+  },
   inboxUi: {
     back: 'Back', title: 'Battle Log', incomingAttacks: 'Incoming attacks', loading: 'Reading the war ledger…',
     noAttacks: 'No attacks yet', attackedYou: 'Attacked your kingdom', defenseDefeat: 'Defense Defeat',

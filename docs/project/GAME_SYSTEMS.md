@@ -25,7 +25,7 @@ PlayerHero -> ArmyFormationSlot Commander
 ArmyFormation -> three Army Battle v2 squads
 ```
 
-`RaidService` consumes Army state for new rules-version-2 Raid and Revenge settlement. See [Army and Commanders](ARMY_AND_COMMANDERS.md).
+`RaidService` consumes Army state for new rules-version-2 Raid and Revenge settlement. The client also reuses the active Formation for non-interactive Kingdom Hero presence and uses stored standard-Raid replay data for departure/return presentation; neither creates a write path. See [Army and Commanders](ARMY_AND_COMMANDERS.md).
 
 ## Dependency map
 
@@ -100,7 +100,7 @@ Onboarding advances inside successful authoritative Collect, building-upgrade, a
 
 ## Presentation-only systems
 
-The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For all nine active buildings, authoritative level plus explicit presentation Theme deterministically selects a five-tier raster asset and minor detail set. `DEFAULT` is the only implemented theme; no appearance/theme column or client economy state exists. Theme, appearance fallback, construction cues, transformation timing, camera movement, labels, HUD formatting, and deterministic ambient actors do not decide gameplay eligibility or power. Ambient selection derives from existing levels, unlocks, visual milestones, and active upgrades, remains capped at 14, and has no pathfinding, hit area, collision, or economy state.
+The client maps server building types to Pixi visual IDs and maps Castle-derived `kingdomExpansionStage` to local terrain treatments. For all nine active buildings, authoritative level plus explicit presentation Theme deterministically selects a five-tier raster asset and minor detail set. `DEFAULT` is the only implemented theme; no appearance/theme column or client economy state exists. Theme, appearance fallback, construction cues, transformation timing, camera movement, labels, HUD formatting, deterministic ambient actors, Hero portrait markers, and Raid journey scenes do not decide gameplay eligibility or power. Ambient and active-Formation Hero selection share a 14-actor cap and have no pathfinding, hit area, collision, or economy state. Standard-Raid departure/return wraps the existing authoritative start and stored replay without another settlement.
 
 Coach marks and the permanent Guide explain server behavior but never decide progress. Music context, Battle-event-to-SFX mapping, volume, and mute state are presentation-only and fail safely.
 

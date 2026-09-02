@@ -19,6 +19,7 @@ interface ExperienceContextValue {
   openGuide(): void;
   openAudioSettings(): void;
   requestAdvisorTip(tip: AdvisorTipKey): void;
+  setAdvisorTipsSuppressed(suppressed: boolean): void;
 }
 
 const ExperienceContext = createContext<ExperienceContextValue | null>(null);
@@ -27,6 +28,7 @@ const AREN_PORTRAIT = '/assets/advisor/aren-current-candidate.webp';
 export function PlayerExperienceProvider({ children, dictionary: t }: { children: ReactNode; dictionary: Dictionary }) {
   const [onboarding, setOnboarding] = useState<OnboardingStateResponse | null>(null);
   const [seenTips, setSeenTips] = useState<Set<AdvisorTipKey>>(new Set());
+  const [advisorTipsSuppressed, setAdvisorTipsSuppressed] = useState(false);
   const [tipsLoaded, setTipsLoaded] = useState(false);
   const [tipQueue, setTipQueue] = useState<AdvisorTipKey[]>([]);
   const activeTip = tipQueue[0] ?? null;
@@ -92,7 +94,7 @@ export function PlayerExperienceProvider({ children, dictionary: t }: { children
   const openGuide = useCallback(() => { setPanel('guide'); audio.playSfx('panel_open'); }, [audio]);
   const openAudioSettings = useCallback(() => { setPanel('audio'); audio.playSfx('panel_open'); }, [audio]);
   const closePanel = (): void => { setPanel(null); audio.playSfx('back'); };
-  const value = useMemo(() => ({ dictionary: t, onboarding, refreshOnboarding, openGuide, openAudioSettings, requestAdvisorTip }), [t, onboarding, refreshOnboarding, openGuide, openAudioSettings, requestAdvisorTip]);
+  const value = useMemo(() => ({ dictionary: t, onboarding, refreshOnboarding, openGuide, openAudioSettings, requestAdvisorTip, setAdvisorTipsSuppressed }), [t, onboarding, refreshOnboarding, openGuide, openAudioSettings, requestAdvisorTip]);
 
   return (
     <ExperienceContext.Provider value={value}>
@@ -115,7 +117,7 @@ export function PlayerExperienceProvider({ children, dictionary: t }: { children
           </section>
         </div>
       ) : null}
-      {activeTip && !panel && !showCompletion ? <ContextualAdvisorTip dictionary={t} onDismiss={() => void dismissTip()} tip={activeTip} /> : null}
+      {activeTip && !advisorTipsSuppressed && !panel && !showCompletion ? <ContextualAdvisorTip dictionary={t} onDismiss={() => void dismissTip()} tip={activeTip} /> : null}
       {error ? <div className="experience-sync-error" role="status">{t.experience.unavailable}<button onClick={() => void refreshOnboarding()} type="button">{t.retry}</button></div> : null}
       {panel === 'guide' ? <GuidePanel dictionary={t} onClose={closePanel} /> : null}
       {panel === 'audio' ? <AudioSettingsPanel dictionary={t} onClose={closePanel} /> : null}

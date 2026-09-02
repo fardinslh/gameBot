@@ -68,6 +68,10 @@ Castle realm-state presentation uses one authoritative API configuration at leve
 
 Active `BuildingUpgrade` state keeps the existing scaffolding/material treatment and adds a nearby construction worker, prioritized inside the same actor budget. Completion removes construction state, swaps to the authoritative new level visual, and reuses the existing short transformation focus and React celebration. No citizen, pathfinding, collision, economy, hit-area, or pointer state exists. Animation pauses when the document is hidden and becomes static when reduced motion is requested.
 
+Phase 08.2B adds a separate non-interactive Hero-presence layer. `GET /army` remains the source: only Commanders in the active Formation appear, with Knight near Castle, Ranger near Lumber Mill, and Mage near Academy after its real server unlock. Up to three Hero portrait markers reduce the ambient allocation so the combined visible world population remains at most 14. They have no collision, pathfinding, gameplay state, or pointer events and follow the same hidden-page and reduced-motion rules.
+
+After a completed standard Raid result, React passes a one-shot presentation derived from the stored Battle replay into Pixi. Commanders travel back through the Kingdom; victory may show a decorative loot cart while defeat uses a subdued regrouping return. This transient layer does not call an API, recalculate loot, or settle resources, and it clears itself after playback.
+
 ## Building visuals
 
 `building-visuals.ts` defines each sprite path, rendered dimensions, normalized ground anchor, visual offset, footprint, contact shadow, hit area, one semantic status-stack anchor, and lock anchor. `building-art.ts` converts those definitions into Pixi containers.
