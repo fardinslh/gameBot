@@ -181,7 +181,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
               serverTime={economy.state.serverTime}
             />
           ) : null}
-          {retentionEnabled && engagement.state && !selectedBuildingId && !retentionOpen && !progressOpen ? <EngagementGoalCard
+          {retentionEnabled && engagement.state && !raidReturn && !selectedBuildingId && !retentionOpen && !progressOpen ? <EngagementGoalCard
             dictionary={t}
             engagement={engagement.state}
             onAction={handleEngagementGoal}

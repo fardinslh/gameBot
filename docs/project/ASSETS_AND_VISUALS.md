@@ -31,6 +31,8 @@ Active-building production now uses 45 files under `kingdom/evolution/default`: 
 
 `public/assets/heroes` contains Knight, Ranger, and Mage portraits. `hero.config.ts` supplies their public paths. The Raid and Hero clients reuse the same files.
 
+`public/assets/heroes/world` contains three transparent full-body Kingdom figures (`knight-world-v1.webp`, `ranger-world-v1.webp`, and `mage-world-v1.webp`). These are presentation-only Pixi/standard-Raid journey assets selected by `hero-world-assets.ts`; portrait assets remain unchanged for roster, match, and Battle UI.
+
 ## Visual mapping layers
 
 - `building-layout.ts`: gameplay building to world coordinate and scale

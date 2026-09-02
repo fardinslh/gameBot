@@ -20,13 +20,50 @@ describe('Kingdom Hero presence', () => {
   it('derives the three recognizable residents from the active owned Commanders', () => {
     const result = deriveKingdomHeroPresences(army, { castle: building(), lumberMill: building(), academy: building() });
     expect(result.map(({ key }) => key)).toEqual<HeroKey[]>(['KNIGHT', 'RANGER', 'MAGE']);
-    expect(new Set(result.map(({ portraitAsset }) => portraitAsset)).size).toBe(3);
+    expect(new Set(result.map(({ worldAsset }) => worldAsset)).size).toBe(3);
+    expect(result.every(({ worldAsset }) => worldAsset.includes('/assets/heroes/world/'))).toBe(true);
   });
 
   it('does not place a Hero at locked or unavailable content', () => {
     const result = deriveKingdomHeroPresences(army, { castle: building(), lumberMill: building(), academy: building(true) });
     expect(result.map(({ key }) => key)).toEqual(['KNIGHT', 'RANGER']);
     expect(deriveKingdomHeroPresences(null, { castle: building() })).toEqual([]);
+  });
+
+  it('renders non-interactive world figures and victory-only return loot', async () => {
+    vi.spyOn(Assets, 'load').mockImplementation(() => Promise.resolve(Texture.WHITE) as unknown as ReturnType<typeof Assets.load>);
+    const artwork = createHeroPresenceArtwork();
+
+    artwork.setHeroes(deriveKingdomHeroPresences(army, { castle: building(), lumberMill: building(), academy: building() }));
+    await vi.waitFor(() => expect(artwork.container.children).toHaveLength(3));
+    expect(artwork.container.eventMode).toBe('none');
+    expect(artwork.container.children.map((child) => child.label)).toEqual(['hero-knight', 'hero-ranger', 'hero-mage']);
+    expect(artwork.container.children.every((child) => child.eventMode === 'none')).toBe(true);
+
+    const victoryComplete = vi.fn();
+    artwork.playReturn({
+      battleId: 'victory-return',
+      commanders: commanders.map(({ key, portraitAsset }) => ({ key, portraitAsset })),
+      loot: { GOLD: '100', FOOD: '50', WOOD: '25', STONE: '10' },
+      outcome: 'VICTORY',
+    }, false, victoryComplete);
+    await vi.waitFor(() => expect(artwork.returnContainer.children).toHaveLength(1));
+    expect(artwork.returnContainer.children[0]?.children.map((child) => child.label)).toEqual([
+      'hero-knight', 'hero-ranger', 'hero-mage', 'raid-return-loot-cart',
+    ]);
+    artwork.update(5_000, 5);
+    expect(victoryComplete).not.toHaveBeenCalled();
+    expect(artwork.returnContainer.children).toHaveLength(1);
+
+    artwork.playReturn({
+      battleId: 'defeat-return',
+      commanders: commanders.map(({ key, portraitAsset }) => ({ key, portraitAsset })),
+      loot: { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0' },
+      outcome: 'DEFEAT',
+    }, false, vi.fn());
+    await vi.waitFor(() => expect(artwork.returnContainer.children[0]?.children).toHaveLength(3));
+    expect(artwork.returnContainer.children[0]?.children.some((child) => child.label === 'raid-return-loot-cart')).toBe(false);
+    artwork.destroy();
   });
 
   it('owns reduced-motion return completion after cold asynchronous assets resolve', async () => {

@@ -92,9 +92,11 @@ try {
   const initialHeroes = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
     count: Number(element.getAttribute('data-hero-presence-count')),
     keys: element.getAttribute('data-hero-presence-keys'),
+    renderStyle: element.getAttribute('data-hero-render-style'),
+    worldAssets: element.getAttribute('data-hero-world-assets'),
     total: Number(element.getAttribute('data-world-actor-count')),
   }));
-  if (initialHeroes.count !== 2 || initialHeroes.keys !== 'KNIGHT,RANGER' || initialHeroes.total > 14) throw new Error(`Initial Hero presence is incorrect: ${JSON.stringify(initialHeroes)}`);
+  if (initialHeroes.count !== 2 || initialHeroes.keys !== 'KNIGHT,RANGER' || initialHeroes.renderStyle !== 'world-figures' || !initialHeroes.worldAssets?.includes('/assets/heroes/world/') || initialHeroes.total > 14) throw new Error(`Initial Hero presence is incorrect: ${JSON.stringify(initialHeroes)}`);
   await assertLayout(320, 568, 'rtl');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'active') throw new Error('Ambient life is not active');
   await openCastle();
@@ -130,9 +132,11 @@ try {
   const progressedHeroes = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
     count: Number(element.getAttribute('data-hero-presence-count')),
     keys: element.getAttribute('data-hero-presence-keys'),
+    renderStyle: element.getAttribute('data-hero-render-style'),
+    worldAssets: element.getAttribute('data-hero-world-assets'),
     total: Number(element.getAttribute('data-world-actor-count')),
   }));
-  if (progressedHeroes.count !== 3 || progressedHeroes.keys !== 'KNIGHT,RANGER,MAGE' || progressedHeroes.total > 14) throw new Error(`Progressed Hero presence is incorrect: ${JSON.stringify(progressedHeroes)}`);
+  if (progressedHeroes.count !== 3 || progressedHeroes.keys !== 'KNIGHT,RANGER,MAGE' || progressedHeroes.renderStyle !== 'world-figures' || progressedHeroes.worldAssets?.split(',').length !== 3 || progressedHeroes.total > 14) throw new Error(`Progressed Hero presence is incorrect: ${JSON.stringify(progressedHeroes)}`);
   await openCastle();
   const nextText = await page.locator('[data-next-transformation]').innerText();
   const laterText = await page.locator('.castle-future-preview').innerText();

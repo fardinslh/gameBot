@@ -232,6 +232,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.expansionStage = '1';
   host.dataset.ambientActorCount = '0';
   host.dataset.heroPresenceCount = '0';
+  host.dataset.heroRenderStyle = 'world-figures';
   host.dataset.worldActorCount = '0';
   host.dataset.raidReturn = 'idle';
   const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');
@@ -462,6 +463,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     host.dataset.ambientActorIds = visibleAmbientActors.join(',');
     host.dataset.heroPresenceCount = String(heroPresenceCount);
     host.dataset.heroPresenceKeys = heroes.map((hero) => hero.key).join(',');
+    host.dataset.heroWorldAssets = heroes.map((hero) => hero.worldAsset).join(',');
     host.dataset.worldActorCount = String(visibleAmbientActors.length + heroPresenceCount);
     host.dataset.ambientMilestones = Object.entries(desiredStates)
       .filter(([, state]) => state?.locked === false)

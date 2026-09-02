@@ -130,7 +130,7 @@ Twenty-one ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1, Phase 08.2A, and Phase 08.2B Heroes in the Kingdom & Raid Departure/Return are complete. Phase 08.2B derives persistent Hero presence from the active Army Formation and unlocked buildings, and adds bounded client-only standard-Raid journey presentation around the existing authoritative start/replay/result flow. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1, Phase 08.2A, and Phase 08.2B Heroes in the Kingdom & Raid Departure/Return are complete. Phase 08.2B derives persistent Hero presence from the active Army Formation and unlocked buildings, renders the Commanders as grounded world-scale figures, and adds bounded client-only standard-Raid journey presentation around the existing authoritative start/replay/result flow. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 
