@@ -90,6 +90,11 @@ export const KINGDOM_REALM_STATE_KEYS = [
   'LEARNED_COURT',
   'MAKERS_WARD',
   'FORGED_KINGDOM',
+  'WAR_COUNCIL',
+  'FORTIFIED_REALM',
+  'GRAND_COURT',
+  'CROWNED_REALM',
+  'LEGENDARY_KINGDOM',
 ] as const;
 export type KingdomRealmStateKey = (typeof KINGDOM_REALM_STATE_KEYS)[number];
 

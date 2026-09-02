@@ -57,8 +57,8 @@ Check the `Last verified against commit` value in `INDEX.md`, then compare it wi
 - Keep building world labels and compact upgrade status screen-legible; do not parent compact UI so it blindly inherits building and world shrink. Preserve the shared screen-space overlay, one semantic `statusStackAnchor` per building, exact centered indicator-above-badge layout, and device-pixel snapping unless a measured replacement is better.
 - Judge core texture quality from effective opaque-pixel resolution at production size, DPR, and moderate 150/200% inspection. Never claim improvement from naive raster upscaling; preserve current-stage lazy loading and the per-file budget.
 - Keep Kingdom Theme presentation-only. Do not add persistence, ownership, selection, historical catalogs, commerce, Seasons, or gameplay bonuses without their explicit future phase
-- Kingdom identity is server-owned: edit it only through `PUT /kingdom/identity`; Castle transformations must continue deriving from existing unlock milestones rather than a second progression system
-- Ambient life is decorative only: keep 6-10 non-interactive deterministic actors, no pathfinding or economy simulation, hidden-page pause, and reduced-motion freeze
+- Kingdom identity is server-owned: edit it only through `PUT /kingdom/identity`; Castle transformations use the authoritative levels 1–20 realm milestone configuration, with optional references to real unlocks, rather than a second progression system
+- Ambient life is decorative only: derive it from existing levels, unlocks, visual milestones, and active upgrades; keep at most 14 non-interactive deterministic actors, no pathfinding or economy simulation, hidden-page pause, and reduced-motion freeze
 
 ## Backend integrity rules
 
@@ -118,7 +118,7 @@ Run `npm run validate:docs` after documentation changes.
 
 ## Current retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, and Phase 08.1 Ownership & Visible Anticipation are implemented. Phase 08.1 adds server-owned Kingdom identity, unlock-derived Castle transformation previews, and decorative ambient life without a new progression or simulation system. Shop uses uncapped earned Gems for three permanent Profile Crests and optional authoritative Building/training completion; no payment or Battle-outcome sale exists. Retention 05B Kingdom Themes is still not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 62px resource HUD, 54px navigation, and Persian RTL remain intact. Theme content, Guild, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1 Ownership & Visible Anticipation, and Phase 08.2A Living Progression & Visible Consequences are implemented. Phase 08.2A extends authoritative Castle realm presentation through level 20 and derives persistent district life/construction from existing progression state without a new progression or simulation system. Shop uses uncapped earned Gems for three permanent Profile Crests and optional authoritative Building/training completion; no payment or Battle-outcome sale exists. Retention 05B Kingdom Themes is still not started. Barracks remains inactive. Kingdom Pixi coordinates, Castle composition, 62px resource HUD, 54px navigation, and Persian RTL remain intact. Theme content, Guild, and Bale have not started.
 
 ## Git completion rules
 

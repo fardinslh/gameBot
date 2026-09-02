@@ -1,8 +1,9 @@
 import { existsSync, mkdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { PrismaClient } from '@prisma/client';
 import { chromium } from 'playwright-core';
 
-const browserPath = ['C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'].find(existsSync);
+const browserPath = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium', 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'].find(existsSync);
 if (!browserPath) throw new Error('No supported local Chromium browser was found');
 
 async function waitForUrl(url, timeoutMs = 25_000) {
@@ -19,7 +20,7 @@ await waitForUrl('http://localhost:3000/?lang=fa');
 const prisma = new PrismaClient();
 const browser = await chromium.launch({ executablePath: browserPath, headless: true });
 const artifacts = new URL('../artifacts/kingdom-soul/', import.meta.url);
-mkdirSync(artifacts, { recursive: true });
+mkdirSync(fileURLToPath(artifacts), { recursive: true });
 const identity = `kingdom-soul-${Date.now()}`;
 const page = await browser.newPage({ viewport: { width: 320, height: 568 }, deviceScaleFactor: 2 });
 const consoleErrors = [];
@@ -71,7 +72,7 @@ async function assertLayout(width, height, direction) {
     navHeight: Math.round(document.querySelector('.bottom-navigation')?.getBoundingClientRect().height ?? 0),
     actorCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-ambient-actor-count')),
   }));
-  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.actorCount > 10) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
+  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.actorCount > 14) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
 }
 
 try {
@@ -80,6 +81,9 @@ try {
   if (initial.kingdom.name !== 'Dawnkeep' || initial.kingdom.rulerTitle !== 'LORD' || initial.kingdom.heraldry !== 'GOLDEN_LION') throw new Error('Safe identity defaults missing');
   const goals = initial.kingdomGoals;
   if (goals.transformation.current.realmState !== 'FRONTIER_HOLD' || goals.transformation.next?.unlockBuildingType !== 'WATCHTOWER' || goals.transformation.future?.unlockBuildingType !== 'ACADEMY') throw new Error('Castle transformation projection does not match unlock rules');
+  const accountState = await prisma.platformAccount.findUnique({ where: { platform_externalUserId: { platform: 'WEB', externalUserId: identity } }, include: { player: { include: { kingdom: true } } } });
+  if (!accountState?.player.kingdom) throw new Error('Kingdom validation account was not bootstrapped');
+  const kingdomId = accountState.player.kingdom.id;
 
   await load('fa');
   await dismissAdvisorTip();
@@ -97,15 +101,54 @@ try {
     page.waitForResponse((response) => response.url().endsWith('/kingdom/identity') && response.request().method() === 'PUT'),
   ]);
   if (!saveResponse.ok()) throw new Error(`Identity UI save failed: ${saveResponse.status()} ${await saveResponse.text()}`);
-  await page.waitForFunction(() => document.querySelector('.castle-identity h3')?.textContent === 'Sunward Keep', null, { timeout: 5_000 });
-  await page.screenshot({ path: new URL('01-fa-castle-identity-320x568.png', artifacts).pathname.slice(1) });
+  const savedIdentity = await saveResponse.json();
   const persisted = await api('/kingdom');
-  if (persisted.kingdom.name !== 'Sunward Keep' || persisted.kingdom.rulerTitle !== 'WARDEN' || persisted.kingdom.heraldry !== 'VERDANT_STAG') throw new Error('Identity did not persist');
+  if (persisted.kingdom.name !== 'Sunward Keep' || persisted.kingdom.rulerTitle !== 'WARDEN' || persisted.kingdom.heraldry !== 'VERDANT_STAG') throw new Error(`Identity did not persist: ${JSON.stringify({ savedIdentity, persisted: persisted.kingdom })}`);
+  await load('fa');
+  await dismissAdvisorTip();
+  await openCastle();
+  await page.locator('.castle-identity h3', { hasText: 'Sunward Keep' }).waitFor();
+  await page.screenshot({ path: fileURLToPath(new URL('01-fa-castle-identity-320x568.png', artifacts)) });
   await page.locator('.building-sheet .icon-button').click();
   for (const [width, height] of [[375, 812], [390, 844]]) await assertLayout(width, height, 'rtl');
-  await page.screenshot({ path: new URL('02-fa-living-kingdom-390x844.png', artifacts).pathname.slice(1) });
+  await page.screenshot({ path: fileURLToPath(new URL('02-fa-living-kingdom-390x844.png', artifacts)) });
+
+  await prisma.building.update({ where: { kingdomId_type: { kingdomId, type: 'CASTLE' } }, data: { level: 10 } });
+  const levelTen = await api('/kingdom');
+  if (levelTen.kingdomGoals.transformation.current.realmState !== 'FORTIFIED_REALM' || levelTen.kingdomGoals.transformation.next?.realmState !== 'GRAND_COURT' || levelTen.kingdomGoals.transformation.future?.realmState !== 'CROWNED_REALM') throw new Error('Castle level 10 realm projection is incorrect');
+  await load('en');
+  await dismissAdvisorTip();
+  await openCastle();
+  const nextText = await page.locator('[data-next-transformation]').innerText();
+  const laterText = await page.locator('.castle-future-preview').innerText();
+  if (!nextText.includes('Grand Court') || !laterText.includes('Crowned Realm')) throw new Error('Post-level-5 Castle UX does not expose next and later realm transformations');
+  await page.screenshot({ path: fileURLToPath(new URL('03-en-castle-level-10-390x844.png', artifacts)) });
+  await page.locator('.building-sheet .icon-button').click();
+
+  await prisma.building.updateMany({ where: { kingdomId }, data: { level: 13 } });
+  await prisma.building.update({ where: { kingdomId_type: { kingdomId, type: 'CASTLE' } }, data: { level: 17 } });
+  const mine = await prisma.building.findUniqueOrThrow({ where: { kingdomId_type: { kingdomId, type: 'MINE' } } });
+  await prisma.buildingUpgrade.create({ data: { buildingId: mine.id, fromLevel: 13, toLevel: 14, status: 'IN_PROGRESS', startedAt: new Date(), completesAt: new Date(Date.now() + 3_600_000) } });
+  await load('en');
+  const worldState = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
+    actors: Number(element.getAttribute('data-ambient-actor-count')),
+    actorIds: element.getAttribute('data-ambient-actor-ids') ?? '',
+    constructionActors: Number(element.getAttribute('data-active-construction-actors')),
+    milestones: element.getAttribute('data-ambient-milestones') ?? '',
+  }));
+  if (worldState.actors > 14 || !worldState.actorIds.includes('construction-mine') || worldState.constructionActors !== 1 || !worldState.milestones.includes('farm:13')) throw new Error(`Progression-aware world state is incorrect: ${JSON.stringify(worldState)}`);
+  await page.screenshot({ path: fileURLToPath(new URL('04-en-lived-kingdom-construction-390x844.png', artifacts)) });
+
+  await prisma.building.update({ where: { kingdomId_type: { kingdomId, type: 'CASTLE' } }, data: { level: 20 } });
+  const terminal = await api('/kingdom');
+  if (terminal.kingdomGoals.transformation.current.realmState !== 'LEGENDARY_KINGDOM' || terminal.kingdomGoals.transformation.next !== null || terminal.kingdomGoals.transformation.future !== null) throw new Error('Castle level 20 terminal realm state is incorrect');
 
   await load('en');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'paused') throw new Error('Hidden page did not pause ambient movement');
   await assertLayout(320, 568, 'ltr');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await load('en');
@@ -114,12 +157,12 @@ try {
   if (consoleErrors.length) throw new Error(`Browser console errors:\n${consoleErrors.join('\n')}`);
 } finally {
   const account = await prisma.platformAccount.findUnique({ where: { platform_externalUserId: { platform: 'WEB', externalUserId: identity } }, select: { playerId: true } });
-  if (account) await prisma.player.delete({ where: { id: account.playerId } });
   await browser.close();
+  if (account) await prisma.player.delete({ where: { id: account.playerId } });
   await prisma.$disconnect();
 }
 
 console.log('PASS server-owned identity defaults, update, and persistence');
-console.log('PASS Castle realm state plus next/future unlock-rule previews');
-console.log('PASS deterministic actor budget and reduced motion');
+console.log('PASS Castle realm milestones through level 20 with next/future previews');
+console.log('PASS building milestones, active construction, 14-actor budget, hidden-page pause, and reduced motion');
 console.log('PASS RTL/LTR, mobile viewports, 54px nav, no overflow, clean console');

@@ -72,9 +72,13 @@ export const fa: Dictionary = {
     titles: { LORD: 'لرد', LADY: 'بانو', WARDEN: 'نگهبان' },
     heraldry: { GOLDEN_LION: 'شیر طلایی', VERDANT_STAG: 'گوزن سبز', CRIMSON_FALCON: 'شاهین سرخ' },
     currentRealmState: 'وضعیت کنونی قلمرو', nextTransformation: 'دگرگونی بعدی', futurePreview: 'پس از آن',
-    castleLevelRealm: 'قلعه سطح {level} · {realm}', futureRealm: '{realm} · {building} در قلعه سطح {level}',
-    realmEstablished: 'قلمرو کنونی استوار شده است', realmEstablishedHint: 'سطح‌های بعدی قلعه، شکوه و قدرت قلمرو را افزایش می‌دهند.',
-    realmStates: { FRONTIER_HOLD: 'دژ مرزی', GUARDED_SETTLEMENT: 'آبادی محافظت‌شده', LEARNED_COURT: 'دربار دانش', MAKERS_WARD: 'ناحیه سازندگان', FORGED_KINGDOM: 'پادشاهی استوار' },
+    castleLevelRealm: 'قلعه سطح {level} · {realm}', futureRealm: '{realm} · قلعه سطح {level}', futureRealmWithBuilding: '{realm} · {building} در قلعه سطح {level}',
+    realmEstablished: 'پادشاهی افسانه‌ای بنا شده است', realmEstablishedHint: 'همهٔ دگرگونی‌های قلعه اکنون در قلمرو شما نمایان‌اند.',
+    realmStates: { FRONTIER_HOLD: 'دژ مرزی', GUARDED_SETTLEMENT: 'آبادی محافظت‌شده', LEARNED_COURT: 'دربار دانش', MAKERS_WARD: 'ناحیه سازندگان', FORGED_KINGDOM: 'پادشاهی استوار', WAR_COUNCIL: 'شورای جنگ', FORTIFIED_REALM: 'قلمرو مستحکم', GRAND_COURT: 'دربار بزرگ', CROWNED_REALM: 'قلمرو تاج‌گذاری‌شده', LEGENDARY_KINGDOM: 'پادشاهی افسانه‌ای' },
+    realmActivity: {
+      FRONTIER_HOLD: 'گروهی کوچک از نگهبانان، نخستین ناحیه‌های کاری را پاس می‌دارند.', GUARDED_SETTLEMENT: 'نگهبانان گشت‌زنی در مرزها را آغاز می‌کنند.', LEARNED_COURT: 'دانشوران و جنب‌وجوش علمی پدیدار می‌شوند.', MAKERS_WARD: 'مهندسان و گاری‌های منابع وارد محوطه می‌شوند.', FORGED_KINGDOM: 'آهنگران کوره را روشن و قلمرو را مسلح می‌کنند.',
+      WAR_COUNCIL: 'نگهبانان و آمادگی نظامی پیرامون قلعه افزایش می‌یابد.', FORTIFIED_REALM: 'گشت‌های دفاعی و مسیرهای تدارکاتی قلمرو را استوارتر می‌کنند.', GRAND_COURT: 'دانشوران، بازرگانان و خدمتگزاران بیشتری در دربار گرد می‌آیند.', CROWNED_REALM: 'پرچم‌ها و نگهبانان تشریفاتی، پایتخت سلطنتی را نمایان می‌کنند.', LEGENDARY_KINGDOM: 'درباری آباد و همهٔ ناحیه‌ها، شکوه کامل قلمرو را نشان می‌دهند.',
+    },
     transformationArrival: {
       CASTLE: 'قلعه برافراشته می‌شود', FARM: 'ناحیه مزرعه پدیدار می‌شود', LUMBER_MILL: 'ناحیه چوب‌بری پدیدار می‌شود', MINE: 'ناحیه معدن پدیدار می‌شود', GRAND_MARKET: 'بازار بزرگ پدیدار می‌شود',
       WATCHTOWER: 'ناحیه برج نگهبانی پدیدار می‌شود', ACADEMY: 'ناحیه آکادمی پدیدار می‌شود', WORKSHOP: 'ناحیه کارگاه پدیدار می‌شود', BLACKSMITH: 'ناحیه آهنگری سلطنتی پدیدار می‌شود',

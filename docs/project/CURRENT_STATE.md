@@ -14,8 +14,9 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 | --- | --- | --- |
 | Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
 | Kingdom ownership identity | Implemented | Server-owned Kingdom name, ruler title, and one of three free heraldry choices; safe defaults backfill old players and Castle detail owns editing |
-| Castle transformation preview | Implemented | Castle detail derives the current realm state, next transformation, and one later preview from existing authoritative Castle unlock milestones |
-| Ambient life V1 | Implemented | Eight or nine deterministic, non-interactive Pixi actors represent guards, workers, a cart, and a farm animal; motion pauses while hidden and freezes for reduced motion |
+| Castle transformation preview | Implemented | One authoritative presentation configuration spans Castle levels 1–20, references real district unlocks when applicable, and returns the current realm state, next transformation, and one later preview |
+| Living progression | Implemented | Existing building levels, visual milestones, unlock state, and active upgrades drive restrained district specialists, richer activity, construction workers, and persistent environmental detail without gameplay state |
+| Ambient life V2 | Implemented | Eight early actors grow into a capped 14-actor mix of guards, workers, carts, animals, scholars, merchants, builders, and court life; motion pauses while hidden and freezes for reduced motion |
 | Economy | Implemented | PostgreSQL balances, capacity-limited passive production, preserved explicit-reward overflow, ledger, idempotency, advisory locks |
 | Buildings | Implemented | Nine persistent types, levels 1 to 20, one active upgrade per building |
 | Active building visual evolution | Implemented | All nine active buildings derive five major raster tiers plus a visible minor step at every level; all 45 assets pass effective-resolution audit through moderate 200% inspection |
@@ -127,7 +128,7 @@ Twenty-one ordered migrations exist:
 
 ## Active retention gate
 
-Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, and Phase 08.1 Ownership & Visible Anticipation are complete. Phase 08.1 adds identity, Castle anticipation, and ambient presentation without parallel progression or simulation state. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
+Retention 01A, 01B, 02, 03A, 03B, 04, 05, Phase A Engagement Cohesion, Phase 08.1 Ownership & Visible Anticipation, and Phase 08.2A Living Progression & Visible Consequences are complete. Phase 08.2A extends Castle presentation through level 20 and makes existing building milestones and upgrade state visibly affect the world without parallel progression or simulation state. Retention 05B Kingdom Themes remains separately planned and not started. Barracks remains inactive. Owner Shop/Campaign art direction, troop art, Aren, Persian-device, and real-device audio checks remain open. Themes, Guild, Leaderboards, and Bale have not started.
 
 ## Persian RTL and bidirectional text
 

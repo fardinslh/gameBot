@@ -140,3 +140,10 @@ These active decisions explain constraints that code alone may not reveal. Chang
 - **Reason**: A Player must receive the complete reward they earned even when storage is full, while Building production still respects progression capacity.
 - **Consequences**: The HUD keeps normal/full/overflow as internal state but presents four equal-width capped-resource cells in a 62px bar with isolated icon, `current / capacity`, and production/full tracks. Uncapped Gems use a separate icon-and-balance premium pill in the player header across Kingdom, Army, and Raid. Collect estimates remaining room per resource, and the server remains the sole authority for final gains and balances.
 - **Status**: Active.
+
+## ADR-020: Derive visible Kingdom life from existing progression
+
+- **Decision**: Castle realm presentation spans levels 1–20 through one server-owned milestone table, while Pixi district life derives from authoritative building levels, unlocks, visual milestones, and active upgrades.
+- **Reason**: Castle and building investment should leave visible evidence without creating a competing progression model or citizen simulation.
+- **Consequences**: Realm milestones may reference a real building unlock but can be presentation-only. Ambient actors remain deterministic, non-interactive, pathless, paused while hidden, frozen for reduced motion, and capped at 14 visible actors. Existing upgrade records, visual tiers, completion effects, and celebrations remain the only inputs and transitions.
+- **Status**: Active. Phase 08.2A implemented.

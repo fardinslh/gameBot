@@ -70,9 +70,13 @@ export const en = {
     titles: { LORD: 'Lord', LADY: 'Lady', WARDEN: 'Warden' },
     heraldry: { GOLDEN_LION: 'Golden Lion', VERDANT_STAG: 'Verdant Stag', CRIMSON_FALCON: 'Crimson Falcon' },
     currentRealmState: 'Current realm state', nextTransformation: 'Next transformation', futurePreview: 'Later',
-    castleLevelRealm: 'Castle Lv.{level} · {realm}', futureRealm: '{realm} · {building} at Castle Lv.{level}',
-    realmEstablished: 'Current realm established', realmEstablishedHint: 'Further Castle levels strengthen your realm and its prestige.',
-    realmStates: { FRONTIER_HOLD: 'Frontier Hold', GUARDED_SETTLEMENT: 'Guarded Settlement', LEARNED_COURT: 'Learned Court', MAKERS_WARD: 'Makers’ Ward', FORGED_KINGDOM: 'Forged Kingdom' },
+    castleLevelRealm: 'Castle Lv.{level} · {realm}', futureRealm: '{realm} · Castle Lv.{level}', futureRealmWithBuilding: '{realm} · {building} at Castle Lv.{level}',
+    realmEstablished: 'Legendary Kingdom established', realmEstablishedHint: 'Every Castle transformation now stands visible in your realm.',
+    realmStates: { FRONTIER_HOLD: 'Frontier Hold', GUARDED_SETTLEMENT: 'Guarded Settlement', LEARNED_COURT: 'Learned Court', MAKERS_WARD: 'Makers’ Ward', FORGED_KINGDOM: 'Forged Kingdom', WAR_COUNCIL: 'War Council', FORTIFIED_REALM: 'Fortified Realm', GRAND_COURT: 'Grand Court', CROWNED_REALM: 'Crowned Realm', LEGENDARY_KINGDOM: 'Legendary Kingdom' },
+    realmActivity: {
+      FRONTIER_HOLD: 'A small frontier guard protects the first working districts.', GUARDED_SETTLEMENT: 'Guards begin patrols along the frontier.', LEARNED_COURT: 'Scholars and knowledge activity appear.', MAKERS_WARD: 'Engineers and resource carts enter the yard.', FORGED_KINGDOM: 'Smiths light the forge and arm the realm.',
+      WAR_COUNCIL: 'Guards and military preparation increase around the Castle.', FORTIFIED_REALM: 'Defensive patrols and supply routes reinforce the realm.', GRAND_COURT: 'Scholars, merchants, and court attendants gather in greater number.', CROWNED_REALM: 'Banners and ceremonial guards proclaim a royal capital.', LEGENDARY_KINGDOM: 'A prosperous court and every district display the realm’s full stature.',
+    },
     transformationArrival: {
       CASTLE: 'The Castle rises', FARM: 'Farm district arrives', LUMBER_MILL: 'Lumber district arrives', MINE: 'Mine district arrives', GRAND_MARKET: 'Grand Market arrives',
       WATCHTOWER: 'Watchtower district arrives', ACADEMY: 'Academy district arrives', WORKSHOP: 'Workshop district arrives', BLACKSMITH: 'Royal Forge district arrives',

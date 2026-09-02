@@ -57,7 +57,7 @@ Raster quality is governed by effective opaque pixels, not canvas dimensions alo
 
 ## Upgrade presentation
 
-An active authoritative upgrade adds restrained scaffolding and material piles without obscuring the structure. Reconciled level increases use a 620 ms minor transformation or 980 ms major-tier transformation. `prefers-reduced-motion` applies the final state immediately. Selection and detail interaction survive because the stable Pixi container is not replaced.
+An active authoritative upgrade adds restrained scaffolding, material piles, and one nearby ambient construction worker without obscuring the structure. Reconciled level increases use a 620 ms minor transformation or 980 ms major-tier transformation. Existing tier boundaries also drive restrained district activity, so progression leaves persistent world evidence beyond the sprite itself. `prefers-reduced-motion` applies the final state immediately. Selection and detail interaction survive because the stable Pixi container is not replaced.
 
 ## Development comparison tool
 

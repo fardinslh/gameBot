@@ -24,7 +24,7 @@ import {
   type BuildingStatusIndicator,
 } from './building-status-badge';
 import type { Locale } from '@/i18n/config';
-import { createAmbientLifeArtwork } from './ambient-life';
+import { buildingActivityMilestone, createAmbientLifeArtwork } from './ambient-life';
 
 interface KingdomSceneRuntime {
   destroy(): void;
@@ -71,7 +71,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const buildingsLayer = new Container();
   buildingsLayer.sortableChildren = true;
   world.addChild(buildingsLayer);
-  const ambientLife = createAmbientLifeArtwork(1);
+  const ambientLife = createAmbientLifeArtwork();
   ambientLife.container.visible = debugKingdomLayers === null;
   world.addChild(ambientLife.container);
   app.stage.addChild(statusLayer);
@@ -220,7 +220,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.futureBuildingCount = '0';
   host.dataset.expansionAreaCount = '0';
   host.dataset.expansionStage = '1';
-  host.dataset.ambientActorCount = '8';
+  host.dataset.ambientActorCount = '0';
   const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');
   host.dataset.mineGround = mineLayout ? `${mineLayout.groundX},${mineLayout.groundY}` : '';
   host.dataset.panEnabled = 'true';
@@ -448,7 +448,19 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     setBuildingStates: (states, expansionStage) => {
       desiredStates = states;
       syncExpansionAreas(states, expansionStage);
-      host.dataset.ambientActorCount = String(ambientLife.setExpansionStage(expansionStage));
+      const ambientStates = Object.fromEntries(Object.entries(states).map(([id, state]) => [id, {
+        level: state?.level ?? 1,
+        unlocked: state?.locked === false,
+        upgrading: state?.indicator === 'active',
+      }]));
+      const visibleAmbientActors = ambientLife.setProgression(ambientStates);
+      host.dataset.ambientActorCount = String(visibleAmbientActors.length);
+      host.dataset.ambientActorIds = visibleAmbientActors.join(',');
+      host.dataset.ambientMilestones = Object.entries(states)
+        .filter(([, state]) => state?.locked === false)
+        .map(([id, state]) => `${id}:${buildingActivityMilestone(state?.level ?? 1)}`)
+        .join(',');
+      host.dataset.activeConstructionActors = String(Object.values(states).filter((state) => state?.locked === false && state.indicator === 'active').length);
       for (const building of KINGDOM_BUILDING_LAYOUT) {
         const id = building.id;
         const state = states[id];

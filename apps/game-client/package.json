@@ -9,7 +9,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit",
     "test:analytics": "vitest run src/features/analytics/analytics-queue.spec.ts",
-    "test:building-evolution": "vitest run src/features/kingdom/rendering/building-visual-progression.spec.ts src/features/kingdom/rendering/building-art.spec.ts src/features/kingdom/rendering/building-status-badge.spec.ts",
+    "test:building-evolution": "vitest run src/features/kingdom/rendering/building-visual-progression.spec.ts src/features/kingdom/rendering/building-art.spec.ts src/features/kingdom/rendering/building-status-badge.spec.ts src/features/kingdom/rendering/ambient-life.spec.ts",
     "test:experience": "vitest run src/features/audio/crossfade-loop-player.spec.ts src/features/audio/audio-manager.spec.ts src/features/audio/battle-audio.spec.ts src/features/audio-lab/audio-audition.spec.ts src/features/experience/experience-content.spec.ts src/features/experience/advisor-positioning.spec.ts",
     "test:rtl": "vitest run src/i18n/bidi.spec.tsx",
     "test:economy-hud": "vitest run src/features/kingdom/domain/collection-presentation.spec.tsx"

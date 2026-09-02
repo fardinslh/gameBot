@@ -27,7 +27,7 @@ interface KingdomIdentityCardProps {
 export function KingdomIdentityCard({ dictionary: t, identity, onSave, playerName, saving, transformation }: KingdomIdentityCardProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(identity);
-  useEffect(() => { setDraft(identity); }, [identity]);
+  useEffect(() => { setDraft(identity); }, [identity.name, identity.rulerTitle, identity.heraldry]);
 
   const save = async (): Promise<void> => {
     if (await onSave(draft)) setEditing(false);
@@ -60,9 +60,9 @@ export function KingdomIdentityCard({ dictionary: t, identity, onSave, playerNam
         <small>{t.kingdomIdentity.nextTransformation}</small>
         <strong><BidiTemplate template={t.kingdomIdentity.castleLevelRealm} values={{ level: { direction: 'ltr', value: next.requiredCastleLevel }, realm: t.kingdomIdentity.realmStates[next.realmState] }} /></strong>
         {next.unlockBuildingType ? <p>{t.kingdomIdentity.transformationArrival[next.unlockBuildingType]}</p> : null}
-        {next.unlockBuildingType ? <span>{t.kingdomIdentity.transformationActivity[next.unlockBuildingType]}</span> : null}
+        <span>{t.kingdomIdentity.realmActivity[next.realmState]}</span>
       </div> : <div className="castle-transformation castle-transformation--complete"><Crown size={16} /><span><strong>{t.kingdomIdentity.realmEstablished}</strong><small>{t.kingdomIdentity.realmEstablishedHint}</small></span></div>}
-      {future?.unlockBuildingType ? <p className="castle-future-preview"><span>{t.kingdomIdentity.futurePreview}</span><BidiTemplate template={t.kingdomIdentity.futureRealm} values={{ realm: t.kingdomIdentity.realmStates[future.realmState], building: t.buildings[BUILDING_TYPE_TO_ID[future.unlockBuildingType]].name, level: { direction: 'ltr', value: future.requiredCastleLevel } }} /></p> : null}
+      {future ? <p className="castle-future-preview"><span>{t.kingdomIdentity.futurePreview}</span><BidiTemplate template={future.unlockBuildingType ? t.kingdomIdentity.futureRealmWithBuilding : t.kingdomIdentity.futureRealm} values={{ realm: t.kingdomIdentity.realmStates[future.realmState], ...(future.unlockBuildingType ? { building: t.buildings[BUILDING_TYPE_TO_ID[future.unlockBuildingType]].name } : {}), level: { direction: 'ltr', value: future.requiredCastleLevel } }} /></p> : null}
     </>}
   </section>;
 }

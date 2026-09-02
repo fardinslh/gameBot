@@ -20,6 +20,8 @@ describe('building evolution artwork', () => {
     const artwork = createBuildingArtwork('mine', Texture.WHITE, false, level, true);
     expect(artwork.construction.children).toHaveLength(1);
     expect(artwork.sprite.visible).toBe(true);
+    applyBuildingVisualState(artwork, 'mine', level, false);
+    expect(artwork.construction.children).toHaveLength(0);
     artwork.container.destroy({ children: true });
   });
 

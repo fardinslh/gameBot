@@ -33,7 +33,7 @@ Economy mutations, Hero upgrade, troop training, Shop purchase, Raid start, Reve
 
 The client submits a persistent Building UUID in `buildingId`, not a building type or Pixi visual ID.
 
-`KingdomStateResponse.kingdomGoals` is authoritative presentation data. It contains Castle level, real Castle-2-through-5 building milestones, the next real district unlock or `null`, `allDistrictsUnlocked`, current/next effect basis points, and a transformation projection with the current realm state plus at most one next and one future milestone. Reserved `ADVANCED_PVP` configuration is not exposed. `progression` remains the authoritative Kingdom Level/XP state. These fields create no mission, reward, claim, or client-authoritative unlock endpoint.
+`KingdomStateResponse.kingdomGoals` is authoritative presentation data. It contains Castle level, real Castle-2-through-5 building milestones, the next real district unlock or `null`, `allDistrictsUnlocked`, current/next effect basis points, and a transformation projection with the current realm state plus at most one next and one future milestone. Realm milestones span Castle levels 1, 2, 3, 4, 5, 7, 10, 13, 17, and 20; `unlockBuildingType` is nullable for presentation-only later states. Reserved `ADVANCED_PVP` configuration is not exposed. `progression` remains the authoritative Kingdom Level/XP state. These fields create no mission, reward, claim, or client-authoritative unlock endpoint.
 
 Identity names are normalized and must contain 2 through 24 safe visible characters. Allowed ruler titles are `LORD`, `LADY`, and `WARDEN`; allowed heraldry keys are `GOLDEN_LION`, `VERDANT_STAG`, and `CRIMSON_FALCON`. Existing players receive Prisma defaults.
 

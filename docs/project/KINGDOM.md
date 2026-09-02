@@ -60,11 +60,13 @@ The API derives the stage from Castle level and returns it in `KingdomStateRespo
 
 During a live stage increase, the environment fades in while a local mist clears. The building starts after 24 percent of the configured duration and settles from 90 percent scale. Its pointer mode becomes active after the reveal. Reduced-motion mode displays the completed state without the animation.
 
-Castle realm-state presentation reuses these same milestones. The API derives the current realm label, the next real building arrival, and one later preview; the client does not maintain another roadmap or unlock counter.
+Castle realm-state presentation uses one authoritative API configuration at levels 1, 2, 3, 4, 5, 7, 10, 13, 17, and 20. Levels 2–5 optionally reference the existing Watchtower, Academy, Workshop, and Blacksmith unlocks. War Council, Fortified Realm, Grand Court, Crowned Realm, and Legendary Kingdom are presentation-only milestones, so anticipation continues after every current district is unlocked without adding an economy or progression path. The response contains only current, next, and one later milestone.
 
-## Ambient life V1
+## Living progression and ambient life V2
 
-`ambient-life.ts` mounts deterministic decorative actors in a separate Pixi layer. Stage 1 shows two Castle guards, four production workers, a resource cart, and a farm animal; Stage 2 adds the Watchtower guard. The total remains between six and ten. Actors use simple bounded loops without pathfinding, collision, economy state, hit areas, or pointer events. Animation pauses when the document is hidden and becomes static when reduced motion is requested.
+`ambient-life.ts` mounts deterministic decorative actors in a separate Pixi layer. The early Kingdom retains two Castle guards, four production workers, a resource cart, and a farm animal. Real district unlocks add guards, scholars, builders, and smiths; Castle 7 and 17 add restrained court and ceremonial presence. Existing building milestones at 1, 5, 9, 13, 17, and 20 increase activity and can add district specialists. The visible population is priority-selected and hard-capped at 14.
+
+Active `BuildingUpgrade` state keeps the existing scaffolding/material treatment and adds a nearby construction worker, prioritized inside the same actor budget. Completion removes construction state, swaps to the authoritative new level visual, and reuses the existing short transformation focus and React celebration. No citizen, pathfinding, collision, economy, hit-area, or pointer state exists. Animation pauses when the document is hidden and becomes static when reduced motion is requested.
 
 ## Building visuals
 
@@ -76,7 +78,7 @@ Production currently passes `DEFAULT` explicitly. Theme is presentation-only and
 
 Legacy `appearanceVariantStage` remains available for unused/future art compatibility, but it no longer selects Academy, Blacksmith, Watchtower, or Workshop production bodies.
 
-An active upgrade adds restrained scaffolding/materials. When a reconciled server level increases, Pixi keeps the stable building container and swaps only the required texture/details. Minor transitions last 620 ms; major boundaries 4→5, 8→9, 12→13, and 16→17 last 980 ms. Reduced-motion clients receive the final state immediately.
+An active upgrade adds restrained scaffolding/materials plus the ambient construction worker described above. When a reconciled server level increases, Pixi keeps the stable building container and swaps only the required texture/details. Minor transitions last 620 ms; major boundaries 4→5, 8→9, 12→13, and 16→17 last 980 ms. The existing persistent tier/minor/capstone props and surrounding activity make completed investment remain visible. Reduced-motion clients receive the final state immediately.
 
 ## Mine registration
 
