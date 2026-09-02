@@ -28,6 +28,7 @@ async function scenario(kind) {
   const externalUserId = `raid-browser-${kind}-${Date.now()}`;
   await fetch('http://localhost:3001/onboarding/skip', { method: 'POST', headers: { 'x-dev-player-id': externalUserId } });
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
+  if (kind === 'defeat') await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': externalUserId } }));
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
@@ -109,14 +110,16 @@ async function scenario(kind) {
   {
     const resultBalances = battle.balances;
     await page.locator('.raid-result .raid-primary').click();
-    await page.waitForSelector('[data-scene-status="ready"]');
     await page.waitForSelector(`[data-raid-return-presentation="${kind === 'victory' ? 'VICTORY' : 'DEFEAT'}"]`);
+    await page.waitForSelector('[data-scene-status="ready"]');
     const returnState = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
       outcome: element.getAttribute('data-raid-return'),
       lootCart: element.getAttribute('data-raid-return-loot-cart'),
+      motion: element.getAttribute('data-hero-motion'),
       actors: Number(element.getAttribute('data-world-actor-count')),
     }));
-    if (returnState.outcome !== kind || returnState.lootCart !== String(kind === 'victory') || returnState.actors > 14) throw new Error(`Incorrect ${kind} return presentation: ${JSON.stringify(returnState)}`);
+    if (![kind, ...(kind === 'defeat' ? ['complete'] : [])].includes(returnState.outcome) || returnState.lootCart !== String(kind === 'victory') || returnState.actors > 14) throw new Error(`Incorrect ${kind} return presentation: ${JSON.stringify(returnState)}`);
+    if (kind === 'defeat' && returnState.motion !== 'reduced') throw new Error(`Reduced-motion return was not active: ${JSON.stringify(returnState)}`);
     await page.screenshot({ path: fileURLToPath(new URL(`army-${kind}-return-fa-320x568.png`, artifacts)) });
     for (const [resource, value] of Object.entries(resultBalances)) {
       const selector = resourceSelector(resource);

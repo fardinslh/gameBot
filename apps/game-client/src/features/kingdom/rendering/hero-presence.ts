@@ -48,12 +48,20 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
   let destroyed = false;
   let markers: Array<{ key: HeroKey; marker: Container; baseY: number }> = [];
   let returnAnimation: { elapsedMs: number; durationMs: number; group: Container; outcome: 'VICTORY' | 'DEFEAT'; onComplete: () => void } | null = null;
+  let reducedReturnTimer: ReturnType<typeof setTimeout> | null = null;
 
   const clear = (target: Container): void => { target.removeChildren().forEach((child) => child.destroy({ children: true })); };
-  const finishReturn = (): void => {
-    const complete = returnAnimation?.onComplete;
+  const cancelReturn = (): void => {
+    if (reducedReturnTimer !== null) {
+      clearTimeout(reducedReturnTimer);
+      reducedReturnTimer = null;
+    }
     returnAnimation = null;
     clear(returnContainer);
+  };
+  const finishReturn = (): void => {
+    const complete = returnAnimation?.onComplete;
+    cancelReturn();
     complete?.();
   };
 
@@ -75,22 +83,34 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
     },
     playReturn: (presentation, reducedMotion, onComplete) => {
       const request = ++returnGeneration;
-      void Promise.all(presentation.commanders.map(async (commander) => ({ commander, texture: await Assets.load(commander.portraitAsset) }))).then((loaded) => {
-        if (destroyed || request !== returnGeneration) return;
-        clear(returnContainer);
-        const group = new Container();
-        group.eventMode = 'none';
-        loaded.slice(0, 3).forEach(({ commander, texture }, index) => {
-          const marker = createHeroMarker(commander.key, texture, 34);
-          marker.position.set((index - 1) * 42, 0);
-          marker.alpha = presentation.outcome === 'VICTORY' ? 1 : .72;
-          group.addChild(marker);
+      cancelReturn();
+      void Promise.all(presentation.commanders.map(async (commander) => ({ commander, texture: await Assets.load(commander.portraitAsset) })))
+        .then((loaded) => {
+          if (destroyed || request !== returnGeneration) return;
+          clear(returnContainer);
+          const group = new Container();
+          group.eventMode = 'none';
+          loaded.slice(0, 3).forEach(({ commander, texture }, index) => {
+            const marker = createHeroMarker(commander.key, texture, 34);
+            marker.position.set((index - 1) * 42, 0);
+            marker.alpha = presentation.outcome === 'VICTORY' ? 1 : .72;
+            group.addChild(marker);
+          });
+          if (presentation.outcome === 'VICTORY') group.addChild(createLootCart());
+          group.position.set(320, reducedMotion ? 815 : 1_080);
+          returnContainer.addChild(group);
+          returnAnimation = { elapsedMs: 0, durationMs: reducedMotion ? 450 : 1_300, group, outcome: presentation.outcome, onComplete };
+          if (reducedMotion) {
+            reducedReturnTimer = setTimeout(() => {
+              if (!destroyed && request === returnGeneration) finishReturn();
+            }, 180);
+          }
+        })
+        .catch(() => {
+          if (destroyed || request !== returnGeneration) return;
+          cancelReturn();
+          onComplete();
         });
-        if (presentation.outcome === 'VICTORY') group.addChild(createLootCart());
-        group.position.set(320, reducedMotion ? 815 : 1_080);
-        returnContainer.addChild(group);
-        returnAnimation = { elapsedMs: 0, durationMs: reducedMotion ? 450 : 1_300, group, outcome: presentation.outcome, onComplete };
-      });
     },
     update: (deltaMs, elapsedSeconds) => {
       for (const { key, marker, baseY } of markers) {
@@ -109,7 +129,7 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
       destroyed = true;
       heroGeneration += 1;
       returnGeneration += 1;
-      returnAnimation = null;
+      cancelReturn();
       container.destroy({ children: true });
       returnContainer.destroy({ children: true });
     },

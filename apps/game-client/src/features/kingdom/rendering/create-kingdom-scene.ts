@@ -541,7 +541,6 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         host.dataset.raidReturn = 'complete';
         onComplete();
       });
-      if (reducedMotion) window.setTimeout(() => heroPresence.update(450, elapsed), 450);
     },
     destroy: () => {
       resizeObserver.disconnect();
