@@ -28,6 +28,8 @@ Castle detail also owns the compact Kingdom identity editor. Name, ruler title, 
 
 The renderer scales the world to the host width. It calculates camera bounds from mounted buildings and the full world height. The upper bound keeps the top active building below Resource HUD, inbox, and Collect controls with 12 pixels of clearance. A pointer movement above 7 pixels changes the gesture from tap to pan.
 
+Pixi uses `autoDensity` and a renderer resolution of `clamp(window.devicePixelRatio, 1, 2)`. The runtime re-samples that value on window resize, resolution-media changes, and Kingdom container layout, then resizes the framebuffer when it changes. Browser zoom or monitor changes therefore cannot leave the renderer permanently at its initialization DPR. The cap remains 2 because a 390x844 Kingdom already allocates a 780x1688 framebuffer; DPR 3 would increase pixel work by 2.25x without fixing source-art detail.
+
 Locked buildings never enter `buildingsLayer`, so they do not affect `getLocalBounds()`, camera bounds, z-order, hit areas, or pointer events.
 
 ## Active layout

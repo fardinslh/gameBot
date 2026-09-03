@@ -293,7 +293,13 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const height = Math.max(host.clientHeight, 1);
     const previousRange = cameraMinY - cameraMaxY;
     const previousProgress = laidOut && previousRange !== 0 ? (cameraY - cameraMaxY) / previousRange : .28;
+    runtime.syncResolution();
     app.renderer.resize(width, height);
+    host.dataset.canvasCssSize = `${width}x${height}`;
+    host.dataset.rendererLogicalSize = `${app.renderer.width}x${app.renderer.height}`;
+    host.dataset.rendererPhysicalSize = `${app.canvas.width}x${app.canvas.height}`;
+    host.dataset.rendererResolution = String(app.renderer.resolution);
+    host.dataset.devicePixelRatio = String(window.devicePixelRatio);
     worldScale = width / KINGDOM_WORLD.width;
     world.scale.set(worldScale);
     world.x = (width - KINGDOM_WORLD.width * worldScale) / 2;

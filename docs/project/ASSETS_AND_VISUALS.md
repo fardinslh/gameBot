@@ -96,6 +96,24 @@ All audio remains local under `apps/game-client/public/assets/audio`. All 24 exp
 
 Installed Pixi 8.20 defaults these textures to linear minification/magnification, not nearest-neighbor. Automatic mipmaps remain disabled: real mobile captures showed no useful gain for the current render sizes, while mip chains would increase GPU memory. The renderer keeps its DPR cap of 2.
 
+## Zoom and source-resolution budget
+
+`npm run audit:kingdom-render-quality -- --output=artifacts/zoom-quality/world-assets.json` measures source pixels per physical renderer pixel at 320/375/390 widths, DPR 2, and 100/125/150/200% inspection. `npm run validate:kingdom-render-quality` records CSS canvas, logical renderer, physical framebuffer, effective resolution, and browser DPR at DPR-equivalent 1/1.25/1.5/2/3 scenarios plus live viewport resizing.
+
+The current tier-5 buildings remain above one source pixel per physical pixel even at the strict 390px/DPR2/200% inspection budget: Mine is the narrowest margin at about 1.02, while Castle is about 1.27. Character atlas frames are also numerically above one at that display size, but their painted detail and two-frame motion remain below the owner quality bar; pixel count alone does not approve art.
+
+Terrain is the actual raster-resolution risk. The 1024px texture is scaled as a 1024-world-pixel sprite behind a 640-world-pixel viewport. It reaches about 0.82 source pixels per physical pixel at 390px/DPR2 and about 0.41 at 200% inspection. A future replacement needs a genuinely authored higher-detail source, approximately 2048x3072 for the current DPR2 plus 200% inspection target. Naive enlargement is prohibited.
+
+No sharpening/color-grade filter is retained. The observed failure includes magnification beyond source detail, which a post-process cannot recover, and a full-screen filter adds bandwidth/render-target cost. A/B would therefore compare altered edges rather than restored detail. Automatic mipmaps also remain disabled because they address minification, while the reported defect is magnification; enable them only if a future measured zoom-out shimmer case demonstrates a benefit.
+
+## Character quality benchmark gate
+
+Knight and Castle Guard are the only approved next art-production targets. The repository currently has no layered or genuinely higher-detail animation source for either character, so the rejected two-frame sheets must not be distorted or upscaled into fake 4–6 frame animations. The required external/source-art deliverable is:
+
+- Knight: at least four distinct idle and four to six distinct walk frames, authored at no less than 192x264 per frame, consistent warm upper-left light, cool ground shadow, armor/sword/shield silhouette, and current pseudo-isometric footing.
+- Castle Guard: at least four distinct idle/patrol and four to six distinct walk frames, authored at no less than 128x160 per frame, spear/shield silhouette, matching palette/light, and grounded contact.
+- Both: transparent lossless masters retained outside runtime WebP, identical registration point per frame, no duplicated poses under different animation names, and in-Kingdom approval at 320x568, 375x812, and 390x844 before replacing Ranger, Mage, or other ambient families.
+
 `npm run validate:visual` continues to check pan, interaction, mobile layout, console errors, and terrain budgets. `npm run validate:progression` checks active-only expansion mounting and locked asset exclusion.
 
 Query-only debug options include `?debugBuildingLayout=1`, `?debugKingdomLayers=terrain`, and `?debugKingdomLayers=castle`.
