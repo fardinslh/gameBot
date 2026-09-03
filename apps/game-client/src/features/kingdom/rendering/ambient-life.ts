@@ -1,5 +1,7 @@
-import { Container, Graphics } from 'pixi.js';
+import { AnimatedSprite, Assets, Container, Graphics, Texture } from 'pixi.js';
 import type { BuildingId } from '../domain/kingdom-types';
+import { createAtlasRowFrames } from './sprite-atlas';
+import { createCharacterSprite, updateCharacterSprite } from './character-animation';
 
 type AmbientKind = 'GUARD' | 'WORKER' | 'CART' | 'ANIMAL' | 'SCHOLAR' | 'MERCHANT' | 'BUILDER';
 export interface AmbientBuildingState { level: number; unlocked: boolean; upgrading: boolean; }
@@ -19,9 +21,21 @@ interface AmbientDefinition {
   activeUpgradeOnly?: boolean;
   color?: number;
 }
-interface AmbientActor extends AmbientDefinition { container: Container; }
+interface AmbientActor extends AmbientDefinition { container: Container; frames: readonly Texture[]; sprite: AnimatedSprite | null; }
 
 export const MAX_AMBIENT_ACTORS = 14;
+
+const AMBIENT_ROOT = '/assets/kingdom/characters/ambient';
+const PEOPLE_ATLAS = `${AMBIENT_ROOT}/people-atlas-v1.webp`;
+const GOAT_STRIP = `${AMBIENT_ROOT}/goat-strip-v1.webp`;
+const CART_STRIP = `${AMBIENT_ROOT}/cart-strip-v1.webp`;
+const PEOPLE_ROW: Readonly<Record<Exclude<AmbientKind, 'CART' | 'ANIMAL'>, number>> = {
+  GUARD: 0,
+  WORKER: 1,
+  MERCHANT: 2,
+  SCHOLAR: 3,
+  BUILDER: 4,
+};
 
 const ACTORS: readonly AmbientDefinition[] = [
   { id: 'castle-guard-west', kind: 'GUARD', from: [250, 710], to: [270, 710], phase: .08, speed: .09, priority: 10, buildingId: 'castle', color: 0x31558a },
@@ -87,13 +101,35 @@ export function createAmbientLifeArtwork(): AmbientLifeArtwork {
   container.eventMode = 'none';
   container.label = 'ambient-life';
   const actors: AmbientActor[] = ACTORS.map((definition) => {
-    const actor = { ...definition, container: createActor(definition) };
+    const actorContainer = new Container();
+    actorContainer.eventMode = 'none';
+    actorContainer.label = `ambient-${definition.kind.toLowerCase()}`;
+    const actor = { ...definition, container: actorContainer, frames: [], sprite: null };
     actor.container.position.set(...definition.from);
     actor.container.visible = false;
     container.addChild(actor.container);
     return actor;
   });
   let progression: AmbientProgressionState = {};
+  let destroyed = false;
+  let previousElapsedSeconds = 0;
+  void Promise.all([
+    Assets.load<Texture>(PEOPLE_ATLAS),
+    Assets.load<Texture>(GOAT_STRIP),
+    Assets.load<Texture>(CART_STRIP),
+  ]).then(([people, goat, cart]) => {
+    if (destroyed) return;
+    for (const actor of actors) {
+      actor.frames = actor.kind === 'CART'
+        ? createAtlasRowFrames(cart, 0, 1)
+        : actor.kind === 'ANIMAL'
+          ? createAtlasRowFrames(goat, 0, 1)
+          : createAtlasRowFrames(people, PEOPLE_ROW[actor.kind], 5);
+      const artwork = createSpriteActor(actor.kind, actor.frames);
+      actor.sprite = artwork.sprite;
+      actor.container.addChild(artwork.shadow, artwork.sprite);
+    }
+  }).catch(() => undefined);
   return {
     container,
     setProgression: (states, maximumActors) => {
@@ -103,6 +139,8 @@ export function createAmbientLifeArtwork(): AmbientLifeArtwork {
       return [...visibleIds];
     },
     update: (elapsedSeconds) => {
+      const deltaSeconds = Math.max(0, Math.min(.05, elapsedSeconds - previousElapsedSeconds));
+      previousElapsedSeconds = elapsedSeconds;
       for (const actor of actors) {
         if (!actor.container.visible) continue;
         const level = actor.buildingId ? progression[actor.buildingId]?.level ?? 1 : 1;
@@ -111,61 +149,26 @@ export function createAmbientLifeArtwork(): AmbientLifeArtwork {
         const progress = cycle <= 1 ? cycle : 2 - cycle;
         const direction = cycle <= 1 ? 1 : -1;
         actor.container.x = actor.from[0] + (actor.to[0] - actor.from[0]) * progress;
-        actor.container.y = actor.from[1] + (actor.to[1] - actor.from[1]) * progress + Math.sin(elapsedSeconds * 2.2 + actor.phase * 8) * .7;
+        actor.container.y = actor.from[1] + (actor.to[1] - actor.from[1]) * progress;
         actor.container.scale.x = direction;
-        if (actor.kind === 'GUARD') actor.container.rotation = Math.sin(elapsedSeconds * 1.4 + actor.phase * 7) * .018;
-        if (actor.kind === 'ANIMAL') actor.container.rotation = Math.sin(elapsedSeconds * 1.9) * .025;
+        if (actor.sprite) updateCharacterSprite(actor.sprite, deltaSeconds);
       }
     },
-    destroy: () => container.destroy({ children: true }),
+    destroy: () => {
+      destroyed = true;
+      container.destroy({ children: true });
+    },
   };
 }
 
-function createActor(definition: AmbientDefinition): Container {
-  if (definition.kind === 'CART') return createCart();
-  if (definition.kind === 'ANIMAL') return createAnimal();
-  return createPerson(definition.kind, definition.color ?? 0x71583e);
-}
-
-function createPerson(kind: Exclude<AmbientKind, 'CART' | 'ANIMAL'>, tunic: number): Container {
-  const guard = kind === 'GUARD';
-  const actor = new Container();
-  actor.eventMode = 'none';
-  actor.addChild(new Graphics().ellipse(0, 2, 7, 2.3).fill({ color: 0x10140e, alpha: .3 }));
-  const body = new Graphics().poly([-4, -13, 4, -13, 5, -3, 2, 1, -3, 1, -5, -3]).fill({ color: tunic })
-    .circle(0, -17, 3.8).fill({ color: 0xc69a68 }).moveTo(-2, 1).lineTo(-3, 6).moveTo(2, 1).lineTo(3, 6).stroke({ color: 0x33291f, width: 2 });
-  if (guard) {
-    body.poly([-5, -20, 0, -23, 5, -20, 3.5, -16, -3.5, -16]).fill({ color: 0x777a77 });
-    body.moveTo(6, -20).lineTo(6, 4).stroke({ color: 0x7b6544, width: 1.4 });
-    body.poly([4.4, -20, 7.6, -20, 6, -25]).fill({ color: 0xaeb4af });
-  } else {
-    body.arc(0, -18, 4.6, Math.PI, Math.PI * 2).stroke({ color: kind === 'SCHOLAR' ? 0xd6c56c : 0xd2b887, width: 1.4 });
-    if (kind === 'SCHOLAR') body.rect(4, -12, 5, 7).fill({ color: 0xceb665 }).stroke({ color: 0x6b5228, width: .7 });
-    if (kind === 'BUILDER') body.moveTo(4, -10).lineTo(9, -17).stroke({ color: 0x8b6a3f, width: 1.8 });
-    if (kind === 'MERCHANT') body.circle(5, -8, 3).fill({ color: 0x9d7444 });
-  }
-  actor.addChild(body);
-  return actor;
-}
-
-function createCart(): Container {
-  const cart = new Container();
-  cart.eventMode = 'none';
-  cart.addChild(new Graphics().ellipse(0, 3, 13, 3).fill({ color: 0x11150f, alpha: .3 }));
-  cart.addChild(new Graphics().poly([-10, -8, 8, -8, 6, 0, -8, 0]).fill({ color: 0x76502d })
-    .rect(-7, -12, 5, 4).fill({ color: 0xb28a4a }).rect(-1, -13, 6, 5).fill({ color: 0x94703b })
-    .circle(-7, 1, 3.4).fill({ color: 0x2e241a }).circle(6, 1, 3.4).fill({ color: 0x2e241a })
-    .circle(-7, 1, 1.2).fill({ color: 0x9b7a4c }).circle(6, 1, 1.2).fill({ color: 0x9b7a4c })
-    .moveTo(8, -5).lineTo(15, -2).stroke({ color: 0x6d4b2c, width: 1.6 }));
-  return cart;
-}
-
-function createAnimal(): Container {
-  const animal = new Container();
-  animal.eventMode = 'none';
-  animal.addChild(new Graphics().ellipse(0, 2, 7, 2).fill({ color: 0x11140f, alpha: .25 }));
-  animal.addChild(new Graphics().ellipse(0, -5, 7, 4.5).fill({ color: 0xd2c2a1 }).circle(6, -8, 3.2).fill({ color: 0xbba783 })
-    .poly([5, -11, 3, -15, 7, -12]).fill({ color: 0x8c7658 }).poly([8, -10, 10, -14, 10, -10]).fill({ color: 0x8c7658 })
-    .moveTo(-4, -2).lineTo(-4, 3).moveTo(3, -2).lineTo(3, 3).stroke({ color: 0x5b4a37, width: 1.4 }));
-  return animal;
+function createSpriteActor(kind: AmbientKind, frames: readonly Texture[]): { shadow: Graphics; sprite: AnimatedSprite } {
+  const height = kind === 'GUARD' ? 30 : kind === 'CART' ? 24 : kind === 'ANIMAL' ? 17 : 27;
+  const width = kind === 'CART' ? 15 : kind === 'ANIMAL' ? 8 : 6;
+  const shadow = new Graphics().ellipse(0, 1, width, Math.max(1.5, height * .07)).fill({ color: 0x0b100b, alpha: .3 });
+  const fps = kind === 'CART' ? 2 : kind === 'ANIMAL' ? 3 : kind === 'GUARD' ? 2 : 4;
+  const sprite = createCharacterSprite({ name: kind === 'GUARD' ? 'idle' : 'walk', fps, frames, loop: true });
+  sprite.height = height;
+  sprite.scale.x = sprite.scale.y;
+  sprite.position.y = 1;
+  return { shadow, sprite };
 }

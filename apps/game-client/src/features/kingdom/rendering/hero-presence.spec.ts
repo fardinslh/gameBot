@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { Assets, Texture } from 'pixi.js';
+import { AnimatedSprite, Assets, Texture } from 'pixi.js';
 import type { ArmyResponse, HeroKey } from '@crown-and-coin/shared';
 import { createHeroPresenceArtwork, deriveKingdomHeroPresences } from './hero-presence';
 
@@ -21,7 +21,7 @@ describe('Kingdom Hero presence', () => {
     const result = deriveKingdomHeroPresences(army, { castle: building(), lumberMill: building(), academy: building() });
     expect(result.map(({ key }) => key)).toEqual<HeroKey[]>(['KNIGHT', 'RANGER', 'MAGE']);
     expect(new Set(result.map(({ worldAsset }) => worldAsset)).size).toBe(3);
-    expect(result.every(({ worldAsset }) => worldAsset.includes('/assets/heroes/world/'))).toBe(true);
+    expect(result.every(({ worldAsset }) => worldAsset.includes('/assets/kingdom/characters/heroes/'))).toBe(true);
   });
 
   it('does not place a Hero at locked or unavailable content', () => {
@@ -39,6 +39,9 @@ describe('Kingdom Hero presence', () => {
     expect(artwork.container.eventMode).toBe('none');
     expect(artwork.container.children.map((child) => child.label)).toEqual(['hero-knight', 'hero-ranger', 'hero-mage']);
     expect(artwork.container.children.every((child) => child.eventMode === 'none')).toBe(true);
+    const animations = artwork.container.children.map((figure) => figure.children.find((child) => child instanceof AnimatedSprite));
+    expect(animations.every((animation) => animation?.textures.length === 2)).toBe(true);
+    expect(animations.map((animation) => animation?.label)).toEqual(['animation-idle', 'animation-idle', 'animation-magic-idle']);
 
     const victoryComplete = vi.fn();
     artwork.playReturn({
@@ -95,6 +98,21 @@ describe('Kingdom Hero presence', () => {
     expect(artwork.returnContainer.children).toHaveLength(0);
     await vi.runAllTimersAsync();
     expect(onComplete).toHaveBeenCalledTimes(1);
+    artwork.destroy();
+  });
+
+  it('completes the return when sprite assets fail to load', async () => {
+    vi.spyOn(Assets, 'load').mockRejectedValue(new Error('asset unavailable'));
+    const artwork = createHeroPresenceArtwork();
+    const onComplete = vi.fn();
+    artwork.playReturn({
+      battleId: 'failed-return',
+      commanders: commanders.map(({ key, portraitAsset }) => ({ key, portraitAsset })),
+      loot: { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0' },
+      outcome: 'DEFEAT',
+    }, true, onComplete);
+    await vi.waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+    expect(artwork.returnContainer.children).toHaveLength(0);
     artwork.destroy();
   });
 });

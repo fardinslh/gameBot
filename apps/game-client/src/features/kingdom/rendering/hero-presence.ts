@@ -1,9 +1,11 @@
-import { Assets, Container, Graphics, Sprite } from 'pixi.js';
+import { AnimatedSprite, Assets, Container, Graphics, Sprite, Texture } from 'pixi.js';
 import type { ArmyResponse, HeroKey } from '@crown-and-coin/shared';
 import type { BuildingId } from '../domain/kingdom-types';
 import type { BuildingSceneState } from './create-kingdom-scene';
 import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
-import { HERO_WORLD_ASSET } from '../../heroes/data/hero-world-assets';
+import { HERO_WORLD_ANIMATION, HERO_WORLD_ASSET, HERO_WORLD_ATLAS, HERO_WORLD_ATLAS_ROW } from '../../heroes/data/hero-world-assets';
+import { createAtlasRowFrames } from './sprite-atlas';
+import { createCharacterSprite, setCharacterAnimation, updateCharacterSprite } from './character-animation';
 
 export interface KingdomHeroPresence {
   key: HeroKey;
@@ -20,6 +22,7 @@ const HOME: Record<HeroKey, { buildingId: BuildingId; x: number; y: number }> = 
 };
 const RETURN_START_Y = 850;
 const RETURN_HOME_Y = 720;
+const CART_STRIP = '/assets/kingdom/characters/ambient/cart-strip-v1.webp';
 
 export function deriveKingdomHeroPresences(army: ArmyResponse | null, buildings: Partial<Record<BuildingId, BuildingSceneState>>): readonly KingdomHeroPresence[] {
   if (!army) return [];
@@ -49,7 +52,7 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
   let heroGeneration = 0;
   let returnGeneration = 0;
   let destroyed = false;
-  let markers: Array<{ key: HeroKey; marker: Container; body: Sprite; glow: Graphics | null; baseX: number; baseY: number; bodyScaleY: number }> = [];
+  let markers: Array<{ key: HeroKey; marker: Container; body: AnimatedSprite; frames: readonly Texture[]; glow: Graphics | null; baseX: number; baseY: number }> = [];
   let returnAnimation: { elapsedMs: number; durationMs: number; group: Container; outcome: 'VICTORY' | 'DEFEAT'; onComplete: () => void } | null = null;
   let reducedReturnTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -73,34 +76,40 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
     returnContainer,
     setHeroes: (heroes) => {
       const request = ++heroGeneration;
-      void Promise.all(heroes.map(async (hero) => ({ hero, texture: await Assets.load(hero.worldAsset) }))).then((loaded) => {
+      void Assets.load<Texture>(HERO_WORLD_ATLAS).then((atlas) => {
         if (destroyed || request !== heroGeneration) return;
         clear(container);
-        markers = loaded.map(({ hero, texture }) => {
-          const figure = createHeroFigure(hero.key, texture, 62);
+        markers = heroes.map((hero) => {
+          const frames = createAtlasRowFrames(atlas, HERO_WORLD_ATLAS_ROW[hero.key], 3);
+          const figure = createHeroFigure(hero.key, frames, 58);
+          const animation = hero.key === 'MAGE' ? HERO_WORLD_ANIMATION.MAGE.magicIdle : HERO_WORLD_ANIMATION[hero.key].idle;
+          setCharacterAnimation(figure.body, { name: hero.key === 'MAGE' ? 'magic-idle' : 'idle', frames, ...animation });
           figure.container.position.set(hero.x, hero.y);
           container.addChild(figure.container);
-          return { key: hero.key, marker: figure.container, body: figure.body, glow: figure.glow, baseX: hero.x, baseY: hero.y, bodyScaleY: figure.body.scale.y };
+          return { key: hero.key, marker: figure.container, body: figure.body, frames, glow: figure.glow, baseX: hero.x, baseY: hero.y };
         });
       });
     },
     playReturn: (presentation, reducedMotion, onComplete) => {
       const request = ++returnGeneration;
       cancelReturn();
-      void Promise.all(presentation.commanders.map(async (commander) => ({ commander, texture: await Assets.load(HERO_WORLD_ASSET[commander.key]) })))
-        .then((loaded) => {
+      void Promise.all([Assets.load<Texture>(HERO_WORLD_ATLAS), Assets.load<Texture>(CART_STRIP)])
+        .then(([atlas, cart]) => {
           if (destroyed || request !== returnGeneration) return;
           clear(returnContainer);
           const group = new Container();
           group.eventMode = 'none';
           group.label = 'raid-return-force';
-          loaded.slice(0, 3).forEach(({ commander, texture }, index) => {
-            const figure = createHeroFigure(commander.key, texture, 54);
+          presentation.commanders.slice(0, 3).forEach((commander, index) => {
+            const frames = createAtlasRowFrames(atlas, HERO_WORLD_ATLAS_ROW[commander.key], 3);
+            const figure = createHeroFigure(commander.key, frames, 52);
+            const animation = commander.key === 'MAGE' ? HERO_WORLD_ANIMATION.MAGE.magicIdle : HERO_WORLD_ANIMATION[commander.key].walk;
+            setCharacterAnimation(figure.body, { name: commander.key === 'MAGE' ? 'magic-idle' : 'walk', frames, ...animation });
             figure.container.position.set((index - 1) * 31, index === 1 ? 2 : 0);
             figure.container.alpha = presentation.outcome === 'VICTORY' ? 1 : .68;
             group.addChild(figure.container);
           });
-          if (presentation.outcome === 'VICTORY') group.addChild(createLootCart());
+          if (presentation.outcome === 'VICTORY') group.addChild(createLootCart(cart));
           group.position.set(405, reducedMotion ? RETURN_HOME_Y : RETURN_START_Y);
           returnContainer.addChild(group);
           returnAnimation = { elapsedMs: 0, durationMs: reducedMotion ? 450 : 1_300, group, outcome: presentation.outcome, onComplete };
@@ -117,12 +126,12 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
         });
     },
     update: (deltaMs, elapsedSeconds) => {
-      for (const { key, marker, body, glow, baseX, baseY, bodyScaleY } of markers) {
+      for (const { key, marker, body, glow, baseX, baseY } of markers) {
         marker.y = baseY;
+        updateCharacterSprite(body, Math.min(deltaMs, 50) / 1_000);
         if (key === 'KNIGHT') {
           marker.x = baseX;
-          body.rotation = Math.sin(elapsedSeconds * .7) * .008;
-          body.scale.y = bodyScaleY * (1 + Math.sin(elapsedSeconds * 1.1) * .004);
+          body.rotation = Math.sin(elapsedSeconds * .7) * .004;
         } else if (key === 'RANGER') {
           const patrol = Math.sin(elapsedSeconds * .52);
           marker.x = baseX + patrol * 6;
@@ -155,14 +164,13 @@ export function createHeroPresenceArtwork(): HeroPresenceArtwork {
   };
 }
 
-function createHeroFigure(key: HeroKey, texture: Awaited<ReturnType<typeof Assets.load>>, height: number): { container: Container; body: Sprite; glow: Graphics | null } {
+function createHeroFigure(key: HeroKey, frames: readonly Texture[], height: number): { container: Container; body: AnimatedSprite; glow: Graphics | null } {
   const figure = new Container();
   figure.eventMode = 'none';
   figure.label = `hero-${key.toLowerCase()}`;
   const shadowWidth = key === 'RANGER' ? height * .22 : height * .18;
   const shadow = new Graphics().ellipse(0, 1, shadowWidth, height * .055).fill({ color: 0x0b100b, alpha: .4 });
-  const body = new Sprite(texture);
-  body.anchor.set(.5, 1);
+  const body = createCharacterSprite({ name: 'idle', fps: 2, frames, loop: true });
   body.height = height;
   body.scale.x = body.scale.y;
   body.position.y = 1;
@@ -174,9 +182,16 @@ function createHeroFigure(key: HeroKey, texture: Awaited<ReturnType<typeof Asset
   return { container: figure, body, glow };
 }
 
-function createLootCart(): Graphics {
-  const cart = new Graphics().ellipse(67, -5, 16, 4).fill({ color: 0x10140e, alpha: .35 }).roundRect(55, -22, 25, 13, 3).fill({ color: 0x80552d }).rect(59, -28, 7, 7).fill({ color: 0xd6a83f })
-    .rect(68, -29, 8, 8).fill({ color: 0x9b7435 }).circle(60, -7, 4).fill({ color: 0x2f2519 }).circle(75, -7, 4).fill({ color: 0x2f2519 });
+function createLootCart(texture: Texture): Container {
+  const cart = new Container();
+  cart.eventMode = 'none';
   cart.label = 'raid-return-loot-cart';
+  const shadow = new Graphics().ellipse(67, -4, 15, 3).fill({ color: 0x10140e, alpha: .3 });
+  const body = new Sprite(createAtlasRowFrames(texture, 0, 1)[0]);
+  body.anchor.set(.5, 1);
+  body.height = 27;
+  body.scale.x = body.scale.y;
+  body.position.set(67, -3);
+  cart.addChild(shadow, body);
   return cart;
 }

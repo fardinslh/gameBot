@@ -232,7 +232,10 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   host.dataset.expansionStage = '1';
   host.dataset.ambientActorCount = '0';
   host.dataset.heroPresenceCount = '0';
-  host.dataset.heroRenderStyle = 'world-figures';
+  host.dataset.ambientRenderStyle = 'sprite-atlas';
+  host.dataset.heroRenderStyle = 'sprite-atlas';
+  host.dataset.characterAnimationEngine = 'pixi-animated-sprite';
+  host.dataset.characterFrameCount = '2';
   host.dataset.worldActorCount = '0';
   host.dataset.raidReturn = 'idle';
   const mineLayout = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === 'mine');

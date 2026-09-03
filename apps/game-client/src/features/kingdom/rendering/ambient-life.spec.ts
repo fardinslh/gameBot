@@ -1,12 +1,15 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { AnimatedSprite, Assets, Texture } from 'pixi.js';
 import type { BuildingId } from '../domain/kingdom-types';
-import { buildingActivityMilestone, MAX_AMBIENT_ACTORS, selectAmbientActorIds, type AmbientProgressionState } from './ambient-life';
+import { buildingActivityMilestone, createAmbientLifeArtwork, MAX_AMBIENT_ACTORS, selectAmbientActorIds, type AmbientProgressionState } from './ambient-life';
 
 const allBuildings = (level = 1): AmbientProgressionState => Object.fromEntries(([
   'castle', 'farm', 'lumberMill', 'mine', 'grandMarket', 'academy', 'blacksmith', 'watchtower', 'workshop',
 ] as const satisfies readonly BuildingId[]).map((id) => [id, { level, unlocked: true, upgrading: false }]));
 
 describe('progression-aware ambient life', () => {
+  afterEach(() => vi.restoreAllMocks());
+
   it('keeps early life restrained and only shows unlocked districts', () => {
     const early = allBuildings();
     early.academy = { level: 1, unlocked: false, upgrading: false };
@@ -33,6 +36,18 @@ describe('progression-aware ambient life', () => {
 
   it('shares the normal actor budget with three persistent Heroes', () => {
     expect(selectAmbientActorIds(allBuildings(20), MAX_AMBIENT_ACTORS - 3)).toHaveLength(11);
+  });
+
+  it('renders visible inhabitants from sprite assets rather than procedural bodies', async () => {
+    vi.spyOn(Assets, 'load').mockImplementation(() => Promise.resolve(Texture.WHITE) as unknown as ReturnType<typeof Assets.load>);
+    const artwork = createAmbientLifeArtwork();
+    artwork.setProgression(allBuildings());
+    await vi.waitFor(() => expect(artwork.container.children[0]?.children.some((child) => child instanceof AnimatedSprite)).toBe(true));
+    const sprite = artwork.container.children[0]?.children.find((child) => child instanceof AnimatedSprite);
+    expect(sprite?.textures).toHaveLength(2);
+    expect(sprite?.label).toBe('animation-idle');
+    expect(artwork.container.children.filter((actor) => actor.visible)).toHaveLength(selectAmbientActorIds(allBuildings()).length);
+    artwork.destroy();
   });
 
   it.each([[1, 1], [4, 1], [5, 5], [9, 9], [13, 13], [17, 17], [20, 20]])(

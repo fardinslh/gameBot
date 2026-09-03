@@ -71,9 +71,19 @@ async function assertLayout(width, height, direction) {
     overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     navHeight: Math.round(document.querySelector('.bottom-navigation')?.getBoundingClientRect().height ?? 0),
     actorCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-ambient-actor-count')),
+    ambientRenderStyle: document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-ambient-render-style'),
+    animationEngine: document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-character-animation-engine'),
+    frameCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-character-frame-count')),
     worldActorCount: Number(document.querySelector('.kingdom-scene__canvas')?.getAttribute('data-world-actor-count')),
   }));
-  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.worldActorCount > 14) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
+  if (audit.direction !== direction || audit.overflow > 0 || audit.navHeight !== 54 || audit.actorCount < 6 || audit.ambientRenderStyle !== 'sprite-atlas' || audit.animationEngine !== 'pixi-animated-sprite' || audit.frameCount !== 2 || audit.worldActorCount > 14) throw new Error(`Bad ${width}x${height} layout: ${JSON.stringify(audit)}`);
+}
+async function captureMatrix(prefix) {
+  for (const [width, height] of [[320, 568], [375, 812], [390, 844]]) {
+    await page.setViewportSize({ width, height });
+    await page.waitForTimeout(120);
+    await page.screenshot({ path: fileURLToPath(new URL(`${prefix}-${width}x${height}.png`, artifacts)) });
+  }
 }
 
 try {
@@ -96,8 +106,9 @@ try {
     worldAssets: element.getAttribute('data-hero-world-assets'),
     total: Number(element.getAttribute('data-world-actor-count')),
   }));
-  if (initialHeroes.count !== 2 || initialHeroes.keys !== 'KNIGHT,RANGER' || initialHeroes.renderStyle !== 'world-figures' || !initialHeroes.worldAssets?.includes('/assets/heroes/world/') || initialHeroes.total > 14) throw new Error(`Initial Hero presence is incorrect: ${JSON.stringify(initialHeroes)}`);
+  if (initialHeroes.count !== 2 || initialHeroes.keys !== 'KNIGHT,RANGER' || initialHeroes.renderStyle !== 'sprite-atlas' || !initialHeroes.worldAssets?.includes('/assets/kingdom/characters/heroes/') || initialHeroes.total > 14) throw new Error(`Initial Hero presence is incorrect: ${JSON.stringify(initialHeroes)}`);
   await assertLayout(320, 568, 'rtl');
+  await captureMatrix('heroes-knight-ranger-fa');
   if (await page.locator('.kingdom-scene__canvas').getAttribute('data-ambient-motion') !== 'active') throw new Error('Ambient life is not active');
   await openCastle();
   await dismissAdvisorTip();
@@ -136,7 +147,8 @@ try {
     worldAssets: element.getAttribute('data-hero-world-assets'),
     total: Number(element.getAttribute('data-world-actor-count')),
   }));
-  if (progressedHeroes.count !== 3 || progressedHeroes.keys !== 'KNIGHT,RANGER,MAGE' || progressedHeroes.renderStyle !== 'world-figures' || progressedHeroes.worldAssets?.split(',').length !== 3 || progressedHeroes.total > 14) throw new Error(`Progressed Hero presence is incorrect: ${JSON.stringify(progressedHeroes)}`);
+  if (progressedHeroes.count !== 3 || progressedHeroes.keys !== 'KNIGHT,RANGER,MAGE' || progressedHeroes.renderStyle !== 'sprite-atlas' || progressedHeroes.worldAssets?.split(',').length !== 3 || progressedHeroes.total > 14) throw new Error(`Progressed Hero presence is incorrect: ${JSON.stringify(progressedHeroes)}`);
+  await captureMatrix('heroes-knight-ranger-mage-en');
   await openCastle();
   const nextText = await page.locator('[data-next-transformation]').innerText();
   const laterText = await page.locator('.castle-future-preview').innerText();
@@ -156,6 +168,7 @@ try {
     milestones: element.getAttribute('data-ambient-milestones') ?? '',
   }));
   if (worldState.actors > 14 || !worldState.actorIds.includes('construction-mine') || worldState.constructionActors !== 1 || !worldState.milestones.includes('farm:13')) throw new Error(`Progression-aware world state is incorrect: ${JSON.stringify(worldState)}`);
+  await captureMatrix('progressed-inhabitants-en');
   await page.screenshot({ path: fileURLToPath(new URL('04-en-lived-kingdom-construction-390x844.png', artifacts)) });
 
   await prisma.building.update({ where: { kingdomId_type: { kingdomId, type: 'CASTLE' } }, data: { level: 20 } });

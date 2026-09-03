@@ -31,7 +31,22 @@ Active-building production now uses 45 files under `kingdom/evolution/default`: 
 
 `public/assets/heroes` contains Knight, Ranger, and Mage portraits. `hero.config.ts` supplies their public paths. The Raid and Hero clients reuse the same files.
 
-`public/assets/heroes/world` contains three transparent full-body Kingdom figures (`knight-world-v1.webp`, `ranger-world-v1.webp`, and `mage-world-v1.webp`). These are presentation-only Pixi/standard-Raid journey assets selected by `hero-world-assets.ts`; portrait assets remain unchanged for roster, match, and Battle UI.
+Production Kingdom and standard-Raid journey rendering uses the two-frame-per-Hero rows in `kingdom/characters/heroes/hero-atlas-v2.webp`; portrait assets remain unchanged for roster, match, and Battle UI. The older standalone `public/assets/heroes/world/*-v1.webp` files remain historical comparison assets and are not loaded by production.
+
+`public/assets/kingdom/characters/ambient` contains a five-row people atlas for guards, workers, merchants, scholars, and builders, plus compact goat and cart strips. These replace the former procedural humanoids and journey cart with grounded transparent sprites while preserving the existing actor budget and lightweight deterministic animation.
+
+## Character atlas metadata
+
+All sheets use a regular transparent grid and are sliced by `sprite-atlas.ts`. Runtime animation uses manually driven Pixi `AnimatedSprite` instances so the Kingdom scene retains control of hidden-page pause and reduced motion.
+
+| Sheet | Canvas | Frame layout | Production animations |
+| --- | ---: | --- | --- |
+| `characters/heroes/hero-atlas-v2.webp` | 320x660 | 2 columns x 3 rows; 160x220 frame; Knight, Ranger, Mage rows | Knight `idle` 2 fps and `walk` 4 fps; Ranger `idle` 2 fps and `walk` 5 fps; Mage `magic-idle` 4 fps |
+| `characters/ambient/people-atlas-v1.webp` | 192x600 | 2 columns x 5 rows; 96x120 frame; Guard, Worker, Merchant, Scholar, Builder rows | Guard `idle` 2 fps; other people `walk` 4 fps |
+| `characters/ambient/goat-strip-v1.webp` | 256x96 | 2 columns x 1 row; 128x96 frame | `walk` 3 fps |
+| `characters/ambient/cart-strip-v1.webp` | 320x112 | 2 columns x 1 row; 160x112 frame | `walk` 2 fps |
+
+All animations loop. Reduced motion displays frame zero without advancing. Encoded WebP bounds can report one pixel less where the final transparent edge is trimmed; the table records the authored logical grid.
 
 ## Visual mapping layers
 
@@ -44,6 +59,8 @@ Active-building production now uses 45 files under `kingdom/evolution/default`: 
 - `expansion-area-art.ts`: local irregular defensive, scholarly, engineering, and forge treatments
 - `create-kingdom-scene.ts`: asset loading, active-only mounting, camera, reveal, interaction, and effects
 - `building-status-badge.ts`: constant-size screen-space level/upgrade presentation, device-pixel-snapped world-anchor conversion, and a structurally aligned indicator-above-badge stack
+- `sprite-atlas.ts`: bounded Pixi texture slicing for lightweight Hero and ambient-character animation
+- `character-animation.ts`: named FPS/loop metadata application and scene-driven Pixi `AnimatedSprite` advancement
 
 File names do not decide gameplay. Shared building type and server state select a visual ID, then the mapping resolves its texture.
 

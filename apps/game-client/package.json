@@ -10,7 +10,7 @@
     "lint": "tsc --noEmit",
     "test:analytics": "vitest run src/features/analytics/analytics-queue.spec.ts",
     "test:building-evolution": "vitest run src/features/kingdom/rendering/building-visual-progression.spec.ts src/features/kingdom/rendering/building-art.spec.ts src/features/kingdom/rendering/building-status-badge.spec.ts src/features/kingdom/rendering/ambient-life.spec.ts",
-    "test:kingdom-soul": "vitest run src/features/kingdom/rendering/ambient-life.spec.ts src/features/kingdom/rendering/hero-presence.spec.ts src/features/raid/domain/raid-journey-presentation.spec.ts",
+    "test:kingdom-soul": "vitest run src/features/kingdom/rendering/ambient-life.spec.ts src/features/kingdom/rendering/character-animation.spec.ts src/features/kingdom/rendering/hero-presence.spec.ts src/features/kingdom/rendering/sprite-atlas.spec.ts src/features/raid/domain/raid-journey-presentation.spec.ts",
     "test:experience": "vitest run src/features/audio/crossfade-loop-player.spec.ts src/features/audio/audio-manager.spec.ts src/features/audio/battle-audio.spec.ts src/features/audio-lab/audio-audition.spec.ts src/features/experience/experience-content.spec.ts src/features/experience/advisor-positioning.spec.ts",
     "test:rtl": "vitest run src/i18n/bidi.spec.tsx",
     "test:economy-hud": "vitest run src/features/kingdom/domain/collection-presentation.spec.tsx"

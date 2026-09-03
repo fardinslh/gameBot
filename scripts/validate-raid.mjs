@@ -77,7 +77,14 @@ async function scenario(kind) {
   await page.waitForSelector('[data-raid-state="departing"]');
   if (Number(await page.locator('.raid-departure').getAttribute('data-raid-departure-count')) !== 3) throw new Error('Raid departure did not show the authoritative three-squad Army');
   if (await page.locator('.raid-departure__hero').count() !== 3 || await page.locator('.raid-departure__troop').count() !== 3 || await page.locator('.raid-departure__origin img').count() !== 1) throw new Error('Raid departure did not render three world-scale Hero/troop figures from a Kingdom origin');
-  if (kind === 'victory') await page.screenshot({ path: fileURLToPath(new URL('army-departure-fa-320x568.png', artifacts)) });
+  if (kind === 'victory') {
+    await page.screenshot({ path: fileURLToPath(new URL('army-departure-fa-320x568.png', artifacts)) });
+    for (const [width, height] of [[375, 812], [390, 844]]) {
+      await page.setViewportSize({ width, height });
+      await page.screenshot({ path: fileURLToPath(new URL(`army-departure-fa-${width}x${height}.png`, artifacts)) });
+    }
+    await page.setViewportSize({ width: 320, height: 568 });
+  }
   const startResponse = await startResponsePromise;
   const battle = await startResponse.json();
   if (kind === 'victory') {
@@ -112,6 +119,7 @@ async function scenario(kind) {
     const resultBalances = battle.balances;
     await page.locator('.raid-result .raid-primary').click();
     await page.waitForSelector(`[data-raid-return-presentation="${kind === 'victory' ? 'VICTORY' : 'DEFEAT'}"]`);
+    if (await page.locator('.engagement-goal-card').isVisible().catch(() => false)) throw new Error('Kingdom goal card obscured the Raid return procession');
     await page.waitForSelector('[data-scene-status="ready"]');
     const returnState = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({
       outcome: element.getAttribute('data-raid-return'),
@@ -120,11 +128,17 @@ async function scenario(kind) {
       renderStyle: element.getAttribute('data-hero-render-style'),
       actors: Number(element.getAttribute('data-world-actor-count')),
     }));
-    if (![kind, ...(kind === 'defeat' ? ['complete'] : [])].includes(returnState.outcome) || returnState.lootCart !== String(kind === 'victory') || returnState.renderStyle !== 'world-figures' || returnState.actors > 14) throw new Error(`Incorrect ${kind} return presentation: ${JSON.stringify(returnState)}`);
+    if (![kind, ...(kind === 'defeat' ? ['complete'] : [])].includes(returnState.outcome) || returnState.lootCart !== String(kind === 'victory') || returnState.renderStyle !== 'sprite-atlas' || returnState.actors > 14) throw new Error(`Incorrect ${kind} return presentation: ${JSON.stringify(returnState)}`);
     if (kind === 'defeat' && returnState.motion !== 'reduced') throw new Error(`Reduced-motion return was not active: ${JSON.stringify(returnState)}`);
-    if (await page.locator('.engagement-goal-card').isVisible().catch(() => false)) throw new Error('Kingdom goal card obscured the Raid return procession');
     if (kind === 'victory') await page.waitForTimeout(500);
     await page.screenshot({ path: fileURLToPath(new URL(`army-${kind}-return-fa-320x568.png`, artifacts)) });
+    if (kind === 'victory') {
+      for (const [width, height] of [[375, 812], [390, 844]]) {
+        await page.setViewportSize({ width, height });
+        await page.screenshot({ path: fileURLToPath(new URL(`army-${kind}-return-fa-${width}x${height}.png`, artifacts)) });
+      }
+      await page.setViewportSize({ width: 320, height: 568 });
+    }
     for (const [resource, value] of Object.entries(resultBalances)) {
       const selector = resourceSelector(resource);
       const chip = page.locator(selector);
