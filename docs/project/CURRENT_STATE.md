@@ -12,7 +12,7 @@ This snapshot includes the Launch-Safety PvP implementation. The labels distingu
 
 | Area | Status | Current implementation |
 | --- | --- | --- |
-| Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, and isolated mixed-direction values |
+| Kingdom | Implemented | Pixi world, bounded vertical pan, HUD, Collect, building selection, detail sheets, semantic RTL/LTR, isolated mixed-direction values, and 2048x3072 clean canvas terrain v5 |
 | Kingdom ownership identity | Implemented | Server-owned Kingdom name, ruler title, and one of three free heraldry choices; safe defaults backfill old players and Castle detail owns editing |
 | Castle transformation preview | Implemented | One authoritative presentation configuration spans Castle levels 1–20, references real district unlocks when applicable, and returns the current realm state, next transformation, and one later preview |
 | Living progression | Implemented | Existing building levels, visual milestones, unlock state, and active upgrades drive restrained district specialists, richer activity, construction workers, and persistent environmental detail without gameplay state |

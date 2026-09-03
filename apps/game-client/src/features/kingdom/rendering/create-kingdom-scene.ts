@@ -45,7 +45,7 @@ export interface BuildingSceneState {
   appearanceVariant: BuildingAppearanceVariant;
 }
 
-const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v3.webp';
+const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v5.webp';
 const KINGDOM_COMPOSITION_FOCUS_Y = 690;
 
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void, initialLocale: Locale = 'en'): Promise<KingdomSceneRuntime> {
@@ -55,6 +55,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const debugBuildingLayout = searchParams.get('debugBuildingLayout') === '1';
   const debugKingdomLayers = searchParams.get('debugKingdomLayers');
   const texture = await Assets.load(TERRAIN_TEXTURE);
+  const terrainScale = 1024 / texture.width;
   // A mirrored top-edge extension only shows above a positively panned world.
   // Its lower edge shares source row zero with the terrain, avoiding a repeated
   // or hard seam while the camera keeps the upper building clear of the HUD.
@@ -66,6 +67,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   statusLayer.eventMode = 'none';
 
   const background = new Sprite(texture);
+  background.scale.set(terrainScale);
   background.position.set(KINGDOM_WORLD.sourceOffsetX, 0);
   world.addChild(background);
   world.addChild(new Graphics().rect(0, 0, KINGDOM_WORLD.width, KINGDOM_WORLD.height).fill({ color: 0x0b140d, alpha: .08 }));
@@ -303,7 +305,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     worldScale = width / KINGDOM_WORLD.width;
     world.scale.set(worldScale);
     world.x = (width - KINGDOM_WORLD.width * worldScale) / 2;
-    backdrop.scale.set(worldScale, -worldScale);
+    backdrop.scale.set(worldScale * terrainScale, -worldScale * terrainScale);
     cameraMinY = Math.min(0, height - KINGDOM_WORLD.height * worldScale);
     const shell = host.closest<HTMLElement>('.kingdom-shell');
     const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');

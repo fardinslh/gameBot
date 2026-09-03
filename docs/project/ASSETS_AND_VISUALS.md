@@ -14,7 +14,7 @@ Active-building production now uses 45 files under `kingdom/evolution/default`: 
 
 | Asset | Role | Approximate size |
 | --- | --- | ---: |
-| `terrain/kingdom-base-v3.webp` | Active 1024 by 1536 building-free environment | 460 KB |
+| `terrain/kingdom-base-v5.webp` | Active 2048 by 3072 building-free environment | 90 KB |
 | `castle-production-v1.webp` | Active separate Castle sprite | 90 KB |
 | `buildings/farm-stage-1.webp` | Farm sprite | 70 KB |
 | `buildings/lumber-mill-stage-1.webp` | Lumber Mill sprite | 60 KB |
@@ -102,7 +102,7 @@ Installed Pixi 8.20 defaults these textures to linear minification/magnification
 
 The current tier-5 buildings remain above one source pixel per physical pixel even at the strict 390px/DPR2/200% inspection budget: Mine is the narrowest margin at about 1.02, while Castle is about 1.27. Character atlas frames are also numerically above one at that display size, but their painted detail and two-frame motion remain below the owner quality bar; pixel count alone does not approve art.
 
-Terrain is the actual raster-resolution risk. The 1024px texture is scaled as a 1024-world-pixel sprite behind a 640-world-pixel viewport. It reaches about 0.82 source pixels per physical pixel at 390px/DPR2 and about 0.41 at 200% inspection. A future replacement needs a genuinely authored higher-detail source, approximately 2048x3072 for the current DPR2 plus 200% inspection target. Naive enlargement is prohibited.
+Terrain uses the genuinely authored clean canvas master (`kingdom-base-v5.webp`, 90 KB, 2048x3072). It reaches 1.64 source pixels per physical pixel at 390px/DPR2/100% (up from 0.82) and 0.82 at 200% inspection (up from 0.41), eliminating raster starvation with low-frequency organic ground and crisp authored edges. Naive enlargement remains prohibited; all master art must maintain rich surface texture.
 
 No sharpening/color-grade filter is retained. The observed failure includes magnification beyond source detail, which a post-process cannot recover, and a full-screen filter adds bandwidth/render-target cost. A/B would therefore compare altered edges rather than restored detail. Automatic mipmaps also remain disabled because they address minification, while the reported defect is magnification; enable them only if a future measured zoom-out shimmer case demonstrates a benefit.
 

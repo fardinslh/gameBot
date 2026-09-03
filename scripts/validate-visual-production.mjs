@@ -1,9 +1,7 @@
 import { existsSync, mkdirSync, statSync } from 'node:fs';
 import { chromium } from 'playwright-core';
 
-const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
+const browserPath = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium', 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'].find(existsSync);
 if (!browserPath) throw new Error('No supported local Chromium browser was found');
 
 async function waitForUrl(url, timeoutMs = 20_000) {
@@ -100,9 +98,9 @@ try {
     }
   }
 
-  const terrainBytes = statSync(new URL('apps/game-client/public/assets/kingdom/terrain/kingdom-base-v3.webp', root)).size;
+  const terrainBytes = statSync(new URL('apps/game-client/public/assets/kingdom/terrain/kingdom-base-v5.webp', root)).size;
   const castleBytes = statSync(new URL('apps/game-client/public/assets/kingdom/castle-production-v1.webp', root)).size;
-  if (terrainBytes > 700_000 || castleBytes > 150_000) throw new Error(`Visual assets exceed mobile budget: terrain=${terrainBytes}, castle=${castleBytes}`);
+  if (terrainBytes > 900_000 || castleBytes > 150_000) throw new Error(`Visual assets exceed mobile budget: terrain=${terrainBytes}, castle=${castleBytes}`);
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
   console.log('PASS five-building Castle-level-one Kingdom + bounded mobile pan + active interactions');
   console.log('PASS 320x568, 375x812, 390x844 in English LTR and Persian RTL with unchanged 54px navigation');

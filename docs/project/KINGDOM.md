@@ -23,7 +23,7 @@ Castle detail also owns the compact Kingdom identity editor. Name, ruler title, 
 - Width: `640`
 - Height: `1536`
 - Terrain source X offset: `-192`
-- Active terrain: `/assets/kingdom/terrain/kingdom-base-v3.webp`
+- Active terrain: `/assets/kingdom/terrain/kingdom-base-v5.webp`
 - Camera composition focus Y: `690`
 
 The renderer scales the world to the host width. It calculates camera bounds from mounted buildings and the full world height. The upper bound keeps the top active building below Resource HUD, inbox, and Collect controls with 12 pixels of clearance. A pointer movement above 7 pixels changes the gesture from tap to pan.
