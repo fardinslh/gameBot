@@ -166,8 +166,8 @@ Each roadmap item is a separate authorization boundary. Completing or discussing
 
 At this document's latest roadmap update:
 
-- **Last completed**: Retention 05 — Shop MVP + Gem Economy
-- **Next**: Retention 05B — Kingdom Themes Foundation and First Historical Theme, not started
+- **Last completed**: Kingdom renderer resolution synchronization + zoom spike investigation
+- **Next**: Art-quality gate — Knight and Castle Guard character benchmark plus genuine terrain source art; Retention 05B Kingdom Themes Foundation remains separately planned and not started
 - **Bale**: not started
 
 If current code or newer canonical documents disagree with that snapshot, current repository evidence overrides this sentence. Update continuity documents when the phase state legitimately changes.

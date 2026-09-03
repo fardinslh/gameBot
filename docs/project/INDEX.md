@@ -11,9 +11,10 @@ Crown & Coin is a portrait mobile medieval strategy game. The current build comb
 ## Current verified repository state
 
 - **Branch**: `main`
-- **Last verified against commit**: `8924a99fecd574d4477ada4a24161898365e3200`
-- **Baseline commit message**: `feat(kingdom): make progression reshape the realm`
-- **Verification date**: 2026-09-02
+- **Last verified against commit**: `5ed3f46c91037710338f6ff553867c200f7bccd8`
+- **Baseline commit message**: `fix(kingdom): synchronize renderer resolution`
+- **Verification date**: 2026-09-03
+- **Gameplay baseline commit**: `8924a99fecd574d4477ada4a24161898365e3200` (`feat(kingdom): make progression reshape the realm`)
 - **Remote**: `https://github.com/fardinslh/gameBot.git`
 
 Current `HEAD`, source, migrations, and [current state](CURRENT_STATE.md) are authoritative when a published verification marker trails active work.
@@ -88,7 +89,8 @@ The client renders server responses. It never calculates balances, upgrade compl
 
 - **Completed**: repository foundation, Pixi Kingdom slice, server economy, Hero roster, Retention 03A Army/Commander foundation, Retention 03B Army Battle v2 with legacy replay compatibility, Retention 04 Broken Frontier PvE Campaign, Retention 05 Shop/Gem economy, Phase A Engagement Cohesion, Phase 08.1 Kingdom identity/Castle anticipation/ambient life, Phase 08.2A level-20 realm evolution/living progression, Phase 08.2B Kingdom Hero presence and standard-Raid departure/return, defense inbox, Revenge, building progression and effects, progressive Kingdom expansion through Stage 5, Retention 01A/01B visual progression, Retention 02 missions/achievements/Daily Return, first-party analytics, onboarding, Game Guide, and audio runtime
 - **Completed**: Audio Quality Selection Gate; all 24 owner choices are mapped
-- **Next**: Retention 05B — Kingdom Themes Foundation and First Historical Theme, only when explicitly scoped
+- **Completed**: Kingdom renderer resolution synchronization and zoom magnification spike investigation
+- **Next**: Art-quality gate — Knight and Castle Guard character benchmark plus genuine terrain source art (~2048x3072); Retention 05B Kingdom Themes Foundation and First Historical Theme remains separately planned and not started
 - **Not started**: Bale Mini App Integration
 - **Planned**: platform delivery and social/live-ops concepts require a future scoped phase
 - **Deferred**: Kingdom Theme content, Guild, Season, leaderboard, payments, Telegram integration, and additional building gameplay
