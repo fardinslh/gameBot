@@ -4,9 +4,7 @@ import process from 'node:process';
 import { chromium } from 'playwright-core';
 
 const root = new URL('../', import.meta.url);
-const edgePath = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
-const chromePath = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
-const browserPath = existsSync(edgePath) ? edgePath : existsSync(chromePath) ? chromePath : undefined;
+const browserPath = ['/usr/bin/google-chrome-stable', '/usr/bin/google-chrome', '/usr/bin/chromium', 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe', 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'].find(existsSync);
 const nextCli = new URL('node_modules/next/dist/bin/next', root).pathname.slice(1);
 
 function startClient() {

@@ -35,6 +35,8 @@ interface KingdomSceneRuntime {
   setBuildingStates(states: Partial<Record<BuildingId, BuildingSceneState>>, expansionStage: KingdomExpansionStage): void;
   setArmyState(army: ArmyResponse | null): void;
   playRaidReturn(presentation: KingdomRaidReturnPresentation, onComplete: () => void): void;
+  toggleOverview(): void;
+  setZoom(zoom: number): void;
 }
 
 export type BuildingIndicator = BuildingStatusIndicator;
@@ -45,7 +47,7 @@ export interface BuildingSceneState {
   appearanceVariant: BuildingAppearanceVariant;
 }
 
-const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v5.webp';
+const TERRAIN_TEXTURE = '/assets/kingdom/terrain/kingdom-base-v6.webp';
 const KINGDOM_COMPOSITION_FOCUS_Y = 690;
 
 export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildingId: WorldBuildingId) => void, initialLocale: Locale = 'en'): Promise<KingdomSceneRuntime> {
@@ -70,7 +72,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   background.scale.set(terrainScale);
   background.position.set(KINGDOM_WORLD.sourceOffsetX, 0);
   world.addChild(background);
-  world.addChild(new Graphics().rect(0, 0, KINGDOM_WORLD.width, KINGDOM_WORLD.height).fill({ color: 0x0b140d, alpha: .08 }));
+  world.addChild(new Graphics().rect(KINGDOM_WORLD.sourceOffsetX, 0, 1024, KINGDOM_WORLD.height).fill({ color: 0x0b140d, alpha: .08 }));
 
   const expansionLayer = new Container();
   world.addChild(expansionLayer);
@@ -253,13 +255,62 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     }
   }
 
+  let cameraX = 0;
   let cameraY = 0;
+  let cameraMinX = 0;
+  let cameraMaxX = 0;
   let cameraMinY = 0;
   let cameraMaxY = 0;
   let worldScale = 1;
+  const MIN_ZOOM = 640 / 1024; // ~0.625 (fits complete 1024-wide designed terrain edge-to-edge)
+  const MAX_ZOOM = 1.35;
+  let zoom = 1.0;
   let laidOut = false;
-  const clampCamera = (value: number): number => Math.max(cameraMinY, Math.min(cameraMaxY, value));
+
+  const clampCameraX = (value: number): number => Math.max(cameraMinX, Math.min(cameraMaxX, value));
+  const clampCameraY = (value: number): number => Math.max(cameraMinY, Math.min(cameraMaxY, value));
+
+  const updateCameraBounds = (width: number, height: number): void => {
+    const effectiveScale = worldScale * zoom;
+    const terrainWidthPx = 1024 * effectiveScale;
+    const terrainHeightPx = KINGDOM_WORLD.height * effectiveScale;
+
+    if (terrainWidthPx <= width) {
+      // Zoomed out: full 1024 terrain width fits on screen; center horizontally
+      const centeredX = (width - terrainWidthPx) / 2 - KINGDOM_WORLD.sourceOffsetX * effectiveScale;
+      cameraMinX = centeredX;
+      cameraMaxX = centeredX;
+      cameraX = centeredX;
+    } else {
+      // Zoomed in: allow horizontal panning between western forest and eastern beach
+      cameraMaxX = -KINGDOM_WORLD.sourceOffsetX * effectiveScale;
+      cameraMinX = width - (KINGDOM_WORLD.sourceOffsetX + 1024) * effectiveScale;
+      cameraX = clampCameraX(cameraX);
+    }
+
+    const shell = host.closest<HTMLElement>('.kingdom-shell');
+    const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');
+    const inboxButton = shell?.querySelector<HTMLElement>('.kingdom-inbox-button');
+    const collectControl = shell?.querySelector<HTMLElement>('.collect-control');
+    const bottomNav = shell?.querySelector<HTMLElement>('.bottom-navigation');
+    const shellTop = shell?.getBoundingClientRect().top ?? 0;
+    const hudSafeBottom = Math.max(
+      resourceHud?.getBoundingClientRect().bottom ?? shellTop + 100,
+      inboxButton?.getBoundingClientRect().bottom ?? shellTop + 100,
+      collectControl?.getBoundingClientRect().bottom ?? shellTop + 100,
+    ) - shellTop + 12;
+
+    const bottomNavHeight = bottomNav?.getBoundingClientRect().height ?? 54;
+    const bottomUiClearance = bottomNavHeight + 96;
+
+    // Allow scrolling down so northern mountain crags and peaks clear the top HUD
+    cameraMaxY = hudSafeBottom + 24;
+    // Allow scrolling up so southern river and stone bridge clear the bottom UI
+    cameraMinY = Math.min(cameraMaxY, height - bottomUiClearance - terrainHeightPx);
+  };
+
   const syncStatusPositions = (): void => {
+    const effectiveScale = worldScale * zoom;
     for (const [id, status] of statusArtwork) {
       const item = artwork.get(id);
       if (!item) continue;
@@ -271,7 +322,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         buildingScale: item.container.scale.x,
         resolution: app.renderer.resolution,
         worldPosition: { x: world.x, y: cameraY },
-        worldScale,
+        worldScale: effectiveScale,
       });
       status.position.set(layout.levelBadge.x, layout.levelBadge.y);
       indicator.position.set(layout.upgradeIndicator.x, layout.upgradeIndicator.y);
@@ -281,15 +332,47 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       indicator.alpha = item.container.alpha;
     }
   };
+
   const syncCamera = (): void => {
-    world.y = cameraY;
+    const effectiveScale = worldScale * zoom;
+    world.scale.set(effectiveScale);
+    world.position.set(cameraX, cameraY);
     backdrop.visible = cameraY > 0;
-    backdrop.position.set(world.x + KINGDOM_WORLD.sourceOffsetX * worldScale, cameraY);
+    backdrop.scale.set(effectiveScale * terrainScale, -effectiveScale * terrainScale);
+    backdrop.position.set(cameraX + KINGDOM_WORLD.sourceOffsetX * effectiveScale, cameraY);
+    host.dataset.cameraX = String(Math.round(cameraX));
     host.dataset.cameraY = String(Math.round(cameraY));
     host.dataset.cameraMinY = String(Math.round(cameraMinY));
     host.dataset.cameraMaxY = String(Math.round(cameraMaxY));
+    host.dataset.zoom = zoom.toFixed(3);
     syncStatusPositions();
   };
+
+  const setZoom = (nextZoom: number): void => {
+    zoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextZoom));
+    const width = Math.max(host.clientWidth, 1);
+    const height = Math.max(host.clientHeight, 1);
+    updateCameraBounds(width, height);
+    cameraX = clampCameraX(cameraX);
+    cameraY = clampCameraY(cameraY);
+    syncCamera();
+  };
+
+  const toggleOverview = (): void => {
+    const targetZoom = zoom < 0.85 ? 1.0 : MIN_ZOOM;
+    setZoom(targetZoom);
+    if (targetZoom === 1.0) {
+      const width = Math.max(host.clientWidth, 1);
+      const height = Math.max(host.clientHeight, 1);
+      cameraX = 0;
+      cameraY = clampCameraY(height * .49 - KINGDOM_COMPOSITION_FOCUS_Y * worldScale);
+      syncCamera();
+    } else {
+      cameraY = clampCameraY((cameraMinY + cameraMaxY) / 2);
+      syncCamera();
+    }
+  };
+
   const layout = (): void => {
     const width = Math.max(host.clientWidth, 1);
     const height = Math.max(host.clientHeight, 1);
@@ -303,58 +386,100 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     host.dataset.rendererResolution = String(app.renderer.resolution);
     host.dataset.devicePixelRatio = String(window.devicePixelRatio);
     worldScale = width / KINGDOM_WORLD.width;
-    world.scale.set(worldScale);
-    world.x = (width - KINGDOM_WORLD.width * worldScale) / 2;
-    backdrop.scale.set(worldScale * terrainScale, -worldScale * terrainScale);
-    cameraMinY = Math.min(0, height - KINGDOM_WORLD.height * worldScale);
-    const shell = host.closest<HTMLElement>('.kingdom-shell');
-    const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');
-    const inboxButton = shell?.querySelector<HTMLElement>('.kingdom-inbox-button');
-    const collectControl = shell?.querySelector<HTMLElement>('.collect-control');
-    const shellTop = shell?.getBoundingClientRect().top ?? 0;
-    const hudSafeBottom = Math.max(
-      resourceHud?.getBoundingClientRect().bottom ?? shellTop + 100,
-      inboxButton?.getBoundingClientRect().bottom ?? shellTop + 100,
-      collectControl?.getBoundingClientRect().bottom ?? shellTop + 100,
-    ) - shellTop + 12;
+    updateCameraBounds(width, height);
+
     const topmostBuildingY = buildingsLayer.getLocalBounds().y;
     host.dataset.activeBoundsTop = String(Math.round(topmostBuildingY));
     host.dataset.activeBoundsBottom = String(Math.round(buildingsLayer.getLocalBounds().bottom));
-    cameraMaxY = Math.max(0, hudSafeBottom - topmostBuildingY * worldScale);
-    const castleFocusCameraY = height * .49 - KINGDOM_COMPOSITION_FOCUS_Y * worldScale;
-    const topBuildingSafeCameraY = hudSafeBottom - topmostBuildingY * worldScale;
+
+    const castleFocusCameraY = height * .49 - KINGDOM_COMPOSITION_FOCUS_Y * worldScale * zoom;
     cameraY = laidOut
-      ? clampCamera(cameraMaxY + (cameraMinY - cameraMaxY) * previousProgress)
-      : clampCamera(Math.max(castleFocusCameraY, topBuildingSafeCameraY));
+      ? clampCameraY(cameraMaxY + (cameraMinY - cameraMaxY) * previousProgress)
+      : clampCameraY(castleFocusCameraY);
+    cameraX = clampCameraX(cameraX);
     syncCamera();
     laidOut = true;
   };
 
-  let pointerId: number | null = null;
+  const activePointers = new Map<number, { x: number; y: number }>();
+  let initialPinchDistance = 0;
+  let initialPinchZoom = 1.0;
+  let dragStartX = 0;
   let dragStartY = 0;
+  let cameraStartX = 0;
   let cameraStartY = 0;
+  let lastTapTime = 0;
+  let primaryPointerId: number | null = null;
   const canvas = app.canvas;
+
   const onPointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0) return;
-    pointerId = event.pointerId;
-    dragStartY = event.clientY;
-    cameraStartY = cameraY;
-    didPan = false;
-    canvas.setPointerCapture(event.pointerId);
+    if (event.button !== 0 && event.pointerType === 'mouse') return;
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activePointers.size === 1) {
+      primaryPointerId = event.pointerId;
+      dragStartX = event.clientX;
+      dragStartY = event.clientY;
+      cameraStartX = cameraX;
+      cameraStartY = cameraY;
+      didPan = false;
+      canvas.setPointerCapture(event.pointerId);
+    } else if (activePointers.size === 2) {
+      const pts = Array.from(activePointers.values());
+      initialPinchDistance = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      initialPinchZoom = zoom;
+      didPan = true;
+    }
   };
+
   const onPointerMove = (event: PointerEvent): void => {
-    if (event.pointerId !== pointerId) return;
-    const delta = event.clientY - dragStartY;
-    if (Math.abs(delta) > 7) didPan = true;
+    if (!activePointers.has(event.pointerId)) return;
+    activePointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    if (activePointers.size === 2 && initialPinchDistance > 10) {
+      const pts = Array.from(activePointers.values());
+      const currentDist = Math.hypot(pts[1].x - pts[0].x, pts[1].y - pts[0].y);
+      const targetZoom = initialPinchZoom * (currentDist / initialPinchDistance);
+      setZoom(targetZoom);
+      return;
+    }
+
+    if (event.pointerId !== primaryPointerId) return;
+    const deltaX = event.clientX - dragStartX;
+    const deltaY = event.clientY - dragStartY;
+    if (Math.abs(deltaX) > 7 || Math.abs(deltaY) > 7) didPan = true;
     if (!didPan) return;
-    cameraY = clampCamera(cameraStartY + delta);
+
+    if (cameraMinX < cameraMaxX) {
+      cameraX = clampCameraX(cameraStartX + deltaX);
+    }
+    cameraY = clampCameraY(cameraStartY + deltaY);
     syncCamera();
   };
+
   const onPointerUp = (event: PointerEvent): void => {
-    if (event.pointerId !== pointerId) return;
+    activePointers.delete(event.pointerId);
     if (canvas.hasPointerCapture(event.pointerId)) canvas.releasePointerCapture(event.pointerId);
-    pointerId = null;
+
+    if (event.pointerId === primaryPointerId) {
+      primaryPointerId = null;
+      const now = Date.now();
+      if (!didPan && now - lastTapTime < 320) {
+        toggleOverview();
+        lastTapTime = 0;
+      } else {
+        lastTapTime = now;
+      }
+    }
   };
+
+  const onWheel = (event: WheelEvent): void => {
+    event.preventDefault();
+    const zoomFactor = event.deltaY > 0 ? 0.92 : 1.08;
+    setZoom(zoom * zoomFactor);
+  };
+
+  canvas.addEventListener('wheel', onWheel, { passive: false });
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
   canvas.addEventListener('pointerup', onPointerUp);
@@ -555,9 +680,12 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         onComplete();
       });
     },
+    toggleOverview,
+    setZoom,
     destroy: () => {
       resizeObserver.disconnect();
       window.cancelAnimationFrame(resizeFrame);
+      canvas.removeEventListener('wheel', onWheel);
       canvas.removeEventListener('pointerdown', onPointerDown);
       canvas.removeEventListener('pointermove', onPointerMove);
       canvas.removeEventListener('pointerup', onPointerUp);

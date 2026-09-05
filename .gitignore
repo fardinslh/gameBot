@@ -14,3 +14,6 @@ artifacts/
 .idea/
 .vscode/
 .private/
+tools/
+__pycache__/
+*.blend1
