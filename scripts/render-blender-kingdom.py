@@ -36,9 +36,9 @@ wlinks = scene.world.node_tree.links
 wnodes.clear()
 
 bg = wnodes.new(type='ShaderNodeBackground')
-# Radiant alpine sky ambient fill
-bg.inputs['Color'].default_value = (0.45, 0.65, 0.95, 1.0)
-bg.inputs['Strength'].default_value = 0.70
+# Radiant alpine sky ambient fill (rich azure)
+bg.inputs['Color'].default_value = (0.32, 0.52, 0.88, 1.0)
+bg.inputs['Strength'].default_value = 0.42
 wout = wnodes.new(type='ShaderNodeOutputWorld')
 wlinks.new(bg.outputs['Background'], wout.inputs['Surface'])
 
@@ -69,7 +69,7 @@ scene.render.threads_mode = 'AUTO'
 
 scene.view_settings.view_transform = 'AgX'
 scene.view_settings.look = 'AgX - High Contrast'
-scene.view_settings.exposure = 0.22
+scene.view_settings.exposure = 0.02
 scene.view_settings.gamma = 1.0
 
 # -----------------------------------------------------------------------------
@@ -112,28 +112,29 @@ cam_obj.rotation_euler = (math.radians(90.0 - PITCH_DEG), 0.0, 0.0)
 # -----------------------------------------------------------------------------
 # 4. Radiant Golden-Hour Lighting Rig
 # -----------------------------------------------------------------------------
-# Key Sunlight: Warm golden amber from northwest (Elevation ~44°, Azimuth ~-38°)
+# Key Sunlight: Radiant warm golden amber from northwest (casting deep shadows to southeast)
+# Light vector points (+0.50, -0.60, -0.62)
 sun_key_data = bpy.data.lights.new(name="SunKey", type='SUN')
-sun_key_data.energy = 4.6
-sun_key_data.color = (1.0, 0.86, 0.62) # Warm golden sunlight
-sun_key_data.angle = math.radians(2.0) # Soft natural penumbra
+sun_key_data.energy = 5.2
+sun_key_data.color = (1.0, 0.88, 0.68) # Warm golden sunlight
+sun_key_data.angle = math.radians(2.2) # Soft natural penumbra
 sun_key_obj = bpy.data.objects.new(name="SunKey", object_data=sun_key_data)
 scene.collection.objects.link(sun_key_obj)
-sun_key_obj.rotation_euler = (math.radians(46.0), math.radians(16.0), math.radians(-38.0))
+sun_key_obj.rotation_euler = (math.radians(-44.0), math.radians(-30.0), math.radians(12.4))
 
-# Cool Sky Fill: Deep alpine blue ambient light
+# Cool Sky Fill: Deep alpine blue ambient light from southeast
 sun_fill_data = bpy.data.lights.new(name="SunFill", type='SUN')
-sun_fill_data.energy = 1.25
-sun_fill_data.color = (0.35, 0.60, 0.98)
+sun_fill_data.energy = 1.35
+sun_fill_data.color = (0.28, 0.48, 0.88)
 sun_fill_data.angle = math.radians(18.0)
 sun_fill_obj = bpy.data.objects.new(name="SunFill", object_data=sun_fill_data)
 scene.collection.objects.link(sun_fill_obj)
-sun_fill_obj.rotation_euler = (math.radians(50.0), math.radians(-20.0), math.radians(140.0))
+sun_fill_obj.rotation_euler = (math.radians(28.8), math.radians(20.5), math.radians(5.3))
 
 # Warm Earth Bounce: Simulates sunlight bouncing off the golden terrain
 sun_bounce_data = bpy.data.lights.new(name="SunBounce", type='SUN')
-sun_bounce_data.energy = 0.50
-sun_bounce_data.color = (0.95, 0.78, 0.45)
+sun_bounce_data.energy = 0.55
+sun_bounce_data.color = (0.35, 0.48, 0.22)
 sun_bounce_obj = bpy.data.objects.new(name="SunBounce", object_data=sun_bounce_data)
 scene.collection.objects.link(sun_bounce_obj)
 sun_bounce_obj.rotation_euler = (math.radians(135.0), 0.0, math.radians(0.0))
@@ -211,20 +212,34 @@ noise_edge = np.sin(grid_x * 2.8) * np.cos(grid_y * 2.4) * 0.22 + \
 perturbed_road_d = min_road_d + noise_edge
 
 # A. Cobblestone / Flagstone Channel (R)
-# 1. Castle Hexagonal Courtyard
+# 1. Castle Hexagonal Courtyard with Interlocking Flagstone Pavers
 dx_c = np.abs(grid_x - c_x)
 dy_c = np.abs(grid_y - c_y)
 hex_d = np.maximum(dx_c * 0.866 + dy_c * 0.5, dy_c)
 w_hex = np.clip((2.75 - hex_d) / 0.35, 0.0, 1.0)
+hex_u = (grid_x - c_x) * 4.4
+hex_v = (grid_y - c_y) * 4.4
+flag_grooves = (np.abs(np.sin(hex_u)) ** 0.28) * (np.abs(np.sin(hex_v)) ** 0.28)
+w_hex_paved = w_hex * np.clip(flag_grooves * 1.25, 0.20, 1.0)
 
-# 2. Market Circular Plaza
+# 2. Market Concentric Circular Stone Paver Rings (Matching candidate-848!)
 d_mkt = np.hypot(grid_x - m_x, grid_y - m_y)
 w_mkt = np.clip((2.45 - d_mkt) / 0.40, 0.0, 1.0)
+theta_mkt = np.arctan2(grid_y - m_y, grid_x - m_x)
+# Concentric stone rings
+ring_grooves = np.abs(np.sin(d_mkt * 18.84)) ** 0.35
+# Radial stone joints (higher frequency on outer rings)
+radial_freq = np.clip(np.floor(d_mkt * 5.0) * 4.0, 8.0, 32.0)
+radial_grooves = np.abs(np.sin(theta_mkt * radial_freq)) ** 0.35
+mkt_pattern = np.clip(ring_grooves * radial_grooves * 1.30, 0.18, 1.0)
+w_mkt_paved = w_mkt * mkt_pattern
 
-# 3. Road Core
+# 3. Road Core with Crisp Individual Cobblestones
 w_road_core = np.clip((0.80 - perturbed_road_d) / 0.30, 0.0, 1.0)
+road_stones = (np.abs(np.sin(perturbed_road_d * 10.0)) ** 0.30) * (np.abs(np.cos(grid_x * 6.5 + grid_y * 4.5)) ** 0.30)
+w_road_paved = w_road_core * np.clip(road_stones * 1.30, 0.25, 1.0)
 
-splat_r = np.clip(w_hex + w_mkt + w_road_core, 0.0, 1.0)
+splat_r = np.clip(w_hex_paved + w_mkt_paved + w_road_paved, 0.0, 1.0)
 
 # B. Trampled Earth & Fertile Loam Channel (G)
 w_road_shoulder = np.clip((1.80 - perturbed_road_d) / 0.55, 0.0, 1.0) * (1.0 - w_road_core)
@@ -294,7 +309,7 @@ tm_links.new(tm_texcoord.outputs['UV'], tm_splat_tex.inputs['Vector'])
 tm_sep = tm_nodes.new(type='ShaderNodeSeparateColor')
 tm_links.new(tm_splat_tex.outputs['Color'], tm_sep.inputs['Color'])
 
-# 1. Grass Material Sub-Network (Deep Emerald Turf & Golden Moss)
+# 1. Grass Material Sub-Network (Deep Emerald Turf & Warm Golden Moss)
 grass_noise = tm_nodes.new(type='ShaderNodeTexNoise')
 grass_noise.inputs['Scale'].default_value = 4.5
 grass_noise.inputs['Detail'].default_value = 3.5
@@ -302,20 +317,20 @@ grass_noise.inputs['Roughness'].default_value = 0.60
 tm_links.new(tm_texcoord.outputs['Object'], grass_noise.inputs['Vector'])
 
 grass_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
-grass_ramp.color_ramp.elements[0].position = 0.08
-grass_ramp.color_ramp.elements[0].color = (0.05, 0.16, 0.02, 1.0) # Deep forest moss
-grass_ramp.color_ramp.elements[1].position = 0.42
-grass_ramp.color_ramp.elements[1].color = (0.15, 0.38, 0.06, 1.0) # Lush emerald turf
-elem_crest = grass_ramp.color_ramp.elements.new(0.80)
-elem_crest.color = (0.42, 0.56, 0.12, 1.0) # Golden-amber sunlit crest
+grass_ramp.color_ramp.elements[0].position = 0.05
+grass_ramp.color_ramp.elements[0].color = (0.04, 0.11, 0.02, 1.0) # Deep forest moss
+grass_ramp.color_ramp.elements[1].position = 0.38
+grass_ramp.color_ramp.elements[1].color = (0.12, 0.28, 0.05, 1.0) # Lush emerald turf
+elem_crest = grass_ramp.color_ramp.elements.new(0.82)
+elem_crest.color = (0.24, 0.40, 0.08, 1.0) # Golden-amber sunlit crest
 tm_links.new(grass_noise.outputs['Fac'], grass_ramp.inputs['Fac'])
 
 # 2. Dirt & Fertile Loam Material Sub-Network (Splat G)
 dirt_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
-dirt_ramp.color_ramp.elements[0].position = 0.12
-dirt_ramp.color_ramp.elements[0].color = (0.18, 0.10, 0.05, 1.0) # Rich dark loam
+dirt_ramp.color_ramp.elements[0].position = 0.10
+dirt_ramp.color_ramp.elements[0].color = (0.18, 0.11, 0.06, 1.0) # Rich dark loam
 dirt_ramp.color_ramp.elements[1].position = 0.85
-dirt_ramp.color_ramp.elements[1].color = (0.45, 0.30, 0.16, 1.0) # Warm dry earth
+dirt_ramp.color_ramp.elements[1].color = (0.42, 0.30, 0.16, 1.0) # Warm dry golden earth
 tm_links.new(grass_noise.outputs['Fac'], dirt_ramp.inputs['Fac'])
 
 # 3. Cobblestones & Ancient Sandstone Flagstones (Splat R)
@@ -325,12 +340,12 @@ cobble_vor.inputs['Scale'].default_value = 6.5
 tm_links.new(tm_texcoord.outputs['Object'], cobble_vor.inputs['Vector'])
 
 cobble_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
-cobble_ramp.color_ramp.elements[0].position = 0.05
-cobble_ramp.color_ramp.elements[0].color = (0.14, 0.09, 0.05, 1.0) # Dark loam mortar
-cobble_ramp.color_ramp.elements[1].position = 0.20
-cobble_ramp.color_ramp.elements[1].color = (0.64, 0.52, 0.36, 1.0) # Warm golden sandstone paver
+cobble_ramp.color_ramp.elements[0].position = 0.06
+cobble_ramp.color_ramp.elements[0].color = (0.10, 0.07, 0.05, 1.0) # Dark loam mortar
+cobble_ramp.color_ramp.elements[1].position = 0.22
+cobble_ramp.color_ramp.elements[1].color = (0.48, 0.38, 0.26, 1.0) # Warm golden sandstone paver
 elem_c_hi = cobble_ramp.color_ramp.elements.new(0.75)
-elem_c_hi.color = (0.80, 0.70, 0.52, 1.0) # Sunlit paver edge
+elem_c_hi.color = (0.60, 0.50, 0.35, 1.0) # Sunlit paver edge
 tm_links.new(cobble_vor.outputs['Distance'], cobble_ramp.inputs['Fac'])
 
 # 4. Stratified Mountain Granite & Cliff Rock (Noise-driven natural crags)
@@ -341,18 +356,18 @@ rock_noise.inputs['Roughness'].default_value = 0.65
 tm_links.new(tm_texcoord.outputs['Object'], rock_noise.inputs['Vector'])
 
 rock_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
-rock_ramp.color_ramp.elements[0].position = 0.22
-rock_ramp.color_ramp.elements[0].color = (0.26, 0.24, 0.22, 1.0) # Slate granite
+rock_ramp.color_ramp.elements[0].position = 0.20
+rock_ramp.color_ramp.elements[0].color = (0.20, 0.19, 0.18, 1.0) # Slate granite
 rock_ramp.color_ramp.elements[1].position = 0.75
-rock_ramp.color_ramp.elements[1].color = (0.58, 0.50, 0.40, 1.0) # Warm limestone band
+rock_ramp.color_ramp.elements[1].color = (0.44, 0.38, 0.32, 1.0) # Warm limestone band
 tm_links.new(rock_noise.outputs['Fac'], rock_ramp.inputs['Fac'])
 
 # 5. River Sand & Pebbles (Splat B)
 sand_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
 sand_ramp.color_ramp.elements[0].position = 0.15
-sand_ramp.color_ramp.elements[0].color = (0.36, 0.30, 0.22, 1.0) # Wet river gravel
+sand_ramp.color_ramp.elements[0].color = (0.32, 0.26, 0.18, 1.0) # Wet river gravel
 sand_ramp.color_ramp.elements[1].position = 0.85
-sand_ramp.color_ramp.elements[1].color = (0.72, 0.62, 0.44, 1.0) # Warm golden river sand
+sand_ramp.color_ramp.elements[1].color = (0.58, 0.48, 0.32, 1.0) # Warm golden river sand
 tm_links.new(grass_noise.outputs['Fac'], sand_ramp.inputs['Fac'])
 
 # --- Blending Tree ---
@@ -377,7 +392,7 @@ tm_links.new(tm_sep.outputs['Blue'], mix_sand.inputs['Factor'])
 tm_links.new(mix_cobble.outputs['Result'], mix_sand.inputs['A'])
 tm_links.new(sand_ramp.outputs['Color'], mix_sand.inputs['B'])
 
-# + Mountain Rock (Driven by Slope & Northern Elevation with organic noise breakup)
+# + Mountain Rock (Driven primarily by Slope so terraces remain green)
 geom_norm = tm_nodes.new(type='ShaderNodeNewGeometry')
 sep_norm = tm_nodes.new(type='ShaderNodeSeparateXYZ')
 tm_links.new(geom_norm.outputs['Normal'], sep_norm.inputs['Vector'])
@@ -393,30 +408,30 @@ tm_links.new(rock_noise.outputs['Fac'], slope_n_mult.inputs[0])
 tm_links.new(slope_n_mult.outputs['Value'], slope_pert.inputs[1])
 
 slope_ramp = tm_nodes.new(type='ShaderNodeValToRGB')
-slope_ramp.color_ramp.elements[0].position = 0.58 # Steep slope
+slope_ramp.color_ramp.elements[0].position = 0.48 # Steep cliff faces
 slope_ramp.color_ramp.elements[0].color = (1.0, 1.0, 1.0, 1.0)
-slope_ramp.color_ramp.elements[1].position = 0.90 # Flat
+slope_ramp.color_ramp.elements[1].position = 0.78 # Gentle slopes and terraces stay lush turf
 slope_ramp.color_ramp.elements[1].color = (0.0, 0.0, 0.0, 1.0)
 tm_links.new(slope_pert.outputs['Value'], slope_ramp.inputs['Fac'])
 
 sep_obj = tm_nodes.new(type='ShaderNodeSeparateXYZ')
 tm_links.new(tm_texcoord.outputs['Object'], sep_obj.inputs['Vector'])
 
-# Perturb northern elevation boundary with noise
+# Perturb northern elevation boundary: only highest alpine peaks turn rocky
 north_pert = tm_nodes.new(type='ShaderNodeMath')
 north_pert.operation = 'ADD'
 tm_links.new(sep_obj.outputs['Y'], north_pert.inputs[0])
 north_n_mult = tm_nodes.new(type='ShaderNodeMath')
 north_n_mult.operation = 'MULTIPLY'
-north_n_mult.inputs[1].default_value = 1.6
+north_n_mult.inputs[1].default_value = 1.4
 tm_links.new(rock_noise.outputs['Fac'], north_n_mult.inputs[0])
 tm_links.new(north_n_mult.outputs['Value'], north_pert.inputs[1])
 
 north_map = tm_nodes.new(type='ShaderNodeMapRange')
-north_map.inputs['From Min'].default_value = 7.5
-north_map.inputs['From Max'].default_value = 16.5
+north_map.inputs['From Min'].default_value = 17.5
+north_map.inputs['From Max'].default_value = 21.5
 north_map.inputs['To Min'].default_value = 0.0
-north_map.inputs['To Max'].default_value = 0.90
+north_map.inputs['To Max'].default_value = 0.65
 north_map.clamp = True
 tm_links.new(north_pert.outputs['Value'], north_map.inputs['Value'])
 
@@ -435,8 +450,8 @@ tm_links.new(mix_rock.outputs['Result'], tm_bsdf.inputs['Base Color'])
 
 # Tactile Cobble & Rock Normal Bump
 tm_bump = tm_nodes.new(type='ShaderNodeBump')
-tm_bump.inputs['Strength'].default_value = 0.35
-tm_bump.inputs['Distance'].default_value = 0.08
+tm_bump.inputs['Strength'].default_value = 0.40
+tm_bump.inputs['Distance'].default_value = 0.06
 
 bump_scale = tm_nodes.new(type='ShaderNodeMath')
 bump_scale.operation = 'MULTIPLY'
@@ -461,16 +476,33 @@ cb_links.new(cb_tex.outputs['Object'], cb_noise.inputs['Vector'])
 cb_links.new(cb_noise.outputs['Fac'], cb_bump.inputs['Height'])
 cb_links.new(cb_bump.outputs['Normal'], curb_bsdf.inputs['Normal'])
 
+# Ancient Stone Bridge Deck Pavers
+mat_bridge_deck, bd_nodes, bd_links, bd_bsdf = create_shader("BridgeDeckStone")
+bd_bsdf.inputs['Base Color'].default_value = (0.48, 0.40, 0.30, 1.0)
+bd_bsdf.inputs['Roughness'].default_value = 0.72
+bd_tex = bd_nodes.new(type='ShaderNodeTexCoord')
+bd_wave = bd_nodes.new(type='ShaderNodeTexWave')
+bd_wave.wave_type = 'BANDS'
+bd_wave.inputs['Scale'].default_value = 16.0
+bd_bump = bd_nodes.new(type='ShaderNodeBump')
+bd_bump.inputs['Strength'].default_value = 0.35
+bd_bump.inputs['Distance'].default_value = 0.06
+bd_links.new(bd_tex.outputs['Object'], bd_wave.inputs['Vector'])
+bd_links.new(bd_wave.outputs['Color'], bd_bump.inputs['Height'])
+bd_links.new(bd_bump.outputs['Normal'], bd_bsdf.inputs['Normal'])
+
 # Translucent Alpine River Water
 mat_water, w_nodes, w_links, w_bsdf = create_shader("AlpineRiverWater")
-w_bsdf.inputs['Base Color'].default_value = (0.04, 0.54, 0.62, 1.0) # Mountain turquoise
-w_bsdf.inputs['Roughness'].default_value = 0.02
-w_bsdf.inputs['Transmission Weight'].default_value = 0.85
+w_bsdf.inputs['Base Color'].default_value = (0.02, 0.44, 0.58, 1.0) # Deep crystalline sapphire/turquoise
+w_bsdf.inputs['Roughness'].default_value = 0.03
+w_bsdf.inputs['Transmission Weight'].default_value = 0.88
 w_bsdf.inputs['IOR'].default_value = 1.333
 w_noise = w_nodes.new(type='ShaderNodeTexNoise')
-w_noise.inputs['Scale'].default_value = 16.0
+w_noise.inputs['Scale'].default_value = 14.0
+w_noise.inputs['Detail'].default_value = 2.5
 w_bump = w_nodes.new(type='ShaderNodeBump')
-w_bump.inputs['Strength'].default_value = 0.14
+w_bump.inputs['Strength'].default_value = 0.18
+w_bump.inputs['Distance'].default_value = 0.06
 w_links.new(w_noise.outputs['Fac'], w_bump.inputs['Height'])
 w_links.new(w_bump.outputs['Normal'], w_bsdf.inputs['Normal'])
 
@@ -535,6 +567,22 @@ p_bsdf.inputs['Roughness'].default_value = 0.55
 p_bsdf.inputs['Subsurface Weight'].default_value = 0.18
 p_bsdf.inputs['Subsurface Radius'].default_value = (0.15, 0.35, 0.08)
 
+# Stylized Puffy Broadleaf Foliage (Golden Emerald & Lime)
+mat_oak_foliage, ok_nodes, ok_links, ok_bsdf = create_shader("OakFoliage")
+ok_tex = ok_nodes.new(type='ShaderNodeTexCoord')
+ok_sep = ok_nodes.new(type='ShaderNodeSeparateXYZ')
+ok_links.new(ok_tex.outputs['Object'], ok_sep.inputs['Vector'])
+ok_ramp = ok_nodes.new(type='ShaderNodeValToRGB')
+ok_ramp.color_ramp.elements[0].position = 0.10
+ok_ramp.color_ramp.elements[0].color = (0.06, 0.18, 0.03, 1.0) # Forest shadow
+ok_ramp.color_ramp.elements[1].position = 0.75
+ok_ramp.color_ramp.elements[1].color = (0.36, 0.64, 0.10, 1.0) # Warm sunlit lime/gold
+ok_links.new(ok_sep.outputs['Z'], ok_ramp.inputs['Fac'])
+ok_links.new(ok_ramp.outputs['Color'], ok_bsdf.inputs['Base Color'])
+ok_bsdf.inputs['Roughness'].default_value = 0.50
+ok_bsdf.inputs['Subsurface Weight'].default_value = 0.22
+ok_bsdf.inputs['Subsurface Radius'].default_value = (0.12, 0.35, 0.06)
+
 # Dark Fertile Plowed Soil
 mat_farm_soil, _, _, fs_bsdf = create_shader("FarmTilledSoil")
 fs_bsdf.inputs['Base Color'].default_value = (0.11, 0.06, 0.03, 1.0)
@@ -558,11 +606,71 @@ mat_hay, _, _, h_bsdf = create_shader("GoldenHay")
 h_bsdf.inputs['Base Color'].default_value = (0.84, 0.66, 0.22, 1.0)
 h_bsdf.inputs['Roughness'].default_value = 0.85
 
-# Striped Market Awnings
-mat_awning_red, _, _, awr_bsdf = create_shader("AwningRed")
-awr_bsdf.inputs['Base Color'].default_value = (0.82, 0.14, 0.14, 1.0)
-mat_awning_blue, _, _, awb_bsdf = create_shader("AwningBlue")
-awb_bsdf.inputs['Base Color'].default_value = (0.14, 0.36, 0.76, 1.0)
+# Procedural Striped Market Awnings
+mat_awning_red, ar_nodes, ar_links, awr_bsdf = create_shader("AwningRed")
+ar_tex = ar_nodes.new(type='ShaderNodeTexCoord')
+ar_wave = ar_nodes.new(type='ShaderNodeTexWave')
+ar_wave.wave_type = 'BANDS'
+ar_wave.inputs['Scale'].default_value = 20.0
+ar_wave.inputs['Distortion'].default_value = 0.0
+ar_ramp = ar_nodes.new(type='ShaderNodeValToRGB')
+ar_ramp.color_ramp.interpolation = 'CONSTANT'
+ar_ramp.color_ramp.elements[0].position = 0.0
+ar_ramp.color_ramp.elements[0].color = (0.86, 0.16, 0.16, 1.0) # Crimson red stripe
+ar_ramp.color_ramp.elements[1].position = 0.50
+ar_ramp.color_ramp.elements[1].color = (0.96, 0.93, 0.86, 1.0) # Cream linen stripe
+ar_links.new(ar_tex.outputs['Object'], ar_wave.inputs['Vector'])
+ar_links.new(ar_wave.outputs['Color'], ar_ramp.inputs['Fac'])
+ar_links.new(ar_ramp.outputs['Color'], awr_bsdf.inputs['Base Color'])
+awr_bsdf.inputs['Roughness'].default_value = 0.65
+
+mat_awning_blue, ab_nodes, ab_links, awb_bsdf = create_shader("AwningBlue")
+ab_tex = ab_nodes.new(type='ShaderNodeTexCoord')
+ab_wave = ab_nodes.new(type='ShaderNodeTexWave')
+ab_wave.wave_type = 'BANDS'
+ab_wave.inputs['Scale'].default_value = 20.0
+ab_wave.inputs['Distortion'].default_value = 0.0
+ab_ramp = ab_nodes.new(type='ShaderNodeValToRGB')
+ab_ramp.color_ramp.interpolation = 'CONSTANT'
+ab_ramp.color_ramp.elements[0].position = 0.0
+ab_ramp.color_ramp.elements[0].color = (0.12, 0.36, 0.78, 1.0) # Royal cobalt blue stripe
+ab_ramp.color_ramp.elements[1].position = 0.50
+ab_ramp.color_ramp.elements[1].color = (0.96, 0.93, 0.86, 1.0) # Cream linen stripe
+ab_links.new(ab_tex.outputs['Object'], ab_wave.inputs['Vector'])
+ab_links.new(ab_wave.outputs['Color'], ab_ramp.inputs['Fac'])
+ab_links.new(ab_ramp.outputs['Color'], awb_bsdf.inputs['Base Color'])
+awb_bsdf.inputs['Roughness'].default_value = 0.65
+
+# Market Produce
+mat_produce_red, _, _, pr_bsdf = create_shader("ProduceRed")
+pr_bsdf.inputs['Base Color'].default_value = (0.88, 0.14, 0.10, 1.0)
+mat_produce_gold, _, _, pg_bsdf = create_shader("ProduceGold")
+pg_bsdf.inputs['Base Color'].default_value = (0.95, 0.70, 0.12, 1.0)
+
+# Meadow Wildflowers
+mat_flower_white, _, _, fw_bsdf = create_shader("FlowerWhite")
+fw_bsdf.inputs['Base Color'].default_value = (0.98, 0.98, 0.92, 1.0)
+fw_bsdf.inputs['Roughness'].default_value = 0.45
+mat_flower_gold, _, _, fg_bsdf = create_shader("FlowerGold")
+fg_bsdf.inputs['Base Color'].default_value = (1.0, 0.80, 0.12, 1.0)
+fg_bsdf.inputs['Roughness'].default_value = 0.45
+mat_flower_blue, _, _, fb_bsdf = create_shader("FlowerBlue")
+fb_bsdf.inputs['Base Color'].default_value = (0.24, 0.52, 0.95, 1.0)
+fb_bsdf.inputs['Roughness'].default_value = 0.45
+
+# Flowering Shrubs
+mat_shrub, _, _, sh_bsdf = create_shader("ShrubFoliage")
+sh_bsdf.inputs['Base Color'].default_value = (0.18, 0.45, 0.08, 1.0)
+sh_bsdf.inputs['Roughness'].default_value = 0.55
+sh_bsdf.inputs['Subsurface Weight'].default_value = 0.18
+
+# River Water Lilies
+mat_lilypad, _, _, lp_bsdf = create_shader("LilyPad")
+lp_bsdf.inputs['Base Color'].default_value = (0.10, 0.42, 0.08, 1.0)
+lp_bsdf.inputs['Roughness'].default_value = 0.35
+mat_lotus, _, _, lt_bsdf = create_shader("LotusFlower")
+lt_bsdf.inputs['Base Color'].default_value = (0.96, 0.45, 0.68, 1.0)
+lt_bsdf.inputs['Roughness'].default_value = 0.40
 
 # -----------------------------------------------------------------------------
 # 8. Helper Modeling Utilities
@@ -606,20 +714,20 @@ def add_box(name, size, location, material, collection, rot_z=0.0):
     collection.objects.link(obj)
     return obj
 
-def add_boulder(name, radius, location, material, collection, seed=0, subdivisions=2):
+def add_boulder(name, radius, location, material, collection, seed=0, subdivisions=2, smooth=False):
     bm = bmesh.new()
     bmesh.ops.create_icosphere(bm, subdivisions=subdivisions, radius=radius)
     rng = random.Random(seed)
     for v in bm.verts:
-        disp = 1.0 + (rng.random() - 0.5) * 0.42
-        v.co.x *= disp * 1.20
-        v.co.y *= disp * 0.90
-        v.co.z *= disp * 0.70
+        disp = 1.0 + (rng.random() - 0.5) * 0.38
+        v.co.x *= disp * 1.25
+        v.co.y *= disp * 0.95
+        v.co.z *= disp * 0.72
     mesh = bpy.data.meshes.new(name)
     bm.to_mesh(mesh)
     bm.free()
     for p in mesh.polygons:
-        p.use_smooth = True
+        p.use_smooth = smooth # Sharp chiseled crystalline facets for rocks!
     obj = bpy.data.objects.new(name, mesh)
     obj.location = location
     obj.rotation_euler = (rng.random() * 0.6, rng.random() * 0.6, rng.random() * 6.28)
@@ -629,37 +737,92 @@ def add_boulder(name, radius, location, material, collection, seed=0, subdivisio
 
 def add_stylized_pine(location, height_scale, collection, seed=0):
     rng = random.Random(seed)
-    trunk_h = 0.50 * height_scale
-    trunk_r = 0.10 * height_scale
+    trunk_h = 0.70 * height_scale
+    trunk_r = 0.11 * height_scale
     add_cylinder("PineTrunk", trunk_r, trunk_h, location, mat_timber, collection, segments=8)
     
-    tier_radii = [0.95 * height_scale, 0.72 * height_scale, 0.48 * height_scale, 0.25 * height_scale]
-    tier_heights = [0.75 * height_scale, 0.65 * height_scale, 0.55 * height_scale, 0.45 * height_scale]
-    tier_base_z = location[2] + trunk_h * 0.6
+    tier_radii = [1.10 * height_scale, 0.85 * height_scale, 0.60 * height_scale, 0.35 * height_scale]
+    tier_heights = [0.55 * height_scale, 0.50 * height_scale, 0.44 * height_scale, 0.38 * height_scale]
+    tier_base_z = location[2] + trunk_h * 0.45
+    branch_counts = [7, 6, 5, 4]
     
     for i in range(4):
         bm = bmesh.new()
-        bmesh.ops.create_cone(
-            bm,
-            cap_ends=True,
-            segments=12,
-            radius1=tier_radii[i],
-            radius2=0.04 * height_scale,
-            depth=tier_heights[i]
+        nb = branch_counts[i]
+        r_outer = tier_radii[i]
+        r_inner = r_outer * 0.52 # Deep cutout between branch fronds
+        h = tier_heights[i]
+        
+        v_top = bm.verts.new((0, 0, h * 0.65))
+        v_bot = bm.verts.new((0, 0, -h * 0.15))
+        
+        star_verts = []
+        for b in range(nb * 2):
+            ang = (b / (nb * 2)) * math.tau + rng.random() * 0.05
+            if b % 2 == 0:
+                r = r_outer * (1.0 + (rng.random() - 0.5) * 0.12)
+                z = -h * 0.38 - (rng.random() * 0.10 * h) # Drooping branch tip
+            else:
+                r = r_inner * (1.0 + (rng.random() - 0.5) * 0.12)
+                z = -h * 0.08 # Inner valley between branches
+            vx = r * math.cos(ang)
+            vy = r * math.sin(ang)
+            star_verts.append(bm.verts.new((vx, vy, z)))
+            
+        for b in range(nb * 2):
+            b_next = (b + 1) % (nb * 2)
+            bm.faces.new((v_top, star_verts[b], star_verts[b_next]))
+            bm.faces.new((v_bot, star_verts[b_next], star_verts[b]))
+            
+        mesh = bpy.data.meshes.new(f"PineTier_{i}")
+        bm.to_mesh(mesh)
+        bm.free()
+        
+        for p in mesh.polygons:
+            p.use_smooth = False # Crisp stylized faceted planes, not smooth mush!
+            
+        obj = bpy.data.objects.new(f"PineTier_{i}", mesh)
+        rot_z = (i * 0.95) + rng.random() * 0.6
+        obj.location = (
+            location[0] + (rng.random() - 0.5) * 0.04 * height_scale,
+            location[1] + (rng.random() - 0.5) * 0.04 * height_scale,
+            tier_base_z + i * 0.35 * height_scale
         )
+        obj.rotation_euler = ((rng.random() - 0.5) * 0.06, ((rng.random() - 0.5) * 0.06), rot_z)
+        obj.data.materials.append(mat_pine)
+        collection.objects.link(obj)
+
+def add_stylized_broadleaf(location, scale, collection, seed=0):
+    rng = random.Random(seed)
+    trunk_h = 0.85 * scale
+    trunk_r = 0.13 * scale
+    add_cylinder("OakTrunk", trunk_r, trunk_h, location, mat_timber, collection, segments=8)
+    
+    clump_offsets = [
+        (0.0, 0.0, trunk_h + 0.35 * scale, 0.60 * scale),
+        (-0.35 * scale, -0.20 * scale, trunk_h + 0.25 * scale, 0.46 * scale),
+        (0.35 * scale, -0.15 * scale, trunk_h + 0.28 * scale, 0.48 * scale),
+        (-0.15 * scale, 0.30 * scale, trunk_h + 0.36 * scale, 0.46 * scale),
+        (0.18 * scale, 0.26 * scale, trunk_h + 0.40 * scale, 0.44 * scale),
+    ]
+    for c_idx, (cx, cy, cz, cr) in enumerate(clump_offsets):
+        bm = bmesh.new()
+        bmesh.ops.create_icosphere(bm, subdivisions=2, radius=cr)
+        c_rng = random.Random(seed * 17 + c_idx)
         for v in bm.verts:
-            if v.co.z < 0:
-                v.co.x *= (1.0 + (rng.random() - 0.5) * 0.12)
-                v.co.y *= (1.0 + (rng.random() - 0.5) * 0.12)
-        mesh = bpy.data.meshes.new(f"PineFoliage_T{i}")
+            disp = 1.0 + (c_rng.random() - 0.5) * 0.28
+            v.co.x *= disp * 1.05
+            v.co.y *= disp * 1.05
+            v.co.z *= disp * 0.80
+        mesh = bpy.data.meshes.new(f"OakClump_{c_idx}")
         bm.to_mesh(mesh)
         bm.free()
         for p in mesh.polygons:
-            p.use_smooth = True
-        obj = bpy.data.objects.new(f"PineFoliage_{i}", mesh)
-        obj.location = (location[0], location[1], tier_base_z + i * 0.38 * height_scale)
-        obj.rotation_euler = (0, 0, i * 0.65 + rng.random() * 0.4)
-        obj.data.materials.append(mat_pine)
+            p.use_smooth = False # Stylized faceted puffy leaf clumps!
+        obj = bpy.data.objects.new(f"OakClump_{c_idx}", mesh)
+        obj.location = (location[0] + cx, location[1] + cy, location[2] + cz)
+        obj.rotation_euler = (c_rng.random() * 0.5, c_rng.random() * 0.5, c_rng.random() * 6.28)
+        obj.data.materials.append(mat_oak_foliage)
         collection.objects.link(obj)
 
 # -----------------------------------------------------------------------------
@@ -786,6 +949,18 @@ river_rock_coords = [
 for idx, (rx, ry, rz, rs) in enumerate(river_rock_coords):
     add_boulder(f"RiverBoulder_{idx}", rs, (rx, ry, rz), mat_granite, col_l1, seed=idx * 17)
 
+# Floating River Lily Pads & Lotus Blossoms
+lily_coords = [
+    (-6.8, bridge_y + 0.4), (-6.0, bridge_y + 0.7), (-5.2, bridge_y - 0.5),
+    (-3.8, bridge_y - 0.6), (-2.8, bridge_y + 0.5),
+    (2.6, bridge_y + 0.5), (3.4, bridge_y - 0.5), (5.0, bridge_y - 0.7),
+    (5.8, bridge_y + 0.4), (7.0, bridge_y - 0.5)
+]
+for l_idx, (lx, ly) in enumerate(lily_coords):
+    add_cylinder(f"LilyPad_{l_idx}", 0.16, 0.02, (lx, ly, -0.34), mat_lilypad, col_l1, segments=8)
+    if l_idx % 2 == 0:
+        add_cylinder(f"Lotus_{l_idx}", 0.05, 0.05, (lx, ly, -0.31), mat_lotus, col_l1, segments=6)
+
 # -----------------------------------------------------------------------------
 # 10. Layer 4: Royal Castle Courtyard & Dais
 # -----------------------------------------------------------------------------
@@ -803,13 +978,20 @@ for i in range(6):
     length = math.hypot(dx, dy)
     rot = math.atan2(dy, dx)
     if i != 4: # Leave south opening clear for avenue
-        add_box(f"CastleCurb_{i}", (length, 0.22, 0.14), mid, mat_curb, col_l4, rot_z=rot)
-    add_box(f"CastleCornerBollard_{i}", (0.32, 0.32, 0.36), (p1[0], p1[1], 0.20), mat_curb, col_l4)
+        add_box(f"CastleCurb_{i}", (length, 0.24, 0.16), mid, mat_curb, col_l4, rot_z=rot)
+    add_box(f"CastleCornerBollard_{i}", (0.38, 0.38, 0.44), (p1[0], p1[1], 0.22), mat_curb, col_l4)
+    add_box(f"CastleBollardCap_{i}", (0.44, 0.44, 0.08), (p1[0], p1[1], 0.46), mat_curb, col_l4)
 
 # Grand South Entrance Stone Steps (3 tiered carved steps)
 for s in range(3):
     step_y = c_y - 2.65 - s * 0.35
-    add_box(f"CastleSouthStep_{s}", (2.2 - s * 0.2, 0.36, 0.08), (c_x, step_y, 0.08 - s * 0.025), mat_curb, col_l4)
+    add_box(f"CastleSouthStep_{s}", (2.4 - s * 0.2, 0.38, 0.08), (c_x, step_y, 0.08 - s * 0.025), mat_curb, col_l4)
+
+# Two carved stone braziers flanking the courtyard south entrance
+for side in [-1.45, 1.45]:
+    add_cylinder(f"CastleBrazier_{side}", 0.22, 0.50, (c_x + side, c_y - 2.85, 0.0), mat_curb, col_l4, segments=12)
+    add_cylinder(f"CastleBrazierBowl_{side}", 0.30, 0.14, (c_x + side, c_y - 2.85, 0.50), mat_curb, col_l4, segments=12)
+    add_cylinder(f"CastleEmber_{side}", 0.18, 0.08, (c_x + side, c_y - 2.85, 0.60), mat_gold_ore, col_l4, segments=8)
 
 # -----------------------------------------------------------------------------
 # 11. Layer 5: Sunfield Farm District
@@ -859,6 +1041,13 @@ add_cylinder("HayBale_Roll1", 0.32, 0.48, (f_x + 1.55, f_y - 0.8, 0.0), mat_hay,
 add_cylinder("HayBale_Roll2", 0.32, 0.48, (f_x + 1.95, f_y - 0.4, 0.0), mat_hay, col_l5, segments=16)
 add_box("HayBale_Stack1", (0.50, 0.34, 0.28), (f_x + 1.70, f_y - 0.6, 0.46), mat_hay, col_l5, rot_z=0.25)
 
+# Farm Handcart
+add_box("FarmCart_Bed", (0.80, 1.20, 0.10), (f_x + 1.6, f_y + 0.8, 0.28), mat_timber, col_l5, rot_z=0.20)
+add_box("FarmCart_SideL", (0.06, 1.20, 0.22), (f_x + 1.22, f_y + 0.8, 0.42), mat_timber, col_l5, rot_z=0.20)
+add_box("FarmCart_SideR", (0.06, 1.20, 0.22), (f_x + 1.98, f_y + 0.8, 0.42), mat_timber, col_l5, rot_z=0.20)
+add_cylinder("FarmCart_WheelL", 0.24, 0.08, (f_x + 1.18, f_y + 0.8, 0.24), mat_timber, col_l5, segments=12)
+add_cylinder("FarmCart_WheelR", 0.24, 0.08, (f_x + 2.02, f_y + 0.8, 0.24), mat_timber, col_l5, segments=12)
+
 # -----------------------------------------------------------------------------
 # 12. Layer 6: Lumber Yard, Grand Market & Arched Bridge
 # -----------------------------------------------------------------------------
@@ -872,6 +1061,10 @@ for idx, (sx, sy) in enumerate(stump_offsets):
     for p in obj_stump.data.polygons:
         if p.normal.z > 0.5:
             p.material_index = 1
+
+add_cylinder("WoodChoppingBlock", 0.44, 0.38, (l_x - 0.4, l_y - 0.8, 0.0), mat_timber, col_l6, segments=16)
+for p in range(4):
+    add_box(f"WoodPlankStack_{p}", (0.35, 1.8, 0.08), (l_x - 1.2, l_y + 0.2, 0.04 + p * 0.08), mat_timber, col_l6, rot_z=-0.15)
 
 log_base_x = l_x + 0.9
 log_base_y = l_y - 0.7
@@ -909,14 +1102,20 @@ crate_positions = [
 ]
 for idx, (cx, cy) in enumerate(crate_positions):
     add_box(f"MerchantCrate_{idx}", (0.34, 0.34, 0.34), (cx, cy, 0.17), mat_timber, col_l6, rot_z=idx * 0.45)
+    p_mat = mat_produce_red if idx % 2 == 0 else mat_produce_gold
+    add_cylinder(f"CrateProduce_{idx}", 0.13, 0.08, (cx, cy, 0.34), p_mat, col_l6, segments=8)
     add_cylinder(f"MerchantBarrel_{idx}", 0.18, 0.40, (cx + 0.30, cy - 0.22, 0.05), mat_timber, col_l6, segments=12)
 
-add_cylinder("MarketFountain_Basin", 0.65, 0.28, (m_x, m_y, 0.02), mat_curb, col_l6, segments=20)
-add_cylinder("MarketFountain_Pillar", 0.22, 0.55, (m_x, m_y, 0.28), mat_curb, col_l6, segments=12)
-add_cylinder("MarketFountain_Water", 0.55, 0.05, (m_x, m_y, 0.24), mat_water, col_l6, segments=16)
+# Two-tiered Stepped Stone Fountain
+add_cylinder("MarketFountain_BasePad", 1.05, 0.08, (m_x, m_y, 0.0), mat_curb, col_l6, segments=24)
+add_cylinder("MarketFountain_LowerWater", 0.90, 0.05, (m_x, m_y, 0.07), mat_water, col_l6, segments=24)
+add_cylinder("MarketFountain_Pillar", 0.22, 0.65, (m_x, m_y, 0.08), mat_curb, col_l6, segments=12)
+add_cylinder("MarketFountain_UpperBowl", 0.48, 0.12, (m_x, m_y, 0.52), mat_curb, col_l6, segments=16)
+add_cylinder("MarketFountain_UpperWater", 0.42, 0.04, (m_x, m_y, 0.60), mat_water, col_l6, segments=16)
+add_cylinder("MarketFountain_Finial", 0.08, 0.16, (m_x, m_y, 0.64), mat_curb, col_l6, segments=8)
 
 # Medieval Double-Arched Stone Bridge
-add_box("BridgeDeck", (1.60, 3.6, 0.24), (bridge_x, bridge_y, -0.06), mat_curb, col_l6)
+add_box("BridgeDeck", (1.60, 3.6, 0.24), (bridge_x, bridge_y, -0.06), mat_bridge_deck, col_l6)
 add_box("BridgeParapet_Left", (0.22, 3.8, 0.44), (bridge_x - 0.86, bridge_y, 0.18), mat_curb, col_l6)
 add_box("BridgeParapet_Right", (0.22, 3.8, 0.44), (bridge_x + 0.86, bridge_y, 0.18), mat_curb, col_l6)
 for px in [-0.86, 0.86]:
@@ -1016,7 +1215,11 @@ for idx, (px, py, scale) in enumerate(pine_groves):
         gz = (prog ** 1.35) * 4.8 + math.sin(px * 0.70) * 0.45 * prog
         if py > 13.5:
             gz += (py - 13.5) * 0.45
-    add_stylized_pine((px, py, gz), scale, col_l3, seed=idx * 31)
+    # Alpine heights (>10.0) are spruce pines; valley & riverbanks mix in lush puffy oaks:
+    if py < 10.0 and (idx % 3 == 1):
+        add_stylized_broadleaf((px, py, gz), scale * 0.95, col_l3, seed=idx * 29)
+    else:
+        add_stylized_pine((px, py, gz), scale, col_l3, seed=idx * 31)
 
 boulder_coords = [
     (-7.5, -3.0, 0.15, 0.55), (7.5, -3.0, 0.15, 0.55),
@@ -1025,7 +1228,60 @@ boulder_coords = [
     (3.8, 9.5, 1.10, 0.70), (0.5, 8.5, 0.85, 0.58),
 ]
 for idx, (bx, by, bz, bs) in enumerate(boulder_coords):
-    add_boulder(f"GroveBoulder_{idx}", bs, (bx, by, bz), mat_granite, col_l3, seed=idx * 43)
+    add_boulder(f"GroveBoulder_{idx}", bs, (bx, by, bz), mat_granite, col_l3, seed=idx * 43, smooth=False)
+
+# Flowering Shrubs along forest edges
+shrub_coords = [
+    (-6.0, -10.0, 0.42), (6.0, -10.0, 0.42),
+    (-5.2, -2.5, 0.38), (5.2, -2.5, 0.38),
+    (-2.8, 0.6, 0.35), (2.8, 0.6, 0.35),
+    (-6.4, 3.5, 0.42), (6.4, 3.5, 0.42),
+    (-4.5, 9.2, 0.46), (4.2, 10.2, 0.46),
+]
+for s_idx, (sx, sy, sz) in enumerate(shrub_coords):
+    s_rng = random.Random(s_idx * 79)
+    sgz = 0.0
+    if sy > 5.2:
+        prog = (sy - 5.2) / (max_by - 5.2)
+        sgz = (prog ** 1.35) * 4.8 + math.sin(sx * 0.70) * 0.45 * prog
+    for c in range(2):
+        bm_s = bmesh.new()
+        bmesh.ops.create_icosphere(bm_s, subdivisions=2, radius=sz * (0.85 + c * 0.22))
+        for v in bm_s.verts:
+            v.co.z *= 0.75
+        mesh_s = bpy.data.meshes.new(f"Shrub_{s_idx}_{c}")
+        bm_s.to_mesh(mesh_s)
+        bm_s.free()
+        for p in mesh_s.polygons:
+            p.use_smooth = False
+        obj_s = bpy.data.objects.new(f"Shrub_{s_idx}_{c}", mesh_s)
+        obj_s.location = (sx + (c - 0.5) * 0.22, sy + (s_rng.random() - 0.5) * 0.22, sgz + sz * 0.4)
+        obj_s.data.materials.append(mat_shrub)
+        col_l3.objects.link(obj_s)
+
+# Meadow Wildflower Clusters
+flower_patches = [
+    (-1.8, 1.2, 8), (1.8, 1.2, 8),
+    (-2.2, -1.0, 7), (2.2, -1.0, 7),
+    (-2.4, -4.2, 9), (-3.2, -6.8, 9),
+    (2.4, -4.2, 9), (3.2, -6.8, 9),
+    (-2.2, -9.8, 8), (2.2, -9.8, 8),
+    (-1.8, -13.8, 8), (1.8, -13.8, 8),
+    (-4.5, bridge_y + 1.6, 9), (4.5, bridge_y + 1.6, 9),
+    (-2.4, bridge_y + 1.4, 8), (2.4, bridge_y + 1.4, 8),
+    (1.2, 8.2, 8), (3.5, 7.8, 8), (-1.2, 8.2, 8),
+]
+for p_idx, (fx, fy, cnt) in enumerate(flower_patches):
+    p_rng = random.Random(p_idx * 53)
+    f_mat = [mat_flower_white, mat_flower_gold, mat_flower_blue][p_idx % 3]
+    fgz = 0.0
+    if fy > 5.2:
+        prog = (fy - 5.2) / (max_by - 5.2)
+        fgz = (prog ** 1.35) * 4.8 + math.sin(fx * 0.70) * 0.45 * prog
+    for i in range(cnt):
+        ox = (p_rng.random() - 0.5) * 1.5
+        oy = (p_rng.random() - 0.5) * 1.5
+        add_cylinder(f"Flw_{p_idx}_{i}", 0.045, 0.08, (fx + ox, fy + oy, fgz + 0.02), f_mat, col_l3, segments=6)
 
 # -----------------------------------------------------------------------------
 # 15. Save .blend Main File & Render
