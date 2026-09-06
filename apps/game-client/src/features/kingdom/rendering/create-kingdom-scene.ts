@@ -58,10 +58,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   const debugKingdomLayers = searchParams.get('debugKingdomLayers');
   const texture = await Assets.load(TERRAIN_TEXTURE);
   const terrainScale = 1024 / texture.width;
-  // A mirrored top-edge extension only shows above a positively panned world.
-  // Its lower edge shares source row zero with the terrain, avoiding a repeated
-  // or hard seam while the camera keeps the upper building clear of the HUD.
-  const backdrop = new Sprite(texture);
+  // A clean atmospheric top extension fill matching the northern alpine ridge,
+  // avoiding any mirrored/repeated map artifacts when panned down.
+  const backdrop = new Graphics();
   app.stage.addChild(backdrop);
   const world = new Container();
   app.stage.addChild(world);
@@ -337,9 +336,13 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const effectiveScale = worldScale * zoom;
     world.scale.set(effectiveScale);
     world.position.set(cameraX, cameraY);
-    backdrop.visible = cameraY > 0;
-    backdrop.scale.set(effectiveScale * terrainScale, -effectiveScale * terrainScale);
-    backdrop.position.set(cameraX + KINGDOM_WORLD.sourceOffsetX * effectiveScale, cameraY);
+    if (cameraY > 0) {
+      backdrop.visible = true;
+      backdrop.clear();
+      backdrop.rect(0, 0, app.screen.width, cameraY + 2).fill({ color: 0x4a6a4e });
+    } else {
+      backdrop.visible = false;
+    }
     host.dataset.cameraX = String(Math.round(cameraX));
     host.dataset.cameraY = String(Math.round(cameraY));
     host.dataset.cameraMinY = String(Math.round(cameraMinY));

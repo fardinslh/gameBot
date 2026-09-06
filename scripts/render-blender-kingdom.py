@@ -1177,35 +1177,44 @@ for s in range(7):
     add_box(f"HillStep_{s}", (1.25, 0.48, 0.15), (step_x, step_y, step_z), mat_curb, col_l3, rot_z=0.35)
 
 # Dense Stylized Pine Forest Framing Realm (West, East, North Ridges)
+# Organic Stylized Pine & Oak Groves Framing Realm
+# Naturally spaced copses with open meadow clearings and breathing room
 pine_groves = [
-    # West Forest Ridge (Dense organic clusters)
-    (-8.8, -16.0, 1.1), (-7.6, -15.2, 0.9), (-8.2, -14.0, 1.2), (-7.4, -12.8, 1.0),
-    (-8.6, -11.5, 1.3), (-7.7, -10.0, 1.1), (-8.5, -8.5, 1.4), (-7.5, -7.2, 1.0),
-    (-8.7, -5.8, 1.3), (-7.8, -4.5, 1.2), (-8.6, -3.0, 1.4), (-7.6, -1.8, 1.1),
-    (-8.5, -0.5, 1.3), (-7.7, 0.8, 1.0), (-8.8, 2.2, 1.4), (-7.6, 3.5, 1.2),
-    (-8.5, 5.0, 1.3), (-7.4, 6.2, 1.1), (-8.7, 7.8, 1.4), (-7.6, 9.2, 1.2),
-    (-8.5, 10.8, 1.3), (-7.5, 12.2, 1.1), (-8.6, 13.8, 1.4), (-7.2, 15.2, 1.5),
-    (-6.5, 16.8, 1.4), (-5.2, 18.2, 1.5), (-3.8, 19.5, 1.6),
-    # East Forest Ridge (Dense organic clusters)
-    (8.8, -16.0, 1.1), (7.6, -15.2, 0.9), (8.2, -14.0, 1.2), (7.4, -12.8, 1.0),
-    (8.6, -11.5, 1.3), (7.7, -10.0, 1.1), (8.5, -8.5, 1.4), (7.5, -7.2, 1.0),
-    (8.7, -5.8, 1.3), (7.8, -4.5, 1.2), (8.6, -3.0, 1.4), (7.6, -1.8, 1.1),
-    (8.5, -0.5, 1.3), (7.7, 0.8, 1.0), (8.8, 2.2, 1.4), (7.6, 3.5, 1.2),
-    (8.5, 5.0, 1.3), (7.4, 6.2, 1.1), (8.7, 7.8, 1.4), (7.6, 9.2, 1.2),
-    (8.5, 10.8, 1.3), (7.5, 12.2, 1.1), (8.6, 13.8, 1.4), (7.2, 15.2, 1.5),
-    (6.5, 16.8, 1.4), (5.2, 18.2, 1.5), (3.8, 19.5, 1.6),
-    # North Alpine Ridge
-    (-2.0, 20.2, 1.6), (0.0, 20.8, 1.7), (2.0, 20.2, 1.6),
-    # Riverbank Forest Accents
-    (-6.2, bridge_y + 1.8, 1.0), (6.2, bridge_y + 1.8, 1.0),
-    (-5.5, bridge_y - 1.8, 0.9), (5.5, bridge_y - 1.8, 0.9),
-    (-3.8, bridge_y - 2.2, 0.8), (3.8, bridge_y - 2.2, 0.8),
-    # Interior Natural Accents
-    (-3.0, 3.5, 0.90), (3.0, 3.5, 0.90),
-    (-3.4, -8.5, 0.95), (3.4, -8.5, 0.95),
-    # Northern Foothills & Alpine Groves
-    (2.4, 7.5, 0.95), (4.5, 6.8, 1.10), (5.2, 8.8, 1.25),
-    (-5.8, 8.2, 1.15), (-6.4, 10.5, 1.30), (-1.8, 13.5, 1.35), (2.2, 14.5, 1.40),
+    # --- West Forest (Natural clustered copses with open meadow clearings) ---
+    # South River Copse (Framing water entrance)
+    (-8.8, -15.5, 1.15), (-7.8, -14.2, 0.95), (-8.6, -13.0, 1.10),
+    # Open meadow opposite market (pushed back with breathing room)
+    (-9.0, -9.8, 1.20), (-8.2, -7.8, 1.05),
+    # Mid-Valley Copse (West of farm)
+    (-8.9, -3.8, 1.25), (-8.0, -1.8, 1.10), (-8.8, 0.5, 1.20),
+    # Castle Flank Copse
+    (-8.6, 4.8, 1.20), (-7.8, 6.8, 1.10),
+    # Northwest Alpine Ascent (Climbing rugged mountain slope)
+    (-8.5, 11.2, 1.30), (-7.4, 13.8, 1.35), (-6.2, 16.5, 1.45), (-4.8, 18.0, 1.50),
+
+    # --- East Forest (Natural clustered copses with open meadow clearings) ---
+    # South River Copse (Framing water entrance)
+    (8.8, -15.5, 1.15), (7.8, -14.2, 0.95), (8.6, -13.0, 1.10),
+    # Open meadow opposite market (pushed back with breathing room)
+    (9.0, -9.8, 1.20), (8.2, -7.8, 1.05),
+    # Mid-Valley Copse (East of lumber yard)
+    (8.9, -3.8, 1.25), (8.0, -1.8, 1.10), (8.8, 0.5, 1.20),
+    # Castle Flank Copse
+    (8.6, 4.8, 1.20), (7.8, 6.8, 1.10),
+    # Northeast Alpine Ascent (Climbing terrace slope)
+    (8.5, 11.2, 1.30), (7.4, 13.8, 1.35), (6.2, 16.5, 1.45), (4.8, 18.0, 1.50),
+
+    # --- Riverbank Natural Accents ---
+    (-6.2, bridge_y + 1.8, 0.95), (6.2, bridge_y + 1.8, 0.95),
+    (-4.0, bridge_y - 2.0, 0.80), (4.0, bridge_y - 2.0, 0.80),
+
+    # --- Interior Natural Meadow Accents ---
+    (-3.2, 3.8, 0.85), (3.2, 3.8, 0.85),
+    (-3.5, -8.5, 0.90), (3.5, -8.5, 0.90),
+
+    # --- Northern Foothills & Alpine Terraces ---
+    (2.6, 7.8, 0.95), (4.8, 7.2, 1.05), (5.5, 9.2, 1.20),
+    (-5.6, 8.5, 1.10), (-6.2, 11.0, 1.25), (-1.8, 14.0, 1.30), (2.4, 14.8, 1.35),
 ]
 
 for idx, (px, py, scale) in enumerate(pine_groves):
