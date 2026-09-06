@@ -11,22 +11,25 @@ import {
   ResourceType,
 } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
-import type {
-  BattleHeroState,
-  BattleArmySquadState,
-  BattleReplayResponse,
-  ArmyPreview,
-  ArmyFormationSlotState,
-  DefenseInboxResponse,
-  HeroKey,
-  RaidHistoryResponse,
-  RaidLootAmounts,
-  RaidMatchOfferState,
-  RaidOverviewResponse,
-  RaidResourceType,
-  RaidSearchResponse,
-  RevengePreviewResponse,
-  ResourceAmounts,
+import {
+  LEAGUE_CONFIGS,
+  resolveLeagueFromTrophies,
+  type BattleHeroState,
+  type BattleArmySquadState,
+  type BattleReplayResponse,
+  type ArmyPreview,
+  type ArmyFormationSlotState,
+  type DefenseInboxResponse,
+  type HeroKey,
+  type RaidHistoryResponse,
+  type RaidLootAmounts,
+  type RaidMatchOfferState,
+  type RaidOverviewResponse,
+  type RaidResourceType,
+  type RaidSearchResponse,
+  type RevengePreviewResponse,
+  type ResourceAmounts,
+  type TrophyLeague,
 } from '@crown-and-coin/shared';
 import { ARMY_BATTLE_RULES_VERSION } from '../battle/battle.config';
 import { resolveBattleSimulation } from '../battle/battle-simulation';
@@ -524,7 +527,13 @@ export class RaidService {
     });
     if (!player.kingdom || !player.armyFormation) throw new RaidError('INVALID_ARMY_FORMATION', 'Your Army is not ready.');
     return {
-      player: { id: player.id, displayName: player.displayName ?? 'Warden of Dawnkeep', level: player.kingdom.buildings[0]?.level ?? player.kingdom.level, trophies: player.trophies },
+      player: {
+        id: player.id,
+        displayName: player.displayName ?? 'Warden of Dawnkeep',
+        level: player.kingdom.buildings[0]?.level ?? player.kingdom.level,
+        trophies: player.trophies,
+        league: resolveLeagueFromTrophies(player.trophies),
+      },
       balances: this.presentBalances(player.kingdom.resourceBalances),
       army: this.presentArmy(player.armyFormation, player.troops),
       newPlayerProtection: newPlayerProtection(player.createdAt, player.isSystemOpponent, now),
@@ -663,6 +672,16 @@ export class RaidService {
         { id: defender.id, kingdom: defender.kingdom },
         loot,
       );
+      if (!attacker.isSystemOpponent) {
+        const attackerLeague = resolveLeagueFromTrophies(attacker.trophies);
+        const leagueBonus = LEAGUE_CONFIGS[attackerLeague].winBonus;
+        await this.awardLeagueBonus(
+          tx,
+          battleId,
+          { id: attacker.id, kingdom: attacker.kingdom },
+          leagueBonus,
+        );
+      }
     }
     if (attackerDelta !== 0) await tx.player.update({ where: { id: attacker.id }, data: { trophies: { increment: attackerDelta } } });
     if (defenderDelta !== 0) await tx.player.update({ where: { id: defender.id }, data: { trophies: { increment: defenderDelta } } });
@@ -838,6 +857,38 @@ export class RaidService {
     }
   }
 
+  private async awardLeagueBonus(
+    tx: Tx,
+    battleId: string,
+    attacker: { id: string; kingdom: { id: string; resourceBalances: { id: string; resource: ResourceType; amount: bigint }[] } },
+    bonus: ResourceAmounts,
+  ): Promise<void> {
+    for (const [resKey, strVal] of Object.entries(bonus) as [ResourceType, string][]) {
+      const amount = BigInt(strVal);
+      if (amount <= 0n) continue;
+      const target = attacker.kingdom.resourceBalances.find((b) => b.resource === resKey);
+      if (!target) continue;
+      await tx.resourceBalance.update({
+        where: { id: target.id },
+        data: { amount: { increment: amount } },
+      });
+      await tx.economyTransaction.create({
+        data: {
+          playerId: attacker.id,
+          kingdomId: attacker.kingdom.id,
+          balanceId: target.id,
+          resourceType: resKey,
+          delta: amount,
+          balanceBefore: target.amount,
+          balanceAfter: target.amount + amount,
+          reason: EconomyTransactionReason.RAID_REWARD,
+          referenceId: battleId,
+        },
+      });
+      target.amount += amount;
+    }
+  }
+
   private async presentBattle(tx: Tx, battleId: string, requestingPlayerId: string): Promise<BattleReplayResponse> {
     const battle = await tx.battle.findUnique({
       where: { id: battleId },
@@ -856,12 +907,19 @@ export class RaidService {
       side: hero.side, slot: hero.slot as 1 | 2 | 3, key: hero.heroKey, level: hero.level, hp: hero.hp, atk: hero.atk,
       def: hero.def, power: hero.power, skillKey: hero.skillKey as BattleHeroState['skillKey'], portraitAsset: portrait(hero.heroKey),
     }));
+    const attackerLeague: TrophyLeague = resolveLeagueFromTrophies(battle.attackerTrophyBefore);
+    const leagueBonus = battle.result === 'ATTACKER_WIN' && battle.type !== PrismaBattleType.CAMPAIGN && !battle.attacker.isSystemOpponent
+      ? LEAGUE_CONFIGS[attackerLeague].winBonus
+      : undefined;
+
     const base = {
       id: battle.id, type: battle.type, seed: battle.seed, result: battle.result, winnerPlayerId: battle.winnerPlayerId,
       durationMs: battle.durationMs,
       attacker: { playerId: battle.attacker.id, displayName: battle.attacker.displayName ?? 'Warden', trophiesBefore: battle.attackerTrophyBefore, trophyDelta: battle.attackerTrophyDelta },
       defender: { playerId: battle.defender.id, displayName: battle.defender.displayName ?? 'Warden', trophiesBefore: battle.defenderTrophyBefore, trophyDelta: battle.defenderTrophyDelta },
       loot: battle.loot as RaidLootAmounts,
+      leagueBonus,
+      attackerLeague,
       balances: requestingPlayerId === battle.attackerPlayerId && battle.attacker.kingdom
         ? this.presentBalances(battle.attacker.kingdom.resourceBalances)
         : battle.defender.kingdom

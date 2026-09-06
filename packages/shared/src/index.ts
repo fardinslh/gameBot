@@ -387,6 +387,8 @@ export interface KingdomStateResponse {
     displayName: string;
     level: number;
     equippedProfileCrest: ProfileCrestKey;
+    trophies?: number;
+    league?: TrophyLeague;
   };
   kingdom: {
     id: string;
@@ -815,7 +817,7 @@ export interface NewPlayerProtectionState {
 }
 
 export interface RaidOverviewResponse {
-  player: { id: string; displayName: string; level: number; trophies: number };
+  player: { id: string; displayName: string; level: number; trophies: number; league?: TrophyLeague };
   balances: ResourceAmounts;
   army: ArmyPreview;
   newPlayerProtection: NewPlayerProtectionState;
@@ -853,6 +855,8 @@ export interface BattleReplayBase {
   defender: { playerId: string; displayName: string; trophiesBefore: number; trophyDelta: number };
   events: BattleEventState[];
   loot: RaidLootAmounts;
+  leagueBonus?: ResourceAmounts;
+  attackerLeague?: TrophyLeague;
   balances: ResourceAmounts;
   resolvedAt: string;
 }
@@ -1033,3 +1037,271 @@ export interface RaidErrorResponse {
   code: RaidErrorCode;
   message: string;
 }
+
+export type TrophyLeague = 'BRONZE' | 'SILVER' | 'GOLD' | 'CRYSTAL' | 'MASTER' | 'CHAMPION';
+
+export interface LeagueConfig {
+  id: TrophyLeague;
+  nameKey: string;
+  minTrophies: number;
+  maxTrophies: number | null;
+  winBonus: ResourceAmounts;
+  badgeColor: string;
+  badgeAccent: string;
+}
+
+export const LEAGUE_CONFIGS: Readonly<Record<TrophyLeague, LeagueConfig>> = {
+  BRONZE: {
+    id: 'BRONZE',
+    nameKey: 'leagues.bronze',
+    minTrophies: 0,
+    maxTrophies: 1199,
+    winBonus: { GOLD: '2500', FOOD: '1500', WOOD: '1500', STONE: '1000', GEMS: '0' },
+    badgeColor: '#cd7f32',
+    badgeAccent: '#8c501e',
+  },
+  SILVER: {
+    id: 'SILVER',
+    nameKey: 'leagues.silver',
+    minTrophies: 1200,
+    maxTrophies: 1499,
+    winBonus: { GOLD: '5000', FOOD: '3000', WOOD: '3000', STONE: '2000', GEMS: '2' },
+    badgeColor: '#c0c8d0',
+    badgeAccent: '#7e8a94',
+  },
+  GOLD: {
+    id: 'GOLD',
+    nameKey: 'leagues.gold',
+    minTrophies: 1500,
+    maxTrophies: 1799,
+    winBonus: { GOLD: '10000', FOOD: '6000', WOOD: '6000', STONE: '4000', GEMS: '5' },
+    badgeColor: '#e5b842',
+    badgeAccent: '#a27618',
+  },
+  CRYSTAL: {
+    id: 'CRYSTAL',
+    nameKey: 'leagues.crystal',
+    minTrophies: 1800,
+    maxTrophies: 2199,
+    winBonus: { GOLD: '18000', FOOD: '12000', WOOD: '12000', STONE: '8000', GEMS: '10' },
+    badgeColor: '#a855f7',
+    badgeAccent: '#6b21a8',
+  },
+  MASTER: {
+    id: 'MASTER',
+    nameKey: 'leagues.master',
+    minTrophies: 2200,
+    maxTrophies: 2599,
+    winBonus: { GOLD: '30000', FOOD: '20000', WOOD: '20000', STONE: '15000', GEMS: '20' },
+    badgeColor: '#ef4444',
+    badgeAccent: '#991b1b',
+  },
+  CHAMPION: {
+    id: 'CHAMPION',
+    nameKey: 'leagues.champion',
+    minTrophies: 2600,
+    maxTrophies: null,
+    winBonus: { GOLD: '50000', FOOD: '35000', WOOD: '35000', STONE: '25000', GEMS: '40' },
+    badgeColor: '#f59e0b',
+    badgeAccent: '#d97706',
+  },
+};
+
+export const LEAGUE_TIER_ORDER: readonly TrophyLeague[] = [
+  'BRONZE',
+  'SILVER',
+  'GOLD',
+  'CRYSTAL',
+  'MASTER',
+  'CHAMPION',
+];
+
+export function resolveLeagueFromTrophies(trophies: number): TrophyLeague {
+  if (trophies >= 2600) return 'CHAMPION';
+  if (trophies >= 2200) return 'MASTER';
+  if (trophies >= 1800) return 'CRYSTAL';
+  if (trophies >= 1500) return 'GOLD';
+  if (trophies >= 1200) return 'SILVER';
+  return 'BRONZE';
+}
+
+export function getNextLeagueThreshold(currentLeague: TrophyLeague): number | null {
+  const index = LEAGUE_TIER_ORDER.indexOf(currentLeague);
+  if (index === -1 || index === LEAGUE_TIER_ORDER.length - 1) return null;
+  const nextLeague = LEAGUE_TIER_ORDER[index + 1];
+  return LEAGUE_CONFIGS[nextLeague].minTrophies;
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  playerId: string;
+  displayName: string;
+  castleLevel: number;
+  trophies: number;
+  league: TrophyLeague;
+  profileCrest: ProfileCrestKey;
+  isCurrentPlayer: boolean;
+}
+
+export interface LeaderboardSeasonInfo {
+  seasonId: string;
+  name: string;
+  endsAt: string;
+  daysRemaining: number;
+}
+
+export interface LeaderboardResponse {
+  topPlayers: LeaderboardEntry[];
+  currentPlayer: LeaderboardEntry | null;
+  season: LeaderboardSeasonInfo;
+  serverTime: string;
+}
+
+// ==========================================
+// Guilds & Alliances Domain Types
+// ==========================================
+
+export const GUILD_JOIN_POLICIES = ['OPEN', 'INVITE_ONLY', 'CLOSED'] as const;
+export type GuildJoinPolicy = (typeof GUILD_JOIN_POLICIES)[number];
+
+export const GUILD_ROLES = ['LEADER', 'OFFICER', 'MEMBER'] as const;
+export type GuildRole = (typeof GUILD_ROLES)[number];
+
+export const GUILD_CREST_EMBLEMS = [
+  'shield',
+  'crown',
+  'swords',
+  'lion',
+  'eagle',
+  'dragon',
+  'tower',
+  'flame',
+] as const;
+export type GuildCrestEmblem = (typeof GUILD_CREST_EMBLEMS)[number];
+
+export interface GuildCrest {
+  emblem: GuildCrestEmblem;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+export interface GuildSummary {
+  id: string;
+  name: string;
+  tag: string;
+  description: string;
+  crest: GuildCrest;
+  joinPolicy: GuildJoinPolicy;
+  minTrophies: number;
+  memberCount: number;
+  maxMembers: number;
+  score: number;
+  leaderName: string;
+}
+
+export interface GuildMemberInfo {
+  playerId: string;
+  displayName: string;
+  role: GuildRole;
+  castleLevel: number;
+  trophies: number;
+  league: TrophyLeague;
+  profileCrest: ProfileCrestKey;
+  donationsGiven: number;
+  donationsReceived: number;
+  joinedAt: string;
+}
+
+export const GUILD_TROOP_REQUEST_STATUSES = ['OPEN', 'FULFILLED', 'EXPIRED'] as const;
+export type GuildTroopRequestStatus = (typeof GUILD_TROOP_REQUEST_STATUSES)[number];
+
+export interface GuildTroopRequestDonor {
+  playerId: string;
+  displayName: string;
+  amount: number;
+}
+
+export interface GuildTroopRequestItem {
+  id: string;
+  requesterId: string;
+  requesterName: string;
+  troopType: TroopType;
+  currentDonations: number;
+  maxDonations: number;
+  status: GuildTroopRequestStatus;
+  createdAt: string;
+  expiresAt: string;
+  donors: GuildTroopRequestDonor[];
+}
+
+export interface GuildDetailsResponse {
+  guild: GuildSummary;
+  members: GuildMemberInfo[];
+  requests: GuildTroopRequestItem[];
+  currentUserRole: GuildRole | null;
+  canRequestTroops: boolean;
+  nextRequestAvailableAt: string | null;
+}
+
+export interface GuildLeaderboardEntry {
+  rank: number;
+  guildId: string;
+  name: string;
+  tag: string;
+  crest: GuildCrest;
+  memberCount: number;
+  maxMembers: number;
+  minTrophies: number;
+  score: number;
+  isPlayerGuild: boolean;
+}
+
+export interface GuildLeaderboardResponse {
+  topGuilds: GuildLeaderboardEntry[];
+  playerGuild: GuildLeaderboardEntry | null;
+  serverTime: string;
+}
+
+export interface GuildOverviewResponse {
+  inGuild: boolean;
+  guild: GuildDetailsResponse | null;
+  suggestedGuilds: GuildSummary[];
+  creationCostGold: string;
+}
+
+export interface CreateGuildRequest {
+  name: string;
+  description?: string;
+  emblem: GuildCrestEmblem;
+  primaryColor: string;
+  secondaryColor: string;
+  joinPolicy: GuildJoinPolicy;
+  minTrophies: number;
+}
+
+export interface RequestTroopsPayload {
+  troopType: TroopType;
+}
+
+export interface DonateTroopsPayload {
+  requestId: string;
+  amount?: number;
+}
+
+export interface DonateTroopsResult {
+  requestId: string;
+  status: GuildTroopRequestStatus;
+  currentDonations: number;
+  maxDonations: number;
+  donatedTroopType: TroopType;
+  donatedAmount: number;
+  xpAwarded: number;
+  goldAwarded: string;
+}
+
+export const GUILD_CREATE_COST_GOLD = '2500';
+export const GUILD_MAX_MEMBERS = 50;
+export const GUILD_REQUEST_MAX_TROOPS = 10;
+export const GUILD_REQUEST_COOLDOWN_HOURS = 4;
+
+

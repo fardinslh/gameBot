@@ -289,22 +289,17 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
 
     const shell = host.closest<HTMLElement>('.kingdom-shell');
     const resourceHud = shell?.querySelector<HTMLElement>('.resource-hud');
-    const inboxButton = shell?.querySelector<HTMLElement>('.kingdom-inbox-button');
-    const collectControl = shell?.querySelector<HTMLElement>('.collect-control');
     const bottomNav = shell?.querySelector<HTMLElement>('.bottom-navigation');
     const shellTop = shell?.getBoundingClientRect().top ?? 0;
-    const hudSafeBottom = Math.max(
-      resourceHud?.getBoundingClientRect().bottom ?? shellTop + 100,
-      inboxButton?.getBoundingClientRect().bottom ?? shellTop + 100,
-      collectControl?.getBoundingClientRect().bottom ?? shellTop + 100,
-    ) - shellTop + 12;
+    const resourceHudBottom = (resourceHud?.getBoundingClientRect().bottom ?? shellTop + 120) - shellTop;
 
     const bottomNavHeight = bottomNav?.getBoundingClientRect().height ?? 54;
     const bottomUiClearance = bottomNavHeight + 96;
 
-    // Anchor the northern boundary of the terrain to the top of the viewport:
-    // cameraY cannot exceed 0, completely preventing any detachment, gaps, or repeating backdrops.
-    cameraMaxY = 0;
+    // Allow scrolling down just enough so northern buildings (Blacksmith, Workshop, Mine, Watchtower)
+    // clear the HUD overlays, while keeping the top terrain edge anchored behind the Resource HUD
+    // so the map never detaches, overscrolls, or scrolls away into empty space.
+    cameraMaxY = Math.round(Math.min(110, Math.max(64, resourceHudBottom - 10)));
     // Allow scrolling up so southern river and stone bridge clear the bottom UI
     cameraMinY = Math.min(cameraMaxY, height - bottomUiClearance - terrainHeightPx);
   };

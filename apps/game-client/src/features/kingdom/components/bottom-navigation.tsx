@@ -9,7 +9,7 @@ interface BottomNavigationProps {
   onComingSoon(section: string): void;
 }
 
-export type GameSection = 'kingdom' | 'raid' | 'heroes' | 'shop';
+export type GameSection = 'kingdom' | 'raid' | 'heroes' | 'shop' | 'guild';
 
 export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onComingSoon }: BottomNavigationProps) {
   const audio = useGameAudio();
@@ -17,7 +17,7 @@ export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onC
     { id: 'kingdom', label: t.kingdom, Icon: Castle, enabled: true },
     { id: 'raid', label: t.raid, Icon: Swords, enabled: true },
     { id: 'heroes', label: t.heroes, Icon: Shield, enabled: true },
-    { id: 'guild', label: t.guild, Icon: Users, enabled: false },
+    { id: 'guild', label: t.guild, Icon: Users, enabled: true },
     { id: 'shop', label: t.shop, Icon: ShoppingBag, enabled: true },
   ];
 

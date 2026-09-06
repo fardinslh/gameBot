@@ -246,6 +246,7 @@ button { color: inherit; }
   border-radius: 16px;
   box-shadow: 0 7px 22px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.09);
   backdrop-filter: blur(10px);
+  pointer-events: auto;
 }
 .player-avatar {
   display: grid;
@@ -1690,3 +1691,1834 @@ button { color: inherit; }
   .player-actions .api-status { display: none; }
   .experience-welcome { padding-inline: 14px; }
 }
+
+/* ==========================================================================
+   Leaderboard & League Engine Styles
+   ========================================================================== */
+
+.league-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 7px;
+  border-radius: 9px;
+  color: #fff;
+  background: linear-gradient(135deg, rgba(255,255,255,0.12), rgba(0,0,0,0.3));
+  border: 1px solid var(--league-color, #cd7f32);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
+  vertical-align: middle;
+}
+.league-badge--sm {
+  padding: 2px 5px;
+  font-size: var(--text-caption);
+  border-radius: 7px;
+}
+.league-badge--lg {
+  padding: 6px 12px;
+  font-size: var(--text-body-strong);
+  border-radius: 12px;
+}
+.league-badge__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--league-color, #e2b447);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5));
+}
+.league-badge__label {
+  font-size: inherit;
+  font-weight: 700;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  white-space: nowrap;
+}
+.league-badge--champion {
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4), inset 0 1px 0 rgba(255,255,255,0.4);
+}
+.league-badge--master {
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255,255,255,0.3);
+}
+
+/* Player HUD League Pill / Button */
+.player-trophy-btn {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  padding: 2px 8px;
+  background: linear-gradient(145deg, rgba(38,32,22,0.9), rgba(18,17,14,0.95));
+  border: 1px solid rgba(255,215,108,0.25);
+  border-radius: 12px;
+  color: var(--gold-bright);
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  pointer-events: auto;
+  transition: transform 140ms var(--ease), border-color 140ms var(--ease);
+}
+.player-trophy-btn:hover {
+  border-color: rgba(255,215,108,0.5);
+  transform: translateY(-1px);
+}
+.player-trophy-btn:active {
+  transform: scale(0.96);
+}
+
+/* Leaderboard Modal Backdrop & Panel */
+.leaderboard-backdrop {
+  position: absolute;
+  z-index: 100;
+  inset: 0 0 calc(54px + max(0px, env(safe-area-inset-bottom))) 0;
+  display: grid;
+  align-items: stretch;
+  padding: max(6px, env(safe-area-inset-top)) 6px 6px;
+  pointer-events: auto;
+  background: rgba(7,8,6,.78);
+  backdrop-filter: blur(6px);
+}
+
+.leaderboard-panel {
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  grid-template-rows: auto auto auto 1fr auto;
+  overflow: hidden;
+  color: var(--cream);
+  background: radial-gradient(circle at 50% -8%, rgba(226,180,71,.18), transparent 28%), linear-gradient(155deg, rgba(49,43,32,.99), rgba(17,19,16,.995));
+  border-radius: 21px;
+  box-shadow: 0 24px 70px rgba(0,0,0,.7), inset 0 0 0 1px rgba(255,215,108,.16);
+}
+
+.leaderboard-header {
+  display: grid;
+  min-height: 54px;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  box-shadow: inset 0 -1px rgba(255,215,108,.08);
+}
+.leaderboard-header__icon {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,.12);
+  border-radius: 11px;
+  box-shadow: inset 0 0 0 1px rgba(255,215,108,.12);
+}
+.leaderboard-header__copy h2 {
+  margin: 0;
+  color: var(--gold-bright);
+  font: 700 17px/1.05 var(--font-display);
+}
+.leaderboard-header__copy small {
+  display: block;
+  margin-top: 2px;
+  color: var(--cream-muted);
+  font-size: var(--text-caption);
+}
+.leaderboard-header__close {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  color: var(--cream-muted);
+  background: rgba(255,255,255,.05);
+  border: 0;
+  border-radius: 11px;
+  cursor: pointer;
+}
+.leaderboard-header__close:active {
+  transform: scale(0.96);
+}
+
+/* Season Info Banner */
+.leaderboard-season-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 6px 8px 4px;
+  padding: 7px 10px;
+  background: linear-gradient(135deg, rgba(106,75,29,.22), rgba(24,23,18,.72));
+  border-radius: 13px;
+  box-shadow: inset 0 0 0 1px rgba(255,215,108,.1);
+}
+.leaderboard-season-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.leaderboard-season-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 7px;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,0.15);
+  border-radius: 8px;
+  font-size: var(--text-caption);
+  font-weight: 700;
+}
+.leaderboard-season-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--cream-muted);
+  font-size: var(--text-caption);
+}
+.leaderboard-season-standing {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.leaderboard-season-standing small {
+  color: var(--cream-muted);
+  font-size: var(--text-caption);
+}
+.leaderboard-season-standing strong {
+  color: var(--gold-bright);
+  font-size: var(--text-body-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabs */
+.leaderboard-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 2px 8px 6px;
+}
+.leaderboard-tabs button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 4px 10px;
+  color: var(--cream-muted);
+  background: rgba(0,0,0,.2);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: var(--text-small);
+  font-weight: 700;
+  transition: all 160ms var(--ease);
+}
+.leaderboard-tabs button[aria-selected="true"] {
+  color: #2c1d0c;
+  background: linear-gradient(145deg, #edd071, #b97a31);
+  box-shadow: inset 0 1px rgba(255,255,255,.35);
+}
+
+/* Content Container */
+.leaderboard-content {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 4px 8px 8px;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+
+.leaderboard-loading,
+.leaderboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  gap: 12px;
+  color: var(--cream-muted);
+  text-align: center;
+}
+.leaderboard-spinner {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255,215,108,0.2);
+  border-top-color: var(--gold-bright);
+  border-radius: 50%;
+  animation: leaderboard-spin 0.8s linear infinite;
+}
+@keyframes leaderboard-spin {
+  to { transform: rotate(360deg); }
+}
+.leaderboard-error button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Top 3 Podium */
+.leaderboard-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: flex-end;
+  gap: 6px;
+  margin: 6px 0 12px;
+  padding: 10px 4px 0;
+}
+.leaderboard-podium-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  position: relative;
+}
+.leaderboard-podium-spot__crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+.leaderboard-podium-spot__crown {
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
+  margin-bottom: -4px;
+}
+.leaderboard-podium-spot__avatar {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, rgba(60,50,38,0.95), rgba(24,23,20,0.95));
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  color: var(--gold-bright);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+}
+.leaderboard-podium-spot--1 .leaderboard-podium-spot__avatar {
+  width: 52px;
+  height: 52px;
+  border-color: #ffd76c;
+  box-shadow: 0 0 14px rgba(255,215,108,0.4);
+}
+.leaderboard-podium-spot--2 .leaderboard-podium-spot__avatar {
+  border-color: #c0c8d0;
+}
+.leaderboard-podium-spot--3 .leaderboard-podium-spot__avatar {
+  border-color: #cd7f32;
+}
+.leaderboard-podium-spot__rank-pill {
+  position: absolute;
+  bottom: -6px;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: #1a150c;
+  background: #ffd76c;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+}
+.leaderboard-podium-spot--2 .leaderboard-podium-spot__rank-pill {
+  background: #c0c8d0;
+}
+.leaderboard-podium-spot--3 .leaderboard-podium-spot__rank-pill {
+  background: #cd7f32;
+  color: #fff;
+}
+.leaderboard-podium-spot__name {
+  margin-top: 9px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.leaderboard-podium-spot__name strong {
+  font-size: var(--text-caption);
+  color: var(--cream);
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leaderboard-podium-spot__name small {
+  font-size: 9px;
+  color: var(--cream-muted);
+}
+.leaderboard-podium-spot__score {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 3px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+.leaderboard-podium-spot__score b {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard-podium-pedestal {
+  width: 100%;
+  margin-top: 6px;
+  border-radius: 8px 8px 0 0;
+  background: linear-gradient(180deg, rgba(255,215,108,0.18), rgba(0,0,0,0.4));
+  box-shadow: inset 0 1px 0 rgba(255,215,108,0.25);
+}
+.leaderboard-podium-spot--1 .leaderboard-podium-pedestal {
+  height: 52px;
+  background: linear-gradient(180deg, rgba(255,215,108,0.3), rgba(0,0,0,0.45));
+}
+.leaderboard-podium-spot--2 .leaderboard-podium-pedestal {
+  height: 38px;
+  background: linear-gradient(180deg, rgba(192,200,208,0.22), rgba(0,0,0,0.45));
+}
+.leaderboard-podium-spot--3 .leaderboard-podium-pedestal {
+  height: 28px;
+  background: linear-gradient(180deg, rgba(205,127,50,0.22), rgba(0,0,0,0.45));
+}
+
+/* Ranks 4-50 List */
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.leaderboard-row {
+  display: grid;
+  grid-template-columns: 28px 28px 1fr auto auto;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 9px;
+  background: linear-gradient(145deg, rgba(46,40,31,.85), rgba(22,23,20,.85));
+  border: 1px solid rgba(255,255,255,.05);
+  border-radius: 11px;
+  transition: background 140ms var(--ease);
+}
+.leaderboard-row--current {
+  border-color: rgba(255,215,108,0.4);
+  background: linear-gradient(145deg, rgba(80,62,28,.88), rgba(30,26,20,.92));
+  box-shadow: 0 0 10px rgba(226,180,71,0.15);
+}
+.leaderboard-row__rank strong {
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard-row__avatar {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,0.1);
+}
+.leaderboard-row__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.leaderboard-row__name {
+  font-size: var(--text-caption);
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leaderboard-row__sub {
+  font-size: 9px;
+  color: var(--cream-muted);
+}
+.leaderboard-row__trophies {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--gold-bright);
+  font-size: var(--text-caption);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sticky User Bar */
+.leaderboard-user-bar {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  background: linear-gradient(135deg, rgba(45,36,22,.98), rgba(20,18,15,.98));
+  box-shadow: inset 0 1px 0 rgba(255,215,108,.25), 0 -6px 18px rgba(0,0,0,0.45);
+}
+.leaderboard-user-bar__rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2px 7px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,215,108,0.2);
+  border-radius: 8px;
+}
+.leaderboard-user-bar__rank small {
+  font-size: 8px;
+  color: var(--cream-muted);
+}
+.leaderboard-user-bar__rank strong {
+  font-size: var(--text-body-strong);
+  color: var(--gold-bright);
+}
+.leaderboard-user-bar__profile {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 2px;
+}
+.leaderboard-user-bar__identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.leaderboard-user-bar__identity strong {
+  font-size: var(--text-small);
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.leaderboard-user-bar__identity small {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+}
+.leaderboard-user-bar__league-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.leaderboard-user-bar__trophies {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+.leaderboard-user-bar__promote-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 7px;
+  background: rgba(226,180,71,0.12);
+  border: 1px solid rgba(255,215,108,0.2);
+  border-radius: 8px;
+  color: var(--gold-bright);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.leaderboard-user-bar__promote-hint--max {
+  background: rgba(245,158,11,0.18);
+  border-color: rgba(245,158,11,0.4);
+}
+
+/* Leagues & Perks Tab */
+.leaderboard-leagues-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.leaderboard-league-card {
+  padding: 9px 10px;
+  background: linear-gradient(145deg, rgba(46,40,31,.9), rgba(22,23,20,.92));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-left: 3px solid var(--league-color, #cd7f32);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+[dir="rtl"] .leaderboard-league-card {
+  border-left: 1px solid rgba(255,255,255,0.08);
+  border-right: 3px solid var(--league-color, #cd7f32);
+}
+.leaderboard-league-card--active {
+  background: linear-gradient(145deg, rgba(74,58,30,.92), rgba(28,26,20,.95));
+  border-color: rgba(255,215,108,0.4);
+  box-shadow: 0 0 14px rgba(226,180,71,0.16);
+}
+.leaderboard-league-card__header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.leaderboard-league-card__title {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.leaderboard-league-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.leaderboard-league-card__name-row h3 {
+  margin: 0;
+  font-size: var(--text-small);
+  font-weight: 800;
+  color: var(--cream);
+}
+.leaderboard-league-card__current-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: #1a150c;
+  background: #ffd76c;
+}
+.leaderboard-league-card__req {
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+}
+.leaderboard-league-card__rewards {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.leaderboard-league-card__reward-header {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+.leaderboard-reward-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.leaderboard-reward-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  font-size: var(--text-caption);
+}
+.leaderboard-reward-pill strong {
+  color: var(--cream);
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard-reward-pill small {
+  color: var(--cream-muted);
+}
+.leaderboard-reward-pill--premium {
+  background: rgba(168,85,247,0.15);
+  border-color: rgba(168,85,247,0.35);
+  color: #c084fc;
+}
+.leaderboard-reward-pill--premium strong {
+  color: #e9d5ff;
+}
+
+/* Post-battle League Victory Bonus Banner */
+.raid-league-bonus {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0;
+  padding: 8px 10px;
+  background: linear-gradient(135deg, rgba(88,68,26,0.35), rgba(28,25,18,0.7));
+  border: 1px solid rgba(255,215,108,0.25);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.raid-league-bonus__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.raid-league-bonus__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--text-small);
+  font-weight: 800;
+  color: var(--gold-bright);
+}
+
+/* ==========================================================================
+   GUILDS & ALLIANCES STYLES
+   ========================================================================== */
+
+.guild-viewport {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+  background: radial-gradient(circle at 50% 0%, rgba(226,180,71,0.12), transparent 40%),
+              linear-gradient(180deg, #141311 0%, #0c0c0a 100%);
+  color: var(--cream);
+}
+
+.guild-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  max-width: 580px;
+  margin: 0 auto;
+  padding: max(8px, env(safe-area-inset-top)) 8px calc(64px + max(8px, env(safe-area-inset-bottom)));
+}
+
+.guild-titlebar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 10px;
+  border-bottom: 1px solid rgba(255,215,108,0.12);
+}
+.guild-titlebar__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guild-titlebar__brand > span {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,0.12);
+  border-radius: 10px;
+}
+.guild-titlebar__brand h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  color: var(--gold-bright);
+}
+.guild-titlebar__brand p {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+}
+
+.guild-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 48px 16px;
+  color: var(--cream-muted);
+}
+
+/* Guild Crest Badge */
+.guild-crest {
+  display: grid;
+  place-items: center;
+  color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  flex-shrink: 0;
+}
+.guild-crest--sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+}
+.guild-crest--md {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.guild-crest--lg {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  border-width: 2px;
+}
+
+/* Unjoined View */
+.guild-unjoined-view {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+}
+.guild-unjoined-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 14px;
+  background: linear-gradient(145deg, rgba(46,40,31,0.85), rgba(20,20,18,0.92));
+  border: 1px solid rgba(255,215,108,0.2);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.guild-unjoined-hero__icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,0.15);
+  border-radius: 16px;
+  margin-bottom: 8px;
+}
+.guild-unjoined-hero h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-section);
+  color: var(--gold-bright);
+}
+.guild-unjoined-hero p {
+  margin: 4px 0 12px;
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+  max-width: 380px;
+}
+.guild-create-trigger {
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: var(--text-caption);
+  font-weight: 800;
+}
+
+/* Tabs */
+.guild-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0,0,0,0.3);
+  padding: 4px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.guild-tab-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--cream-muted);
+  font-size: var(--text-caption);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 140ms var(--ease), color 140ms var(--ease);
+}
+.guild-tab-btn--active {
+  background: linear-gradient(145deg, rgba(226,180,71,0.25), rgba(189,121,34,0.35));
+  color: var(--gold-bright);
+  box-shadow: inset 0 0 0 1px rgba(255,215,108,0.3);
+}
+.guild-tab-badge {
+  padding: 1px 5px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+/* Browse Content */
+.guild-browse-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guild-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  min-height: 38px;
+  background: rgba(26,24,20,0.85);
+  border: 1px solid rgba(255,215,108,0.18);
+  border-radius: 10px;
+  color: var(--cream-muted);
+}
+.guild-search-bar input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--cream);
+  font-size: var(--text-caption);
+  outline: none;
+}
+.guild-cards-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.guild-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  background: linear-gradient(145deg, rgba(38,34,28,0.88), rgba(20,20,18,0.92));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+.guild-card__header {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.guild-card__title {
+  flex: 1;
+  min-width: 0;
+}
+.guild-card__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.guild-card__name-row strong {
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+.guild-tag {
+  font-size: 10px;
+  color: var(--cream-muted);
+  background: rgba(255,255,255,0.06);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.guild-card__desc {
+  display: block;
+  font-size: 10px;
+  color: var(--cream-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.guild-card__stats {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.guild-card__stats span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.guild-card__join-btn {
+  align-self: flex-end;
+  min-height: 28px;
+  padding: 0 14px;
+  background: linear-gradient(145deg, #f0d477, #bd8137);
+  color: #271b0b;
+  border: 0;
+  border-radius: 8px;
+  font-size: var(--text-caption);
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 120ms var(--ease);
+}
+.guild-card__join-btn:active {
+  transform: scale(0.96);
+}
+.guild-empty-browse {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: var(--cream-muted);
+}
+
+/* Joined Guild Dashboard */
+.guild-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 8px;
+}
+.guild-banner {
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(46,40,31,0.92), rgba(18,18,16,0.96));
+  border: 1px solid rgba(255,215,108,0.22);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.guild-banner__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.guild-banner__info {
+  flex: 1;
+  min-width: 0;
+}
+.guild-banner__name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.guild-banner__name-row h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--gold-bright);
+}
+.guild-banner__desc {
+  margin: 2px 0 0;
+  font-size: var(--text-caption);
+  color: var(--cream-muted);
+}
+.guild-leave-btn {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 8px;
+  color: #f87171;
+  cursor: pointer;
+}
+.guild-metrics-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.guild-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.guild-metric small {
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-metric strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+
+/* Roster View */
+.guild-roster-view {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.guild-roster-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.guild-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guild-member-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(145deg, rgba(38,34,28,0.85), rgba(20,20,18,0.9));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.guild-member-row--self {
+  border-color: rgba(255,215,108,0.35);
+  background: linear-gradient(145deg, rgba(64,52,32,0.85), rgba(28,26,20,0.9));
+}
+.guild-member-avatar {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.3);
+}
+.guild-member-avatar--leader {
+  color: #f59e0b;
+  background: rgba(245,158,11,0.15);
+}
+.guild-member-avatar--officer {
+  color: #3b82f6;
+  background: rgba(59,130,246,0.15);
+}
+.guild-member-avatar--member {
+  color: var(--cream-muted);
+}
+.guild-member-info {
+  flex: 1;
+  min-width: 0;
+}
+.guild-member-name-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.guild-member-name-row strong {
+  font-size: var(--text-caption);
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.guild-role-tag {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+.guild-role-tag--leader {
+  background: rgba(245,158,11,0.2);
+  color: #fbbf24;
+}
+.guild-role-tag--officer {
+  background: rgba(59,130,246,0.2);
+  color: #93c5fd;
+}
+.guild-role-tag--member {
+  background: rgba(255,255,255,0.06);
+  color: var(--cream-muted);
+}
+.guild-member-trophies {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--gold-bright);
+}
+.guild-member-donations {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 10px;
+}
+.guild-donations-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: #4ade80;
+}
+.guild-donations-stat--received {
+  color: var(--cream-muted);
+}
+.guild-member-more-btn {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 0;
+  color: var(--cream-muted);
+  cursor: pointer;
+}
+.guild-member-menu {
+  position: absolute;
+  top: 100%;
+  right: 6px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 4px;
+  background: #1c1b18;
+  border: 1px solid rgba(255,215,108,0.25);
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+}
+[dir="rtl"] .guild-member-menu {
+  right: auto;
+  left: 6px;
+}
+.guild-member-menu button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  background: transparent;
+  border: 0;
+  color: var(--cream);
+  font-size: 11px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 4px;
+}
+.guild-member-menu button:hover {
+  background: rgba(255,255,255,0.08);
+}
+.guild-menu-btn--danger {
+  color: #f87171 !important;
+}
+
+/* Requests / Reinforcements View */
+.guild-requests-view {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.guild-request-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(145deg, rgba(46,40,31,0.85), rgba(20,20,18,0.92));
+  border: 1px solid rgba(255,215,108,0.2);
+  border-radius: 12px;
+}
+.guild-request-banner__copy {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guild-request-banner__icon {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: var(--gold-bright);
+  background: rgba(226,180,71,0.12);
+  border-radius: 8px;
+}
+.guild-request-banner__copy strong {
+  display: block;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+.guild-request-banner__copy small {
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-request-btn {
+  min-height: 32px;
+  padding: 0 12px;
+  font-size: 11px;
+}
+.guild-cooldown-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 6px;
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.guild-picker-modal {
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(38,34,28,0.95), rgba(18,18,16,0.98));
+  border: 1px solid rgba(255,215,108,0.3);
+  border-radius: 12px;
+}
+.guild-picker-content h3 {
+  margin: 0 0 8px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+  text-align: center;
+}
+.guild-troop-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+.guild-troop-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 10px 6px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--cream);
+  cursor: pointer;
+}
+.guild-troop-btn:hover {
+  border-color: rgba(255,215,108,0.4);
+}
+.guild-picker-cancel {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px;
+  background: transparent;
+  border: 0;
+  color: var(--cream-muted);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* Request Cards */
+.guild-requests-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guild-empty-requests {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 32px 16px;
+  color: var(--cream-muted);
+  text-align: center;
+}
+.guild-request-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: linear-gradient(145deg, rgba(38,34,28,0.85), rgba(20,20,18,0.9));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+}
+.guild-request-card--self {
+  border-color: rgba(255,215,108,0.3);
+}
+.guild-request-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.guild-request-card__user strong {
+  font-size: var(--text-caption);
+  color: var(--cream);
+}
+.guild-self-tag {
+  margin-left: 6px;
+  padding: 1px 4px;
+  background: rgba(226,180,71,0.2);
+  color: var(--gold-bright);
+  font-size: 9px;
+  border-radius: 4px;
+}
+[dir="rtl"] .guild-self-tag {
+  margin-left: 0;
+  margin-right: 6px;
+}
+.guild-request-card__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-request-card__body {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.guild-request-card__troop {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guild-troop-icon {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  background: rgba(226,180,71,0.15);
+  border-radius: 8px;
+  color: var(--gold-bright);
+}
+.guild-request-card__troop h4 {
+  margin: 0;
+  font-size: var(--text-caption);
+  color: var(--cream);
+}
+.guild-request-card__troop small {
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.guild-donate-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 5px 12px;
+  background: linear-gradient(145deg, #22c55e, #15803d);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+.guild-donate-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.guild-donate-reward-preview {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 9px;
+  opacity: 0.9;
+}
+.guild-own-request-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255,215,108,0.12);
+  border-radius: 6px;
+  font-size: 10px;
+  color: var(--gold-bright);
+}
+.guild-request-progress {
+  width: 100%;
+  height: 5px;
+  background: rgba(0,0,0,0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.guild-request-progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #4ade80);
+  border-radius: inherit;
+}
+.guild-request-donors {
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-request-donors small {
+  margin-right: 4px;
+}
+[dir="rtl"] .guild-request-donors small {
+  margin-right: 0;
+  margin-left: 4px;
+}
+
+/* Guild Leaderboard */
+.guild-leaderboard-view {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.guild-podium {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 10px 6px 0;
+  min-height: 150px;
+}
+.guild-podium-spot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 3px;
+}
+.guild-podium-crown {
+  color: #ffd76c;
+  filter: drop-shadow(0 0 8px rgba(255,215,108,0.6));
+}
+.guild-podium-spot__rank {
+  font-size: 10px;
+  font-weight: 900;
+  padding: 1px 6px;
+  border-radius: 6px;
+  color: #1a150c;
+  background: #ffd76c;
+}
+.guild-podium-spot--2 .guild-podium-spot__rank {
+  background: #c0c8d0;
+}
+.guild-podium-spot--3 .guild-podium-spot__rank {
+  background: #cd7f32;
+  color: #fff;
+}
+.guild-podium-spot strong {
+  font-size: 11px;
+  color: var(--cream);
+  max-width: 85px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.guild-podium-spot span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  color: var(--gold-bright);
+}
+.guild-podium-pedestal {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, rgba(255,215,108,0.18), rgba(0,0,0,0.4));
+}
+.guild-podium-spot--1 .guild-podium-pedestal { height: 42px; background: linear-gradient(180deg, rgba(255,215,108,0.3), rgba(0,0,0,0.45)); }
+.guild-podium-spot--2 .guild-podium-pedestal { height: 32px; background: linear-gradient(180deg, rgba(192,200,208,0.22), rgba(0,0,0,0.45)); }
+.guild-podium-spot--3 .guild-podium-pedestal { height: 22px; background: linear-gradient(180deg, rgba(205,127,50,0.22), rgba(0,0,0,0.45)); }
+
+.guild-leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guild-leaderboard-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: linear-gradient(145deg, rgba(38,34,28,0.85), rgba(20,20,18,0.9));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px;
+}
+.guild-leaderboard-row--self {
+  border-color: rgba(255,215,108,0.4);
+  background: linear-gradient(145deg, rgba(64,52,32,0.85), rgba(28,26,20,0.9));
+}
+.guild-leaderboard-row__rank strong {
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+.guild-leaderboard-row__info {
+  flex: 1;
+  min-width: 0;
+}
+.guild-leaderboard-row__info strong {
+  display: block;
+  font-size: var(--text-caption);
+  color: var(--cream);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.guild-leaderboard-row__info small {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-leaderboard-row__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+
+.guild-leaderboard-user-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: linear-gradient(145deg, rgba(74,58,30,0.95), rgba(28,26,20,0.98));
+  border: 1px solid rgba(255,215,108,0.45);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  margin-top: 4px;
+}
+.guild-leaderboard-user-bar__rank {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 36px;
+}
+.guild-leaderboard-user-bar__rank small {
+  font-size: 8px;
+  color: var(--cream-muted);
+}
+.guild-leaderboard-user-bar__rank strong {
+  font-size: 13px;
+  color: var(--gold-bright);
+}
+.guild-leaderboard-user-bar__info {
+  flex: 1;
+  min-width: 0;
+}
+.guild-leaderboard-user-bar__info strong {
+  display: block;
+  font-size: var(--text-caption);
+  color: var(--cream);
+}
+.guild-leaderboard-user-bar__info small {
+  font-size: 10px;
+  color: var(--cream-muted);
+}
+.guild-leaderboard-user-bar__score {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: var(--text-caption);
+  color: var(--gold-bright);
+}
+
+/* Create Guild Modal */
+.guild-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(7,8,6,0.8);
+  backdrop-filter: blur(6px);
+}
+.guild-create-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 440px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: linear-gradient(155deg, rgba(46,40,31,0.98), rgba(18,19,16,0.99));
+  border: 1px solid rgba(255,215,108,0.3);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+}
+.guild-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255,215,108,0.12);
+}
+.guild-modal-header__title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold-bright);
+}
+.guild-modal-header__title h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 16px;
+}
+.guild-modal-close {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255,255,255,0.06);
+  border: 0;
+  border-radius: 8px;
+  color: var(--cream-muted);
+  cursor: pointer;
+}
+.guild-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+}
+.guild-create-crest-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  background: rgba(0,0,0,0.25);
+  border-radius: 12px;
+}
+.guild-create-crest-picker {
+  flex: 1;
+}
+.guild-create-crest-picker label,
+.guild-color-presets label,
+.guild-form-field label {
+  display: block;
+  font-size: 11px;
+  color: var(--cream-muted);
+  margin-bottom: 4px;
+}
+.guild-emblem-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.guild-emblem-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 2px;
+  cursor: pointer;
+}
+.guild-emblem-btn--active {
+  border-color: #ffd76c;
+  background: rgba(255,215,108,0.2);
+}
+.guild-color-swatches {
+  display: flex;
+  gap: 6px;
+}
+.guild-swatch-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  cursor: pointer;
+}
+.guild-swatch-btn--active {
+  outline: 2px solid #ffd76c;
+  outline-offset: 1px;
+}
+.guild-form-field input,
+.guild-form-field select {
+  width: 100%;
+  min-height: 36px;
+  padding: 0 10px;
+  background: rgba(20,20,18,0.9);
+  border: 1px solid rgba(255,215,108,0.2);
+  border-radius: 8px;
+  color: var(--cream);
+  font-size: var(--text-caption);
+  outline: none;
+}
+.guild-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.guild-policy-selector {
+  display: flex;
+  gap: 4px;
+}
+.guild-policy-btn {
+  flex: 1;
+  min-height: 34px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  color: var(--cream-muted);
+  font-size: 10px;
+  cursor: pointer;
+}
+.guild-policy-btn--active {
+  background: rgba(226,180,71,0.2);
+  border-color: rgba(255,215,108,0.4);
+  color: var(--gold-bright);
+}
+.guild-form-error {
+  padding: 6px 10px;
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  border-radius: 6px;
+  color: #f87171;
+  font-size: 11px;
+}
+.guild-create-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.guild-create-cost {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--gold-bright);
+}
+
+/* Guild Generic Buttons & Toasts */
+.guild-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 120ms var(--ease);
+}
+.guild-btn--primary {
+  background: linear-gradient(145deg, #f0d477, #bd8137);
+  color: #271b0b;
+}
+.guild-btn:active {
+  transform: scale(0.96);
+}
+.guild-reward-toast {
+  position: fixed;
+  bottom: calc(64px + max(8px, env(safe-area-inset-bottom)));
+  left: 12px;
+  right: 12px;
+  max-width: 440px;
+  margin: 0 auto;
+  z-index: 90;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: linear-gradient(145deg, rgba(34,197,94,0.95), rgba(21,128,61,0.98));
+  border: 1px solid rgba(134,239,172,0.4);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  color: #fff;
+}
+.guild-reward-toast__content strong {
+  display: block;
+  font-size: 12px;
+}
+.guild-reward-toast__pills {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  margin-top: 2px;
+}
+.guild-reward-toast__pills span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+.guild-reward-toast button {
+  padding: 4px 10px;
+  background: rgba(0,0,0,0.25);
+  border: 0;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+}
+.guild-error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: rgba(239,68,68,0.18);
+  border: 1px solid rgba(239,68,68,0.4);
+  border-radius: 10px;
+  color: #fca5a5;
+  font-size: 11px;
+}
+.guild-error-banner button {
+  background: transparent;
+  border: 0;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 11px;
+}
+
+

@@ -17,6 +17,8 @@ import { RetentionModule } from './retention/retention.module';
 import { ArmyModule } from './army/army.module';
 import { CampaignModule } from './campaign/campaign.module';
 import { ShopModule } from './shop/shop.module';
+import { LeaderboardModule } from './leaderboard/leaderboard.module';
+import { GuildModule } from './guild/guild.module';
 
 @Module({
   imports: [
@@ -41,6 +43,8 @@ import { ShopModule } from './shop/shop.module';
     ArmyModule,
     CampaignModule,
     ShopModule,
+    LeaderboardModule,
+    GuildModule,
   ],
 })
 export class AppModule {}

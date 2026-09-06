@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Coins, Crown, History, Shield, Swords, Trophy } from 'lucide-react';
+import { Coins, Crown, Gift, History, Shield, Sparkles, Swords, Trophy } from 'lucide-react';
 import type { Dictionary, Locale } from '@/i18n/config';
 import type { GameSection } from '@/features/kingdom/components/bottom-navigation';
 import { BottomNavigation } from '@/features/kingdom/components/bottom-navigation';
@@ -25,6 +25,8 @@ import { HeraldryMark } from '@/features/kingdom/components/kingdom-identity-car
 import type { BattleReplayResponse } from '@crown-and-coin/shared';
 import { RaidDeparture } from './raid-departure';
 import { deriveKingdomRaidReturn, type KingdomRaidReturnPresentation } from '../domain/raid-journey-presentation';
+import { LeaderboardModal } from '@/features/leaderboard/components/leaderboard-modal';
+import { LeagueBadge } from '@/features/leaderboard/components/league-badge';
 
 interface RaidPageProps { dictionary: Dictionary; locale: Locale; initialView?: RaidView; onNavigate(section: GameSection): void; onRaidReturn(presentation: KingdomRaidReturnPresentation): void; }
 const EMPTY = { GOLD: '0', FOOD: '0', WOOD: '0', STONE: '0', GEMS: '0' } as const;
@@ -38,6 +40,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
   const { playSfx, setMusicContext } = useGameAudio();
   const [battleFinished, setBattleFinished] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const activeBattle = combatMode === 'campaign' ? campaign.result?.battle ?? null : raid.battle;
   useEffect(() => { if (activeBattle) setBattleFinished(false); }, [activeBattle?.id]);
   useEffect(() => {
@@ -98,6 +101,35 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
                 {raid.battle.result === 'ATTACKER_WIN' && engagement.state?.kingdomIdentity ? <div className="raid-realm-victory" data-kingdom-identity><HeraldryMark heraldry={engagement.state.kingdomIdentity.heraldry} /><span><strong><BidiTemplate template={t.engagement.victoryForRealm} values={{ kingdom: { direction: 'auto', value: engagement.state.kingdomIdentity.name } }} /></strong><small>{t.kingdomIdentity.titles[engagement.state.kingdomIdentity.rulerTitle]}</small></span></div> : null}
                 <p><Trophy size={15} /> <BidiValue direction="ltr">{raid.battle.attacker.trophiesBefore} → {raid.battle.attacker.trophiesBefore + raid.battle.attacker.trophyDelta} ({raid.battle.attacker.trophyDelta > 0 ? '+' : ''}{raid.battle.attacker.trophyDelta})</BidiValue> {t.raidUi.trophies}</p>
                 <div className="raid-loot-grid">{Object.entries(raid.battle.loot).map(([resource, amount]) => <span key={resource}><b><BidiValue direction="ltr">{formatAmount(amount)}</BidiValue></b><small>{t.resourceShort[resource as keyof typeof t.resourceShort]}</small></span>)}</div>
+                {raid.battle.leagueBonus && raid.battle.result === 'ATTACKER_WIN' ? (
+                  <div className="raid-league-bonus">
+                    <div className="raid-league-bonus__header">
+                      <span className="raid-league-bonus__title">
+                        <Gift size={15} /> {t.raidUi.leagueVictoryBonus}
+                      </span>
+                      {raid.battle.attackerLeague ? (
+                        <LeagueBadge league={raid.battle.attackerLeague} size="sm" dictionary={t} showName />
+                      ) : null}
+                    </div>
+                    <div className="leaderboard-reward-grid">
+                      {Object.entries(raid.battle.leagueBonus).map(([resource, amount]) => {
+                        if (Number(amount) <= 0) return null;
+                        const isGems = resource === 'GEMS';
+                        return (
+                          <span
+                            key={resource}
+                            className={`leaderboard-reward-pill ${isGems ? 'leaderboard-reward-pill--premium' : ''}`}
+                            data-resource={resource}
+                          >
+                            {isGems ? <Sparkles size={11} /> : null}
+                            <strong>+{formatAmount(amount)}</strong>
+                            <small>{isGems ? t.resourceGems : t.resourceShort[resource as keyof typeof t.resourceShort]}</small>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
                 {engagement.state ? <RaidEngagementSummary dictionary={t} engagement={engagement.state} /> : null}
                 {raid.battle.rulesVersion === 2 ? <div className="raid-army-result">{raid.battle.armies.attacker.map((squad) => {
                   const last = [...raid.battle!.events].reverse().find((event) => event.targetSide === 'ATTACKER' && event.targetSlot === squad.slot && event.remainingUnits !== null);
@@ -117,7 +149,7 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
             ) : (
               <>
                 <CombatModeTabs active={combatMode} dictionary={t} onChange={(mode) => { setCombatMode(mode); if (mode === 'campaign') experience.requestAdvisorTip('CAMPAIGN_INTRO'); }} />
-                <header className="raid-titlebar"><span><Swords size={19} /></span><div><h1>{t.raidUi.title}</h1><p>{t.raidUi.subtitle}</p></div><button className="raid-titlebar__log" onClick={() => void raid.openInbox()} type="button"><History size={15} /><span>{t.inboxUi.title}</span></button><b><Trophy size={14} /> <BidiValue direction="ltr">{state?.player.trophies ?? 1000}</BidiValue></b></header>
+                <header className="raid-titlebar"><span><Swords size={19} /></span><div><h1>{t.raidUi.title}</h1><p>{t.raidUi.subtitle}</p></div><button className="raid-titlebar__log" onClick={() => void raid.openInbox()} type="button"><History size={15} /><span>{t.inboxUi.title}</span></button><button className="player-trophy-btn" onClick={() => { playSfx('panel_open'); setLeaderboardOpen(true); }} type="button" aria-label={t.leaderboard.title}><Trophy size={14} /> <BidiValue direction="ltr">{state?.player.trophies ?? 1000}</BidiValue></button></header>
                 {state?.newPlayerProtection.active ? (
                   <div className="raid-shield-status" role="status">
                     <Shield size={17} />
@@ -147,7 +179,14 @@ export function RaidPage({ dictionary: t, locale, initialView = 'overview', onNa
           {tutorialRaid && raid.battle && !battleFinished ? <AdvisorCoach title={t.experience.battleTitle} body={t.experience.advisor.battle} durationMs={3500} /> : null}
           {tutorialRaid && raid.battle && battleFinished ? <AdvisorCoach title={t.experience.resultTitle} body={t.experience.advisor.result} target="result-return" /> : null}
           {tutorialRaid && !raid.battle && !raid.departure && raid.offer ? <AdvisorCoach title={t.experience.attackTitle} body={t.experience.advisor.attack} target="attack" /> : null}
-          {tutorialRaid && !raid.battle && !raid.departure && !raid.offer ? <AdvisorCoach title={t.experience.findTitle} body={t.experience.advisor.findEnemy} target="find-enemy" /> : null}
+          <LeaderboardModal
+            isOpen={leaderboardOpen}
+            onClose={() => setLeaderboardOpen(false)}
+            dictionary={t}
+            locale={locale}
+            currentTrophies={state?.player.trophies ?? 1000}
+            currentLeague={state?.player.league}
+          />
           <BottomNavigation activeSection="raid" dictionary={t} onComingSoon={setComingSoon} onNavigate={onNavigate} />
           <div className={comingSoon ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">{comingSoon ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoon }} /> : ''}</div>
           <div className={(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? 'hero-error hero-error--visible' : 'hero-error'} role="alert">{combatMode === 'campaign' && campaign.errorCode ? (t.campaign.errors[campaign.errorCode as keyof typeof t.campaign.errors] ?? t.campaign.errors.SERVER_ERROR) : raid.errorCode ? (t.raidErrors[raid.errorCode as keyof typeof t.raidErrors] ?? t.raidErrors.SERVER_ERROR) : ''}{(combatMode === 'campaign' ? campaign.errorCode : raid.errorCode) ? <button onClick={() => void (combatMode === 'campaign' ? campaign.refresh() : raid.refresh())} type="button">{t.retry}</button> : null}</div>

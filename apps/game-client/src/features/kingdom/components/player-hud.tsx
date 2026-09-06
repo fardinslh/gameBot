@@ -1,8 +1,8 @@
-import { Crown, Gem } from 'lucide-react';
+import { Crown, Gem, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { ApiStatus } from '@/components/api-status';
-import type { KingdomProgressionState, ProfileCrestKey } from '@crown-and-coin/shared';
+import type { KingdomProgressionState, ProfileCrestKey, TrophyLeague } from '@crown-and-coin/shared';
 import { ExperienceControls } from '@/features/experience/player-experience-provider';
 import { BidiValue } from '@/i18n/bidi';
 import { formatAmount } from '../domain/collection-presentation';
@@ -16,9 +16,12 @@ interface PlayerHudProps {
   progression?: KingdomProgressionState;
   profileCrest?: ProfileCrestKey;
   section?: 'heroes' | 'raid';
+  trophies?: number;
+  league?: TrophyLeague;
+  onOpenLeaderboard?(): void;
 }
 
-export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section }: PlayerHudProps) {
+export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section, trophies, league, onOpenLeaderboard }: PlayerHudProps) {
   const sectionQuery = section ? `&section=${section}` : '';
   const displayedLevel = progression?.level ?? playerLevel;
   const xpProgress = progression?.xpRequiredForNextLevel
@@ -45,6 +48,17 @@ export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, play
           <small>{t.playerLevel}</small><strong><BidiValue direction="ltr">{displayedLevel}</BidiValue></strong>
           {progression ? <i aria-hidden="true"><b style={{ width: `${xpProgress}%` }} /></i> : null}
         </span>
+        {onOpenLeaderboard ? (
+          <button
+            aria-label={`${t.leaderboard.title}: ${trophies ?? 1000} ${t.leaderboard.trophies}`}
+            className="player-trophy-btn"
+            onClick={onOpenLeaderboard}
+            type="button"
+          >
+            <Trophy aria-hidden="true" size={13} />
+            <BidiValue direction="ltr">{trophies ?? 1000}</BidiValue>
+          </button>
+        ) : null}
       </div>
 
       <div className="player-actions">

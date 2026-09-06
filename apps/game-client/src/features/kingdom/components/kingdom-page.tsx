@@ -31,6 +31,7 @@ import { RoyalDecreeSheet } from '@/features/engagement/components/royal-decree-
 import { UpgradeCelebration } from '@/features/engagement/components/upgrade-celebration';
 import { fetchArmy } from '@/features/army/api/army-api';
 import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
+import { LeaderboardModal } from '@/features/leaderboard/components/leaderboard-modal';
 
 interface KingdomPageProps {
   dictionary: Dictionary;
@@ -55,6 +56,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
   const [progressOpen, setProgressOpen] = useState(false);
   const [retentionOpen, setRetentionOpen] = useState(false);
   const [decreeOpen, setDecreeOpen] = useState(false);
+  const [leaderboardOpen, setLeaderboardOpen] = useState(false);
   const [kingdomArmy, setKingdomArmy] = useState<ArmyResponse | null>(null);
   const retentionEnabled = experience.onboarding?.status === 'COMPLETED' || experience.onboarding?.status === 'SKIPPED';
   const refreshKingdom = useCallback(async () => { await economy.refresh(); }, [economy.refresh]);
@@ -158,6 +160,12 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
             playerName={economy.state?.player.displayName ?? t.playerTitle}
             progression={economy.state?.progression}
             profileCrest={economy.state?.player.equippedProfileCrest}
+            trophies={economy.state?.player.trophies}
+            league={economy.state?.player.league}
+            onOpenLeaderboard={() => {
+              audio.playSfx('panel_open');
+              setLeaderboardOpen(true);
+            }}
           />
           <ResourceHud balances={balances} capacities={economy.state?.storageCapacities} dictionary={t} displayedBalances={displayedBalances} gains={economy.lastGains} productionRates={productionRates} />
           <button className="kingdom-inbox-button" aria-label={`${t.inboxUi.title}: ${inboxCount}`} onClick={onOpenInbox} type="button">
@@ -231,6 +239,14 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
             ? <AdvisorCoach title={t.experience.upgradeTitle} body={t.experience.advisor.upgrade} target="upgrade" /> : null}
           {experience.onboarding?.status === 'IN_PROGRESS' && experience.onboarding.currentStep === 'RAID'
             ? <AdvisorCoach title={t.experience.raidTitle} body={t.experience.advisor.raid} target="raid-tab" /> : null}
+          <LeaderboardModal
+            isOpen={leaderboardOpen}
+            onClose={() => setLeaderboardOpen(false)}
+            dictionary={t}
+            locale={locale}
+            currentTrophies={economy.state?.player.trophies ?? 1000}
+            currentLeague={economy.state?.player.league}
+          />
           <BottomNavigation activeSection="kingdom" dictionary={t} onComingSoon={setComingSoonSection} onNavigate={onNavigate} />
           <div className={comingSoonSection ? 'coming-soon-toast coming-soon-toast--visible' : 'coming-soon-toast'} role="status">
             {comingSoonSection ? <BidiTemplate template={t.comingSoonMessage} values={{ section: comingSoonSection }} /> : ''}

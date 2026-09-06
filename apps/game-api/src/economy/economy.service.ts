@@ -21,7 +21,7 @@ import type {
   UpgradeAvailability,
   UpgradeResponse,
 } from '@crown-and-coin/shared';
-import { KINGDOM_BUILDING_TYPES, RESOURCE_TYPES } from '@crown-and-coin/shared';
+import { KINGDOM_BUILDING_TYPES, RESOURCE_TYPES, resolveLeagueFromTrophies } from '@crown-and-coin/shared';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import { ensureHeroSystemForPlayer } from '../heroes/hero.bootstrap';
 import { PrismaService } from '../infrastructure/prisma/prisma.service';
@@ -525,6 +525,8 @@ export class EconomyService {
         displayName: graph.player.displayName ?? 'Warden of Dawnkeep',
         level: castle?.level ?? graph.level,
         equippedProfileCrest: graph.player.equippedProfileCrest,
+        trophies: graph.player.trophies,
+        league: resolveLeagueFromTrophies(graph.player.trophies),
       },
       kingdom: {
         id: graph.id,

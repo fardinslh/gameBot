@@ -87,6 +87,9 @@ enum EconomyTransactionReason {
   CAMPAIGN_STAR_REWARD
   SHOP_GEM_SPEND
   ROYAL_DECREE_REWARD
+  LEAGUE_WIN_BONUS
+  GUILD_CREATE
+  GUILD_DONATION_REWARD
 }
 
 enum EconomyAction {
@@ -106,6 +109,8 @@ enum EconomyAction {
   SHOP_PURCHASE
   ENGAGEMENT_SESSION
   ROYAL_DECREE_CLAIM
+  GUILD_CREATE
+  GUILD_DONATE
 }
 
 enum ShopCategory {
@@ -178,6 +183,24 @@ enum BattleStatus {
   CREATED
   RESOLVED
   REWARDED
+}
+
+enum GuildJoinPolicy {
+  OPEN
+  INVITE_ONLY
+  CLOSED
+}
+
+enum GuildRole {
+  LEADER
+  OFFICER
+  MEMBER
+}
+
+enum GuildTroopRequestStatus {
+  OPEN
+  FULFILLED
+  EXPIRED
 }
 
 enum BattleSide {
@@ -259,6 +282,11 @@ model Player {
   shopPurchases         ShopPurchase[]
   equippedProfileCrest  ProfileCrestKey             @default(DEFAULT)
   engagement            PlayerEngagementState?
+  guildMembership       GuildMember?
+  guildDonationRequests GuildTroopRequest[]         @relation("GuildRequestRequester")
+  guildDonationsGiven   GuildTroopDonation[]        @relation("GuildDonationDonor")
+
+  @@index([isSystemOpponent, trophies, createdAt])
 }
 
 model PlayerEngagementState {
@@ -806,3 +834,69 @@ model BattleEvent {
   @@unique([battleId, sequence])
   @@index([battleId, timeMs])
 }
+
+model Guild {
+  id             String              @id @default(uuid())
+  name           String              @unique
+  tag            String              @unique
+  description    String              @default("")
+  emblem         String              @default("shield")
+  primaryColor   String              @default("#d97706")
+  secondaryColor String              @default("#78350f")
+  joinPolicy     GuildJoinPolicy     @default(OPEN)
+  minTrophies    Int                 @default(0)
+  score          Int                 @default(0)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+  members        GuildMember[]
+  requests       GuildTroopRequest[]
+
+  @@index([score(sort: Desc), name])
+  @@index([joinPolicy, minTrophies])
+}
+
+model GuildMember {
+  id                String    @id @default(uuid())
+  guildId           String
+  playerId          String    @unique
+  role              GuildRole @default(MEMBER)
+  donationsGiven    Int       @default(0)
+  donationsReceived Int       @default(0)
+  joinedAt          DateTime  @default(now())
+  guild             Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  player            Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, role])
+}
+
+model GuildTroopRequest {
+  id               String                  @id @default(uuid())
+  guildId          String
+  requesterId      String
+  troopType        TroopType
+  currentDonations Int                     @default(0)
+  maxDonations     Int                     @default(10)
+  status           GuildTroopRequestStatus @default(OPEN)
+  createdAt        DateTime                @default(now())
+  expiresAt        DateTime
+  guild            Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  requester        Player                  @relation("GuildRequestRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  donations        GuildTroopDonation[]
+
+  @@index([guildId, status, createdAt])
+  @@index([requesterId, createdAt])
+}
+
+model GuildTroopDonation {
+  id        String            @id @default(uuid())
+  requestId String
+  donorId   String
+  amount    Int               @default(1)
+  createdAt DateTime          @default(now())
+  request   GuildTroopRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  donor     Player            @relation("GuildDonationDonor", fields: [donorId], references: [id], onDelete: Cascade)
+
+  @@index([requestId, donorId])
+  @@index([donorId, createdAt])
+}
+
