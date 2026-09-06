@@ -830,6 +830,21 @@ def add_stylized_broadleaf(location, scale, collection, seed=0):
 # -----------------------------------------------------------------------------
 col_l1 = layers["Layer1_BaseTerrainAndRiver"]
 
+def calc_mountain_z(x, y):
+    if y <= 5.2:
+        return 0.0
+    prog = (y - 5.2) / (max_by - 5.2)
+    # Multi-octave non-periodic natural mountain ridges (avoids mechanical repeating waves)
+    ridge = (
+        math.sin(x * 0.38 + 0.6) * 0.55 +
+        math.cos(x * 0.73 - 1.1) * 0.32 +
+        math.sin(x * 1.42 + 2.0) * 0.18
+    ) * prog
+    elev = (prog ** 1.35) * 4.8 + ridge
+    if y > 13.5:
+        elev += (y - 13.5) * 0.45
+    return elev
+
 GRID_X = 180
 GRID_Y = 250
 
@@ -844,10 +859,7 @@ for v in bm_t.verts:
     
     # Northern Mountain Slope & Craggy Ridges (Y > 5.2)
     if y > 5.2:
-        prog = (y - 5.2) / (max_by - 5.2)
-        z += (prog ** 1.35) * 4.8 + math.sin(x * 0.70) * 0.45 * prog
-        if y > 13.5:
-            z += (y - 13.5) * 0.45
+        z += calc_mountain_z(x, y)
             
     # Northeastern Watchtower / Academy Hill Terrace
     d_hill = math.hypot(x - 3.2, y - 10.5)
@@ -1178,81 +1190,102 @@ for s in range(7):
 
 # Dense Stylized Pine Forest Framing Realm (West, East, North Ridges)
 # Organic Stylized Pine & Oak Groves Framing Realm
-# Naturally spaced copses with open meadow clearings and breathing room
+# Naturally spaced copses with open meadow clearings and breathing room (strictly asymmetric, no straight border lines)
 pine_groves = [
     # --- West Forest (Natural clustered copses with open meadow clearings) ---
     # South River Copse (Framing water entrance)
-    (-8.8, -15.5, 1.15), (-7.8, -14.2, 0.95), (-8.6, -13.0, 1.10),
-    # Open meadow opposite market (pushed back with breathing room)
-    (-9.0, -9.8, 1.20), (-8.2, -7.8, 1.05),
-    # Mid-Valley Copse (West of farm)
-    (-8.9, -3.8, 1.25), (-8.0, -1.8, 1.10), (-8.8, 0.5, 1.20),
-    # Castle Flank Copse
-    (-8.6, 4.8, 1.20), (-7.8, 6.8, 1.10),
-    # Northwest Alpine Ascent (Climbing rugged mountain slope)
-    (-8.5, 11.2, 1.30), (-7.4, 13.8, 1.35), (-6.2, 16.5, 1.45), (-4.8, 18.0, 1.50),
+    (-8.2, -15.4, 1.10, 'pine'),
+    (-7.2, -14.0, 0.95, 'broadleaf'),
+    (-8.8, -13.0, 1.15, 'pine'),
+    # Wide open sunlit meadow glade west of market (Y: -12 to -5 is tree-free)
+    # Farmstead Copse (Nested behind farm)
+    (-7.6, -4.6, 1.15, 'broadleaf'),
+    (-8.9, -3.4, 1.25, 'pine'),
+    (-8.0, -1.8, 1.05, 'pine'),
+    # Open meadow between farm and castle
+    # Castle West Flank Copse
+    (-7.4, 4.0, 1.05, 'broadleaf'),
+    (-8.6, 5.6, 1.20, 'pine'),
+    # Northwest Alpine Ascent (Nestled against mountain rock faces)
+    (-6.0, 11.8, 1.20, 'pine'),
+    (-7.5, 14.0, 1.35, 'pine'),
+    (-4.6, 16.5, 1.40, 'pine'),
 
-    # --- East Forest (Natural clustered copses with open meadow clearings) ---
-    # South River Copse (Framing water entrance)
-    (8.8, -15.5, 1.15), (7.8, -14.2, 0.95), (8.6, -13.0, 1.10),
-    # Open meadow opposite market (pushed back with breathing room)
-    (9.0, -9.8, 1.20), (8.2, -7.8, 1.05),
-    # Mid-Valley Copse (East of lumber yard)
-    (8.9, -3.8, 1.25), (8.0, -1.8, 1.10), (8.8, 0.5, 1.20),
-    # Castle Flank Copse
-    (8.6, 4.8, 1.20), (7.8, 6.8, 1.10),
-    # Northeast Alpine Ascent (Climbing terrace slope)
-    (8.5, 11.2, 1.30), (7.4, 13.8, 1.35), (6.2, 16.5, 1.45), (4.8, 18.0, 1.50),
+    # --- East Forest (Completely asymmetric landscape character) ---
+    # South River Copse (East riverbank)
+    (7.6, -15.0, 1.05, 'broadleaf'),
+    (8.6, -16.2, 0.95, 'pine'),
+    # East Meadow Glade (Lone scenic field oak in open rolling turf)
+    (8.5, -9.2, 1.00, 'broadleaf'),
+    # Lumber Woods (Thematic dense timber grove behind and north of lumber yard)
+    (7.5, -5.0, 1.15, 'pine'),
+    (8.9, -3.6, 1.30, 'pine'),
+    (7.2, -2.0, 1.05, 'broadleaf'),
+    (8.6, -0.6, 1.15, 'pine'),
+    # Castle East Glade
+    (8.0, 3.4, 1.00, 'broadleaf'),
+    (8.8, 5.2, 1.15, 'pine'),
+    # Northeast Terrace Slopes (Winding organically around Watchtower hill)
+    (6.6, 8.2, 1.05, 'pine'),
+    (8.2, 10.8, 1.20, 'pine'),
+    (5.2, 14.2, 1.25, 'pine'),
+    (7.2, 16.6, 1.35, 'pine'),
 
-    # --- Riverbank Natural Accents ---
-    (-6.2, bridge_y + 1.8, 0.95), (6.2, bridge_y + 1.8, 0.95),
-    (-4.0, bridge_y - 2.0, 0.80), (4.0, bridge_y - 2.0, 0.80),
-
-    # --- Interior Natural Meadow Accents ---
-    (-3.2, 3.8, 0.85), (3.2, 3.8, 0.85),
-    (-3.5, -8.5, 0.90), (3.5, -8.5, 0.90),
-
-    # --- Northern Foothills & Alpine Terraces ---
-    (2.6, 7.8, 0.95), (4.8, 7.2, 1.05), (5.5, 9.2, 1.20),
-    (-5.6, 8.5, 1.10), (-6.2, 11.0, 1.25), (-1.8, 14.0, 1.30), (2.4, 14.8, 1.35),
+    # --- Interior Natural Meadow & Terrace Accents ---
+    (-3.4, 3.6, 0.85, 'broadleaf'),
+    (3.6, 4.2, 0.80, 'broadleaf'),
+    (-3.6, -8.8, 0.85, 'broadleaf'),
+    (3.8, -8.2, 0.85, 'broadleaf'),
+    (2.2, 7.6, 0.90, 'broadleaf'),
+    (-5.4, 8.8, 1.10, 'pine'),
 ]
 
-for idx, (px, py, scale) in enumerate(pine_groves):
-    gz = 0.0
-    if py > 5.2:
-        prog = (py - 5.2) / (max_by - 5.2)
-        gz = (prog ** 1.35) * 4.8 + math.sin(px * 0.70) * 0.45 * prog
-        if py > 13.5:
-            gz += (py - 13.5) * 0.45
-    # Alpine heights (>10.0) are spruce pines; valley & riverbanks mix in lush puffy oaks:
-    if py < 10.0 and (idx % 3 == 1):
+for idx, (px, py, scale, t_type) in enumerate(pine_groves):
+    gz = calc_mountain_z(px, py)
+    if t_type == 'broadleaf':
         add_stylized_broadleaf((px, py, gz), scale * 0.95, col_l3, seed=idx * 29)
     else:
         add_stylized_pine((px, py, gz), scale, col_l3, seed=idx * 31)
 
 boulder_coords = [
-    (-7.5, -3.0, 0.15, 0.55), (7.5, -3.0, 0.15, 0.55),
-    (-7.8, 2.5, 0.20, 0.65), (7.8, 2.5, 0.20, 0.65),
-    (-2.2, 4.5, 0.15, 0.48), (2.2, 4.5, 0.15, 0.48),
-    (3.8, 9.5, 1.10, 0.70), (0.5, 8.5, 0.85, 0.58),
+    # West landscape
+    (-8.4, -9.0, 0.15, 0.62),
+    (-7.5, -2.6, 0.18, 0.58),
+    (-2.8, 4.4, 0.15, 0.48),
+    (-2.6, 9.6, 1.10, 0.65),
+    # East landscape
+    (8.2, -10.5, 0.15, 0.54),
+    (7.0, -4.8, 0.18, 0.55),
+    (2.4, 4.8, 0.15, 0.46),
+    (4.0, 9.8, 1.15, 0.68),
+    (0.6, 8.6, 0.85, 0.56),
 ]
 for idx, (bx, by, bz, bs) in enumerate(boulder_coords):
     add_boulder(f"GroveBoulder_{idx}", bs, (bx, by, bz), mat_granite, col_l3, seed=idx * 43, smooth=False)
 
+# Majestic Alpine Backdrop Crags across northern horizon
+add_boulder("NorthCrag_East", 2.1, (4.8, 17.6, 3.6), mat_granite, col_l3, seed=201, subdivisions=3)
+add_boulder("NorthCrag_Center", 1.9, (0.2, 18.4, 4.1), mat_granite, col_l3, seed=202, subdivisions=3)
+add_boulder("NorthCrag_WestHigh", 2.3, (-5.2, 17.9, 3.8), mat_granite, col_l3, seed=203, subdivisions=3)
+
 # Flowering Shrubs along forest edges
 shrub_coords = [
-    (-6.0, -10.0, 0.42), (6.0, -10.0, 0.42),
-    (-5.2, -2.5, 0.38), (5.2, -2.5, 0.38),
-    (-2.8, 0.6, 0.35), (2.8, 0.6, 0.35),
-    (-6.4, 3.5, 0.42), (6.4, 3.5, 0.42),
-    (-4.5, 9.2, 0.46), (4.2, 10.2, 0.46),
+    # West
+    (-6.2, -9.8, 0.42),
+    (-5.4, -2.2, 0.38),
+    (-2.6, 0.8, 0.35),
+    (-6.6, 3.8, 0.42),
+    (-4.2, 9.5, 0.46),
+    # East
+    (5.8, -10.4, 0.40),
+    (5.4, -2.8, 0.38),
+    (3.0, 0.5, 0.36),
+    (6.2, 3.2, 0.40),
+    (4.5, 10.4, 0.45),
 ]
 for s_idx, (sx, sy, sz) in enumerate(shrub_coords):
     s_rng = random.Random(s_idx * 79)
-    sgz = 0.0
-    if sy > 5.2:
-        prog = (sy - 5.2) / (max_by - 5.2)
-        sgz = (prog ** 1.35) * 4.8 + math.sin(sx * 0.70) * 0.45 * prog
+    sgz = calc_mountain_z(sx, sy)
     for c in range(2):
         bm_s = bmesh.new()
         bmesh.ops.create_icosphere(bm_s, subdivisions=2, radius=sz * (0.85 + c * 0.22))
@@ -1283,10 +1316,7 @@ flower_patches = [
 for p_idx, (fx, fy, cnt) in enumerate(flower_patches):
     p_rng = random.Random(p_idx * 53)
     f_mat = [mat_flower_white, mat_flower_gold, mat_flower_blue][p_idx % 3]
-    fgz = 0.0
-    if fy > 5.2:
-        prog = (fy - 5.2) / (max_by - 5.2)
-        fgz = (prog ** 1.35) * 4.8 + math.sin(fx * 0.70) * 0.45 * prog
+    fgz = calc_mountain_z(fx, fy)
     for i in range(cnt):
         ox = (p_rng.random() - 0.5) * 1.5
         oy = (p_rng.random() - 0.5) * 1.5

@@ -302,8 +302,9 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const bottomNavHeight = bottomNav?.getBoundingClientRect().height ?? 54;
     const bottomUiClearance = bottomNavHeight + 96;
 
-    // Allow scrolling down so northern mountain crags and peaks clear the top HUD
-    cameraMaxY = hudSafeBottom + 24;
+    // Anchor the northern boundary of the terrain to the top of the viewport:
+    // cameraY cannot exceed 0, completely preventing any detachment, gaps, or repeating backdrops.
+    cameraMaxY = 0;
     // Allow scrolling up so southern river and stone bridge clear the bottom UI
     cameraMinY = Math.min(cameraMaxY, height - bottomUiClearance - terrainHeightPx);
   };
