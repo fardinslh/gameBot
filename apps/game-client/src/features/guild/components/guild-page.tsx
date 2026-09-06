@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Coins, LogOut, Shield, Sparkles, Swords, Trophy, Users } from 'lucide-react';
+import { Coins, Flame, LogOut, Shield, Sparkles, Swords, Trophy, Users } from 'lucide-react';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { BidiValue } from '@/i18n/bidi';
 import { BottomNavigation, type GameSection } from '@/features/kingdom/components/bottom-navigation';
 import { useGuildState, type GuildTab } from '../hooks/use-guild-state';
+import { useGuildWar } from '../hooks/use-guild-war';
 import { GuildCrestBadge } from './guild-crest';
 import { CreateGuildModal } from './create-guild-modal';
 import { GuildRosterView } from './guild-roster-view';
 import { GuildRequestsView } from './guild-requests-view';
 import { GuildLeaderboardView } from './guild-leaderboard-view';
 import { GuildUnjoinedView } from './guild-unjoined-view';
+import { GuildWarView } from './guild-war-view';
 
 interface GuildPageProps {
   locale: Locale;
@@ -26,6 +28,7 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
 
   const inGuild = guild.overview?.inGuild ?? false;
   const guildDetails = guild.overview?.guild;
+  const warState = useGuildWar(inGuild);
 
   return (
     <div className="guild-viewport">
@@ -121,6 +124,18 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
               </button>
 
               <button
+                className={`guild-tab-btn ${guild.activeTab === 'war' ? 'guild-tab-btn--active' : ''}`}
+                onClick={() => guild.setActiveTab('war')}
+                role="tab"
+                type="button"
+              >
+                <Flame size={15} /> {t.guildWarUi.warTab}
+                {warState.war && warState.war.state === 'BATTLE_DAY' ? (
+                  <span className="guild-tab-badge guild-tab-badge--war">LIVE</span>
+                ) : null}
+              </button>
+
+              <button
                 className={`guild-tab-btn ${guild.activeTab === 'roster' ? 'guild-tab-btn--active' : ''}`}
                 onClick={() => guild.setActiveTab('roster')}
                 role="tab"
@@ -151,6 +166,21 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   onRequestTroops={guild.requestTroops}
                   pending={guild.actionPending}
                   requests={guildDetails.requests}
+                />
+              ) : guild.activeTab === 'war' ? (
+                <GuildWarView
+                  canDeclareWar={warState.canDeclareWar}
+                  dictionary={t}
+                  lastAttackResult={warState.lastAttackResult}
+                  onAttack={warState.attackBase}
+                  onClaimSpoils={warState.claimSpoils}
+                  onClearAttackResult={warState.clearAttackResult}
+                  onDeclareWar={warState.declareWar}
+                  onSimulateBattleDay={warState.fastForwardBattleDay}
+                  onSimulateWarEnd={warState.fastForwardWarEnd}
+                  pending={warState.pending}
+                  war={warState.war}
+                  warRecord={warState.warRecord}
                 />
               ) : guild.activeTab === 'roster' ? (
                 <GuildRosterView
@@ -196,10 +226,10 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
         ) : null}
 
         {/* Error Alert */}
-        {guild.error ? (
+        {guild.error || warState.error ? (
           <div className="guild-error-banner" role="alert">
-            <span>{guild.error}</span>
-            <button onClick={guild.clearError} type="button">{t.close}</button>
+            <span>{guild.error || warState.error}</span>
+            <button onClick={guild.error ? guild.clearError : warState.refreshWar} type="button">{t.close}</button>
           </div>
         ) : null}
 

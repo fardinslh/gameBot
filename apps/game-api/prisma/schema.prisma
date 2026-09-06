@@ -90,6 +90,7 @@ enum EconomyTransactionReason {
   LEAGUE_WIN_BONUS
   GUILD_CREATE
   GUILD_DONATION_REWARD
+  GUILD_WAR_SPOILS
 }
 
 enum EconomyAction {
@@ -111,6 +112,7 @@ enum EconomyAction {
   ROYAL_DECREE_CLAIM
   GUILD_CREATE
   GUILD_DONATE
+  GUILD_WAR_SPOILS_CLAIM
 }
 
 enum ShopCategory {
@@ -285,6 +287,9 @@ model Player {
   guildMembership       GuildMember?
   guildDonationRequests GuildTroopRequest[]         @relation("GuildRequestRequester")
   guildDonationsGiven   GuildTroopDonation[]        @relation("GuildDonationDonor")
+  warParticipants       GuildWarParticipant[]
+  warAttacksMade        GuildWarAttack[]            @relation("WarAttacker")
+  warAttacksTaken       GuildWarAttack[]            @relation("WarDefender")
 
   @@index([isSystemOpponent, trophies, createdAt])
 }
@@ -836,20 +841,31 @@ model BattleEvent {
 }
 
 model Guild {
-  id             String              @id @default(uuid())
-  name           String              @unique
-  tag            String              @unique
-  description    String              @default("")
-  emblem         String              @default("shield")
-  primaryColor   String              @default("#d97706")
-  secondaryColor String              @default("#78350f")
-  joinPolicy     GuildJoinPolicy     @default(OPEN)
-  minTrophies    Int                 @default(0)
-  score          Int                 @default(0)
-  createdAt      DateTime            @default(now())
-  updatedAt      DateTime            @updatedAt
-  members        GuildMember[]
-  requests       GuildTroopRequest[]
+  id              String                @id @default(uuid())
+  name            String                @unique
+  tag             String                @unique
+  description     String                @default("")
+  emblem          String                @default("shield")
+  primaryColor    String                @default("#d97706")
+  secondaryColor  String                @default("#78350f")
+  joinPolicy      GuildJoinPolicy       @default(OPEN)
+  minTrophies     Int                   @default(0)
+  score           Int                   @default(0)
+  level           Int                   @default(1)
+  xp              Int                   @default(0)
+  warWins         Int                   @default(0)
+  warLosses       Int                   @default(0)
+  warDraws        Int                   @default(0)
+  currentWarId    String?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  members         GuildMember[]
+  requests        GuildTroopRequest[]
+  friendlyWars    GuildWar[]            @relation("FriendlyGuildWars")
+  opposingWars    GuildWar[]            @relation("OpposingGuildWars")
+  warParticipants GuildWarParticipant[]
+  attacksMade     GuildWarAttack[]      @relation("AttackerGuildAttacks")
+  attacksReceived GuildWarAttack[]      @relation("DefenderGuildAttacks")
 
   @@index([score(sort: Desc), name])
   @@index([joinPolicy, minTrophies])
@@ -898,5 +914,85 @@ model GuildTroopDonation {
 
   @@index([requestId, donorId])
   @@index([donorId, createdAt])
+}
+
+enum GuildWarState {
+  NOT_IN_WAR
+  PREPARATION
+  BATTLE_DAY
+  WAR_ENDED
+}
+
+enum GuildWarOutcome {
+  PENDING
+  VICTORY
+  DEFEAT
+  DRAW
+}
+
+model GuildWar {
+  id                String                @id @default(uuid())
+  guildId1          String
+  guildId2          String
+  warSize           Int                   @default(5)
+  state             GuildWarState         @default(PREPARATION)
+  outcome           GuildWarOutcome       @default(PENDING)
+  prepEndsAt        DateTime
+  battleEndsAt      DateTime
+  guild1Stars       Int                   @default(0)
+  guild2Stars       Int                   @default(0)
+  guild1Destruction Float                 @default(0)
+  guild2Destruction Float                 @default(0)
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+  guild1            Guild                 @relation("FriendlyGuildWars", fields: [guildId1], references: [id], onDelete: Cascade)
+  guild2            Guild                 @relation("OpposingGuildWars", fields: [guildId2], references: [id], onDelete: Cascade)
+  participants      GuildWarParticipant[]
+  attacks           GuildWarAttack[]
+
+  @@index([state, battleEndsAt])
+  @@index([guildId1, state])
+  @@index([guildId2, state])
+}
+
+model GuildWarParticipant {
+  id                      String   @id @default(uuid())
+  warId                   String
+  guildId                 String
+  playerId                String
+  baseNumber              Int
+  attacksUsed             Int      @default(0)
+  bestStarsConceded       Int      @default(0)
+  bestDestructionConceded  Float    @default(0)
+  war                     GuildWar @relation(fields: [warId], references: [id], onDelete: Cascade)
+  guild                   Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  player                  Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@unique([warId, playerId])
+  @@index([warId, guildId, baseNumber])
+  @@index([playerId])
+}
+
+model GuildWarAttack {
+  id              String   @id @default(uuid())
+  warId           String
+  attackerId      String
+  defenderId      String
+  attackerGuildId String
+  defenderGuildId String
+  stars           Int
+  destructionPct  Float
+  spoilsGold      BigInt   @default(0)
+  timeMs          Int      @default(0)
+  createdAt       DateTime @default(now())
+  war             GuildWar @relation(fields: [warId], references: [id], onDelete: Cascade)
+  attacker        Player   @relation("WarAttacker", fields: [attackerId], references: [id], onDelete: Cascade)
+  defender        Player   @relation("WarDefender", fields: [defenderId], references: [id], onDelete: Cascade)
+  attackerGuild   Guild    @relation("AttackerGuildAttacks", fields: [attackerGuildId], references: [id], onDelete: Cascade)
+  defenderGuild   Guild    @relation("DefenderGuildAttacks", fields: [defenderGuildId], references: [id], onDelete: Cascade)
+
+  @@index([warId, attackerId])
+  @@index([warId, defenderId])
+  @@index([warId, createdAt])
 }
 

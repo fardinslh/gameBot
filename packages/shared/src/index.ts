@@ -1304,4 +1304,112 @@ export const GUILD_MAX_MEMBERS = 50;
 export const GUILD_REQUEST_MAX_TROOPS = 10;
 export const GUILD_REQUEST_COOLDOWN_HOURS = 4;
 
+// --- GUILD WARS SYSTEM CONTRACTS ---
+
+export const GUILD_WAR_STATES = ['NOT_IN_WAR', 'PREPARATION', 'BATTLE_DAY', 'WAR_ENDED'] as const;
+export type GuildWarState = (typeof GUILD_WAR_STATES)[number];
+
+export const GUILD_WAR_OUTCOMES = ['PENDING', 'VICTORY', 'DEFEAT', 'DRAW'] as const;
+export type GuildWarOutcome = (typeof GUILD_WAR_OUTCOMES)[number];
+
+export interface GuildWarParticipant {
+  playerId: string;
+  displayName: string;
+  castleLevel: number;
+  league: TrophyLeague;
+  baseNumber: number;
+  attacksUsed: number;
+  maxAttacks: number;
+  bestStarsConceded: number; // 0..3
+  bestDestructionConceded: number; // 0..100
+  defenseReinforcementsCount: number;
+}
+
+export interface GuildWarAttackEntry {
+  id: string;
+  attackerId: string;
+  attackerName: string;
+  defenderId: string;
+  defenderName: string;
+  attackerGuildId: string;
+  defenderGuildId: string;
+  stars: number;
+  destructionPct: number;
+  timeMs: number;
+  createdAt: string;
+  spoilsGold: string;
+}
+
+export interface GuildWarSideSummary {
+  guildId: string;
+  name: string;
+  tag: string;
+  crest: GuildCrest;
+  stars: number;
+  totalStarsPossible: number;
+  destructionPct: number;
+  attacksUsed: number;
+  totalAttacks: number;
+}
+
+export interface GuildWarDetails {
+  warId: string;
+  state: GuildWarState;
+  warSize: number;
+  prepEndsAt: string;
+  battleEndsAt: string;
+  outcome: GuildWarOutcome;
+  friendly: GuildWarSideSummary;
+  opposing: GuildWarSideSummary;
+  friendlyParticipants: GuildWarParticipant[];
+  opposingParticipants: GuildWarParticipant[];
+  recentAttacks: GuildWarAttackEntry[];
+  canDeclareWar: boolean;
+  currentUserAttacksLeft: number;
+  warSpoilsAvailableGold: string;
+}
+
+export interface GuildWarRecord {
+  wins: number;
+  losses: number;
+  draws: number;
+  currentStreak: number;
+  guildLevel: number;
+  guildXp: number;
+  nextLevelXp: number;
+}
+
+export interface GuildWarOverviewResponse {
+  activeWar: GuildWarDetails | null;
+  warRecord: GuildWarRecord;
+  canDeclareWar: boolean;
+}
+
+export interface StartWarPayload {
+  warSize?: number;
+}
+
+export interface WarAttackPayload {
+  defenderPlayerId: string;
+}
+
+export interface WarAttackResult {
+  attackId: string;
+  stars: number;
+  destructionPct: number;
+  isNewBest: boolean;
+  additionalStarsAwarded: number;
+  spoilsGoldAwarded: string;
+  friendlyTotalStars: number;
+  opposingTotalStars: number;
+  attacksRemaining: number;
+  warFinished: boolean;
+  outcome: GuildWarOutcome;
+}
+
+export const GUILD_WAR_ATTACKS_PER_PLAYER = 2;
+export const GUILD_WAR_DEFAULT_SIZE = 5;
+export const GUILD_WAR_WIN_SPOILS_GOLD = '50000';
+export const GUILD_WAR_LOSE_SPOILS_GOLD = '15000';
+
 

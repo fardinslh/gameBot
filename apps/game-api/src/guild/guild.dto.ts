@@ -84,3 +84,18 @@ export class SetMemberRoleDto {
   @IsEnum(['OFFICER', 'MEMBER'])
   role!: 'OFFICER' | 'MEMBER';
 }
+
+export class StartWarDto {
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(15)
+  warSize?: number;
+}
+
+export class WarAttackDto {
+  @IsString()
+  @IsNotEmpty()
+  defenderPlayerId!: string;
+}
+
