@@ -1,4 +1,4 @@
-﻿import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { LeaderboardService } from './leaderboard.service';
 import type { PrismaService } from '../infrastructure/prisma/prisma.service';
 import type { DevelopmentPlayerContext } from '../player/player-context.service';
@@ -30,6 +30,9 @@ describe('LeaderboardService', () => {
         ]),
         findUnique: vi.fn(),
         count: vi.fn(),
+      },
+      season: {
+        findFirst: vi.fn().mockResolvedValue(null),
       },
     } as unknown as PrismaService;
 

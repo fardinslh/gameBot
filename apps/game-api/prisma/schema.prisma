@@ -92,6 +92,7 @@ enum EconomyTransactionReason {
   GUILD_DONATION_REWARD
   GUILD_WAR_SPOILS
   SEASON_REWARD
+  GUILD_TREASURY_DONATE
 }
 
 enum EconomyAction {
@@ -115,6 +116,7 @@ enum EconomyAction {
   GUILD_DONATE
   GUILD_WAR_SPOILS_CLAIM
   SEASON_REWARD_CLAIM
+  GUILD_TREASURY_DONATE
 }
 
 enum SeasonStatus {
@@ -308,6 +310,7 @@ model Player {
   warAttacksMade        GuildWarAttack[]            @relation("WarAttacker")
   warAttacksTaken       GuildWarAttack[]            @relation("WarDefender")
   seasonRecords         PlayerSeasonRecord[]
+  guildTreasuryDonations GuildTreasuryDonation[]    @relation("GuildTreasuryDonor")
 
   @@index([isSystemOpponent, trophies, createdAt])
 }
@@ -884,6 +887,9 @@ model Guild {
   warParticipants GuildWarParticipant[]
   attacksMade     GuildWarAttack[]      @relation("AttackerGuildAttacks")
   attacksReceived GuildWarAttack[]      @relation("DefenderGuildAttacks")
+  treasuryGold    BigInt                @default(0)
+  perks           GuildPerk[]
+  treasuryDonations GuildTreasuryDonation[]
 
   @@index([score(sort: Desc), name])
   @@index([joinPolicy, minTrophies])
@@ -1046,5 +1052,39 @@ model PlayerSeasonRecord {
   @@unique([playerId, seasonId])
   @@index([seasonId, playerId])
 }
+
+enum GuildPerkType {
+  GOLD_BOOST
+  DONATION_CAPACITY
+  WAR_LOOT_BONUS
+  TROOP_TRAINING_SPEED
+}
+
+model GuildPerk {
+  id         String        @id @default(uuid())
+  guildId    String
+  perkType   GuildPerkType
+  level      Int           @default(1)
+  unlockedAt DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  guild      Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, perkType])
+  @@index([guildId])
+}
+
+model GuildTreasuryDonation {
+  id        String   @id @default(uuid())
+  guildId   String
+  donorId   String
+  amount    BigInt
+  createdAt DateTime @default(now())
+  guild     Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  donor     Player   @relation("GuildTreasuryDonor", fields: [donorId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, createdAt])
+  @@index([donorId, createdAt])
+}
+
 
 

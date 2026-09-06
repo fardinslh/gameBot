@@ -7,6 +7,7 @@ import { BidiValue } from '@/i18n/bidi';
 import { BottomNavigation, type GameSection } from '@/features/kingdom/components/bottom-navigation';
 import { useGuildState, type GuildTab } from '../hooks/use-guild-state';
 import { useGuildWar } from '../hooks/use-guild-war';
+import { useGuildTreasury } from '../hooks/use-guild-treasury';
 import { GuildCrestBadge } from './guild-crest';
 import { CreateGuildModal } from './create-guild-modal';
 import { GuildRosterView } from './guild-roster-view';
@@ -14,6 +15,7 @@ import { GuildRequestsView } from './guild-requests-view';
 import { GuildLeaderboardView } from './guild-leaderboard-view';
 import { GuildUnjoinedView } from './guild-unjoined-view';
 import { GuildWarView } from './guild-war-view';
+import { GuildPerksView } from './guild-perks-view';
 
 interface GuildPageProps {
   locale: Locale;
@@ -29,6 +31,7 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
   const inGuild = guild.overview?.inGuild ?? false;
   const guildDetails = guild.overview?.guild;
   const warState = useGuildWar(inGuild);
+  const treasuryState = useGuildTreasury(inGuild);
 
   return (
     <div className="guild-viewport">
@@ -99,6 +102,10 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   <strong><Trophy size={13} /> <BidiValue direction="ltr">{guildDetails.guild.score}</BidiValue></strong>
                 </div>
                 <div className="guild-metric">
+                  <small>{t.guildTreasuryUi.clanLevel}</small>
+                  <strong><Sparkles size={13} /> <BidiValue direction="ltr">{guildDetails.guild.level ?? 1}</BidiValue></strong>
+                </div>
+                <div className="guild-metric">
                   <small>{t.guildUi.members}</small>
                   <strong><Users size={13} /> <BidiValue direction="ltr">{guildDetails.guild.memberCount}</BidiValue>/{guildDetails.guild.maxMembers}</strong>
                 </div>
@@ -133,6 +140,15 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                 {warState.war && warState.war.state === 'BATTLE_DAY' ? (
                   <span className="guild-tab-badge guild-tab-badge--war">LIVE</span>
                 ) : null}
+              </button>
+
+              <button
+                className={`guild-tab-btn ${guild.activeTab === 'perks' ? 'guild-tab-btn--active' : ''}`}
+                onClick={() => guild.setActiveTab('perks')}
+                role="tab"
+                type="button"
+              >
+                <Sparkles size={15} /> {t.guildTreasuryUi.perksTab}
               </button>
 
               <button
@@ -182,6 +198,19 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   war={warState.war}
                   warRecord={warState.warRecord}
                 />
+              ) : guild.activeTab === 'perks' ? (
+                <GuildPerksView
+                  dictionary={t}
+                  treasury={treasuryState.treasury}
+                  loading={treasuryState.loading}
+                  pending={treasuryState.pending}
+                  lastDonationResult={treasuryState.lastDonationResult}
+                  lastUpgradeResult={treasuryState.lastUpgradeResult}
+                  onDonate={treasuryState.donate}
+                  onUpgrade={treasuryState.upgrade}
+                  onClearDonationResult={treasuryState.clearDonationResult}
+                  onClearUpgradeResult={treasuryState.clearUpgradeResult}
+                />
               ) : guild.activeTab === 'roster' ? (
                 <GuildRosterView
                   currentUserRole={guildDetails.currentUserRole}
@@ -226,10 +255,19 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
         ) : null}
 
         {/* Error Alert */}
-        {guild.error || warState.error ? (
+        {guild.error || warState.error || treasuryState.error ? (
           <div className="guild-error-banner" role="alert">
-            <span>{guild.error || warState.error}</span>
-            <button onClick={guild.error ? guild.clearError : warState.refreshWar} type="button">{t.close}</button>
+            <span>{guild.error || warState.error || treasuryState.error}</span>
+            <button
+              onClick={() => {
+                if (guild.error) guild.clearError();
+                if (warState.error) warState.refreshWar();
+                if (treasuryState.error) treasuryState.clearError();
+              }}
+              type="button"
+            >
+              {t.close}
+            </button>
           </div>
         ) : null}
 

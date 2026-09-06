@@ -22,7 +22,7 @@ import {
   setMemberRole as apiSetMemberRole,
 } from '../api/guild-api';
 
-export type GuildTab = 'requests' | 'war' | 'roster' | 'leaderboard';
+export type GuildTab = 'requests' | 'war' | 'perks' | 'roster' | 'leaderboard';
 
 export function useGuildState() {
   const [overview, setOverview] = useState<GuildOverviewResponse | null>(null);

@@ -1197,6 +1197,10 @@ export interface GuildSummary {
   maxMembers: number;
   score: number;
   leaderName: string;
+  level?: number;
+  xp?: number;
+  nextLevelXp?: number;
+  treasuryGold?: string;
 }
 
 export interface GuildMemberInfo {
@@ -1484,6 +1488,94 @@ export interface ClaimSeasonRewardResponse {
   titleAwarded?: string;
   claimedAt: string;
 }
+
+// ==========================================
+// Guild Perks & Treasury Domain Types
+// ==========================================
+
+export const GUILD_PERK_TYPES = [
+  'GOLD_BOOST',
+  'DONATION_CAPACITY',
+  'WAR_LOOT_BONUS',
+  'TROOP_TRAINING_SPEED',
+] as const;
+export type GuildPerkType = (typeof GUILD_PERK_TYPES)[number];
+
+export interface GuildPerkLevelInfo {
+  level: number;
+  requiredGuildLevel: number;
+  costTreasuryGold: string;
+  bonusValue: number;
+  description: string;
+}
+
+export interface GuildPerkDefinition {
+  type: GuildPerkType;
+  name: string;
+  maxLevel: number;
+  levels: GuildPerkLevelInfo[];
+}
+
+export interface GuildPerkStatus {
+  type: GuildPerkType;
+  name: string;
+  currentLevel: number; // 0 if locked
+  maxLevel: number;
+  currentBonusValue: number;
+  currentBonusDescription: string;
+  nextLevel: GuildPerkLevelInfo | null;
+  canUpgrade: boolean;
+  lockReason?: 'INSUFFICIENT_LEVEL' | 'INSUFFICIENT_TREASURY' | 'MAX_LEVEL' | 'OFFICER_OR_LEADER_REQUIRED';
+}
+
+export interface GuildTreasuryDonationItem {
+  id: string;
+  donorId: string;
+  donorName: string;
+  amount: string;
+  createdAt: string;
+}
+
+export interface GuildTreasuryOverviewResponse {
+  guildId: string;
+  guildName: string;
+  guildLevel: number;
+  guildXp: number;
+  nextLevelXp: number;
+  xpProgressPct: number;
+  treasuryGold: string;
+  treasuryCapacity: string;
+  canDonate: boolean;
+  canUpgradePerks: boolean; // LEADER or OFFICER
+  currentUserRole: GuildRole | null;
+  perks: GuildPerkStatus[];
+  recentDonations: GuildTreasuryDonationItem[];
+  playerContributionTotal: string;
+}
+
+export interface DonateToTreasuryPayload {
+  amount: string; // gold amount
+}
+
+export interface DonateToTreasuryResponse {
+  treasuryGold: string;
+  guildXp: number;
+  guildLevel: number;
+  playerBalances: ResourceAmounts;
+  donatedAmount: string;
+  xpAwarded: number;
+}
+
+export interface UpgradeGuildPerkPayload {
+  perkType: GuildPerkType;
+}
+
+export interface UpgradeGuildPerkResponse {
+  perk: GuildPerkStatus;
+  treasuryGold: string;
+  guildLevel: number;
+}
+
 
 
 

@@ -11,6 +11,10 @@ import {
   GUILD_REQUEST_MAX_TROOPS,
   TROOP_DONATION_REWARDS,
 } from './guild.config';
+import {
+  calculateGuildLevelProgression,
+  GUILD_XP_PER_TROOP_DONATION,
+} from './guild-perk.config';
 import type {
   CreateGuildDto,
   DonateTroopsDto,
@@ -148,6 +152,7 @@ export class GuildService {
       secondaryColor: guild.secondaryColor,
     };
 
+    const progression = calculateGuildLevelProgression(guild.xp);
     const summary: GuildSummary = {
       id: guild.id,
       name: guild.name,
@@ -160,6 +165,10 @@ export class GuildService {
       maxMembers: GUILD_MAX_MEMBERS,
       score: guild.score,
       leaderName,
+      level: guild.level,
+      xp: guild.xp,
+      nextLevelXp: progression.nextLevelXp,
+      treasuryGold: guild.treasuryGold.toString(),
     };
 
     const members: GuildMemberInfo[] = guild.members.map((m) => {
@@ -631,12 +640,25 @@ export class GuildService {
       }
     }
 
+    // Check DONATION_CAPACITY perk
+    const capacityPerk = await this.prisma.guildPerk.findUnique({
+      where: {
+        guildId_perkType: {
+          guildId: membership.guildId,
+          perkType: 'DONATION_CAPACITY',
+        },
+      },
+    });
+    const bonusCapacity =
+      capacityPerk?.level === 1 ? 2 : capacityPerk?.level === 2 ? 4 : capacityPerk?.level === 3 ? 6 : 0;
+    const maxDonations = GUILD_REQUEST_MAX_TROOPS + bonusCapacity;
+
     await this.prisma.guildTroopRequest.create({
       data: {
         guildId: membership.guildId,
         requesterId: playerId,
         troopType: dto.troopType,
-        maxDonations: GUILD_REQUEST_MAX_TROOPS,
+        maxDonations,
         expiresAt: new Date(Date.now() + GUILD_REQUEST_EXPIRES_MS),
       },
     });
@@ -785,6 +807,20 @@ export class GuildService {
             reason: 'GUILD_DONATION_REWARD',
             referenceId: request.id,
           },
+        });
+      }
+
+      // Increment Guild XP and check clan level progression
+      const guildXpAwarded = GUILD_XP_PER_TROOP_DONATION * donateAmount;
+      const updatedGuild = await tx.guild.update({
+        where: { id: donorMembership.guildId },
+        data: { xp: { increment: guildXpAwarded } },
+      });
+      const progression = calculateGuildLevelProgression(updatedGuild.xp);
+      if (progression.level !== updatedGuild.level) {
+        await tx.guild.update({
+          where: { id: donorMembership.guildId },
+          data: { level: progression.level },
         });
       }
     });

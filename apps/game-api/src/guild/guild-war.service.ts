@@ -512,9 +512,18 @@ export class GuildWarService {
       (isGuild1 && war.guild1Stars > war.guild2Stars) ||
       (!isGuild1 && war.guild2Stars > war.guild1Stars);
 
-    const spoilsAmount = BigInt(
-      won ? GUILD_WAR_WIN_SPOILS_GOLD : GUILD_WAR_LOSE_SPOILS_GOLD,
-    );
+    const warLootPerk = await this.prisma.guildPerk.findUnique({
+      where: {
+        guildId_perkType: {
+          guildId: member.guildId,
+          perkType: 'WAR_LOOT_BONUS',
+        },
+      },
+    });
+    const bonusPct =
+      warLootPerk?.level === 1 ? 10 : warLootPerk?.level === 2 ? 20 : warLootPerk?.level === 3 ? 30 : 0;
+    const baseSpoils = BigInt(won ? GUILD_WAR_WIN_SPOILS_GOLD : GUILD_WAR_LOSE_SPOILS_GOLD);
+    const spoilsAmount = baseSpoils + (baseSpoils * BigInt(bonusPct)) / 100n;
 
     // Credit gold to player
     await this.prisma.resourceBalance.updateMany({
