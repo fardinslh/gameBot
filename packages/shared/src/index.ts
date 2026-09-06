@@ -1576,6 +1576,76 @@ export interface UpgradeGuildPerkResponse {
   guildLevel: number;
 }
 
+// ==========================================
+// Alliance Chat & War Room Strategy Types
+// ==========================================
+
+export const GUILD_CHAT_MESSAGE_TYPES = ['TEXT', 'SYSTEM', 'ANNOUNCEMENT'] as const;
+export type GuildChatMessageType = (typeof GUILD_CHAT_MESSAGE_TYPES)[number];
+
+export interface GuildChatMessageItem {
+  id: string;
+  guildId: string;
+  senderId: string | null;
+  senderName: string;
+  senderRole: GuildRole | null;
+  senderProfileCrest: ProfileCrestKey;
+  type: GuildChatMessageType;
+  content: string;
+  isPinned: boolean;
+  createdAt: string;
+}
+
+export interface GuildChatFeedResponse {
+  messages: GuildChatMessageItem[];
+  pinnedAnnouncement: GuildChatMessageItem | null;
+  canPostAnnouncement: boolean;
+}
+
+export interface SendGuildChatMessagePayload {
+  content: string;
+  isAnnouncement?: boolean;
+  isPinned?: boolean;
+}
+
+export const WAR_TACTICAL_MARKERS = [
+  'TARGET_CALLOUT',
+  'ATTACK_PRIORITY',
+  'SCOUT_FIRST',
+  'CLEARED',
+] as const;
+export type WarTacticalMarker = (typeof WAR_TACTICAL_MARKERS)[number];
+
+export interface GuildWarCalloutItem {
+  id: string;
+  warId: string;
+  defenderPlayerId: string;
+  baseNumber: number;
+  marker: WarTacticalMarker;
+  claimedById: string | null;
+  claimedByName: string | null;
+  notes: string | null;
+  assignedById: string;
+  assignedByName: string;
+  updatedAt: string;
+}
+
+export interface SetWarCalloutPayload {
+  defenderPlayerId: string;
+  baseNumber: number;
+  marker: WarTacticalMarker;
+  claimedById?: string | null;
+  notes?: string | null;
+}
+
+export interface WarRoomStrategyResponse {
+  warId: string;
+  callouts: GuildWarCalloutItem[];
+  pinnedStrategyNotice: string | null;
+  canManageStrategy: boolean;
+}
+
+
 
 
 

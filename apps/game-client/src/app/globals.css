@@ -5074,5 +5074,692 @@ button { color: inherit; }
   margin: 8px 0 0;
 }
 
+/* =========================================================
+   Alliance Chat & War Room Tactical Strategy Map Styles
+   ========================================================= */
+
+/* 1. Chat Viewport */
+.guild-chat-viewport {
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  max-height: calc(100vh - 250px);
+  background: rgba(15, 12, 22, 0.85);
+  border: 1px solid rgba(255, 215, 108, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* 2. Pinned Command Announcement Banner */
+.guild-chat-pinned-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(217, 119, 6, 0.12));
+  border-bottom: 1px solid rgba(234, 179, 8, 0.35);
+}
+
+.guild-chat-pinned-banner__icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: rgba(234, 179, 8, 0.25);
+  color: #fbbf24;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.guild-chat-pinned-banner__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.guild-chat-pinned-banner__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.guild-chat-pinned-banner__header strong {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fbbf24;
+  font-weight: 800;
+}
+
+.guild-chat-pinned-banner__header small {
+  font-size: 11px;
+  color: var(--cream-muted);
+}
+
+.guild-chat-pinned-banner__body p {
+  margin: 0;
+  font-size: 13px;
+  color: #fff;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+/* 3. Filter Navigation */
+.guild-chat-filters {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px;
+  background: rgba(10, 8, 16, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.guild-chat-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--cream-muted);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.guild-chat-filter-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.guild-chat-filter-btn--active {
+  background: rgba(226, 180, 71, 0.2);
+  border-color: rgba(226, 180, 71, 0.5);
+  color: var(--gold-bright);
+}
+
+/* 4. Chat Feed Messages */
+.guild-chat-feed {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  scroll-behavior: smooth;
+}
+
+.guild-chat-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  color: var(--cream-muted);
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.guild-chat-message-row {
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.guild-chat-message-row--own {
+  justify-content: flex-end;
+}
+
+.guild-chat-bubble {
+  max-width: 80%;
+  padding: 8px 12px;
+  background: rgba(30, 25, 42, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px 12px 12px 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.guild-chat-message-row--own .guild-chat-bubble {
+  background: rgba(45, 36, 64, 0.95);
+  border-color: rgba(226, 180, 71, 0.25);
+  border-radius: 12px 12px 2px 12px;
+}
+
+.guild-chat-bubble--announcement {
+  background: linear-gradient(135deg, rgba(45, 35, 20, 0.95), rgba(30, 25, 42, 0.95));
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.15);
+}
+
+.guild-chat-bubble__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.guild-chat-bubble__author {
+  color: var(--gold-bright);
+  font-weight: 700;
+}
+
+.guild-chat-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.guild-chat-role-badge--leader {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.guild-chat-role-badge--officer {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.guild-chat-bubble__pin-tag {
+  color: #fbbf24;
+  display: flex;
+  align-items: center;
+}
+
+.guild-chat-bubble__text {
+  margin: 0;
+  font-size: 13px;
+  color: #f1f5f9;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+/* System Message Row */
+.guild-chat-system-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  margin: 4px 0;
+  background: rgba(226, 180, 71, 0.06);
+  border-radius: 6px;
+  border: 1px dashed rgba(226, 180, 71, 0.2);
+  font-size: 11px;
+  text-align: center;
+}
+
+.guild-chat-system-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: var(--gold-bright);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+.guild-chat-system-text {
+  color: var(--cream-muted);
+}
+
+/* 5. Composer Form */
+.guild-chat-composer {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  background: rgba(12, 10, 18, 0.95);
+  border-top: 1px solid rgba(255, 215, 108, 0.15);
+  gap: 6px;
+}
+
+.guild-chat-composer__options {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+}
+
+.guild-chat-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--cream-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.guild-chat-checkbox-label input[type="checkbox"] {
+  accent-color: #fbbf24;
+  cursor: pointer;
+}
+
+.guild-chat-composer__input-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.guild-chat-input {
+  flex: 1;
+  background: rgba(20, 17, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.guild-chat-input:focus {
+  border-color: var(--gold-bright);
+}
+
+.guild-chat-send-btn {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold-bright), #b45309);
+  border: none;
+  color: #0f0c16;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.2s;
+  flex-shrink: 0;
+}
+
+.guild-chat-send-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.guild-chat-send-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Tab Badge Pinned */
+.guild-tab-badge--pinned {
+  background: #fbbf24;
+  color: #0f0c16;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+
+/* 6. War Tactical Directives on Base Cards */
+.war-tactical-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-top: 4px;
+  width: fit-content;
+}
+
+.war-tactical-badge--attack_priority {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+.war-tactical-badge--scout_first {
+  background: rgba(59, 130, 246, 0.2);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+.war-tactical-badge--target_callout {
+  background: rgba(234, 179, 8, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.war-tactical-badge--cleared {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.war-tactical-claimed {
+  font-size: 10px;
+  opacity: 0.9;
+  font-weight: 600;
+}
+
+.war-tactical-directive-strip {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 4px;
+}
+
+.war-tactical-directive-strip__left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.war-tactical-note-preview {
+  margin: 0;
+  font-size: 11px;
+  font-style: italic;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border-left: 2px solid #fbbf24;
+  max-width: 240px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.war-tactical-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(226, 180, 71, 0.15);
+  border: 1px solid rgba(226, 180, 71, 0.35);
+  color: var(--gold-bright);
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.war-tactical-edit-btn:hover {
+  background: rgba(226, 180, 71, 0.3);
+}
+
+.guild-war-base-action {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.guild-war-base-card--attack_priority {
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
+}
+
+.guild-war-base-card--cleared {
+  opacity: 0.75;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+
+.guild-war-strategy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: rgba(226, 180, 71, 0.12);
+  border: 1px solid rgba(226, 180, 71, 0.35);
+  color: var(--gold-bright);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.guild-war-strategy-btn:hover {
+  background: rgba(226, 180, 71, 0.25);
+}
+
+/* 7. War Room Strategy Modal */
+.war-room-modal {
+  background: #14101e;
+  border: 1px solid rgba(255, 215, 108, 0.25);
+  border-radius: 14px;
+  width: 90%;
+  max-width: 440px;
+  padding: 20px;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.war-room-modal__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.war-room-modal__title-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.war-room-modal__shield-icon {
+  color: var(--gold-bright);
+}
+
+.war-room-modal__title-box h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #fff;
+  font-weight: 700;
+}
+
+.war-room-modal__title-box p {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--cream-muted);
+}
+
+.war-room-modal__close-btn {
+  background: transparent;
+  border: none;
+  color: var(--cream-muted);
+  cursor: pointer;
+}
+
+.war-room-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.war-room-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.war-room-modal__field label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--gold-bright);
+}
+
+.war-room-modal__marker-chips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.war-room-marker-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.war-room-marker-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.war-room-marker-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.war-room-marker-btn--active {
+  background: rgba(226, 180, 71, 0.25);
+  border-color: #fbbf24;
+  color: #fbbf24;
+}
+
+.war-room-modal__assign-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.war-room-self-claim-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #4ade80;
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 7px;
+  cursor: pointer;
+}
+
+.war-room-modal__select {
+  background: rgba(20, 17, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+}
+
+.war-room-modal__readonly-assign {
+  padding: 8px 10px;
+  background: rgba(20, 17, 28, 0.5);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  font-size: 12px;
+  color: var(--cream-muted);
+}
+
+.war-room-claimed-self {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #4ade80;
+}
+
+.war-room-modal__textarea {
+  background: rgba(20, 17, 28, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #fff;
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+}
+
+.war-room-modal__char-count {
+  font-size: 10px;
+  color: var(--cream-muted);
+  text-align: right;
+}
+
+.war-room-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.war-room-modal__cancel-btn {
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--cream-muted);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.war-room-modal__save-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--gold-bright), #b45309);
+  border: none;
+  color: #0f0c16;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.war-room-modal__save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* RTL Adjustments */
+[dir="rtl"] .guild-chat-bubble {
+  border-radius: 12px 12px 2px 12px;
+}
+
+[dir="rtl"] .guild-chat-message-row--own .guild-chat-bubble {
+  border-radius: 12px 12px 12px 2px;
+}
+
+[dir="rtl"] .war-tactical-note-preview {
+  border-left: none;
+  border-right: 2px solid #fbbf24;
+}
+
+[dir="rtl"] .war-room-marker-btn {
+  text-align: right;
+}
+
+[dir="rtl"] .war-room-modal__char-count {
+  text-align: left;
+}
+
 
 

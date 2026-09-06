@@ -6,6 +6,8 @@ import {
   Clock,
   Coins,
   Crown,
+  Crosshair,
+  Eye,
   FastForward,
   Flame,
   Shield,
@@ -16,15 +18,20 @@ import {
   Users,
 } from 'lucide-react';
 import type {
+  GuildMemberInfo,
+  GuildRole,
   GuildWarDetails,
   GuildWarParticipant,
   GuildWarRecord,
+  SetWarCalloutPayload,
   WarAttackResult,
+  WarRoomStrategyResponse,
 } from '@crown-and-coin/shared';
 import type { Dictionary } from '@/i18n/config';
 import { BidiValue } from '@/i18n/bidi';
 import { LeagueBadge } from '@/features/leaderboard/components/league-badge';
 import { GuildCrestBadge } from './guild-crest';
+import { WarRoomStrategyModal } from './war-room-strategy-modal';
 
 interface GuildWarViewProps {
   war: GuildWarDetails | null;
@@ -33,12 +40,17 @@ interface GuildWarViewProps {
   pending: boolean;
   dictionary: Dictionary;
   lastAttackResult: WarAttackResult | null;
+  strategy?: WarRoomStrategyResponse | null;
+  members?: GuildMemberInfo[];
+  currentUserId?: string;
+  currentUserRole?: GuildRole | null;
   onClearAttackResult(): void;
   onDeclareWar(size?: number): Promise<boolean>;
   onAttack(defenderId: string): Promise<WarAttackResult | null>;
   onSimulateBattleDay(): Promise<void>;
   onSimulateWarEnd(): Promise<void>;
   onClaimSpoils(): Promise<boolean>;
+  onSetCallout?(payload: SetWarCalloutPayload): Promise<any>;
 }
 
 export function GuildWarView({
@@ -48,15 +60,21 @@ export function GuildWarView({
   pending,
   dictionary: t,
   lastAttackResult,
+  strategy,
+  members,
+  currentUserId,
+  currentUserRole,
   onClearAttackResult,
   onDeclareWar,
   onAttack,
   onSimulateBattleDay,
   onSimulateWarEnd,
   onClaimSpoils,
+  onSetCallout,
 }: GuildWarViewProps) {
   const [activeTab, setActiveTab] = useState<'enemy' | 'defenses' | 'log'>('enemy');
   const [selectedDefender, setSelectedDefender] = useState<GuildWarParticipant | null>(null);
+  const [selectedCalloutBase, setSelectedCalloutBase] = useState<GuildWarParticipant | null>(null);
 
   // 1. Idle state (not in war)
   if (!war) {
@@ -300,8 +318,13 @@ export function GuildWarView({
         <div className="guild-war-bases-list">
           {war.opposingParticipants.map((base) => {
             const canAttackThisBase = isBattle && war.currentUserAttacksLeft > 0;
+            const callout = strategy?.callouts?.find((c) => c.defenderPlayerId === base.playerId);
+
             return (
-              <div key={base.playerId} className="guild-war-base-card">
+              <div
+                key={base.playerId}
+                className={`guild-war-base-card ${callout?.marker ? `guild-war-base-card--${callout.marker.toLowerCase()}` : ''}`}
+              >
                 <div className="guild-war-base-rank">
                   <span>#{base.baseNumber}</span>
                 </div>
@@ -336,6 +359,17 @@ export function GuildWarView({
                 </div>
 
                 <div className="guild-war-base-action">
+                  {!callout ? (
+                    <button
+                      className="guild-war-strategy-btn"
+                      onClick={() => setSelectedCalloutBase(base)}
+                      title={t.guildChatUi.calloutModalTitle}
+                      type="button"
+                    >
+                      <Crosshair size={12} />
+                      <span>{t.guildChatUi.openCalloutBtn}</span>
+                    </button>
+                  ) : null}
                   <button
                     className="guild-btn guild-btn--primary guild-war-attack-btn"
                     disabled={!canAttackThisBase || pending}
@@ -345,6 +379,54 @@ export function GuildWarView({
                     <Swords size={14} /> {t.guildWarUi.attackBase}
                   </button>
                 </div>
+
+                {callout ? (
+                  <div className="war-tactical-directive-strip">
+                    <div className="war-tactical-directive-strip__left">
+                      <div className={`war-tactical-badge war-tactical-badge--${callout.marker.toLowerCase()}`}>
+                        {callout.marker === 'ATTACK_PRIORITY' ? (
+                          <Flame size={11} />
+                        ) : callout.marker === 'SCOUT_FIRST' ? (
+                          <Eye size={11} />
+                        ) : callout.marker === 'CLEARED' ? (
+                          <Check size={11} />
+                        ) : (
+                          <Crosshair size={11} />
+                        )}
+                        <span>
+                          {callout.marker === 'ATTACK_PRIORITY'
+                            ? t.guildChatUi.markerPriority
+                            : callout.marker === 'SCOUT_FIRST'
+                            ? t.guildChatUi.markerScout
+                            : callout.marker === 'CLEARED'
+                            ? t.guildChatUi.markerCleared
+                            : t.guildChatUi.markerTarget}
+                        </span>
+                        {callout.claimedByName ? (
+                          <span className="war-tactical-claimed">
+                            • <BidiValue>{callout.claimedByName}</BidiValue>
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {callout.notes ? (
+                        <span className="war-tactical-note-preview">
+                          <BidiValue>&ldquo;{callout.notes}&rdquo;</BidiValue>
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <button
+                      className="war-tactical-edit-btn"
+                      onClick={() => setSelectedCalloutBase(base)}
+                      title={t.guildChatUi.calloutModalTitle}
+                      type="button"
+                    >
+                      <Crosshair size={11} />
+                      <span>{t.guildChatUi.openCalloutBtn}</span>
+                    </button>
+                  </div>
+                ) : null}
               </div>
             );
           })}
@@ -482,6 +564,26 @@ export function GuildWarView({
             </button>
           </div>
         </div>
+      ) : null}
+
+      {/* War Room Strategy Directive Modal */}
+      {selectedCalloutBase ? (
+        <WarRoomStrategyModal
+          isOpen={!!selectedCalloutBase}
+          baseNumber={selectedCalloutBase.baseNumber}
+          defenderPlayerId={selectedCalloutBase.playerId}
+          defenderName={selectedCalloutBase.displayName}
+          existingCallout={strategy?.callouts?.find((c) => c.defenderPlayerId === selectedCalloutBase.playerId)}
+          members={members ?? []}
+          currentUserId={currentUserId}
+          canManageStrategy={currentUserRole === 'LEADER' || currentUserRole === 'OFFICER'}
+          pending={pending}
+          onSave={async (payload) => {
+            if (onSetCallout) await onSetCallout(payload);
+          }}
+          onClose={() => setSelectedCalloutBase(null)}
+          dictionary={t}
+        />
       ) : null}
     </div>
   );

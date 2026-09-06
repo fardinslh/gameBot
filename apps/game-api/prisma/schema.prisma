@@ -311,6 +311,9 @@ model Player {
   warAttacksTaken       GuildWarAttack[]            @relation("WarDefender")
   seasonRecords         PlayerSeasonRecord[]
   guildTreasuryDonations GuildTreasuryDonation[]    @relation("GuildTreasuryDonor")
+  sentGuildChatMessages  GuildChatMessage[]         @relation("GuildChatSender")
+  claimedWarCallouts    GuildWarCallout[]           @relation("WarCalloutClaimedBy")
+  assignedWarCallouts   GuildWarCallout[]           @relation("WarCalloutAssignedBy")
 
   @@index([isSystemOpponent, trophies, createdAt])
 }
@@ -890,6 +893,8 @@ model Guild {
   treasuryGold    BigInt                @default(0)
   perks           GuildPerk[]
   treasuryDonations GuildTreasuryDonation[]
+  chatMessages    GuildChatMessage[]
+  warCallouts     GuildWarCallout[]
 
   @@index([score(sort: Desc), name])
   @@index([joinPolicy, minTrophies])
@@ -973,6 +978,7 @@ model GuildWar {
   guild2            Guild                 @relation("OpposingGuildWars", fields: [guildId2], references: [id], onDelete: Cascade)
   participants      GuildWarParticipant[]
   attacks           GuildWarAttack[]
+  callouts          GuildWarCallout[]
 
   @@index([state, battleEndsAt])
   @@index([guildId1, state])
@@ -1085,6 +1091,57 @@ model GuildTreasuryDonation {
   @@index([guildId, createdAt])
   @@index([donorId, createdAt])
 }
+
+enum GuildChatMessageType {
+  TEXT
+  SYSTEM
+  ANNOUNCEMENT
+}
+
+model GuildChatMessage {
+  id        String               @id @default(uuid())
+  guildId   String
+  senderId  String?
+  type      GuildChatMessageType @default(TEXT)
+  content   String
+  isPinned  Boolean              @default(false)
+  metadata  Json?
+  createdAt DateTime             @default(now())
+  guild     Guild                @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  sender    Player?              @relation("GuildChatSender", fields: [senderId], references: [id], onDelete: SetNull)
+
+  @@index([guildId, createdAt(sort: Desc)])
+  @@index([guildId, isPinned])
+}
+
+enum WarTacticalMarker {
+  TARGET_CALLOUT
+  ATTACK_PRIORITY
+  SCOUT_FIRST
+  CLEARED
+}
+
+model GuildWarCallout {
+  id               String            @id @default(uuid())
+  warId            String
+  guildId          String
+  defenderPlayerId String
+  baseNumber       Int
+  marker           WarTacticalMarker @default(TARGET_CALLOUT)
+  claimedById      String?
+  notes            String?
+  assignedById     String
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  war              GuildWar          @relation(fields: [warId], references: [id], onDelete: Cascade)
+  guild            Guild             @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  claimedBy        Player?           @relation("WarCalloutClaimedBy", fields: [claimedById], references: [id], onDelete: SetNull)
+  assignedBy       Player            @relation("WarCalloutAssignedBy", fields: [assignedById], references: [id], onDelete: Cascade)
+
+  @@unique([warId, guildId, defenderPlayerId])
+  @@index([warId, guildId])
+}
+
 
 
 

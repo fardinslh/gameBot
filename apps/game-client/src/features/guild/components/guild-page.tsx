@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { Coins, Flame, LogOut, Shield, Sparkles, Swords, Trophy, Users } from 'lucide-react';
+import { Coins, Flame, LogOut, MessageSquare, Pin, Shield, Sparkles, Swords, Trophy, Users } from 'lucide-react';
 import type { Dictionary, Locale } from '@/i18n/config';
 import { BidiValue } from '@/i18n/bidi';
 import { BottomNavigation, type GameSection } from '@/features/kingdom/components/bottom-navigation';
 import { useGuildState, type GuildTab } from '../hooks/use-guild-state';
 import { useGuildWar } from '../hooks/use-guild-war';
 import { useGuildTreasury } from '../hooks/use-guild-treasury';
+import { useGuildChat } from '../hooks/use-guild-chat';
 import { GuildCrestBadge } from './guild-crest';
 import { CreateGuildModal } from './create-guild-modal';
 import { GuildRosterView } from './guild-roster-view';
@@ -16,6 +17,7 @@ import { GuildLeaderboardView } from './guild-leaderboard-view';
 import { GuildUnjoinedView } from './guild-unjoined-view';
 import { GuildWarView } from './guild-war-view';
 import { GuildPerksView } from './guild-perks-view';
+import { GuildChatView } from './guild-chat-view';
 
 interface GuildPageProps {
   locale: Locale;
@@ -32,6 +34,7 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
   const guildDetails = guild.overview?.guild;
   const warState = useGuildWar(inGuild);
   const treasuryState = useGuildTreasury(inGuild);
+  const chatState = useGuildChat(inGuild, !!warState.war);
 
   return (
     <div className="guild-viewport">
@@ -152,6 +155,20 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
               </button>
 
               <button
+                className={`guild-tab-btn ${guild.activeTab === 'chat' ? 'guild-tab-btn--active' : ''}`}
+                onClick={() => guild.setActiveTab('chat')}
+                role="tab"
+                type="button"
+              >
+                <MessageSquare size={15} /> {t.guildChatUi.chatTab}
+                {chatState.feed?.pinnedAnnouncement ? (
+                  <span className="guild-tab-badge guild-tab-badge--pinned" title={t.guildChatUi.pinnedAnnouncementTitle}>
+                    <Pin size={9} />
+                  </span>
+                ) : null}
+              </button>
+
+              <button
                 className={`guild-tab-btn ${guild.activeTab === 'roster' ? 'guild-tab-btn--active' : ''}`}
                 onClick={() => guild.setActiveTab('roster')}
                 role="tab"
@@ -186,15 +203,20 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
               ) : guild.activeTab === 'war' ? (
                 <GuildWarView
                   canDeclareWar={warState.canDeclareWar}
+                  currentUserId={guildDetails.members.find((m) => m.role === guildDetails.currentUserRole)?.playerId}
+                  currentUserRole={guildDetails.currentUserRole}
                   dictionary={t}
                   lastAttackResult={warState.lastAttackResult}
+                  members={guildDetails.members}
                   onAttack={warState.attackBase}
                   onClaimSpoils={warState.claimSpoils}
                   onClearAttackResult={warState.clearAttackResult}
                   onDeclareWar={warState.declareWar}
+                  onSetCallout={chatState.setCallout}
                   onSimulateBattleDay={warState.fastForwardBattleDay}
                   onSimulateWarEnd={warState.fastForwardWarEnd}
                   pending={warState.pending}
+                  strategy={chatState.strategy}
                   war={warState.war}
                   warRecord={warState.warRecord}
                 />
@@ -210,6 +232,15 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   onUpgrade={treasuryState.upgrade}
                   onClearDonationResult={treasuryState.clearDonationResult}
                   onClearUpgradeResult={treasuryState.clearUpgradeResult}
+                />
+              ) : guild.activeTab === 'chat' ? (
+                <GuildChatView
+                  currentUserId={guildDetails.members.find((m) => m.role === guildDetails.currentUserRole)?.playerId}
+                  dictionary={t}
+                  feed={chatState.feed}
+                  loading={chatState.loading}
+                  onSendMessage={chatState.sendMessage}
+                  pending={chatState.pending}
                 />
               ) : guild.activeTab === 'roster' ? (
                 <GuildRosterView
@@ -255,14 +286,15 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
         ) : null}
 
         {/* Error Alert */}
-        {guild.error || warState.error || treasuryState.error ? (
+        {guild.error || warState.error || treasuryState.error || chatState.error ? (
           <div className="guild-error-banner" role="alert">
-            <span>{guild.error || warState.error || treasuryState.error}</span>
+            <span>{guild.error || warState.error || treasuryState.error || chatState.error}</span>
             <button
               onClick={() => {
                 if (guild.error) guild.clearError();
                 if (warState.error) warState.refreshWar();
                 if (treasuryState.error) treasuryState.clearError();
+                if (chatState.error) chatState.clearError();
               }}
               type="button"
             >

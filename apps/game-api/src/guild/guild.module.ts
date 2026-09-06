@@ -7,11 +7,13 @@ import { GuildWarService } from './guild-war.service';
 
 import { GuildTreasuryController } from './guild-treasury.controller';
 import { GuildTreasuryService } from './guild-treasury.service';
+import { GuildChatController } from './guild-chat.controller';
+import { GuildChatService } from './guild-chat.service';
 
 @Module({
   imports: [PlayerModule],
-  controllers: [GuildWarController, GuildController, GuildTreasuryController],
-  providers: [GuildService, GuildWarService, GuildTreasuryService],
-  exports: [GuildService, GuildWarService, GuildTreasuryService],
+  controllers: [GuildWarController, GuildController, GuildTreasuryController, GuildChatController],
+  providers: [GuildService, GuildWarService, GuildTreasuryService, GuildChatService],
+  exports: [GuildService, GuildWarService, GuildTreasuryService, GuildChatService],
 })
 export class GuildModule {}
