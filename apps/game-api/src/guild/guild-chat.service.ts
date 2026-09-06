@@ -127,6 +127,7 @@ export class GuildChatService {
         senderProfileCrest: (msg.sender?.equippedProfileCrest ?? 'DEFAULT') as ProfileCrestKey,
         type: msg.type,
         content: msg.content,
+        metadata: (msg.metadata as Record<string, any>) ?? null,
         isPinned: msg.isPinned,
         createdAt: msg.createdAt.toISOString(),
       };

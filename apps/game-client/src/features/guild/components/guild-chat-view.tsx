@@ -8,9 +8,11 @@ import {
   Flame,
   MessageSquare,
   Pin,
+  Play,
   Send,
   Shield,
   Sparkles,
+  Swords,
   Users,
 } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
@@ -20,6 +22,7 @@ import type {
   GuildChatMessageItem,
   GuildRole,
 } from '@crown-and-coin/shared';
+import { CreateScrimmageModal } from './create-scrimmage-modal';
 
 interface GuildChatViewProps {
   dictionary: Dictionary;
@@ -28,6 +31,9 @@ interface GuildChatViewProps {
   pending: boolean;
   currentUserId?: string;
   onSendMessage(content: string, isAnnouncement?: boolean, isPinned?: boolean): Promise<any>;
+  onPostChallenge?(message?: string): Promise<any>;
+  onAttackChallenge?(challengeId: string): Promise<any>;
+  onWatchReplay?(replayId: string): Promise<any>;
 }
 
 type ChatFilter = 'ALL' | 'CHAT' | 'SYSTEM';
@@ -39,11 +45,15 @@ export function GuildChatView({
   pending,
   currentUserId,
   onSendMessage,
+  onPostChallenge,
+  onAttackChallenge,
+  onWatchReplay,
 }: GuildChatViewProps) {
   const [filter, setFilter] = useState<ChatFilter>('ALL');
   const [text, setText] = useState('');
   const [isAnnouncement, setIsAnnouncement] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
+  const [isChallengeModalOpen, setIsChallengeModalOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -73,7 +83,7 @@ export function GuildChatView({
   };
 
   const filteredMessages = feed.messages.filter((m) => {
-    if (filter === 'CHAT') return m.type === 'TEXT' || m.type === 'ANNOUNCEMENT';
+    if (filter === 'CHAT') return m.type === 'TEXT' || m.type === 'ANNOUNCEMENT' || m.type === 'SCRIMMAGE';
     if (filter === 'SYSTEM') return m.type === 'SYSTEM';
     return true;
   });
@@ -139,6 +149,15 @@ export function GuildChatView({
         >
           <Bell size={13} /> {t.guildChatUi.filterSystem}
         </button>
+        {onPostChallenge ? (
+          <button
+            type="button"
+            className="guild-chat-filter-btn guild-chat-issue-challenge-btn"
+            onClick={() => setIsChallengeModalOpen(true)}
+          >
+            <Swords size={13} /> {t.guildScrimmageUi.postChallengeBtn}
+          </button>
+        ) : null}
       </div>
 
       {/* 3. Message Feed Container */}
@@ -153,6 +172,7 @@ export function GuildChatView({
             const isOwnMessage = msg.senderId === currentUserId;
 
             if (msg.type === 'SYSTEM') {
+              const replayId = msg.metadata?.replayId;
               return (
                 <div key={msg.id} className="guild-chat-system-row">
                   <span className="guild-chat-system-badge">
@@ -161,6 +181,69 @@ export function GuildChatView({
                   <span className="guild-chat-system-text">
                     <BidiValue>{msg.content}</BidiValue>
                   </span>
+                  {replayId && onWatchReplay ? (
+                    <button
+                      type="button"
+                      className="guild-chat-replay-btn"
+                      onClick={() => onWatchReplay(replayId)}
+                      title={t.guildScrimmageUi.watchReplay}
+                    >
+                      <Play size={11} /> {t.guildScrimmageUi.watchReplay}
+                    </button>
+                  ) : null}
+                </div>
+              );
+            }
+
+            if (msg.type === 'SCRIMMAGE') {
+              const challengeId = (msg.metadata?.challengeId as string) || msg.id;
+              const isOwnChallenge = msg.senderId === currentUserId;
+
+              return (
+                <div key={msg.id} className="guild-chat-scrimmage-card">
+                  <div className="guild-chat-scrimmage-card__header">
+                    <div className="guild-chat-scrimmage-card__badge">
+                      <Swords size={14} />
+                      <span>{t.guildScrimmageUi.modalTitle}</span>
+                    </div>
+                    <small className="guild-chat-scrimmage-card__author">
+                      <BidiValue>{msg.senderName}</BidiValue>
+                      {msg.metadata?.creatorCastleLevel ? (
+                        <span> • {t.guildUi.castle} Lv. <BidiValue direction="ltr">{msg.metadata.creatorCastleLevel}</BidiValue></span>
+                      ) : null}
+                    </small>
+                  </div>
+
+                  <p className="guild-chat-scrimmage-card__message">
+                    <BidiValue>{msg.content}</BidiValue>
+                  </p>
+
+                  <div className="guild-chat-scrimmage-card__actions">
+                    {isOwnChallenge ? (
+                      <span className="guild-chat-scrimmage-own-tag">
+                        <Shield size={12} /> {t.guildScrimmageUi.ownChallengeWarning}
+                      </span>
+                    ) : onAttackChallenge ? (
+                      <button
+                        type="button"
+                        className="scrimmage-action-btn scrimmage-action-btn--attack"
+                        onClick={() => onAttackChallenge(challengeId)}
+                        disabled={pending}
+                      >
+                        <Swords size={13} /> {t.guildScrimmageUi.attackChallenge}
+                      </button>
+                    ) : null}
+
+                    {onWatchReplay ? (
+                      <button
+                        type="button"
+                        className="scrimmage-action-btn scrimmage-action-btn--watch"
+                        onClick={() => onWatchReplay(challengeId)}
+                      >
+                        <Play size={13} /> {t.guildScrimmageUi.watchReplay}
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               );
             }
@@ -241,6 +324,19 @@ export function GuildChatView({
           </button>
         </div>
       </form>
+
+      {/* 5. Create Friendly Scrimmage Modal */}
+      <CreateScrimmageModal
+        isOpen={isChallengeModalOpen}
+        onClose={() => setIsChallengeModalOpen(false)}
+        onSubmit={async (message) => {
+          if (onPostChallenge) {
+            await onPostChallenge(message);
+          }
+        }}
+        pending={pending}
+        dictionary={t}
+      />
     </div>
   );
 }

@@ -1580,7 +1580,7 @@ export interface UpgradeGuildPerkResponse {
 // Alliance Chat & War Room Strategy Types
 // ==========================================
 
-export const GUILD_CHAT_MESSAGE_TYPES = ['TEXT', 'SYSTEM', 'ANNOUNCEMENT'] as const;
+export const GUILD_CHAT_MESSAGE_TYPES = ['TEXT', 'SYSTEM', 'ANNOUNCEMENT', 'SCRIMMAGE'] as const;
 export type GuildChatMessageType = (typeof GUILD_CHAT_MESSAGE_TYPES)[number];
 
 export interface GuildChatMessageItem {
@@ -1593,6 +1593,7 @@ export interface GuildChatMessageItem {
   type: GuildChatMessageType;
   content: string;
   isPinned: boolean;
+  metadata?: Record<string, any> | null;
   createdAt: string;
 }
 
@@ -1644,6 +1645,73 @@ export interface WarRoomStrategyResponse {
   pinnedStrategyNotice: string | null;
   canManageStrategy: boolean;
 }
+
+// ==========================================
+// Friendly Scrimmages & Replay Spectator Types
+// ==========================================
+
+export const FRIENDLY_CHALLENGE_STATUSES = ['OPEN', 'COMPLETED', 'EXPIRED'] as const;
+export type FriendlyChallengeStatus = (typeof FRIENDLY_CHALLENGE_STATUSES)[number];
+
+export interface WarReplayEvent {
+  timeSeconds: number;
+  label: string;
+  category: 'DEPLOYMENT' | 'DAMAGE' | 'STAR_SCORED' | 'HERO_SKILL' | 'DESTRUCTION_BENCHMARK';
+  destructionPct: number;
+  stars: number;
+}
+
+export interface WarBattleReplay {
+  id: string;
+  title: string;
+  source: 'WAR' | 'SCRIMMAGE';
+  attackerName: string;
+  attackerClanName?: string;
+  attackerCastleLevel: number;
+  defenderName: string;
+  defenderClanName?: string;
+  defenderCastleLevel: number;
+  stars: number;
+  destructionPct: number;
+  durationSeconds: number;
+  armyComposition: Array<{ troopType: TroopType; count: number; survived: number }>;
+  defenseBuildings: Array<{ type: string; level: number; destroyed: boolean }>;
+  timelineEvents: WarReplayEvent[];
+  resolvedAt: string;
+}
+
+export interface GuildFriendlyChallengeItem {
+  id: string;
+  guildId: string;
+  creatorId: string;
+  creatorName: string;
+  creatorCastleLevel: number;
+  message: string;
+  status: FriendlyChallengeStatus;
+  attackerId?: string | null;
+  attackerName?: string | null;
+  stars?: number | null;
+  destructionPct?: number | null;
+  replayId?: string | null;
+  createdAt: string;
+  completedAt?: string | null;
+}
+
+export interface PostFriendlyChallengePayload {
+  message?: string;
+}
+
+export interface AcceptFriendlyChallengeResult {
+  challengeId: string;
+  stars: number;
+  destructionPct: number;
+  replay: WarBattleReplay;
+}
+
+export interface FriendlyChallengesResponse {
+  challenges: GuildFriendlyChallengeItem[];
+}
+
 
 
 

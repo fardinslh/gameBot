@@ -314,6 +314,8 @@ model Player {
   sentGuildChatMessages  GuildChatMessage[]         @relation("GuildChatSender")
   claimedWarCallouts    GuildWarCallout[]           @relation("WarCalloutClaimedBy")
   assignedWarCallouts   GuildWarCallout[]           @relation("WarCalloutAssignedBy")
+  createdFriendlyChallenges GuildFriendlyChallenge[] @relation("CreatedFriendlyChallenges")
+  attackedFriendlyChallenges GuildFriendlyChallenge[] @relation("AttackedFriendlyChallenges")
 
   @@index([isSystemOpponent, trophies, createdAt])
 }
@@ -895,6 +897,7 @@ model Guild {
   treasuryDonations GuildTreasuryDonation[]
   chatMessages    GuildChatMessage[]
   warCallouts     GuildWarCallout[]
+  friendlyChallenges GuildFriendlyChallenge[]
 
   @@index([score(sort: Desc), name])
   @@index([joinPolicy, minTrophies])
@@ -1014,6 +1017,7 @@ model GuildWarAttack {
   destructionPct  Float
   spoilsGold      BigInt   @default(0)
   timeMs          Int      @default(0)
+  replayData      Json?
   createdAt       DateTime @default(now())
   war             GuildWar @relation(fields: [warId], references: [id], onDelete: Cascade)
   attacker        Player   @relation("WarAttacker", fields: [attackerId], references: [id], onDelete: Cascade)
@@ -1096,6 +1100,7 @@ enum GuildChatMessageType {
   TEXT
   SYSTEM
   ANNOUNCEMENT
+  SCRIMMAGE
 }
 
 model GuildChatMessage {
@@ -1141,6 +1146,34 @@ model GuildWarCallout {
   @@unique([warId, guildId, defenderPlayerId])
   @@index([warId, guildId])
 }
+
+enum FriendlyChallengeStatus {
+  OPEN
+  COMPLETED
+  EXPIRED
+}
+
+model GuildFriendlyChallenge {
+  id             String                  @id @default(uuid())
+  guildId        String
+  creatorId      String
+  message        String?
+  status         FriendlyChallengeStatus @default(OPEN)
+  attackerId     String?
+  stars          Int?
+  destructionPct Float?
+  replayData     Json?
+  createdAt      DateTime                @default(now())
+  completedAt    DateTime?
+  guild          Guild                   @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  creator        Player                  @relation("CreatedFriendlyChallenges", fields: [creatorId], references: [id], onDelete: Cascade)
+  attacker       Player?                 @relation("AttackedFriendlyChallenges", fields: [attackerId], references: [id], onDelete: SetNull)
+
+  @@index([guildId, status])
+  @@index([creatorId])
+  @@index([attackerId])
+}
+
 
 
 

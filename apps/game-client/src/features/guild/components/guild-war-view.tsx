@@ -10,6 +10,7 @@ import {
   Eye,
   FastForward,
   Flame,
+  Play,
   Shield,
   Sparkles,
   Star,
@@ -51,6 +52,7 @@ interface GuildWarViewProps {
   onSimulateWarEnd(): Promise<void>;
   onClaimSpoils(): Promise<boolean>;
   onSetCallout?(payload: SetWarCalloutPayload): Promise<any>;
+  onWatchReplay?(replayId: string): Promise<any>;
 }
 
 export function GuildWarView({
@@ -71,6 +73,7 @@ export function GuildWarView({
   onSimulateWarEnd,
   onClaimSpoils,
   onSetCallout,
+  onWatchReplay,
 }: GuildWarViewProps) {
   const [activeTab, setActiveTab] = useState<'enemy' | 'defenses' | 'log'>('enemy');
   const [selectedDefender, setSelectedDefender] = useState<GuildWarParticipant | null>(null);
@@ -508,6 +511,16 @@ export function GuildWarView({
                   </div>
                   <span><BidiValue direction="ltr">{atk.destructionPct.toFixed(0)}%</BidiValue></span>
                 </div>
+                {onWatchReplay ? (
+                  <button
+                    type="button"
+                    className="guild-war-replay-btn"
+                    onClick={() => onWatchReplay(atk.id)}
+                    title={t.guildScrimmageUi.watchReplay}
+                  >
+                    <Play size={11} /> {t.guildScrimmageUi.watchReplay}
+                  </button>
+                ) : null}
               </div>
             ))
           )}

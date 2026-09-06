@@ -9,6 +9,7 @@ import { useGuildState, type GuildTab } from '../hooks/use-guild-state';
 import { useGuildWar } from '../hooks/use-guild-war';
 import { useGuildTreasury } from '../hooks/use-guild-treasury';
 import { useGuildChat } from '../hooks/use-guild-chat';
+import { useGuildScrimmages } from '../hooks/use-guild-scrimmages';
 import { GuildCrestBadge } from './guild-crest';
 import { CreateGuildModal } from './create-guild-modal';
 import { GuildRosterView } from './guild-roster-view';
@@ -18,6 +19,7 @@ import { GuildUnjoinedView } from './guild-unjoined-view';
 import { GuildWarView } from './guild-war-view';
 import { GuildPerksView } from './guild-perks-view';
 import { GuildChatView } from './guild-chat-view';
+import { ReplaySpectatorModal } from './replay-spectator-modal';
 
 interface GuildPageProps {
   locale: Locale;
@@ -35,6 +37,7 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
   const warState = useGuildWar(inGuild);
   const treasuryState = useGuildTreasury(inGuild);
   const chatState = useGuildChat(inGuild, !!warState.war);
+  const scrimmageState = useGuildScrimmages(inGuild);
 
   return (
     <div className="guild-viewport">
@@ -215,6 +218,7 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   onSetCallout={chatState.setCallout}
                   onSimulateBattleDay={warState.fastForwardBattleDay}
                   onSimulateWarEnd={warState.fastForwardWarEnd}
+                  onWatchReplay={scrimmageState.watchReplay}
                   pending={warState.pending}
                   strategy={chatState.strategy}
                   war={warState.war}
@@ -239,8 +243,19 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
                   dictionary={t}
                   feed={chatState.feed}
                   loading={chatState.loading}
+                  onAttackChallenge={async (cid) => {
+                    const res = await scrimmageState.attackChallenge(cid);
+                    await chatState.refreshChat();
+                    return res;
+                  }}
+                  onPostChallenge={async (msg) => {
+                    const res = await scrimmageState.postChallenge(msg);
+                    await chatState.refreshChat();
+                    return res;
+                  }}
                   onSendMessage={chatState.sendMessage}
-                  pending={chatState.pending}
+                  onWatchReplay={scrimmageState.watchReplay}
+                  pending={chatState.pending || scrimmageState.pending}
                 />
               ) : guild.activeTab === 'roster' ? (
                 <GuildRosterView
@@ -271,6 +286,13 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
           pending={guild.actionPending}
         />
 
+        {/* Replay Spectator Theater Modal */}
+        <ReplaySpectatorModal
+          dictionary={t}
+          onClose={scrimmageState.closeReplay}
+          replay={scrimmageState.activeReplay}
+        />
+
         {/* Donation Reward Toast */}
         {guild.donationReward ? (
           <div className="guild-reward-toast" role="status">
@@ -286,15 +308,16 @@ export function GuildPage({ dictionary: t, onNavigate }: GuildPageProps) {
         ) : null}
 
         {/* Error Alert */}
-        {guild.error || warState.error || treasuryState.error || chatState.error ? (
+        {guild.error || warState.error || treasuryState.error || chatState.error || scrimmageState.error ? (
           <div className="guild-error-banner" role="alert">
-            <span>{guild.error || warState.error || treasuryState.error || chatState.error}</span>
+            <span>{guild.error || warState.error || treasuryState.error || chatState.error || scrimmageState.error}</span>
             <button
               onClick={() => {
                 if (guild.error) guild.clearError();
                 if (warState.error) warState.refreshWar();
                 if (treasuryState.error) treasuryState.clearError();
                 if (chatState.error) chatState.clearError();
+                if (scrimmageState.error) scrimmageState.clearError();
               }}
               type="button"
             >
