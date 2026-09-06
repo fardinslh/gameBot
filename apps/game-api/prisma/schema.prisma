@@ -91,6 +91,7 @@ enum EconomyTransactionReason {
   GUILD_CREATE
   GUILD_DONATION_REWARD
   GUILD_WAR_SPOILS
+  SEASON_REWARD
 }
 
 enum EconomyAction {
@@ -113,6 +114,22 @@ enum EconomyAction {
   GUILD_CREATE
   GUILD_DONATE
   GUILD_WAR_SPOILS_CLAIM
+  SEASON_REWARD_CLAIM
+}
+
+enum SeasonStatus {
+  ACTIVE
+  FINALIZING
+  ENDED
+}
+
+enum TrophyLeague {
+  BRONZE
+  SILVER
+  GOLD
+  CRYSTAL
+  MASTER
+  CHAMPION
 }
 
 enum ShopCategory {
@@ -290,6 +307,7 @@ model Player {
   warParticipants       GuildWarParticipant[]
   warAttacksMade        GuildWarAttack[]            @relation("WarAttacker")
   warAttacksTaken       GuildWarAttack[]            @relation("WarDefender")
+  seasonRecords         PlayerSeasonRecord[]
 
   @@index([isSystemOpponent, trophies, createdAt])
 }
@@ -995,4 +1013,38 @@ model GuildWarAttack {
   @@index([warId, defenderId])
   @@index([warId, createdAt])
 }
+
+model Season {
+  id            String               @id @default(uuid())
+  seasonNumber  Int                  @unique
+  name          String
+  status        SeasonStatus         @default(ACTIVE)
+  startsAt      DateTime
+  endsAt        DateTime
+  playerRecords PlayerSeasonRecord[]
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+
+  @@index([status, endsAt])
+}
+
+model PlayerSeasonRecord {
+  id               String        @id @default(uuid())
+  playerId         String
+  seasonId         String
+  startingTrophies Int           @default(0)
+  peakTrophies     Int           @default(0)
+  endingTrophies   Int?
+  endingLeague     TrophyLeague?
+  rewardsClaimed   Boolean       @default(false)
+  claimedAt        DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  player           Player        @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  season           Season        @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+
+  @@unique([playerId, seasonId])
+  @@index([seasonId, playerId])
+}
+
 

@@ -138,17 +138,34 @@ export class LeaderboardService {
     }
 
     const now = Date.now();
-    const elapsedSinceEpoch = Math.max(0, now - SEASON_EPOCH);
-    const seasonNumber = Math.floor(elapsedSinceEpoch / SEASON_DURATION_MS) + 1;
-    const seasonEndMs = SEASON_EPOCH + seasonNumber * SEASON_DURATION_MS;
-    const daysRemaining = Math.max(1, Math.ceil((seasonEndMs - now) / (24 * 60 * 60 * 1000)));
+    const activeSeason = await this.prisma.season.findFirst({
+      where: { status: 'ACTIVE' },
+      orderBy: { seasonNumber: 'desc' },
+    });
 
-    const season: LeaderboardSeasonInfo = {
-      seasonId: `season-${seasonNumber}`,
-      name: `Season ${seasonNumber}`,
-      endsAt: new Date(seasonEndMs).toISOString(),
-      daysRemaining,
-    };
+    let season: LeaderboardSeasonInfo;
+    if (activeSeason) {
+      const endsAtMs = activeSeason.endsAt.getTime();
+      const daysRemaining = Math.max(1, Math.ceil((endsAtMs - now) / (24 * 60 * 60 * 1000)));
+      season = {
+        seasonId: activeSeason.id,
+        name: activeSeason.name,
+        endsAt: activeSeason.endsAt.toISOString(),
+        daysRemaining,
+      };
+    } else {
+      const elapsedSinceEpoch = Math.max(0, now - SEASON_EPOCH);
+      const seasonNumber = Math.floor(elapsedSinceEpoch / SEASON_DURATION_MS) + 1;
+      const seasonEndMs = SEASON_EPOCH + seasonNumber * SEASON_DURATION_MS;
+      const daysRemaining = Math.max(1, Math.ceil((seasonEndMs - now) / (24 * 60 * 60 * 1000)));
+
+      season = {
+        seasonId: `season-${seasonNumber}`,
+        name: `Season ${seasonNumber}`,
+        endsAt: new Date(seasonEndMs).toISOString(),
+        daysRemaining,
+      };
+    }
 
     return {
       topPlayers,

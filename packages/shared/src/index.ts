@@ -1412,4 +1412,78 @@ export const GUILD_WAR_DEFAULT_SIZE = 5;
 export const GUILD_WAR_WIN_SPOILS_GOLD = '50000';
 export const GUILD_WAR_LOSE_SPOILS_GOLD = '15000';
 
+// ==========================================
+// Ranked Seasons & Tournaments Domain Types
+// ==========================================
+
+export const SEASON_STATUSES = ['ACTIVE', 'FINALIZING', 'ENDED'] as const;
+export type SeasonStatus = (typeof SEASON_STATUSES)[number];
+
+export interface SeasonRewardTier {
+  league: TrophyLeague;
+  gems: number;
+  gold: string;
+  title?: string;
+}
+
+export const SEASON_REWARD_TIERS: Record<TrophyLeague, SeasonRewardTier> = {
+  BRONZE: { league: 'BRONZE', gems: 50, gold: '25000' },
+  SILVER: { league: 'SILVER', gems: 100, gold: '60000' },
+  GOLD: { league: 'GOLD', gems: 250, gold: '150000' },
+  CRYSTAL: { league: 'CRYSTAL', gems: 500, gold: '350000' },
+  MASTER: { league: 'MASTER', gems: 1000, gold: '750000' },
+  CHAMPION: { league: 'CHAMPION', gems: 2500, gold: '1500000', title: 'Crown Champion' },
+};
+
+export interface SeasonSummary {
+  id: string;
+  seasonNumber: number;
+  name: string;
+  status: SeasonStatus;
+  startsAt: string;
+  endsAt: string;
+  timeRemainingSeconds: number;
+}
+
+export interface PreviousSeasonStanding {
+  seasonNumber: number;
+  seasonName: string;
+  endingTrophies: number;
+  endingLeague: TrophyLeague;
+  rewardsClaimed: boolean;
+  reward: SeasonRewardTier;
+}
+
+export interface SeasonPlayerStanding {
+  currentTrophies: number;
+  currentLeague: TrophyLeague;
+  peakTrophies: number;
+  projectedReward: SeasonRewardTier;
+  previousSeason: PreviousSeasonStanding | null;
+}
+
+export interface SeasonOverviewResponse {
+  currentSeason: SeasonSummary;
+  playerStanding: SeasonPlayerStanding;
+  rewardTiers: SeasonRewardTier[];
+  topGuilds: Array<{
+    rank: number;
+    id: string;
+    name: string;
+    tag: string;
+    emblem: string;
+    score: number;
+  }>;
+}
+
+export interface ClaimSeasonRewardResponse {
+  seasonNumber: number;
+  gemsAwarded: number;
+  goldAwarded: string;
+  endingLeague: TrophyLeague;
+  titleAwarded?: string;
+  claimedAt: string;
+}
+
+
 

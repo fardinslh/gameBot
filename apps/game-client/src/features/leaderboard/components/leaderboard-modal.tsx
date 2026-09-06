@@ -28,10 +28,12 @@ import {
 import type { Dictionary, Locale } from '@/i18n/config';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { formatAmount } from '@/features/kingdom/components/resource-hud';
+import { useSeason } from '@/features/season/hooks/use-season';
+import { SeasonTabView } from '@/features/season/components/season-tab-view';
 import { useLeaderboard } from '../hooks/use-leaderboard';
 import { LeagueBadge } from './league-badge';
 
-type LeaderboardTab = 'top' | 'leagues';
+type LeaderboardTab = 'top' | 'leagues' | 'season';
 
 interface LeaderboardModalProps {
   isOpen: boolean;
@@ -52,6 +54,7 @@ export function LeaderboardModal({
 }: LeaderboardModalProps) {
   const [activeTab, setActiveTab] = useState<LeaderboardTab>('top');
   const { data, loading, error, refresh } = useLeaderboard(isOpen);
+  const season = useSeason(isOpen);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -72,6 +75,9 @@ export function LeaderboardModal({
   const top3 = data?.topPlayers.slice(0, 3) ?? [];
   const restPlayers = data?.topPlayers.slice(3) ?? [];
   const currentPlayer = data?.currentPlayer;
+  const hasUnclaimedSeasonLoot =
+    season.overview?.playerStanding.previousSeason &&
+    !season.overview.playerStanding.previousSeason.rewardsClaimed;
 
   return (
     <div
@@ -107,11 +113,16 @@ export function LeaderboardModal({
         </header>
 
         {/* Season Info Banner */}
-        <div className="leaderboard-season-banner">
+        <div
+          className="leaderboard-season-banner leaderboard-season-banner--clickable"
+          onClick={() => setActiveTab('season')}
+          role="button"
+          tabIndex={0}
+        >
           <div className="leaderboard-season-info">
             <span className="leaderboard-season-badge">
               <Calendar size={13} />
-              <strong>{data?.season.name ?? 'Season'}</strong>
+              <strong>{season.overview?.currentSeason.name ?? data?.season.name ?? 'Season'}</strong>
             </span>
             <span className="leaderboard-season-time">
               <Clock size={12} />
@@ -121,7 +132,11 @@ export function LeaderboardModal({
               />
             </span>
           </div>
-          {currentPlayer ? (
+          {hasUnclaimedSeasonLoot ? (
+            <span className="season-loot-ready-badge">
+              <Gift size={12} /> REWARDS READY!
+            </span>
+          ) : currentPlayer ? (
             <div className="leaderboard-season-standing">
               <small>{t.leaderboard.yourRank}</small>
               <strong>#{currentPlayer.rank}</strong>
@@ -149,11 +164,38 @@ export function LeaderboardModal({
             <Award size={15} />
             <span>{t.leaderboard.leaguesTab}</span>
           </button>
+          <button
+            aria-selected={activeTab === 'season'}
+            onClick={() => setActiveTab('season')}
+            role="tab"
+            type="button"
+          >
+            <Crown size={15} />
+            <span>{t.seasonUi.seasonTab}</span>
+            {hasUnclaimedSeasonLoot ? (
+              <span className="guild-tab-badge guild-tab-badge--war">!</span>
+            ) : null}
+          </button>
         </nav>
 
         {/* Tab Content */}
         <div className="leaderboard-content">
-          {loading && !data ? (
+          {activeTab === 'season' ? (
+            <SeasonTabView
+              claimSuccess={season.claimSuccess}
+              dictionary={t}
+              loading={season.loading}
+              onClaimRewards={season.claimRewards}
+              onClearClaimSuccess={season.clearClaimSuccess}
+              onSimulateEndSeason={async () => {
+                const ok = await season.simulateEndSeason();
+                if (ok) await refresh();
+                return ok;
+              }}
+              overview={season.overview}
+              pending={season.pending}
+            />
+          ) : loading && !data ? (
             <div className="leaderboard-loading">
               <span className="leaderboard-spinner" />
               <p>{t.leaderboard.loading}</p>
