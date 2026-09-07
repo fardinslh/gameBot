@@ -14,6 +14,7 @@ export async function fetchFriendlyChallenges(
   const res = await fetch(`${API_BASE}/guilds/scrimmages`, {
     signal,
     headers: { 'content-type': 'application/json' },
+    cache: 'no-store',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Failed to fetch friendly challenges' }));
@@ -29,6 +30,7 @@ export async function postFriendlyChallenge(
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
+    cache: 'no-store',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Failed to issue friendly challenge' }));
@@ -43,6 +45,7 @@ export async function acceptFriendlyChallenge(
   const res = await fetch(`${API_BASE}/guilds/scrimmages/${challengeId}/attack`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
+    cache: 'no-store',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Failed to attack scrimmage challenge' }));
@@ -54,6 +57,7 @@ export async function acceptFriendlyChallenge(
 export async function fetchBattleReplay(replayId: string): Promise<WarBattleReplay> {
   const res = await fetch(`${API_BASE}/guilds/replays/${replayId}`, {
     headers: { 'content-type': 'application/json' },
+    cache: 'no-store',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: 'Failed to load battle replay' }));

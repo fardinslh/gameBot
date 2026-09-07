@@ -25,6 +25,11 @@ describe('GuildScrimmageService', () => {
       },
       platformAccount: {
         findFirst: vi.fn(),
+        findUnique: vi.fn(),
+      },
+      player: {
+        findUnique: vi.fn(),
+        create: vi.fn(),
       },
       $transaction: vi.fn(async (cb: any) => cb(mockPrisma)),
     };
@@ -171,4 +176,63 @@ describe('GuildScrimmageService', () => {
       expect(replay.timelineEvents).toBeDefined();
     });
   });
+
+  describe('resolvePlayerId', () => {
+    it('resolves playerId from existing platform account', async () => {
+      mockPrisma.platformAccount.findUnique.mockResolvedValue({ playerId: 'player-account-1' });
+
+      const res = await service.resolvePlayerId({
+        platform: 'WEB',
+        externalUserId: 'ext-user-1',
+      } as any);
+      expect(res).toBe('player-account-1');
+      expect(mockPrisma.platformAccount.findUnique).toHaveBeenCalledWith({
+        where: {
+          platform_externalUserId: {
+            platform: 'WEB',
+            externalUserId: 'ext-user-1',
+          },
+        },
+        select: { playerId: true },
+      });
+    });
+
+    it('resolves playerId from direct player id when platform account not found', async () => {
+      mockPrisma.platformAccount.findUnique.mockResolvedValue(null);
+      mockPrisma.player.findUnique.mockResolvedValue({ id: 'direct-player-id' });
+
+      const res = await service.resolvePlayerId('direct-player-id');
+      expect(res).toBe('direct-player-id');
+      expect(mockPrisma.player.findUnique).toHaveBeenCalledWith({
+        where: { id: 'direct-player-id' },
+        select: { id: true },
+      });
+    });
+
+    it('auto-creates player when account and direct player do not exist', async () => {
+      mockPrisma.platformAccount.findUnique.mockResolvedValue(null);
+      mockPrisma.player.findUnique.mockResolvedValue(null);
+      mockPrisma.player.create.mockResolvedValue({ id: 'new-player-id' });
+
+      const res = await service.resolvePlayerId('new-user-123');
+      expect(res).toBe('new-player-id');
+      expect(mockPrisma.player.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            displayName: 'Warden of Dawnkeep',
+          }),
+          select: { id: true },
+        }),
+      );
+    });
+
+    it('throws NotFoundException when player creation fails', async () => {
+      mockPrisma.platformAccount.findUnique.mockResolvedValue(null);
+      mockPrisma.player.findUnique.mockResolvedValue(null);
+      mockPrisma.player.create.mockRejectedValue(new Error('DB connection failed'));
+
+      await expect(service.resolvePlayerId('failed-user')).rejects.toThrow('Player account not found');
+    });
+  });
 });
+

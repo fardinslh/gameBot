@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { GuildScrimmageService } from './guild-scrimmage.service';
 import { PostFriendlyChallengeDto } from './guild-scrimmage.dto';
+import { PlayerContextService } from '../player/player-context.service';
 import type {
   AcceptFriendlyChallengeResult,
   FriendlyChallengesResponse,
@@ -17,13 +18,18 @@ import type {
 
 @Controller('guilds')
 export class GuildScrimmageController {
-  constructor(private readonly scrimmageService: GuildScrimmageService) {}
+  constructor(
+    private readonly scrimmageService: GuildScrimmageService,
+    private readonly playerContext: PlayerContextService,
+  ) {}
 
   @Get('scrimmages')
   async getChallenges(
     @Headers('x-dev-player-id') devPlayerId?: string,
   ): Promise<FriendlyChallengesResponse> {
-    const playerId = await this.scrimmageService.resolvePlayerId(devPlayerId ?? 'dev-player');
+    const playerId = await this.scrimmageService.resolvePlayerId(
+      this.playerContext.resolve(devPlayerId),
+    );
     return this.scrimmageService.getChallenges(playerId);
   }
 
@@ -32,7 +38,9 @@ export class GuildScrimmageController {
     @Body() dto: PostFriendlyChallengeDto,
     @Headers('x-dev-player-id') devPlayerId?: string,
   ): Promise<GuildFriendlyChallengeItem> {
-    const playerId = await this.scrimmageService.resolvePlayerId(devPlayerId ?? 'dev-player');
+    const playerId = await this.scrimmageService.resolvePlayerId(
+      this.playerContext.resolve(devPlayerId),
+    );
     return this.scrimmageService.postChallenge(playerId, dto);
   }
 
@@ -41,7 +49,9 @@ export class GuildScrimmageController {
     @Param('id') challengeId: string,
     @Headers('x-dev-player-id') devPlayerId?: string,
   ): Promise<AcceptFriendlyChallengeResult> {
-    const playerId = await this.scrimmageService.resolvePlayerId(devPlayerId ?? 'dev-player');
+    const playerId = await this.scrimmageService.resolvePlayerId(
+      this.playerContext.resolve(devPlayerId),
+    );
     return this.scrimmageService.acceptChallenge(playerId, challengeId);
   }
 
@@ -50,7 +60,9 @@ export class GuildScrimmageController {
     @Param('id') replayId: string,
     @Headers('x-dev-player-id') devPlayerId?: string,
   ): Promise<WarBattleReplay> {
-    const playerId = await this.scrimmageService.resolvePlayerId(devPlayerId ?? 'dev-player');
+    const playerId = await this.scrimmageService.resolvePlayerId(
+      this.playerContext.resolve(devPlayerId),
+    );
     return this.scrimmageService.getReplay(playerId, replayId);
   }
 }

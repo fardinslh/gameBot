@@ -17,17 +17,50 @@ import type {
   WarBattleReplay,
   WarReplayEvent,
 } from '@crown-and-coin/shared';
+import type { DevelopmentPlayerContext } from '../player/player-context.service';
 import type { PostFriendlyChallengeDto } from './guild-scrimmage.dto';
 
 @Injectable()
 export class GuildScrimmageService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async resolvePlayerId(rawId: string): Promise<string> {
-    const account = await this.prisma.platformAccount.findFirst({
-      where: { externalUserId: rawId },
+  async resolvePlayerId(context: DevelopmentPlayerContext | string): Promise<string> {
+    const rawId = typeof context === 'string' ? context : context.externalUserId;
+    const account = await this.prisma.platformAccount.findUnique({
+      where: {
+        platform_externalUserId: {
+          platform: 'WEB',
+          externalUserId: rawId,
+        },
+      },
+      select: { playerId: true },
     });
-    return account ? account.playerId : rawId;
+    if (account) return account.playerId;
+
+    const directPlayer = await this.prisma.player.findUnique({
+      where: { id: rawId },
+      select: { id: true },
+    });
+    if (directPlayer) return directPlayer.id;
+
+    try {
+      const created = await this.prisma.player.create({
+        data: {
+          displayName: 'Warden of Dawnkeep',
+          platformAccounts: {
+            create: {
+              platform: 'WEB',
+              externalUserId: rawId,
+              verifiedAt: new Date(),
+            },
+          },
+        },
+        select: { id: true },
+      });
+      return created.id;
+    } catch {
+      throw new NotFoundException('Player account not found');
+    }
   }
 
   async getChallenges(playerId: string): Promise<FriendlyChallengesResponse> {
