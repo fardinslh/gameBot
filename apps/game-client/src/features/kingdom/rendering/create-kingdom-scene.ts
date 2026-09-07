@@ -105,6 +105,18 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   let selectedBuildingId: WorldBuildingId | null = null;
   let elapsed = 0;
   let didPan = false;
+  const reducedMotion = typeof window !== 'undefined' && window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)').matches : false;
+  const tapBounceAnimation = new Map<WorldBuildingId, { elapsedMs: number; durationMs: number; baseScale: number }>();
+
+  const triggerTapBounce = (id: WorldBuildingId): void => {
+    if (reducedMotion) return;
+    const item = artwork.get(id);
+    const layoutEntry = KINGDOM_BUILDING_LAYOUT.find((building) => building.id === id);
+    const baseScale = layoutEntry?.scale ?? 1;
+    if (item) {
+      tapBounceAnimation.set(id, { elapsedMs: 0, durationMs: 280, baseScale });
+    }
+  };
 
   const registerBuilding = (id: WorldBuildingId, x: number, y: number, scale: number, buildingArt: BuildingArtwork): void => {
     artwork.set(id, buildingArt);
@@ -115,6 +127,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       if (didPan) return;
       selectedBuildingId = id;
       syncSelection();
+      triggerTapBounce(id);
       onSelect(id);
     });
     buildingsLayer.addChild(buildingArt.container);
@@ -484,7 +497,6 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   canvas.addEventListener('pointerup', onPointerUp);
   canvas.addEventListener('pointercancel', onPointerUp);
 
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let ambientPaused = document.visibilityState === 'hidden';
   const syncAmbientMotionState = (): void => {
     host.dataset.ambientMotion = reducedMotion ? 'reduced' : ambientPaused ? 'paused' : 'active';
@@ -512,6 +524,19 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       heroPresence.update(ticker.deltaMS, elapsed);
     }
     for (const [id, item] of artwork) {
+      const tapBounce = tapBounceAnimation.get(id);
+      if (tapBounce) {
+        const nextElapsed = tapBounce.elapsedMs + ticker.deltaMS;
+        const progress = Math.min(1, nextElapsed / tapBounce.durationMs);
+        if (progress >= 1) {
+          tapBounceAnimation.delete(id);
+          item.container.scale.set(tapBounce.baseScale);
+        } else {
+          tapBounce.elapsedMs = nextElapsed;
+          const { scaleX, scaleY } = calculateSquashStretchScale(progress, tapBounce.baseScale);
+          item.container.scale.set(scaleX, scaleY);
+        }
+      }
       if (id === selectedBuildingId) {
         const pulse = 1 + Math.sin(elapsed * 3.2) * .045;
         item.selection.scale.set(pulse);
@@ -616,7 +641,11 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
   layout();
 
   return {
-    select: (buildingId) => { selectedBuildingId = buildingId; syncSelection(); },
+    select: (buildingId) => {
+      selectedBuildingId = buildingId;
+      syncSelection();
+      if (buildingId) triggerTapBounce(buildingId);
+    },
     setLocale: (nextLocale) => {
       locale = nextLocale;
       for (const [id, status] of statusArtwork) drawBuildingStatusBadge(status, levelById.get(id) ?? 1, app.renderer.resolution, locale);
@@ -708,4 +737,23 @@ function resolveEvolutionState(id: BuildingId, level: number): BuildingVisualSta
 
 function artOffset(id: WorldBuildingId): number {
   return ['castle', 'farm', 'lumberMill', 'mine', 'grandMarket', 'barracks', 'blacksmith', 'academy', 'granary', 'watchtower', 'workshop', 'tavern', 'stable'].indexOf(id) * .7;
+}
+
+export function calculateSquashStretchScale(
+  progress: number,
+  baseScale: number,
+  intensity = 0.12,
+  dampFactor = 4.2,
+  frequency = 2.5
+): { scaleX: number; scaleY: number } {
+  if (progress <= 0 || progress >= 1) {
+    return { scaleX: baseScale, scaleY: baseScale };
+  }
+  const damp = Math.exp(-progress * dampFactor);
+  const oscillation = Math.sin(progress * Math.PI * frequency);
+  const factor = oscillation * damp * intensity;
+  return {
+    scaleX: baseScale * (1 + factor),
+    scaleY: baseScale * (1 - factor),
+  };
 }

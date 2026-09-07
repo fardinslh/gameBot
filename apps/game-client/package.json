@@ -13,7 +13,8 @@
     "test:kingdom-soul": "vitest run src/game/rendering/pixi-runtime.spec.ts src/features/kingdom/rendering/ambient-life.spec.ts src/features/kingdom/rendering/character-animation.spec.ts src/features/kingdom/rendering/hero-presence.spec.ts src/features/kingdom/rendering/sprite-atlas.spec.ts src/features/raid/domain/raid-journey-presentation.spec.ts",
     "test:experience": "vitest run src/features/audio/crossfade-loop-player.spec.ts src/features/audio/audio-manager.spec.ts src/features/audio/battle-audio.spec.ts src/features/audio-lab/audio-audition.spec.ts src/features/experience/experience-content.spec.ts src/features/experience/advisor-positioning.spec.ts",
     "test:rtl": "vitest run src/i18n/bidi.spec.tsx",
-    "test:economy-hud": "vitest run src/features/kingdom/domain/collection-presentation.spec.tsx"
+    "test:economy-hud": "vitest run src/features/kingdom/domain/collection-presentation.spec.tsx",
+    "test:sensory": "vitest run src/platform/platform-adapters.spec.ts src/platform/sensory-feedback.spec.tsx src/features/kingdom/rendering/building-tap-bounce.spec.ts"
   },
   "dependencies": {
     "@crown-and-coin/shared": "*",

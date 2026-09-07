@@ -255,6 +255,10 @@ export class GameAudioManager {
     }
   }
 
+  getWebAudioContext(): AudioContext | null {
+    return this.webContext;
+  }
+
   private musicVolume(): number { return this.musicAllowed() ? this.settings.masterVolume * this.settings.musicVolume : 0; }
   private stopCurrent(): void {
     if (!this.currentMusic) return;

@@ -17,6 +17,8 @@ import { ShopPage } from '@/features/shop/components/shop-page';
 import { GuildPage } from '@/features/guild/components/guild-page';
 import type { KingdomRaidReturnPresentation } from '@/features/raid/domain/raid-journey-presentation';
 
+import { ClientPlatformProvider, useClientPlatform, useSensoryFeedback } from '@/platform/platform-provider';
+
 interface GameShellProps {
   locale: Locale;
   dictionary: Dictionary;
@@ -26,7 +28,11 @@ interface GameShellProps {
 export function GameShell({ locale, dictionary, initialSection }: GameShellProps) {
   return (
     <LocalizedGameRoot className="game-viewport" locale={locale}>
-      <AudioProvider><GameShellContent locale={locale} dictionary={dictionary} initialSection={initialSection} /></AudioProvider>
+      <ClientPlatformProvider>
+        <AudioProvider>
+          <GameShellContent locale={locale} dictionary={dictionary} initialSection={initialSection} />
+        </AudioProvider>
+      </ClientPlatformProvider>
     </LocalizedGameRoot>
   );
 }
@@ -35,18 +41,36 @@ function GameShellContent({ locale, dictionary, initialSection }: GameShellProps
   const [activeSection, setActiveSection] = useState<GameSection>(initialSection);
   const [raidInitialView, setRaidInitialView] = useState<RaidView>('overview');
   const [raidReturn, setRaidReturn] = useState<KingdomRaidReturnPresentation | null>(null);
-  const { playSfx, setMusicContext } = useGameAudio();
+  const platform = useClientPlatform();
+  const sensory = useSensoryFeedback();
+  const { setMusicContext } = useGameAudio();
+
   useEffect(() => initializeAnalytics(locale), [locale]);
   useEffect(() => { setMusicContext('KINGDOM'); }, [activeSection, setMusicContext]);
   useEffect(() => {
     trackScreen(activeSection === 'heroes' ? 'HEROES' : activeSection === 'raid' ? 'RAID' : activeSection === 'shop' ? 'SHOP' : activeSection === 'guild' ? 'GUILD' : 'KINGDOM');
   }, [activeSection]);
+
+  // Connect native messenger back button (Bale / Telegram)
+  useEffect(() => {
+    if (activeSection !== 'kingdom') {
+      platform.showBackButton(() => {
+        sensory.back();
+        setActiveSection('kingdom');
+      });
+    } else {
+      platform.hideBackButton();
+    }
+    return () => platform.hideBackButton();
+  }, [activeSection, platform, sensory]);
+
   const navigate = (section: GameSection): void => {
+    sensory.tap();
     if (section === 'raid') setRaidInitialView('overview');
     setActiveSection(section);
   };
   const openInbox = (): void => {
-    playSfx('panel_open');
+    sensory.panelOpen();
     setRaidInitialView('inbox');
     setActiveSection('raid');
   };

@@ -18,6 +18,7 @@ import { useInboxCount } from '@/features/raid/hooks/use-inbox-count';
 import { LockedBuildingSheet } from './locked-building-sheet';
 import { AdvisorCoach, usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { useGameAudio } from '@/features/audio/audio-provider';
+import { useSensoryFeedback } from '@/platform/platform-provider';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { KingdomProgressSheet } from './kingdom-progress-sheet';
 import { useRetentionState } from '@/features/retention/hooks/use-retention-state';
@@ -108,15 +109,17 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
     if (economy.state?.buildings.some((building) => building.activeUpgrade)) void shop.refresh();
   }, [economy.state?.buildings, shop.refresh]);
 
+  const sensory = useSensoryFeedback();
+
   const handleBuildingSelect = useCallback((buildingId: WorldBuildingId) => {
-    audio.playSfx('building_select');
+    sensory.select();
     setSelectedBuildingId(buildingId);
-  }, [audio]);
+  }, [sensory]);
 
   const handleEngagementGoal = useCallback(() => {
     const goal = engagement.state?.nextGoal;
     if (!goal) return;
-    audio.playSfx('ui_tap');
+    sensory.tap();
     if (goal.kind === 'CLAIM_REWARD') { setRetentionOpen(true); return; }
     if (goal.kind === 'ROYAL_DECREE') { setDecreeOpen(true); return; }
     if (goal.kind === 'COLLECT_RESOURCES') { void economy.collect(); return; }
@@ -125,7 +128,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
       const building = economy.buildings.find((item) => item.type === goal.buildingType);
       if (building) setSelectedBuildingId(building.visualId);
     }
-  }, [audio, economy, engagement.state?.nextGoal, onNavigate]);
+  }, [sensory, economy, engagement.state?.nextGoal, onNavigate]);
 
   return (
     <>

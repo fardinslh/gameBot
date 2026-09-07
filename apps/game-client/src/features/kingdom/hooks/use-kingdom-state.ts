@@ -5,14 +5,14 @@ import type { CollectResponse, KingdomBuildingState, KingdomStateResponse, Resou
 import { BUILDING_TYPE_TO_ID } from '../data/building-layout';
 import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { collectCompletedBuildingUpgrade, collectKingdom, fetchKingdom, KingdomApiError, updateKingdomIdentity, upgradeBuilding } from '../api/kingdom-api';
-import { useGameAudio } from '@/features/audio/audio-provider';
+import { useSensoryFeedback } from '@/platform/platform-provider';
 import { usePlayerExperience } from '@/features/experience/player-experience-provider';
 import { easeOutCubic, interpolateResourceBalances } from '../domain/collection-presentation';
 
 type ActionState = 'idle' | 'collecting' | 'upgrading' | 'finishing-upgrade' | 'saving-identity';
 
 export function useKingdomState() {
-  const audio = useGameAudio();
+  const sensory = useSensoryFeedback();
   const experience = usePlayerExperience();
   const [state, setState] = useState<KingdomStateResponse | null>(null);
   const [errorCode, setErrorCode] = useState<string | null>(null);
@@ -96,7 +96,7 @@ export function useKingdomState() {
     setAction('finishing-upgrade');
     try {
       await collectCompletedBuildingUpgrade(buildingId);
-      audio.playSfx('upgrade_complete');
+      sensory.upgradeComplete();
       await refresh();
       window.dispatchEvent(new Event('crown:engagement-refresh'));
       setErrorCode(null);
@@ -105,7 +105,7 @@ export function useKingdomState() {
     } finally {
       setAction('idle');
     }
-  }, [refresh, audio]);
+  }, [refresh, sensory]);
 
   useEffect(() => {
     if (initialLoadStarted.current) return;
@@ -173,7 +173,7 @@ export function useKingdomState() {
       presentCollection(previousBalances, response.balances, response.gains);
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
-      audio.playSfx('collect');
+      sensory.collect();
       await experience.refreshOnboarding();
       window.dispatchEvent(new Event('crown:retention-refresh'));
       window.dispatchEvent(new Event('crown:engagement-refresh'));
@@ -182,7 +182,7 @@ export function useKingdomState() {
     } finally {
       setAction('idle');
     }
-  }, [state, action, audio, experience, presentCollection]);
+  }, [state, action, sensory, experience, presentCollection]);
 
   const upgrade = useCallback(async (buildingId: string) => {
     if (!state || action !== 'idle') return;
@@ -204,7 +204,7 @@ export function useKingdomState() {
       } : stateRef.current;
       setServerOffsetMs(Date.parse(response.serverTime) - Date.now());
       setErrorCode(null);
-      audio.playSfx('upgrade_start');
+      sensory.upgradeStart();
       await experience.refreshOnboarding();
       window.dispatchEvent(new Event('crown:retention-refresh'));
       window.dispatchEvent(new Event('crown:engagement-refresh'));
@@ -213,7 +213,7 @@ export function useKingdomState() {
     } finally {
       setAction('idle');
     }
-  }, [state, action, audio, experience, cancelCollectionPresentation]);
+  }, [state, action, sensory, experience, cancelCollectionPresentation]);
 
   const saveIdentity = useCallback(async (input: UpdateKingdomIdentityRequest): Promise<boolean> => {
     if (!state || action !== 'idle') return false;

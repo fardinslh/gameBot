@@ -5,6 +5,7 @@ import type { KingdomBuildingView } from '../domain/kingdom-types';
 import { estimateCollectableProduction } from '../domain/collection-presentation';
 import { formatAmount } from './resource-hud';
 import { BidiValue } from '@/i18n/bidi';
+import { ResourceFloaters } from './resource-floaters';
 
 interface CollectControlProps {
   balances: ResourceAmounts;
@@ -30,6 +31,7 @@ export function CollectControl({ balances, buildings, capacities, dictionary: t,
 
   return (
     <div className="collect-control">
+      <ResourceFloaters gains={lastGains} dictionary={t} />
       <button
         data-guide-target="collect"
         className={ready > BigInt(0) ? 'collect-button collect-button--ready' : 'collect-button'}

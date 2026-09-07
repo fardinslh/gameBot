@@ -1,6 +1,6 @@
 import { Castle, Shield, ShoppingBag, Swords, Users } from 'lucide-react';
 import type { Dictionary } from '@/i18n/config';
-import { useGameAudio } from '@/features/audio/audio-provider';
+import { useSensoryFeedback } from '@/platform/platform-provider';
 
 interface BottomNavigationProps {
   dictionary: Dictionary;
@@ -12,7 +12,7 @@ interface BottomNavigationProps {
 export type GameSection = 'kingdom' | 'raid' | 'heroes' | 'shop' | 'guild';
 
 export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onComingSoon }: BottomNavigationProps) {
-  const audio = useGameAudio();
+  const sensory = useSensoryFeedback();
   const items = [
     { id: 'kingdom', label: t.kingdom, Icon: Castle, enabled: true },
     { id: 'raid', label: t.raid, Icon: Swords, enabled: true },
@@ -32,7 +32,7 @@ export function BottomNavigation({ dictionary: t, activeSection, onNavigate, onC
           data-nav-id={id}
           data-guide-target={id === 'raid' ? 'raid-tab' : undefined}
           key={id}
-          onClick={active ? undefined : enabled ? () => { audio.playSfx('ui_tap'); onNavigate(id as GameSection); } : () => { audio.playSfx('ui_tap'); onComingSoon(label); }}
+          onClick={active ? undefined : enabled ? () => { sensory.tap(); onNavigate(id as GameSection); } : () => { sensory.tap(); onComingSoon(label); }}
           type="button"
         >
           <span className="navigation-item__icon"><Icon aria-hidden="true" size={21} /></span>

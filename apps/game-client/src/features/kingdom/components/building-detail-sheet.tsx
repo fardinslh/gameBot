@@ -7,6 +7,7 @@ import type { BuildingId, KingdomBuildingView } from '../domain/kingdom-types';
 import { formatAmount } from './resource-hud';
 import { BidiTemplate, BidiValue } from '@/i18n/bidi';
 import { KingdomIdentityCard } from './kingdom-identity-card';
+import { useSensoryFeedback } from '@/platform/platform-provider';
 
 const BUILDING_ICONS: Record<BuildingId, LucideIcon> = {
   castle: Castle,
@@ -37,6 +38,7 @@ interface BuildingDetailSheetProps {
 }
 
 export function BuildingDetailSheet({ actionPending, building, dictionary: t, finishOffer, identity, onClose, onFinishUpgrade, onOpenProgress, onSaveIdentity, onUpgrade, playerName, serverNow, transformation }: BuildingDetailSheetProps) {
+  const sensory = useSensoryFeedback();
   const [confirmFinish, setConfirmFinish] = useState(false);
   const presentation = building ? t.buildings[building.visualId] : t.buildings.castle;
   const Icon = building ? BUILDING_ICONS[building.visualId] : Castle;
@@ -61,7 +63,7 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, fi
           <small>{t.buildingDetails}</small>
           <h2>{presentation.name}</h2>
         </div>
-        <button className="icon-button" aria-label={t.close} onClick={onClose} type="button">
+        <button className="icon-button" aria-label={t.close} onClick={() => { sensory.back(); onClose(); }} type="button">
           <X aria-hidden="true" size={20} />
         </button>
       </div>
@@ -83,7 +85,7 @@ export function BuildingDetailSheet({ actionPending, building, dictionary: t, fi
       <p className="building-role"><Hammer aria-hidden="true" size={15} /><span><small>{t.role}</small>{presentation.role}</span></p>
 
       {building?.visualId === 'castle' ? (
-        <button className="kingdom-progress-open" onClick={onOpenProgress} type="button">
+        <button className="kingdom-progress-open" onClick={() => { sensory.panelOpen(); onOpenProgress(); }} type="button">
           <Castle aria-hidden="true" size={16} />
           <span>{t.kingdomProgress.open}</span>
           <ArrowUp aria-hidden="true" size={15} />
