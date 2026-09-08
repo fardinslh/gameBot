@@ -13,7 +13,7 @@ import {
   statusElementsOverlap,
   type BuildingStatusIndicator,
 } from '@/features/kingdom/rendering/building-status-badge';
-import { BUILDING_VISUALS, resolveBuildingTexture } from '@/features/kingdom/rendering/building-visuals';
+import { resolveBuildingStatusAnchor, resolveBuildingTexture } from '@/features/kingdom/rendering/building-visuals';
 import styles from './building-evolution-lab.module.css';
 
 const BUILDINGS: readonly { id: EvolutionBuildingId; label: string }[] = [
@@ -38,7 +38,7 @@ type StatusLabState = 'normal' | 'upgrade' | 'active' | 'selected';
 export function BuildingEvolutionLab() {
   const [buildingId, setBuildingId] = useState<EvolutionBuildingId>('castle');
   const [level, setLevel] = useState(1);
-  const [mode, setMode] = useState<'single' | 'adjacent' | 'extremes'>('single');
+  const [mode, setMode] = useState<'single' | 'adjacent' | 'extremes' | 'tiers'>('single');
   const [construction, setConstruction] = useState(false);
   const [inspectionZoom, setInspectionZoom] = useState<(typeof INSPECTION_ZOOMS)[number]>(1);
   const [statusBuildingId, setStatusBuildingId] = useState<BuildingId>('farm');
@@ -48,7 +48,7 @@ export function BuildingEvolutionLab() {
     ? [level]
     : mode === 'adjacent'
       ? [level, Math.min(20, level + 1)]
-      : [1, 20];
+      : mode === 'tiers' ? [1, 5, 9, 13, 17] : [1, 20];
 
   return (
     <main className={styles.lab} data-kingdom-theme={state.theme}>
@@ -89,6 +89,7 @@ export function BuildingEvolutionLab() {
           <button aria-pressed={mode === 'single'} onClick={() => setMode('single')} type="button">Single</button>
           <button aria-pressed={mode === 'adjacent'} onClick={() => setMode('adjacent')} type="button">N vs N+1</button>
           <button aria-pressed={mode === 'extremes'} onClick={() => setMode('extremes')} type="button">1 vs 20</button>
+          <button aria-pressed={mode === 'tiers'} onClick={() => setMode('tiers')} type="button">All tiers</button>
           <button aria-pressed={construction} onClick={() => setConstruction((current) => !current)} type="button">Construction</button>
         </div>
         <div className={styles.inspection}>
@@ -101,7 +102,7 @@ export function BuildingEvolutionLab() {
         </div>
       </section>
 
-      <section className={comparisons.length === 1 ? styles.stageSingle : styles.stageCompare} data-evolution-stage>
+      <section className={mode === 'tiers' ? styles.stageTiers : comparisons.length === 1 ? styles.stageSingle : styles.stageCompare} data-evolution-stage>
         {comparisons.map((comparisonLevel, index) => (
           <BuildingPreview
             buildingId={buildingId}
@@ -182,11 +183,11 @@ function StatusOverlayPreview({ buildingId, level, state }: { buildingId: Buildi
         const width = Math.max(host.clientWidth, 1);
         const height = Math.max(host.clientHeight, 1);
         localRuntime.app.renderer.resize(width, height);
-        const fit = Math.min(1.25, width / 280, height / 250);
+        const fit = Math.min(1.25, width / 280, (height - 56) / (artwork.sprite.height + 55));
         artwork.container.scale.set(fit);
-        artwork.container.position.set(width / 2, height * .7);
+        artwork.container.position.set(width / 2, height - 24);
         const layout = calculateBuildingStatusLayout({
-          statusStackAnchor: BUILDING_VISUALS[current.buildingId].statusStackAnchor,
+          statusStackAnchor: resolveBuildingStatusAnchor(current.buildingId, artwork.sprite.height),
           buildingPosition: artwork.container.position,
           buildingScale: fit,
           resolution: localRuntime.app.renderer.resolution,
@@ -301,6 +302,7 @@ function BuildingPreview({
       resize();
       host.dataset.buildingId = buildingId;
       host.dataset.buildingLevel = String(level);
+      host.dataset.buildingAsset = state.asset;
       host.dataset.visualState = `${state.tier}:${state.minorStep}:${state.capstone ? 'capstone' : 'standard'}`;
     })();
     return () => {

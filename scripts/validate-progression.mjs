@@ -125,7 +125,7 @@ try {
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   await page.route('http://localhost:3001/**', (route) => route.continue({ headers: { ...route.request().headers(), 'x-dev-player-id': identity } }));
   page.on('request', (request) => {
-    if (request.url().includes('/assets/kingdom/evolution/')) requestedEvolutionAssets.push(request.url());
+    if (request.url().includes('/assets/kingdom/evolution/') || request.url().includes('/buildings/polished-v2/')) requestedEvolutionAssets.push(request.url());
   });
   page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
   page.on('pageerror', (error) => consoleErrors.push(error.stack ?? error.message));
@@ -140,10 +140,10 @@ try {
   if (stageOneMetadata.mineGround !== '145,365') throw new Error(`Mine registration is ${stageOneMetadata.mineGround ?? 'missing'}`);
   if (stageOneMetadata.expansionAreaCount !== '0') throw new Error('Locked expansion terrain affected Stage 1');
   const lockedAssetNames = ['academy', 'blacksmith', 'watchtower', 'workshop'];
-  if (requestedEvolutionAssets.some((url) => lockedAssetNames.some((name) => url.includes(`/default/${name}/`)))) {
+  if (requestedEvolutionAssets.some((url) => lockedAssetNames.some((name) => url.includes(`/default/${name}/`) || url.includes(`/polished-v2/${name}.webp`) || url.includes(`/polished-v2/${name}/`)))) {
     throw new Error(`A locked evolution asset was loaded at Castle 1: ${requestedEvolutionAssets.join(', ')}`);
   }
-  await clickWorldPoint(page, 410, 420);
+  await clickWorldPoint(page, 555, 625);
   if (await page.locator('.building-sheet').getAttribute('aria-hidden') !== 'true') throw new Error('A locked building created a ghost click target');
   await validateMobileStage(page, 1, 5);
   await page.locator('[data-world-building-id="castle"]').evaluate((element) => element.click());
@@ -165,21 +165,21 @@ try {
   await setCastleLevel(2);
   await refreshKingdom(page, 6, 2);
   await validateMobileStage(page, 2, 6);
-  await moveWorldTo(page, 300);
+  await moveWorldTo(page, 1320);
   await closeOpenSheet(page);
   await page.screenshot({ path: new URL('phase-07-2-stage-2-watchtower-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
   await setCastleLevel(3);
   await refreshKingdom(page, 7, 3);
   await validateMobileStage(page, 3, 7);
-  await moveWorldTo(page, 420);
+  await moveWorldTo(page, 625);
   await closeOpenSheet(page);
   await page.screenshot({ path: new URL('phase-07-2-stage-3-academy-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
   await setCastleLevel(4);
   await refreshKingdom(page, 8, 4);
   await validateMobileStage(page, 4, 8);
-  await moveWorldTo(page, 170);
+  await moveWorldTo(page, 1320);
   await closeOpenSheet(page);
   await page.screenshot({ path: new URL('phase-07-2-stage-4-workshop-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
@@ -197,7 +197,7 @@ try {
     data: { level: 2 },
   });
   await refreshKingdom(page, 9, 5);
-  await moveWorldTo(page, 310);
+  await moveWorldTo(page, 900);
   await closeOpenSheet(page);
   await page.screenshot({ path: new URL('phase-07-2-stage-5-full-expansion-fa-320.png', artifacts).pathname.slice(1) });
 
@@ -224,11 +224,11 @@ try {
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.waitForTimeout(220);
-  await moveWorldTo(page, 330, 360);
+  await moveWorldTo(page, 900, 360);
   await page.screenshot({ path: new URL('phase-07-2-stage-5-full-expansion-fa-390x844.png', artifacts).pathname.slice(1) });
   const stageFiveMetadata = await page.locator('.kingdom-scene__canvas').evaluate((element) => ({ ...element.dataset }));
-  if (!(Number(stageFiveMetadata.activeBoundsTop) < Number(stageOneMetadata.activeBoundsTop))) {
-    throw new Error(`Expansion did not extend active camera bounds: Stage1=${stageOneMetadata.activeBoundsTop}, Stage5=${stageFiveMetadata.activeBoundsTop}`);
+  if (!(Number(stageFiveMetadata.activeBoundsBottom) > Number(stageOneMetadata.activeBoundsBottom))) {
+    throw new Error(`Expansion did not extend active camera bounds: Stage1=${stageOneMetadata.activeBoundsBottom}, Stage5=${stageFiveMetadata.activeBoundsBottom}`);
   }
   if (consoleErrors.length) throw new Error(`Browser console errors: ${consoleErrors.join(' | ')}`);
 

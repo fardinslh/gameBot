@@ -158,6 +158,7 @@ export function KingdomPage({ dictionary: t, locale, onNavigate, onOpenInbox, on
           <PlayerHud
             dictionary={t}
             gemBalance={balances.GEMS}
+            kingdomName={economy.state?.kingdom.name}
             locale={locale}
             playerLevel={economy.state?.player.level ?? 1}
             playerName={economy.state?.player.displayName ?? t.playerTitle}

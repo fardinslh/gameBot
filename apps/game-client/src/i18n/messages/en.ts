@@ -157,7 +157,7 @@ export const en = {
       campaign: 'The Broken Frontier is a permanent adventure. Clear each stage, improve your stars, and claim milestone chests.',
       reminder: "Need a reminder? Here's what you should know.", gotIt: 'Got it',
     },
-    help: 'Game Guide', settings: 'Audio settings', guideTitle: 'Warden\'s Guide', guideSubtitle: 'How your kingdom works',
+    help: 'Game Guide', settings: 'Audio settings', menuTitle: 'Settings', guideTitle: 'Warden\'s Guide', guideSubtitle: 'How your kingdom works',
     audioTitle: 'Sound & Music', audioSubtitle: 'Saved on this device', master: 'Master sound', music: 'Music', sfx: 'Sound effects', volume: 'Volume',
     welcomeTitle: 'Welcome, Warden', welcomeBody: 'Build your kingdom, gather resources, and lead your vanguard into a protected first Raid.',
     begin: 'Begin', skip: 'Skip tutorial', skipConfirm: 'Skip the guided first session? The Guide will stay available.',

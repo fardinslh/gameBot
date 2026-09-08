@@ -2,8 +2,9 @@
 
 import { createContext, type CSSProperties, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { AdvisorTipKey, OnboardingStateResponse } from '@crown-and-coin/shared';
-import { BookOpen, Volume2, X } from 'lucide-react';
-import type { Dictionary } from '@/i18n/config';
+import { BookOpen, ChevronRight, Languages, Settings, Volume2, X } from 'lucide-react';
+import Link from 'next/link';
+import type { Dictionary, Locale } from '@/i18n/config';
 import { trackClientEvent } from '@/features/analytics/analytics-client';
 import { useGameAudio } from '@/features/audio/audio-provider';
 import { dismissAdvisorTip, fetchAdvisorTips } from './advisor-api';
@@ -131,9 +132,88 @@ export function usePlayerExperience(): ExperienceContextValue {
   return value;
 }
 
-export function ExperienceControls({ dictionary: t }: { dictionary: Dictionary }) {
+export function ExperienceControls({ dictionary: t, locale, section }: { dictionary: Dictionary; locale: Locale; section?: 'heroes' | 'raid' }) {
   const experience = usePlayerExperience();
-  return <div className="experience-controls"><button aria-label={t.experience.help} onClick={experience.openGuide} title={t.experience.help} type="button"><BookOpen aria-hidden="true" size={15} /></button><button aria-label={t.experience.settings} onClick={experience.openAudioSettings} title={t.experience.settings} type="button"><Volume2 aria-hidden="true" size={15} /></button></div>;
+  const [open, setOpen] = useState(false);
+  const controlsRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const sectionQuery = section ? `&section=${section}` : '';
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOnPointerDown = (event: PointerEvent): void => {
+      if (!controlsRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape') return;
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+    document.addEventListener('pointerdown', closeOnPointerDown, true);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnPointerDown, true);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open]);
+
+  const openPanel = (panel: 'guide' | 'audio'): void => {
+    setOpen(false);
+    if (panel === 'guide') experience.openGuide();
+    else experience.openAudioSettings();
+  };
+  const closeMenu = (): void => {
+    setOpen(false);
+    triggerRef.current?.focus();
+  };
+
+  return (
+    <div className="experience-controls" ref={controlsRef}>
+      <button
+        aria-controls="player-settings-menu"
+        aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-label={t.experience.menuTitle}
+        className="settings-trigger"
+        onClick={() => setOpen((current) => !current)}
+        ref={triggerRef}
+        title={t.experience.menuTitle}
+        type="button"
+      >
+        <Settings aria-hidden="true" size={19} />
+      </button>
+      <section
+        aria-hidden={!open}
+        aria-label={t.experience.menuTitle}
+        className={`settings-menu${open ? ' settings-menu--open' : ''}`}
+        id="player-settings-menu"
+        role="dialog"
+      >
+        <header className="settings-menu__header">
+          <span><Settings aria-hidden="true" size={17} /></span>
+          <strong>{t.experience.menuTitle}</strong>
+          <button aria-label={t.close} onClick={closeMenu} type="button"><X aria-hidden="true" size={17} /></button>
+        </header>
+        <button className="settings-menu__option" onClick={() => openPanel('guide')} type="button">
+          <span><BookOpen aria-hidden="true" size={18} /></span>
+          <strong>{t.experience.help}</strong>
+          <ChevronRight aria-hidden="true" size={16} />
+        </button>
+        <button className="settings-menu__option" onClick={() => openPanel('audio')} type="button">
+          <span><Volume2 aria-hidden="true" size={18} /></span>
+          <strong>{t.experience.audioTitle}</strong>
+          <ChevronRight aria-hidden="true" size={16} />
+        </button>
+        <div className="settings-menu__language">
+          <span><Languages aria-hidden="true" size={18} /><strong>{t.language}</strong></span>
+          <div className="language-switch" aria-label={t.language}>
+            <Link aria-current={locale === 'en' ? 'page' : undefined} href={`/?lang=en${sectionQuery}`} onClick={() => setOpen(false)}>{t.english}</Link>
+            <Link aria-current={locale === 'fa' ? 'page' : undefined} href={`/?lang=fa${sectionQuery}`} onClick={() => setOpen(false)}>{t.persian}</Link>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 export function AdvisorCoach({ title, body, target, durationMs }: { title: string; body: string; target?: GuideTarget; durationMs?: number }) {

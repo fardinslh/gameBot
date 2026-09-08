@@ -310,6 +310,7 @@ export const fa: Dictionary = {
     },
     help: 'راهنمای جامع بازی',
     settings: 'تنظیمات صدا',
+    menuTitle: 'تنظیمات',
     guideTitle: 'راهنمای فرمانروا',
     guideSubtitle: 'سازوکارهای کلیدی پادشاهی',
     audioTitle: 'صدا و موسیقی',

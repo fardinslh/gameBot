@@ -119,17 +119,6 @@ export function KingdomScene({
     <section className="kingdom-scene" aria-label={loadingLabel} data-scene-status={status}>
       <div className="kingdom-scene__canvas" ref={containerRef} />
       <div className="kingdom-scene__vignette" aria-hidden="true" />
-      {!selectedBuildingId && (
-        <button
-          type="button"
-          className="kingdom-overview-button"
-          onClick={() => sceneRef.current?.toggleOverview()}
-          aria-label="Toggle Realm Overview"
-          title="Toggle Realm Overview"
-        >
-          <span className="kingdom-overview-button__icon" aria-hidden="true">🗺️</span>
-        </button>
-      )}
       <div className="kingdom-pan-cue" aria-hidden="true"><span>↕</span>{panLabel}</div>
       <div className={`scene-status scene-status--${status}`} role="status">
         <span className="scene-status__rune" aria-hidden="true" />

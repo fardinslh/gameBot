@@ -41,7 +41,9 @@ describe('building visual progression', () => {
     }));
     for (const state of states) {
       expect(state.theme).toBe('DEFAULT');
-      expect(state.asset).toMatch(/^\/assets\/kingdom\/evolution\/default\/.+\/tier-[1-5]\.webp$/);
+      expect(state.asset).toMatch(buildingId === 'mine'
+        ? /^\/assets\/kingdom\/evolution\/default\/mine\/tier-[1-5]\.webp$/
+        : /^\/assets\/kingdom\/buildings\/polished-v2\/.+\.webp$/);
       expect(state.asset).not.toMatch(/^\/assets\/kingdom\/evolution\/(castle|farm|lumber-mill|mine|grand-market)\//);
       expect(existsSync(join(process.cwd(), 'public', state.asset.replace(/^\/assets\//, 'assets/')))).toBe(true);
       expect(state.level).toBeGreaterThanOrEqual(1);
@@ -63,5 +65,15 @@ describe('building visual progression', () => {
     expect(getUpgradeTransition(6, 7)).toEqual({ durationMs: 620, major: false });
     expect(getUpgradeTransition(4, 5)).toEqual({ durationMs: 980, major: true });
     expect(getUpgradeTransition(4, 5, true)).toEqual({ durationMs: 0, major: true });
+  });
+
+  it.each(EVOLUTION_BUILDINGS)('uses five distinct %s sprites and preserves each tier between major upgrades', (buildingId) => {
+    const levels = [1, 5, 9, 13, 17];
+    const assets = levels.map((level) => getBuildingVisualState({ buildingId, level }).asset);
+    expect(new Set(assets).size).toBe(5);
+    for (const level of levels) {
+      const asset = getBuildingVisualState({ buildingId, level }).asset;
+      expect(getBuildingVisualState({ buildingId, level: level + 3 }).asset).toBe(asset);
+    }
   });
 });

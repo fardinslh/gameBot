@@ -51,7 +51,7 @@ async function openCastle() {
   const box = await canvas.boundingBox();
   if (!box) throw new Error('Kingdom canvas has no box');
   const scale = box.width / 640;
-  const castleY = 665;
+  const castleY = 720;
   const cameraY = Number(await host.getAttribute('data-camera-y'));
   const dragY = Math.max(-520, Math.min(520, 330 - castleY * scale - cameraY));
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);

@@ -63,7 +63,7 @@ try {
   await page.screenshot({ path: new URL('phase-06-5-outer-district-fa-320.png', artifacts).pathname.slice(1) });
   await page.screenshot({ path: new URL('phase-06-6-simplified-lower-fa-320.png', artifacts).pathname.slice(1) });
 
-  await clickWorldBuilding(page, 320, 1172);
+  await clickWorldBuilding(page, 320, 1050);
   await page.waitForSelector('[data-building-sheet="grandMarket"]');
   await page.waitForTimeout(320);
   await page.screenshot({ path: new URL('phase-06-5-active-building-detail-fa-320.png', artifacts).pathname.slice(1) });

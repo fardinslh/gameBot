@@ -1,4 +1,5 @@
 import type { BuildingId } from '../domain/kingdom-types';
+import { polishedBuildingAsset } from './building-visuals';
 import {
   DEFAULT_KINGDOM_THEME,
   KINGDOM_THEMES,
@@ -49,6 +50,12 @@ interface BuildingThemeVisuals {
 
 const TIER_NAMES: readonly BuildingVisualTier[] = ['EARLY', 'DEVELOPED', 'ADVANCED', 'FORTIFIED', 'PRESTIGE'];
 const createTierAssets = (theme: KingdomThemeId, folder: string): TierAssets => {
+  // Every polished building has five architectural stages; preserve the mine set.
+  if (theme === 'DEFAULT' && folder !== 'mine') {
+    const asset = polishedBuildingAsset(folder);
+    const base = `/assets/kingdom/buildings/polished-v2/${folder}`;
+    return [asset, `${base}/tier-2.webp`, `${base}/tier-3.webp`, `${base}/tier-4.webp`, `${base}/tier-5.webp`];
+  }
   const namespace = KINGDOM_THEMES[theme].assetNamespace;
   const base = `/assets/kingdom/evolution/${namespace}/${folder}`;
   return [
@@ -71,7 +78,7 @@ export const BUILDING_VISUAL_CATALOG: Readonly<
     grandMarket: { assets: createTierAssets('DEFAULT', 'grand-market'), renderWidths: [156, 176, 194, 204, 212] },
     academy: { assets: createTierAssets('DEFAULT', 'academy'), renderWidths: [184, 190, 196, 202, 208] },
     blacksmith: { assets: createTierAssets('DEFAULT', 'blacksmith'), renderWidths: [174, 181, 188, 195, 202] },
-    watchtower: { assets: createTierAssets('DEFAULT', 'watchtower'), renderWidths: [137, 143, 149, 155, 161] },
+    watchtower: { assets: createTierAssets('DEFAULT', 'watchtower'), renderWidths: [196, 204, 212, 220, 228] },
     workshop: { assets: createTierAssets('DEFAULT', 'workshop'), renderWidths: [174, 181, 188, 195, 202] },
   },
 };

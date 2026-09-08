@@ -6,7 +6,7 @@ import { KINGDOM_BUILDING_LAYOUT, KINGDOM_WORLD } from '../data/building-layout'
 import type { BuildingId, WorldBuildingId } from '../domain/kingdom-types';
 import { DEFAULT_KINGDOM_THEME } from '../domain/kingdom-theme';
 import { applyBuildingVisualState, createBuildingArtwork, type BuildingArtwork } from './building-art';
-import { appearanceVariantStage, BUILDING_VISUALS, resolveBuildingTexture } from './building-visuals';
+import { appearanceVariantStage, resolveBuildingStatusAnchor, resolveBuildingTexture } from './building-visuals';
 import {
   getBuildingVisualState,
   getUpgradeTransition,
@@ -309,7 +309,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
     const bottomNavHeight = bottomNav?.getBoundingClientRect().height ?? 54;
     const bottomUiClearance = bottomNavHeight + 96;
 
-    // Allow scrolling down just enough so northern buildings (Blacksmith, Workshop, Mine, Watchtower)
+    // Allow scrolling down just enough so the northern mine and terrain
     // clear the HUD overlays, while keeping the top terrain edge anchored behind the Resource HUD
     // so the map never detaches, overscrolls, or scrolls away into empty space.
     cameraMaxY = Math.round(Math.min(110, Math.max(64, resourceHudBottom - 10)));
@@ -325,7 +325,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
       const indicator = indicatorArtwork.get(id);
       if (!indicator) continue;
       const layout = calculateBuildingStatusLayout({
-        statusStackAnchor: BUILDING_VISUALS[id].statusStackAnchor,
+        statusStackAnchor: resolveBuildingStatusAnchor(id, item.sprite.height),
         buildingPosition: item.container.position,
         buildingScale: item.container.scale.x,
         resolution: app.renderer.resolution,
@@ -687,6 +687,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
             if (texturePathById.get(id) !== desiredTexturePath) return;
             item.sprite.texture = nextTexture;
             if (visualState) applyBuildingVisualState(item, visualState.buildingId, visualState, state.indicator === 'active');
+            syncStatusPositions();
             if (levelAdvanced) startTransformation(id, previousLevel, state.level);
           });
         } else if (item && levelAdvanced) {
@@ -695,6 +696,7 @@ export async function createKingdomScene(host: HTMLDivElement, onSelect: (buildi
         const status = statusArtwork.get(id);
         if (status) drawBuildingStatusBadge(status, state.level, app.renderer.resolution, locale);
       }
+      syncStatusPositions();
     },
     setArmyState: (army) => {
       currentArmy = army;

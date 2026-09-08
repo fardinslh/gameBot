@@ -74,16 +74,16 @@ try {
   await main.screenshot({ path: new URL('phase-building-art-after-fa-320.png', artifacts).pathname.slice(1) });
   await main.screenshot({ path: new URL('phase-06-6-simplified-fa-320.png', artifacts).pathname.slice(1) });
   await main.screenshot({ path: new URL('phase-clean-base-final-320.png', artifacts).pathname.slice(1) });
-  await clickBuilding(main, 320, 665);
+  await clickBuilding(main, 320, 720);
   await main.waitForSelector('[data-building-sheet="castle"]');
   await main.locator('.building-sheet .icon-button').click();
   await main.close();
 
   const active = [
-    { id: 'farm', x: 88, y: 958 },
-    { id: 'lumberMill', x: 552, y: 958 },
+    { id: 'farm', x: 92, y: 885 },
+    { id: 'lumberMill', x: 540, y: 885 },
     { id: 'mine', x: 145, y: 365 },
-    { id: 'grandMarket', x: 320, y: 1172 },
+    { id: 'grandMarket', x: 320, y: 1050 },
   ];
   for (const building of active) {
     const page = await openPage({ width: 320, height: 568 });

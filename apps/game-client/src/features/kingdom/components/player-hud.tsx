@@ -1,7 +1,5 @@
 import { Crown, Gem, Trophy } from 'lucide-react';
-import Link from 'next/link';
 import type { Dictionary, Locale } from '@/i18n/config';
-import { ApiStatus } from '@/components/api-status';
 import type { KingdomProgressionState, ProfileCrestKey, TrophyLeague } from '@crown-and-coin/shared';
 import { ExperienceControls } from '@/features/experience/player-experience-provider';
 import { BidiValue } from '@/i18n/bidi';
@@ -11,6 +9,7 @@ interface PlayerHudProps {
   dictionary: Dictionary;
   gemBalance?: string;
   locale: Locale;
+  kingdomName?: string;
   playerLevel: number;
   playerName: string;
   progression?: KingdomProgressionState;
@@ -21,8 +20,7 @@ interface PlayerHudProps {
   onOpenLeaderboard?(): void;
 }
 
-export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section, trophies, league, onOpenLeaderboard }: PlayerHudProps) {
-  const sectionQuery = section ? `&section=${section}` : '';
+export function PlayerHud({ dictionary: t, gemBalance, locale, kingdomName, playerLevel, playerName, progression, profileCrest = 'DEFAULT', section, trophies, league, onOpenLeaderboard }: PlayerHudProps) {
   const displayedLevel = progression?.level ?? playerLevel;
   const xpProgress = progression?.xpRequiredForNextLevel
     ? Math.min(100, Math.round((progression.xpIntoLevel / progression.xpRequiredForNextLevel) * 100))
@@ -30,13 +28,14 @@ export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, play
   const displayedPlayerName = locale === 'fa' && playerName === 'Warden of Dawnkeep'
     ? t.playerTitle
     : playerName || t.playerTitle;
+  const displayedKingdomName = kingdomName?.trim() || displayedPlayerName;
   return (
     <header className="player-hud">
       <div className={`player-profile player-profile--${profileCrest.toLowerCase().replace('profile_crest_', '')}`} data-profile-crest={profileCrest}>
         <span className="player-avatar"><Crown aria-hidden="true" size={20} /></span>
         <span className="player-copy">
-          <h1>{t.appName}</h1>
-          <small><BidiValue>{displayedPlayerName}</BidiValue></small>
+          <h1 title={t.appName}>{t.appName}</h1>
+          <small title={displayedKingdomName}><BidiValue>{displayedKingdomName}</BidiValue></small>
         </span>
         {gemBalance !== undefined ? (
           <span aria-label={`${t.resourceGems}: ${formatAmount(gemBalance)}`} className="premium-currency-pill" data-balance={gemBalance} data-resource="GEMS" dir="ltr">
@@ -62,12 +61,7 @@ export function PlayerHud({ dictionary: t, gemBalance, locale, playerLevel, play
       </div>
 
       <div className="player-actions">
-        <ExperienceControls dictionary={t} />
-        <ApiStatus labels={{ checking: t.serverChecking, online: t.serverOnline, offline: t.serverOffline }} />
-        <div className="language-switch" aria-label={t.language}>
-          <Link aria-current={locale === 'en' ? 'page' : undefined} href={`/?lang=en${sectionQuery}`}>{t.english}</Link>
-          <Link aria-current={locale === 'fa' ? 'page' : undefined} href={`/?lang=fa${sectionQuery}`}>{t.persian}</Link>
-        </div>
+        <ExperienceControls dictionary={t} locale={locale} section={section} />
       </div>
     </header>
   );

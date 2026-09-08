@@ -74,9 +74,14 @@ export function createSpriteBuildingArtwork(
 ): BuildingArtwork {
   const visuals = BUILDING_VISUALS[id];
   const container = new Container();
-  const shadow = new Graphics()
-    .ellipse(visuals.shadow.x, visuals.shadow.y, visuals.shadow.width * .5, visuals.shadow.height * .5)
-    .fill({ color: 0x11130f, alpha: visuals.shadow.alpha });
+  const shadow = new Graphics();
+  const softContact = id !== 'mine' && visuals.stages[1].includes('/polished-v2/');
+  for (let layer = 0; layer < (softContact ? 5 : 1); layer += 1) {
+    const falloff = softContact ? 1.12 - layer * .13 : 1;
+    shadow.ellipse(visuals.shadow.x, visuals.shadow.y,
+      visuals.shadow.width * .5 * falloff, visuals.shadow.height * .5 * falloff)
+      .fill({ color: softContact ? 0x24271c : 0x11130f, alpha: softContact ? visuals.shadow.alpha * .3 : visuals.shadow.alpha });
+  }
   const sprite = new Sprite(texture);
   sprite.anchor.set(visuals.groundAnchor.x, visuals.groundAnchor.y);
   sizeBuildingSprite(sprite, id, visualState);
@@ -94,7 +99,7 @@ export function createSpriteBuildingArtwork(
     .stroke({ color: 0xffd76c, alpha: .92, width: 3 });
   selection.visible = false;
 
-  container.addChild(shadow, sprite, evolutionDetails, construction, transformation, selection);
+  container.addChild(shadow, selection, sprite, evolutionDetails, construction, transformation);
   if (debug) container.addChild(createDebugOverlay(id, sprite));
   container.hitArea = new Ellipse(
     visuals.hitArea.x,

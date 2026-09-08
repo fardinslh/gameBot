@@ -111,12 +111,13 @@ try {
   page.on('pageerror', (error) => consoleErrors.push(error.message));
 
   await page.goto('http://localhost:3000/?lang=en', { waitUntil: 'networkidle' });
-  await page.waitForSelector('.api-status--online');
+  await page.waitForSelector('.settings-trigger');
+  if (await page.locator('.api-status').count()) throw new Error('Removed API status control still renders');
   const mobileOverflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (mobileOverflow) throw new Error('Horizontal overflow detected at 320px');
 
   await page.goto('http://localhost:3000/?lang=fa', { waitUntil: 'networkidle' });
-  await page.waitForSelector('.api-status--online');
+  await page.waitForSelector('.settings-trigger');
   const direction = await page.locator('.game-viewport').getAttribute('dir');
   if (direction !== 'rtl') throw new Error('Persian layout did not switch to RTL');
   mkdirSync(new URL('artifacts/', root), { recursive: true });

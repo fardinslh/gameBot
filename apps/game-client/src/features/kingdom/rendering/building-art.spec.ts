@@ -2,13 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { Texture } from 'pixi.js';
 import { applyBuildingVisualState, createBuildingArtwork } from './building-art';
 import { getBuildingVisualState } from './building-visual-progression';
-import { BUILDING_VISUALS } from './building-visuals';
+import { BUILDING_VISUALS, resolveBuildingStatusAnchor } from './building-visuals';
 
 describe('building evolution artwork', () => {
+  it('lifts polished badges with tier height while preserving the mine anchor', () => {
+    expect(resolveBuildingStatusAnchor('castle', 224).y)
+      .toBeLessThan(resolveBuildingStatusAnchor('castle', 158).y);
+    expect(resolveBuildingStatusAnchor('farm', 198)).toEqual({ x: 0, y: -198 * .91 - 14 });
+    expect(resolveBuildingStatusAnchor('mine', 206)).toEqual(BUILDING_VISUALS.mine.statusStackAnchor);
+  });
   it('loads the production base stage and minor details', () => {
     const level = getBuildingVisualState({ buildingId: 'farm', level: 3 });
     const artwork = createBuildingArtwork('farm', Texture.WHITE, false, level, false);
-    expect(level.asset).toBe('/assets/kingdom/evolution/default/farm/tier-1.webp');
+    expect(level.asset).toBe('/assets/kingdom/buildings/polished-v2/farm.webp');
     expect(artwork.sprite.width).toBe(level.renderWidth);
     expect(artwork.evolutionDetails.children).toHaveLength(1);
     expect(artwork.construction.children).toHaveLength(0);
@@ -46,8 +52,17 @@ describe('building evolution artwork', () => {
       expect(BUILDING_VISUALS[buildingId].hitArea.width).toBeGreaterThan(100);
       expect(BUILDING_VISUALS[buildingId].hitArea.height).toBeGreaterThan(100);
       expect(Number.isFinite(BUILDING_VISUALS[buildingId].statusStackAnchor.x)).toBe(true);
-      expect(getBuildingVisualState({ buildingId, level: 1 }).asset)
-        .not.toBe(getBuildingVisualState({ buildingId, level: 20 }).asset);
+      expect(getBuildingVisualState({ buildingId, level: 20 }).renderWidth)
+        .toBeGreaterThan(getBuildingVisualState({ buildingId, level: 1 }).renderWidth);
     }
+  });
+
+  it.each(['castle', 'farm', 'lumberMill', 'grandMarket', 'academy', 'blacksmith', 'watchtower', 'workshop'] as const)('uses %s architecture without generic tier ornaments, keeping minor details and capstone', (buildingId) => {
+    const artwork = createBuildingArtwork(buildingId, Texture.WHITE, false,
+      getBuildingVisualState({ buildingId, level: 5 }), false);
+    expect(artwork.evolutionDetails.children[0].children).toHaveLength(0);
+    applyBuildingVisualState(artwork, buildingId, getBuildingVisualState({ buildingId, level: 20 }), false);
+    expect(artwork.evolutionDetails.children[0].children).toHaveLength(4);
+    artwork.container.destroy({ children: true });
   });
 });

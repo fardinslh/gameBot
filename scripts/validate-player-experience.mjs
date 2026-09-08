@@ -87,7 +87,7 @@ async function completeMobileOnboarding(browser, externalUserId, viewport) {
   await assertCoachClear(page, '[data-guide-target="collect"]');
   await page.locator('[data-guide-target="collect"]').click();
   await page.waitForFunction(() => document.querySelector('.advisor-coach'));
-  await clickWorldBuilding(page, 88, 958);
+  await clickWorldBuilding(page, 92, 885);
   await page.waitForSelector('[data-building-sheet="farm"]');
   await assertCoachClear(page, '[data-guide-target="upgrade"]');
   await page.screenshot({ path: new URL(`upgrade-fa-${viewport.width}x${viewport.height}.png`, artifacts).pathname.slice(1) });
@@ -165,7 +165,7 @@ try {
 
   await page.locator('.collect-button').click();
   await page.waitForFunction(() => document.querySelector('.advisor-coach'));
-  await clickWorldBuilding(page, 88, 958);
+  await clickWorldBuilding(page, 92, 885);
   await page.waitForSelector('[data-building-sheet="farm"]');
   await assertCoachClear(page, '[data-guide-target="upgrade"]');
   await page.screenshot({ path: new URL('03-upgrade-fa-320x568.png', artifacts).pathname.slice(1) });
@@ -209,12 +209,14 @@ try {
   await page.locator('.advisor-context-tip button').click();
   await page.locator('[data-nav-id="kingdom"]').click();
 
-  await page.locator('.experience-controls button').first().click();
+  await page.locator('.settings-trigger').click();
+  await page.locator('.settings-menu__option').first().click();
   await page.waitForSelector('[data-experience-panel="guide"]');
   if (await page.locator('.guide-sections article').count() !== 9) throw new Error('Game Guide must contain nine sections');
   await page.screenshot({ path: new URL('07-guide-fa-320x568.png', artifacts).pathname.slice(1) });
   await page.locator('.experience-panel > header > button').click();
-  await page.locator('.experience-controls button').nth(1).click();
+  await page.locator('.settings-trigger').click();
+  await page.locator('.settings-menu__option').nth(1).click();
   await page.waitForSelector('[data-experience-panel="audio"]');
   if (await page.locator('.audio-setting-row').count() !== 3) throw new Error('Audio settings must contain Master, Music, and SFX rows');
   await page.screenshot({ path: new URL('08-audio-fa-320x568.png', artifacts).pathname.slice(1) });
